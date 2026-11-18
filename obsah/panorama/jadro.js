@@ -1,9 +1,10 @@
 /* Skládání panoramat – jádro bez DOM (prohlížeč, Web Worker i node).
-   Body: Harris + BRIEF, párování Hammingovou vzdáleností, RANSAC (posun / posun+otočení / homografie),
-   válcová projekce, kostra grafu snímků (automatické pořadí), vyrovnání expozice (Brown–Lowe),
-   skládání se švem nalezeným dynamickým programováním a prolnutím, ořez na největší obdélník, EXIF.
-   Souřadnice: „proj“ = souřadnice snímku se středem v (0,0) (u válce úhel×f a výška na válci),
-   „pano“ = proj kořenového snímku; matice T snímku převádí proj → pano. */
+   Body: Harris + BRIEF na snímku promítnutém na kouli, párování Hammingovou vzdáleností, RANSAC homografie,
+   kontrolní body (automatické + ruční), sférický model kamery (rotace + ohnisko), počáteční odhad po kostře grafu,
+   globální optimalizace (bundle adjustment, Levenberg–Marquardt s Huberovou ztrátou), vyrovnání horizontu,
+   výstupní projekce, EXIF. Rovinná mozaika (skeny) zůstává 2D: posun / posun+otočení / homografie po kostře.
+   Kamera: x vpravo, y dolů, z dopředu; R = svět → kamera (řádky = osy kamery ve světě).
+   Kontrolní body: kb = [{ a, b, body: [[xa, ya, xb, yb, rucni], …] }] v px náhledu (počátek vlevo nahoře). */
 'use strict';
 (function (koren, tovarna) {
   const P = tovarna();
@@ -25,11 +26,44 @@ function inv(m) {
     B / det, (a * i - c * g) / det, -(a * f - c * d) / det,
     C / det, -(a * h - b * g) / det, (a * e - b * d) / det];
 }
+const tr = m => [m[0], m[3], m[6], m[1], m[4], m[7], m[2], m[5], m[8]];
 const posun = (x, y) => [1, 0, x, 0, 1, y, 0, 0, 1];
 const rotace = a => [Math.cos(a), -Math.sin(a), 0, Math.sin(a), Math.cos(a), 0, 0, 0, 1];
 function apl(m, x, y) {
   const w = m[6] * x + m[7] * y + m[8];
   return [(m[0] * x + m[1] * y + m[2]) / w, (m[3] * x + m[4] * y + m[5]) / w];
+}
+const mv = (m, v) => [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[3] * v[0] + m[4] * v[1] + m[5] * v[2], m[6] * v[0] + m[7] * v[1] + m[8] * v[2]];
+const mtv = (m, v) => [m[0] * v[0] + m[3] * v[1] + m[6] * v[2], m[1] * v[0] + m[4] * v[1] + m[7] * v[2], m[2] * v[0] + m[5] * v[1] + m[8] * v[2]];
+const norm = v => { const d = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / d, v[1] / d, v[2] / d]; };
+const krizem = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const skal = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+/* Rodriguesova rotace podle vektoru w (osa × úhel v rad) */
+function rod(w) {
+  const t = Math.hypot(w[0], w[1], w[2]);
+  if (t < 1e-12) return [1, -w[2], w[1], w[2], 1, -w[0], -w[1], w[0], 1];
+  const [x, y, z] = [w[0] / t, w[1] / t, w[2] / t], c = Math.cos(t), s = Math.sin(t), C = 1 - c;
+  return [c + x * x * C, x * y * C - z * s, x * z * C + y * s,
+    y * x * C + z * s, c + y * y * C, y * z * C - x * s,
+    z * x * C - y * s, z * y * C + x * s, c + z * z * C];
+}
+const rotY = a => [Math.cos(a), 0, Math.sin(a), 0, 1, 0, -Math.sin(a), 0, Math.cos(a)];
+const rotX = a => [1, 0, 0, 0, Math.cos(a), -Math.sin(a), 0, Math.sin(a), Math.cos(a)];
+const rotZ = rotace;
+const RAD = Math.PI / 180;
+/* kamera natočená o yaw (vpravo +), pitch (nahoru +), roll (po směru hodin +) ve stupních → R svět→kamera */
+const rotKamery = (yaw, pitch, roll = 0) => tr(nas(nas(rotY(yaw * RAD), rotX(pitch * RAD)), rotZ(roll * RAD)));
+/* opak: R (svět→kamera) → { yaw, pitch, roll } ve stupních */
+function yprZRotace(R) {
+  const C = tr(R), F = [C[2], C[5], C[8]];
+  const yaw = Math.atan2(F[0], F[2]), pitch = Math.asin(Math.max(-1, Math.min(1, -F[1])));
+  const Z = nas(tr(nas(rotY(yaw), rotX(pitch))), C);
+  return { yaw: yaw / RAD, pitch: pitch / RAD, roll: Math.atan2(Z[3], Z[0]) / RAD };
+}
+/* úhel rotace mezi dvěma maticemi (rad) */
+function uhelMezi(A, B) {
+  const M = nas(A, tr(B)), c = (M[0] + M[4] + M[8] - 1) / 2;
+  return Math.acos(Math.max(-1, Math.min(1, c)));
 }
 
 /* Gaussova eliminace s výběrem hlavního prvku; A je pole řádků (přepíše se) */
@@ -55,6 +89,24 @@ function resLin(A, b) {
   }
   return x;
 }
+/* vlastní čísla a vektory symetrické matice (Jacobi); A = pole řádků; vektory jsou sloupce V */
+function jacobi(A0) {
+  const n = A0.length, A = A0.map(r => r.slice()), V = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => +(i === j)));
+  for (let k = 0; k < 60; k++) {
+    let off = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += A[i][j] ** 2;
+    if (off < 1e-22) break;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) {
+      if (Math.abs(A[p][q]) < 1e-300) continue;
+      const th = (A[q][q] - A[p][p]) / (2 * A[p][q]), t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1));
+      const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+      for (let r = 0; r < n; r++) { const ap = A[r][p], aq = A[r][q]; A[r][p] = c * ap - s * aq; A[r][q] = s * ap + c * aq; }
+      for (let r = 0; r < n; r++) { const ap = A[p][r], aq = A[q][r]; A[p][r] = c * ap - s * aq; A[q][r] = s * ap + c * aq; }
+      for (let r = 0; r < n; r++) { const vp = V[r][p], vq = V[r][q]; V[r][p] = c * vp - s * vq; V[r][q] = s * vp + c * vq; }
+    }
+  }
+  return { hodnoty: A.map((r, i) => r[i]), V };
+}
 
 /* deterministická náhoda (mulberry32) */
 function prng(seed) {
@@ -68,7 +120,7 @@ function prng(seed) {
   };
 }
 
-/* ---------- modely: páry [xa, ya, xb, yb], model převádí b → a ---------- */
+/* ---------- 2D modely: páry [xa, ya, xb, yb], model převádí b → a ---------- */
 function fitPosun(p) {
   let sx = 0, sy = 0;
   for (const q of p) { sx += q[0] - q[2]; sy += q[1] - q[3]; }
@@ -122,7 +174,7 @@ function chyba2(M, q) {
   const [x, y] = apl(M, q[2], q[3]);
   return (x - q[0]) ** 2 + (y - q[1]) ** 2;
 }
-/* RANSAC + dvě kola zpřesnění nejmenšími čtverci na inlierech */
+/* RANSAC + tři kola zpřesnění nejmenšími čtverci na inlierech */
 function ransac(pary, typ, o = {}) {
   const Mo = MODELY[typ], n = pary.length;
   if (!Mo || n < Mo.min) return null;
@@ -248,7 +300,7 @@ function pop(x) { x -= (x >>> 1) & 0x55555555; x = (x & 0x33333333) + ((x >>> 2)
 function ham(A, i, B, j) { let s = 0; for (let k = 0; k < 8; k++) s += pop(A[i * 8 + k] ^ B[j * 8 + k]); return s; }
 /* vzájemně nejlepší shody s Loweho poměrovým testem → [[i, j], …] */
 function paruj(A, na, B, nb, pomer = 0.8, maxD = 80) {
-  const nejA = new Int32Array(na).fill(-1), dA = new Int32Array(na), nejB = new Int32Array(nb).fill(-1), dB = new Int32Array(nb).fill(999);
+  const nejA = new Int32Array(na).fill(-1), nejB = new Int32Array(nb).fill(-1), dB = new Int32Array(nb).fill(999);
   for (let i = 0; i < na; i++) {
     let b1 = 999, b2 = 999, bj = -1;
     for (let j = 0; j < nb; j++) {
@@ -256,62 +308,41 @@ function paruj(A, na, B, nb, pomer = 0.8, maxD = 80) {
       if (h < b1) { b2 = b1; b1 = h; bj = j; } else if (h < b2) b2 = h;
       if (h < dB[j]) { dB[j] = h; nejB[j] = i; }
     }
-    if (b1 <= maxD && b1 < pomer * b2) { nejA[i] = bj; dA[i] = b1; }
+    if (b1 <= maxD && b1 < pomer * b2) nejA[i] = bj;
   }
   const r = [];
   for (let i = 0; i < na; i++) if (nejA[i] >= 0 && nejB[nejA[i]] === i) r.push([i, nejA[i]]);
   return r;
 }
 
-/* ---------- projekce snímku ---------- */
-function naProj(w, h, f, valec, x, y) {
-  const xc = x - (w - 1) / 2, yc = y - (h - 1) / 2;
-  return valec ? [f * Math.atan2(xc, f), f * yc / Math.hypot(xc, f)] : [xc, yc];
+/* ---------- místní sférické promítnutí snímku (jen pro hledání bodů) ----------
+   (u, v) = f·(zeměpisná délka, šířka) paprsku vůči ose snímku; okraje širokoúhlých snímků se tak
+   nenatahují a BRIEF najde stejná místa i u sousedů vlevo, vpravo, nahoře i dole */
+function lokNaObraz(f, u, v) {
+  const lo = u / f, la = v / f;
+  if (!(Math.abs(lo) < 1.45 && Math.abs(la) < 1.45)) return null;
+  const rx = Math.sin(lo) * Math.cos(la), ry = Math.sin(la), rz = Math.cos(lo) * Math.cos(la);
+  return [f * rx / rz, f * ry / rz];
 }
-function zProj(w, h, f, valec, u, v) {
-  let xc = u, yc = v;
-  if (valec) {
-    const t = u / f;
-    if (!(Math.abs(t) < 1.45)) return null;
-    xc = f * Math.tan(t); yc = v * Math.hypot(xc, f) / f;
-  }
-  return [xc + (w - 1) / 2, yc + (h - 1) / 2];
-}
-/* šedý snímek promítnutý na válec; pixel (X, Y) = proj (X − ox, Y − oy); mimo snímek se protáhne okraj (bez falešných hran) */
-function naValec(g, f) {
-  const { w, h, d } = g, cx = (w - 1) / 2;
-  const W = 2 * Math.ceil(f * Math.atan(cx / f)) + 3, ox = (W - 1) / 2, oy = (h - 1) / 2;
-  const out = new Float32Array(W * h), maska = new Uint8Array(W * h);
-  for (let Y = 0; Y < h; Y++) for (let X = 0; X < W; X++) {
-    const q = zProj(w, h, f, true, X - ox, Y - oy);
-    let x = q[0], y = q[1];
+function obrazNaLok(f, xc, yc) { return [f * Math.atan2(xc, f), f * Math.atan2(yc, Math.hypot(xc, f))]; }
+function naKouli(g, f) {
+  const { w, h, d } = g, cx = (w - 1) / 2, cy = (h - 1) / 2;
+  const W = 2 * Math.ceil(f * Math.atan(cx / f)) + 3, H = 2 * Math.ceil(f * Math.atan(cy / f)) + 3, ox = (W - 1) / 2, oy = (H - 1) / 2;
+  const out = new Float32Array(W * H), maska = new Uint8Array(W * H);
+  for (let Y = 0; Y < H; Y++) for (let X = 0; X < W; X++) {
+    const q = lokNaObraz(f, X - ox, Y - oy);
+    if (!q) continue;
+    let x = q[0] + cx, y = q[1] + cy;
     const uvnitr = x >= 0 && y >= 0 && x <= w - 1 && y <= h - 1;
     x = Math.min(Math.max(x, 0), w - 1); y = Math.min(Math.max(y, 0), h - 1);
     const xi = Math.min(Math.floor(x), w - 2), yi = Math.min(Math.floor(y), h - 2), fx = x - xi, fy = y - yi, i = yi * w + xi;
     out[Y * W + X] = (d[i] * (1 - fx) + d[i + 1] * fx) * (1 - fy) + (d[i + w] * (1 - fx) + d[i + w + 1] * fx) * fy;
     maska[Y * W + X] = uvnitr ? 1 : 0;
   }
-  return { w: W, h, d: out, ox, oy, maska };
+  return { w: W, h: H, d: out, ox, oy, maska };
 }
-/* pohled = { w, h, f, valec, T, Ti } v jednotkách náhledu */
-function pohled(w, h, f, valec, T) { return { w, h, f, valec, T, Ti: inv(T) }; }
-function obrazNaPano(v, x, y) { const p = naProj(v.w, v.h, v.f, v.valec, x, y); return apl(v.T, p[0], p[1]); }
-function panoNaObraz(v, X, Y) { const p = apl(v.Ti, X, Y); return zProj(v.w, v.h, v.f, v.valec, p[0], p[1]); }
-function obrys(v, n = 16) {
-  const r = [], W = v.w - 1, H = v.h - 1;
-  for (let i = 0; i < n; i++) r.push(obrazNaPano(v, W * i / n, 0));
-  for (let i = 0; i < n; i++) r.push(obrazNaPano(v, W, H * i / n));
-  for (let i = 0; i < n; i++) r.push(obrazNaPano(v, W - W * i / n, H));
-  for (let i = 0; i < n; i++) r.push(obrazNaPano(v, 0, H - H * i / n));
-  return r;
-}
-function hranice(pohledy) {
-  const b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-  for (const v of pohledy) for (const [x, y] of obrys(v)) {
-    if (x < b.x0) b.x0 = x; if (x > b.x1) b.x1 = x; if (y < b.y0) b.y0 = y; if (y > b.y1) b.y1 = y;
-  }
-  return b;
-}
+
+/* ---------- ohnisko ---------- */
 /* ohnisko v pixelech z EXIFu: ekvivalent 35 mm (úhlopříčka 43,27 mm) nebo skutečné ohnisko + rozlišení ohniskové roviny */
 function ohniskoPx(w, h, ex) {
   const diag = Math.hypot(w, h);
@@ -322,110 +353,375 @@ function ohniskoPx(w, h, ex) {
 }
 const ekv35 = (w, h, fpx) => fpx * 43.2666 / Math.hypot(w, h);
 const zEkv35 = (w, h, mm) => mm * Math.hypot(w, h) / 43.2666;
+/* ohniska z homografie čistě otočené kamery (Szeliski & Shum 1997); H převádí b → a, souřadnice od středu */
+function ohniskaZHomografie(H) {
+  const h = H.map(v => v / H[8]), r = [];
+  const vyber = (d1, d2, v1, v2) => {
+    if (v1 < v2) [v1, v2] = [v2, v1];
+    if (v1 > 0 && v2 > 0) return Math.sqrt(Math.abs(d1) > Math.abs(d2) ? v1 : v2);
+    return v1 > 0 ? Math.sqrt(v1) : null;
+  };
+  let d1 = h[6] * h[7], d2 = (h[7] - h[6]) * (h[7] + h[6]);
+  r[1] = vyber(d1, d2, -(h[0] * h[1] + h[3] * h[4]) / d1, (h[0] * h[0] + h[3] * h[3] - h[1] * h[1] - h[4] * h[4]) / d2);
+  d1 = h[0] * h[3] + h[1] * h[4]; d2 = h[0] * h[0] + h[1] * h[1] - h[3] * h[3] - h[4] * h[4];
+  r[0] = vyber(d1, d2, -h[2] * h[5] / d1, (h[5] * h[5] - h[2] * h[2]) / d2);
+  return r.every(v => v && isFinite(v)) ? r : null;
+}
 
-/* ---------- zarovnání ----------
-   snimky[i] = { w, h, sedy: Float32Array (náhled), f (px náhledu) }; do snímků se ukládá body/desk (cache)
-   nast = { valec, model, maxBody, rucni: [{ a, b, body: [[xa, ya, xb, yb], …] }] (px náhledu), vyrovnat }
-   → { T: [matice | null], hrany: [{ a, b, shod, inl, rucne, pouzita }], koren, body: [počet] } */
-function zarovnej(snimky, nast = {}, prubeh = () => {}) {
-  const n = snimky.length, valec = !!nast.valec;
-  const typ = nast.model && MODELY[nast.model] ? nast.model : (valec ? 'euklid' : 'homografie');
-  // u válce se body hledají a popisují až na snímku promítnutém na válec – tam vypadá stejné místo
-  // ve všech snímcích stejně (v rovině je okraj snímku roztažený až o desítky procent a BRIEF selže)
+/* ---------- rotace z dvojic paprsků (Horn, kvaterniony): a ≈ R·b ---------- */
+function rotaceZPaprsku(A, B) {
+  const S = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  for (let k = 0; k < A.length; k++) for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) S[i * 3 + j] += B[k][i] * A[k][j];
+  const [xx, xy, xz, yx, yy, yz, zx, zy, zz] = S;
+  const N = [
+    [xx + yy + zz, yz - zy, zx - xz, xy - yx],
+    [yz - zy, xx - yy - zz, xy + yx, zx + xz],
+    [zx - xz, xy + yx, -xx + yy - zz, yz + zy],
+    [xy - yx, zx + xz, yz + zy, -xx - yy + zz]];
+  const e = jacobi(N);
+  let m = 0;
+  for (let i = 1; i < 4; i++) if (e.hodnoty[i] > e.hodnoty[m]) m = i;
+  const [w, x, y, z] = e.V.map(r => r[m]);
+  return [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y),
+    2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x),
+    2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)];
+}
+/* paprsek kamery (jednotkový) z bodu se středem v (0,0) */
+const paprsek = (x, y, f) => norm([x, y, f]);
+
+/* ---------- hledání kontrolních bodů ----------
+   snimky[i] = { w, h, sedy: Float32Array, f (px náhledu) }; do snímků se ukládá body/desk (cache)
+   nast = { projekce ('rovina' = 2D mozaika), model (jen rovina), maxBody, prah, rucni: kb ručních bodů }
+   → { kb (jen inliery + ruční body), statistika: [{ a, b, shod, kandidat, inl }] } */
+function najdiBody(snimky, nast = {}, prubeh = () => {}) {
+  const n = snimky.length, rovina = nast.projekce === 'rovina';
+  const typ = rovina ? (MODELY[nast.model] ? nast.model : 'homografie') : 'homografie';
   snimky.forEach((s, i) => {
-    const klic = (nast.maxBody || 600) + '|' + (valec ? s.f : 0);
+    const klic = (nast.maxBody || 600) + '|' + (rovina ? 0 : s.f);
     if (s.body && s.klic === klic) return;
     prubeh('Hledám body ve snímku ' + (i + 1), i / n * 0.3);
-    let g = { w: s.w, h: s.h, d: s.sedy }, ox = (s.w - 1) / 2, oy = (s.h - 1) / 2, maska = null;
-    if (valec) { const v = naValec(g, s.f); g = v; ox = v.ox; oy = v.oy; maska = v.maska; }
+    const cx = (s.w - 1) / 2, cy = (s.h - 1) / 2;
+    let g = { w: s.w, h: s.h, d: s.sedy }, k = null;
+    if (!rovina) k = naKouli(g, s.f), g = k;
     let body = harris(g, { max: nast.maxBody || 600 });
-    if (maska) {
-      const ok = (x, y) => maska[Math.round(y) * g.w + Math.round(x)];
+    if (k) {
+      const ok = (x, y) => k.maska[Math.round(y) * g.w + Math.round(x)];
       body = body.filter(p => ok(p.x - 15, p.y - 15) && ok(p.x + 15, p.y - 15) && ok(p.x - 15, p.y + 15) && ok(p.x + 15, p.y + 15));
     }
     s.desk = deskriptory(rozmaz(g, 2), body);
-    s.body = body; s.ox = ox; s.oy = oy; s.klic = klic;
+    // poloha bodu v px snímku se středem v (0,0)
+    s.body = body.map(p => k ? lokNaObraz(s.f, p.x - k.ox, p.y - k.oy) : [p.x - cx, p.y - cy]);
+    s.klic = klic;
   });
-  const proj = (s, x, y) => naProj(s.w, s.h, s.f, valec, x, y);
-  const projBod = (s, p) => [p.x - s.ox, p.y - s.oy];
-  const hrany = [];
-  let k = 0;
-  const pocetDvojic = n * (n - 1) / 2;
+  const kb = [], stat = [], pocet = n * (n - 1) / 2, prijate = [];
+  let poradi = 0;
   for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
-    prubeh(`Páruji snímky ${a + 1} a ${b + 1}`, 0.3 + 0.65 * (k++ / Math.max(1, pocetDvojic)));
-    const A = snimky[a], B = snimky[b];
+    prubeh(`Páruji snímky ${a + 1} a ${b + 1}`, 0.3 + 0.6 * (poradi++ / Math.max(1, pocet)));
+    const A = snimky[a], B = snimky[b], ca = [(A.w - 1) / 2, (A.h - 1) / 2], cb = [(B.w - 1) / 2, (B.h - 1) / 2];
     const shody = paruj(A.desk, A.body.length, B.desk, B.body.length);
-    const pary = shody.map(([i, j]) => [...projBod(A, A.body[i]), ...projBod(B, B.body[j])]);
+    const pary = shody.map(([i, j]) => [...A.body[i], ...B.body[j]]);
     const ruc = [];
     for (const r of nast.rucni || []) {
-      if (r.a === a && r.b === b) for (const q of r.body) ruc.push([...proj(A, q[0], q[1]), ...proj(B, q[2], q[3])]);
-      if (r.a === b && r.b === a) for (const q of r.body) ruc.push([...proj(A, q[2], q[3]), ...proj(B, q[0], q[1])]);
+      if (r.a === a && r.b === b) for (const q of r.body) ruc.push([q[0] - ca[0], q[1] - ca[1], q[2] - cb[0], q[3] - cb[1]]);
+      if (r.a === b && r.b === a) for (const q of r.body) ruc.push([q[2] - ca[0], q[3] - ca[1], q[0] - cb[0], q[1] - cb[1]]);
     }
-    let M = null, inl = 0, rucne = false, kandidat = 0;
-    if (ruc.length >= MODELY[typ].min) {
-      M = MODELY[typ].fit(ruc); inl = ruc.length; rucne = true;
-    } else {
-      const vse = pary.concat(ruc);
-      const r = ransac(vse, typ, { prah: nast.prah || 2.5, seed: 11 + a * 31 + b });
-      kandidat = r ? r.inliery.length : 0;
-      if (r && r.inliery.length >= 12 && r.inliery.length > 6 + 0.2 * vse.length) { M = r.M; inl = r.inliery.length; }
-      else if (r && ruc.length && r.inliery.length >= MODELY[typ].min + 2) { M = r.M; inl = r.inliery.length; rucne = true; }
-    }
-    hrany.push({ a, b, shod: shody.length, inl, kandidat, rucne, M, pouzita: false });
+    const r = ransac(pary, typ, { prah: nast.prah || 2.5, seed: 11 + a * 31 + b });
+    const kandidat = r ? r.inliery.length : 0;
+    const st = { a, b, shod: shody.length, kandidat, inl: 0 };
+    stat.push(st);
+    const inl = r && kandidat >= 12 && kandidat > 6 + 0.2 * pary.length ? r.inliery.map(i => pary[i]) : [];
+    if (inl.length || ruc.length) prijate.push({ a, b, ca, cb, inl, ruc, H: inl.length ? r.M : null, st });
   }
-  // kostra s maximálními vahami (Kruskal) – určuje i pořadí a skupiny
+  // koule: homografie musí odpovídat čisté rotaci kamery (vyřadí falešné dvojice z opakujících se vzorů)
+  if (!rovina) {
+    let fk = snimky.map(s => s.f);
+    if (nast.odhadOhniska) {
+      const odh = [];
+      for (const p of prijate) { const fs = p.H && ohniskaZHomografie(p.H); if (fs) odh.push(Math.sqrt(fs[0] * fs[1]) / Math.hypot(snimky[p.a].w, snimky[p.a].h)); }
+      if (odh.length) { odh.sort((x, y) => x - y); const m = odh[odh.length >> 1]; if (m > 0.1 && m < 20) fk = snimky.map(s => m * Math.hypot(s.w, s.h)); }
+    }
+    for (const p of prijate) {
+      if (!p.inl.length) continue;
+      const fa = fk[p.a], fb = fk[p.b], prah = Math.max(8, 0.03 * Math.sqrt(fa * fb));
+      const Rab = rotaceZPaprsku(p.inl.map(q => paprsek(q[0], q[1], fa)), p.inl.map(q => paprsek(q[2], q[3], fb)));
+      const ok = p.inl.filter(q => { const u = paprsek(q[0], q[1], fa), v = mv(Rab, paprsek(q[2], q[3], fb)); return Math.hypot(u[0] - v[0], u[1] - v[1], u[2] - v[2]) * Math.sqrt(fa * fb) < prah; });
+      p.inl = ok.length >= 12 && ok.length >= 0.7 * p.inl.length ? ok : [];
+    }
+  }
+  for (const p of prijate) {
+    p.st.inl = p.inl.length;
+    const body = p.inl.map(q => [q[0] + p.ca[0], q[1] + p.ca[1], q[2] + p.cb[0], q[3] + p.cb[1], 0])
+      .concat(p.ruc.map(q => [q[0] + p.ca[0], q[1] + p.ca[1], q[2] + p.cb[0], q[3] + p.cb[1], 1]));
+    if (body.length) kb.push({ a: p.a, b: p.b, body });
+  }
+  prubeh('Body nalezeny', 0.9);
+  return { kb, statistika: stat };
+}
+
+/* ---------- kostra grafu (Kruskal) a kořen = střed stromu ---------- */
+function kostra(n, hrany) {
   const rod = [...Array(n).keys()], najdi = x => rod[x] === x ? x : (rod[x] = najdi(rod[x]));
   const soused = Array.from({ length: n }, () => []);
-  for (const e of hrany.filter(e => e.M).sort((x, y) => (y.rucne - x.rucne) || (y.inl - x.inl))) {
+  for (const e of hrany.slice().sort((x, y) => y.vaha - x.vaha)) {
     const ra = najdi(e.a), rb = najdi(e.b);
     if (ra === rb) continue;
     rod[ra] = rb; e.pouzita = true;
     soused[e.a].push([e.b, e]); soused[e.b].push([e.a, e]);
   }
-  // největší skupina, kořen = střed stromu (nejmenší výstřednost)
   const skup = new Map();
   for (let i = 0; i < n; i++) { const r = najdi(i); skup.set(r, (skup.get(r) || []).concat(i)); }
   const hlavni = [...skup.values()].sort((x, y) => y.length - x.length)[0] || [];
   const hloubky = s => { const d = new Map([[s, 0]]), f = [s]; while (f.length) { const u = f.shift(); for (const [v] of soused[u]) if (!d.has(v)) { d.set(v, d.get(u) + 1); f.push(v); } } return d; };
   let koren = hlavni[0], nejV = Infinity;
   for (const s of hlavni) { const m = Math.max(...hloubky(s).values()); if (m < nejV) { nejV = m; koren = s; } }
-  const T = new Array(n).fill(null);
+  // pořadí průchodu do šířky od kořene: [rodič, dítě, hrana]
+  const pruchod = [];
   if (koren !== undefined) {
-    T[koren] = I3();
-    const f = [koren];
+    const vid = new Set([koren]), f = [koren];
     while (f.length) {
       const p = f.shift();
-      for (const [c, e] of soused[p]) {
-        if (T[c]) continue;
-        T[c] = e.a === p ? nas(T[p], e.M) : nas(T[p], inv(e.M));
-        f.push(c);
-      }
+      for (const [c, e] of soused[p]) if (!vid.has(c)) { vid.add(c); pruchod.push([p, c, e]); f.push(c); }
     }
   }
-  // vyrovnání horizontu: středy snímků proložit přímkou a otočit ji do vodorovna
-  if (valec && nast.vyrovnat !== false && typ !== 'homografie') {
-    const st = T.map(t => t && apl(t, 0, 0)).filter(Boolean);
-    if (st.length >= 2) {
-      const mx = st.reduce((s, p) => s + p[0], 0) / st.length, my = st.reduce((s, p) => s + p[1], 0) / st.length;
-      let sxx = 0, sxy = 0;
-      for (const p of st) { sxx += (p[0] - mx) ** 2; sxy += (p[0] - mx) * (p[1] - my); }
-      if (sxx > 0) {
-        const R = rotace(-Math.atan(sxy / sxx));
-        for (let i = 0; i < n; i++) if (T[i]) T[i] = nas(R, T[i]);
-      }
-    }
-  }
-  prubeh('Hotovo', 1);
-  return { T, hrany: hrany.map(({ M, ...e }) => e), koren, body: snimky.map(s => s.body.length), model: typ };
+  return { koren, pruchod, hlavni };
 }
 
-/* ruční úprava snímku v pano souřadnicích: posun (dx, dy) a otočení (stupně) kolem středu snímku */
-function upravena(T, w, h, f, valec, u) {
-  if (!u || (!u.dx && !u.dy && !u.uhel)) return T;
-  const c = apl(T, 0, 0);
-  const A = nas(posun(c[0] + (u.dx || 0), c[1] + (u.dy || 0)), nas(rotace((u.uhel || 0) * Math.PI / 180), posun(-c[0], -c[1])));
-  return nas(A, T);
+/* body dvojice se středem v (0,0) */
+function stredovane(snimky, e) {
+  const A = snimky[e.a], B = snimky[e.b], ax = (A.w - 1) / 2, ay = (A.h - 1) / 2, bx = (B.w - 1) / 2, by = (B.h - 1) / 2;
+  return e.body.map(q => [q[0] - ax, q[1] - ay, q[2] - bx, q[3] - by, q[4] || 0]);
 }
+
+/* ---------- globální optimalizace (bundle adjustment) ----------
+   Chyba bodu = rozdíl jednotkových paprsků ve světě × √(fa·fb) ≈ px. Parametry: malé rotace všech snímků
+   kromě kořene, ohnisko (společný násobek / každý snímek / pevné). LM s Huberovou ztrátou. */
+function chybaBodu(Ra, fa, Rb, fb, q, meritko) {
+  const ra = mtv(Ra, paprsek(q[0], q[1], fa)), rb = mtv(Rb, paprsek(q[2], q[3], fb)), s = meritko || Math.sqrt(fa * fb);
+  return [(ra[0] - rb[0]) * s, (ra[1] - rb[1]) * s, (ra[2] - rb[2]) * s];
+}
+function ba(R, f, body, koren, o = {}) {
+  const n = R.length, delta = o.huber || 2, rezim = o.ohnisko || 'spolecne';
+  const iR = new Array(n).fill(-1), iF = new Array(n).fill(-1);
+  let p = 0;
+  for (let i = 0; i < n; i++) if (R[i] && i !== koren) { iR[i] = p; p += 3; }
+  if (rezim === 'spolecne') { const j = p++; for (let i = 0; i < n; i++) if (R[i]) iF[i] = j; }
+  else if (rezim === 'kazdy') for (let i = 0; i < n; i++) if (R[i]) iF[i] = p++;
+  const pouzite = body.filter(b => R[b.a] && R[b.b]);
+  // pevné měřítko chyby z počátečních ohnisek: s měřítkem podle aktuálního f by zmenšení ohniska
+  // „zmenšilo" i chyby odlehlých bodů a optimalizace by ohnisko stáhla k nesmyslu
+  for (const b of pouzite) b.s = Math.sqrt(f[b.a] * f[b.b]);
+  const ztrata = r2 => r2 <= delta * delta ? r2 : 2 * delta * Math.sqrt(r2) - delta * delta;
+  const cena = (R, f) => { let s = 0; for (const b of pouzite) { const r = chybaBodu(R[b.a], f[b.a], R[b.b], f[b.b], b.q, b.s); s += ztrata(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]); } return s; };
+  R = R.map(r => r && r.slice()); f = f.slice();
+  let c0 = cena(R, f), lambda = 1e-3, iter = 0;
+  const eps = 1e-6, maxIter = o.iter || 60;
+  if (!p || !pouzite.length) return { R, f, iter, cena: c0 };
+  for (; iter < maxIter; iter++) {
+    const A = Array.from({ length: p }, () => new Float64Array(p)), g = new Float64Array(p);
+    const sl = new Array(8), J = Array.from({ length: 8 }, () => [0, 0, 0]);
+    for (const b of pouzite) {
+      const r0 = chybaBodu(R[b.a], f[b.a], R[b.b], f[b.b], b.q, b.s), d = Math.hypot(r0[0], r0[1], r0[2]);
+      const w = d <= delta ? 1 : delta / d;
+      let m = 0;
+      for (const [i, strana] of [[b.a, 0], [b.b, 1]]) {
+        if (iR[i] >= 0) for (let k = 0; k < 3; k++) {
+          const ww = [0, 0, 0]; ww[k] = eps;
+          const Ri = nas(rod(ww), R[i]);
+          const r1 = strana ? chybaBodu(R[b.a], f[b.a], Ri, f[b.b], b.q, b.s) : chybaBodu(Ri, f[b.a], R[b.b], f[b.b], b.q, b.s);
+          sl[m] = iR[i] + k; J[m][0] = (r1[0] - r0[0]) / eps; J[m][1] = (r1[1] - r0[1]) / eps; J[m][2] = (r1[2] - r0[2]) / eps; m++;
+        }
+        if (iF[i] >= 0) {
+          const fe = f.slice(); fe[i] *= Math.exp(eps);
+          const r1 = chybaBodu(R[b.a], fe[b.a], R[b.b], fe[b.b], b.q, b.s);
+          sl[m] = iF[i]; J[m][0] = (r1[0] - r0[0]) / eps; J[m][1] = (r1[1] - r0[1]) / eps; J[m][2] = (r1[2] - r0[2]) / eps; m++;
+        }
+      }
+      // společné ohnisko: obě strany mají týž parametr → dva sloupce se stejným indexem, v JᵀJ se správně sečtou
+      for (let u = 0; u < m; u++) {
+        const pu = sl[u];
+        g[pu] += w * (J[u][0] * r0[0] + J[u][1] * r0[1] + J[u][2] * r0[2]);
+        for (let v = 0; v < m; v++) A[pu][sl[v]] += w * (J[u][0] * J[v][0] + J[u][1] * J[v][1] + J[u][2] * J[v][2]);
+      }
+    }
+    let zlepseno = false;
+    for (let pokus = 0; pokus < 10; pokus++) {
+      const M = A.map((r, i) => { const x = Array.from(r); x[i] += lambda * (r[i] || 1e-9) + 1e-12; return x; });
+      const dx = resLin(M, Array.from(g, v => -v));
+      if (!dx || dx.some(v => !isFinite(v))) { lambda *= 10; continue; }
+      const R2 = R.map((r, i) => r && iR[i] >= 0 ? nas(rod([dx[iR[i]], dx[iR[i] + 1], dx[iR[i] + 2]]), r) : r);
+      const f2 = f.map((v, i) => iF[i] >= 0 ? v * Math.exp(dx[iF[i]]) : v);
+      const c1 = cena(R2, f2);
+      if (c1 < c0) {
+        const rel = (c0 - c1) / Math.max(c0, 1e-12);
+        R = R2; f = f2; c0 = c1; lambda = Math.max(1e-9, lambda / 3); zlepseno = true;
+        if (rel < 1e-8) iter = maxIter;
+        break;
+      }
+      lambda *= 4;
+    }
+    if (!zlepseno) break;
+  }
+  return { R, f, iter, cena: c0 };
+}
+
+/* ---------- vyrovnání horizontu a středu (Brown & Lowe): osy x kamer leží vodorovně ----------
+   → Rv (svět → pano): řádky = vpravo, dolů, dopředu */
+function vyrovnani(R) {
+  const akt = R.filter(Boolean);
+  if (!akt.length) return I3();
+  const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], dolu = [0, 0, 0], vpred = [0, 0, 0];
+  for (const r of akt) {
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) C[i][j] += r[i] * r[j];
+    for (let i = 0; i < 3; i++) { dolu[i] += r[3 + i]; vpred[i] += r[6 + i]; }
+  }
+  const e = jacobi(C), por = [0, 1, 2].sort((a, b) => e.hodnoty[a] - e.hodnoty[b]);
+  let d;
+  if (e.hodnoty[por[1]] > 0.05 * akt.length) {
+    d = norm(e.V.map(r => r[por[0]]));
+    if (skal(d, dolu) < 0) d = d.map(v => -v);
+  } else d = norm(dolu);   // jediná osa x (např. dva snímky) → svislice podle průměru kamer
+  let F = vpred.map((v, i) => v - skal(vpred, d) * d[i]);
+  if (Math.hypot(...F) < 0.25 * akt.length) { const z = [akt[0][6], akt[0][7], akt[0][8]]; F = z.map((v, i) => v - skal(z, d) * d[i]); }
+  F = norm(F);
+  const X = norm(krizem(d, F));
+  return [...X, ...d, ...F];
+}
+/* uživatelské natočení pohledu (stupně) */
+const pohledU = (yaw = 0, pitch = 0, roll = 0) => nas(nas(rotZ(roll * RAD), rotX(pitch * RAD)), rotY(yaw * RAD));
+
+/* ---------- optimalizace nad kontrolními body ----------
+   start = { R, f } (teplý start, volitelně); nast = { projekce, model, ohnisko ('spolecne'|'kazdy'|'pevne'),
+   odhadOhniska, ba (false = bez BA), vyrovnat }
+   → koule: { R: [9 | null], f, Rv, koren, hrany, chyby, rms }; rovina: { T, … } */
+function optimalizuj(snimky, kb, nast = {}, start = null) {
+  let v = optimalizujJednou(snimky, kb, nast, start);
+  if (!nast.cistit || v.T) return v;
+  // čištění automatických bodů: odlehlé body a celé špatné dvojice (opakující se vzory) pryč, výpočet znovu
+  for (let kolo = 0; kolo < 3; kolo++) {
+    const vse = v.chyby.flat().filter(x => x != null).sort((a, b) => a - b);
+    if (!vse.length) break;
+    const prah = Math.max(3, 6 * vse[vse.length >> 1]);
+    let zmena = false;
+    const nove = v.kb.map((e, i) => {
+      const c = v.chyby[i], cc = c.filter(x => x != null);
+      const rms = cc.length ? Math.sqrt(cc.reduce((s, x) => s + x * x, 0) / cc.length) : 0;
+      const body = e.body.filter((q, j) => q[4] || !(rms > prah || (c[j] != null && c[j] > prah)));
+      if (body.length !== e.body.length) zmena = true;
+      return { a: e.a, b: e.b, body };
+    }).filter(e => e.body.length);
+    if (!zmena) break;
+    v = optimalizujJednou(snimky, nove, nast, null);
+  }
+  return v;
+}
+function optimalizujJednou(snimky, kb, nast, start) {
+  const n = snimky.length, rovina = nast.projekce === 'rovina';
+  const typ = rovina ? (MODELY[nast.model] ? nast.model : 'homografie') : null;
+  const min = rovina ? MODELY[typ].min : 2;
+  kb = kb.filter(e => e.a !== e.b && snimky[e.a] && snimky[e.b] && e.body.length);
+  const hrany = kb.map(e => {
+    const q = stredovane(snimky, e), ruc = q.filter(x => x[4]).length;
+    return { a: e.a, b: e.b, q, vaha: q.length + 10 * ruc, pouzita: false, ok: q.length >= min };
+  });
+  const k = kostra(n, hrany.filter(e => e.ok));
+  const koren = k.koren;
+  let vysl;
+  if (rovina) {
+    const T = new Array(n).fill(null);
+    if (koren !== undefined) {
+      T[koren] = I3();
+      for (const [p, c, e] of k.pruchod) {
+        const M = MODELY[typ].fit(e.q) || I3();     // M: b → a
+        T[c] = e.a === p ? nas(T[p], M) : nas(T[p], inv(M) || I3());
+      }
+    }
+    const chyby = hrany.map(e => e.q.map(q => {
+      if (!T[e.a] || !T[e.b]) return null;
+      const M = nas(inv(T[e.a]) || I3(), T[e.b]), [x, y] = apl(M, q[2], q[3]);
+      return Math.hypot(x - q[0], y - q[1]);
+    }));
+    vysl = { T, koren, kb };
+    return dokonci(vysl, hrany, chyby);
+  }
+  // ohnisko
+  let f = snimky.map(s => s.f);
+  if (nast.odhadOhniska) {
+    const odh = [];
+    for (const e of hrany) {
+      if (e.q.length < 8) continue;
+      const H = fitHomografie(e.q), fs = H && ohniskaZHomografie(H);
+      if (fs) odh.push(Math.sqrt(fs[0] * fs[1]) / Math.hypot(snimky[e.a].w, snimky[e.a].h));
+    }
+    if (odh.length) {
+      odh.sort((a, b) => a - b);
+      const m = odh[odh.length >> 1];
+      if (m > 0.1 && m < 20) f = snimky.map(s => m * Math.hypot(s.w, s.h));
+    }
+  }
+  if (start && start.f) f = f.map((v, i) => start.f[i] || v);
+  // počáteční rotace po kostře (nebo teplý start)
+  let R = new Array(n).fill(null);
+  const vKostre = new Set(koren === undefined ? [] : [koren, ...k.pruchod.map(x => x[1])]);
+  if (start && start.R && [...vKostre].every(i => start.R[i])) {
+    for (const i of vKostre) R[i] = start.R[i].slice();
+  } else if (koren !== undefined) {
+    R[koren] = I3();
+    for (const [p, c, e] of k.pruchod) {
+      const Rab = rotaceZPaprsku(e.q.map(q => paprsek(q[0], q[1], f[e.a])), e.q.map(q => paprsek(q[2], q[3], f[e.b])));
+      R[c] = e.a === p ? nas(tr(Rab), R[p]) : nas(Rab, R[p]);
+    }
+  }
+  let iter = 0;
+  if (nast.ba !== false) {
+    const body = [];
+    for (const e of hrany) for (const q of e.q) body.push({ a: e.a, b: e.b, q });
+    const b = ba(R, f, body, koren, { ohnisko: nast.ohnisko || 'spolecne', huber: nast.huber });
+    R = b.R; f = b.f; iter = b.iter;
+  }
+  const chyby = hrany.map(e => e.q.map(q => {
+    if (!R[e.a] || !R[e.b]) return null;
+    const r = chybaBodu(R[e.a], f[e.a], R[e.b], f[e.b], q);
+    return Math.hypot(r[0], r[1], r[2]);
+  }));
+  vysl = { R, f, koren, iter, kb, Rv: nast.vyrovnat === false ? I3() : vyrovnani(R) };
+  return dokonci(vysl, hrany, chyby);
+}
+function dokonci(v, hrany, chyby) {
+  let s = 0, m = 0, max = 0;
+  v.hrany = hrany.map((e, i) => {
+    const c = chyby[i].filter(x => x != null);
+    const ss = c.reduce((t, x) => t + x * x, 0);
+    s += ss; m += c.length;
+    const mx = c.length ? Math.max(...c) : 0;
+    if (mx > max) max = mx;
+    return { a: e.a, b: e.b, n: e.q.length, rucne: e.q.filter(x => x[4]).length, pouzita: e.pouzita, rms: c.length ? Math.sqrt(ss / c.length) : null, max: mx };
+  });
+  v.chyby = chyby;
+  v.rms = m ? Math.sqrt(s / m) : null;
+  v.max = max;
+  v.spojene = (v.R || v.T).map(Boolean);
+  return v;
+}
+
+/* ---------- výstupní projekce: směr v pano (x vpravo, y dolů, z dopředu) ↔ rovina (X, Y) ---------- */
+const LAT = 85 * RAD;
+const PROJEKCE = {
+  equi: { nazev: 'Sférická (equirectangular)', delka: true, meze: [-Math.PI, -Math.PI / 2, Math.PI, Math.PI / 2],
+    tam: d => [Math.atan2(d[0], d[2]), Math.asin(Math.max(-1, Math.min(1, d[1])))],
+    zpet: (X, Y) => Math.abs(Y) > Math.PI / 2 ? null : [Math.sin(X) * Math.cos(Y), Math.sin(Y), Math.cos(X) * Math.cos(Y)] },
+  valec: { nazev: 'Válcová', delka: true, meze: [-Math.PI, -Math.tan(LAT), Math.PI, Math.tan(LAT)],
+    tam: d => { const h = Math.hypot(d[0], d[2]); return h < 1e-9 ? null : [Math.atan2(d[0], d[2]), d[1] / h]; },
+    zpet: (X, Y) => norm([Math.sin(X), Y, Math.cos(X)]) },
+  mercator: { nazev: 'Mercatorova', delka: true, meze: [-Math.PI, -Math.atanh(Math.sin(LAT)), Math.PI, Math.atanh(Math.sin(LAT))],
+    tam: d => Math.abs(d[1]) > 0.9999 ? null : [Math.atan2(d[0], d[2]), Math.atanh(d[1])],
+    zpet: (X, Y) => { const la = Math.atan(Math.sinh(Y)); return [Math.sin(X) * Math.cos(la), Math.sin(la), Math.cos(X) * Math.cos(la)]; } },
+  primo: { nazev: 'Přímočará (rectilinear)', delka: false, meze: [-3.5, -3.5, 3.5, 3.5],
+    tam: d => d[2] > 0.05 ? [d[0] / d[2], d[1] / d[2]] : null,
+    zpet: (X, Y) => norm([X, Y, 1]) },
+  stereo: { nazev: 'Malá planeta (stereografická)', delka: false, meze: [-4.5, -4.5, 4.5, 4.5],
+    tam: d => { const t = Math.acos(Math.max(-1, Math.min(1, d[1]))); if (t > 160 * RAD) return null; const r = 2 * Math.tan(t / 2), h = Math.hypot(d[0], d[2]) || 1; return [r * d[0] / h, -r * d[2] / h]; },
+    zpet: (X, Y) => { const r = Math.hypot(X, Y), t = 2 * Math.atan(r / 2), s = Math.sin(t); return r < 1e-12 ? [0, 1, 0] : [s * X / r, Math.cos(t), -s * Y / r]; } }
+};
 
 /* ---------- vzorkování ---------- */
 function vzorek(src, x, y, out) {
@@ -439,154 +735,66 @@ function vzorek(src, x, y, out) {
   }
   return true;
 }
-/* bod pano → souřadnice ve zdroji (zdroj může být větší než náhled, ze kterého je pohled) */
-function doZdroje(v, src, X, Y) {
-  const q = panoNaObraz(v, X, Y);
-  if (!q) return null;
-  return [(q[0] + 0.5) * src.w / v.w - 0.5, (q[1] + 0.5) * src.h / v.h - 0.5];
+/* bilineárně z equirect předlohy s obtočením vodorovně */
+function vzorekEqui(tex, lon, lat, out) {
+  const { w, h, d } = tex;
+  let u = (lon / (2 * Math.PI) + 0.5) * w - 0.5, v = (lat / Math.PI + 0.5) * h - 0.5;
+  v = Math.min(Math.max(v, 0), h - 1);
+  u = ((u % w) + w) % w;
+  const x0 = Math.floor(u), x1 = (x0 + 1) % w, fx = u - x0, y0 = Math.min(Math.floor(v), h - 2), fy = v - y0;
+  for (let c = 0; c < 3; c++) {
+    const a = d[(y0 * w + x0) * 4 + c], b = d[(y0 * w + x1) * 4 + c], e = d[((y0 + 1) * w + x0) * 4 + c], g = d[((y0 + 1) * w + x1) * 4 + c];
+    out[c] = (a * (1 - fx) + b * fx) * (1 - fy) + (e * (1 - fx) + g * fx) * fy;
+  }
+}
+/* perspektivní snímek z equirect předlohy (ukázka a testy): R = svět → kamera, f v px */
+function pohledZKoule(tex, f, R, w, h, nasob = 1) {
+  const d = new Uint8ClampedArray(w * h * 4), c = [0, 0, 0], cx = (w - 1) / 2, cy = (h - 1) / 2;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const r = mtv(R, paprsek(x - cx, y - cy, f)), i = (y * w + x) * 4;
+    vzorekEqui(tex, Math.atan2(r[0], r[2]), Math.asin(r[1]), c);
+    d[i] = c[0] * nasob; d[i + 1] = c[1] * nasob; d[i + 2] = c[2] * nasob; d[i + 3] = 255;
+  }
+  return { w, h, d };
 }
 
-/* ---------- vyrovnání expozice (Brown & Lowe 2007), zisky po kanálech ---------- */
-function zisky(pohledy, zdroje, o = {}) {
-  const n = pohledy.length, b = hranice(pohledy);
-  const krok = o.krok || Math.max(2, Math.sqrt((b.x1 - b.x0) * (b.y1 - b.y0) / 40000));
-  const N = new Float64Array(n * n), S = new Float64Array(n * n * 3);
-  const c = [0, 0, 0], barvy = [], kdo = [];
-  for (let Y = b.y0; Y <= b.y1; Y += krok) for (let X = b.x0; X <= b.x1; X += krok) {
-    kdo.length = 0;
-    for (let i = 0; i < n; i++) {
-      const q = doZdroje(pohledy[i], zdroje[i], X, Y);
-      if (q && vzorek(zdroje[i], q[0], q[1], c)) { kdo.push(i); barvy[i] = [c[0], c[1], c[2]]; }
+/* ---------- doladění ručního bodu korelací (NCC) v okolí ---------- */
+function dolad(gA, xa, ya, gB, xb, yb, o = {}) {
+  const r = o.okno || 7, hl = o.hledat || 8;
+  const okno = (g, x, y) => {
+    const v = [];
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      const X = Math.round(x) + dx, Y = Math.round(y) + dy;
+      if (X < 0 || Y < 0 || X >= g.w || Y >= g.h) return null;
+      v.push(g.d[Y * g.w + X]);
     }
-    for (const i of kdo) for (const j of kdo) {
-      if (i === j) continue;
-      N[i * n + j]++;
-      for (let k = 0; k < 3; k++) S[(i * n + j) * 3 + k] += barvy[i][k];
+    const m = v.reduce((s, t) => s + t, 0) / v.length;
+    let s2 = 0;
+    for (let i = 0; i < v.length; i++) { v[i] -= m; s2 += v[i] * v[i]; }
+    return s2 > 1e-6 ? { v, s: Math.sqrt(s2) } : null;
+  };
+  const T = okno(gA, xa, ya);
+  if (!T) return { x: xb, y: yb, ncc: 0 };
+  let best = { x: xb, y: yb, ncc: -2 };
+  const sk = [];
+  for (let dy = -hl; dy <= hl; dy++) {
+    const radek = [];
+    for (let dx = -hl; dx <= hl; dx++) {
+      const W = okno(gB, xb + dx, yb + dy);
+      let c = -2;
+      if (W) { c = 0; for (let i = 0; i < T.v.length; i++) c += T.v[i] * W.v[i]; c /= T.s * W.s; }
+      radek.push(c);
+      if (c > best.ncc) best = { x: Math.round(xb) + dx, y: Math.round(yb) + dy, ncc: c, i: dx + hl, j: dy + hl };
     }
+    sk.push(radek);
   }
-  const sN = o.sigmaN || 10, sG = o.sigmaG || 0.1, g = Array.from({ length: n }, () => [1, 1, 1]);
-  for (let k = 0; k < 3; k++) {
-    const A = Array.from({ length: n }, () => new Array(n).fill(0)), r = new Array(n).fill(0);
-    for (let i = 0; i < n; i++) {
-      A[i][i] += 1e-6; r[i] += 1e-6;
-      for (let j = 0; j < n; j++) {
-        const m = N[i * n + j];
-        if (!m || i === j) continue;
-        const aij = S[(i * n + j) * 3 + k] / m, aji = S[(j * n + i) * 3 + k] / m;
-        A[i][i] += m * (2 * aij * aij / (sN * sN) + 1 / (sG * sG));
-        A[i][j] -= m * 2 * aij * aji / (sN * sN);
-        r[i] += m / (sG * sG);
-      }
-    }
-    const x = resLin(A, r);
-    if (x) x.forEach((v, i) => { g[i][k] = isFinite(v) && v > 0.2 && v < 5 ? v : 1; });
+  // subpixel: parabola v x a y
+  if (best.i > 0 && best.i < 2 * hl && best.j > 0 && best.j < 2 * hl) {
+    const s = (a, b, c) => { const den = a - 2 * b + c; return den < 0 ? Math.max(-0.5, Math.min(0.5, (a - c) / (2 * den))) : 0; };
+    best.x += s(sk[best.j][best.i - 1], sk[best.j][best.i], sk[best.j][best.i + 1]);
+    best.y += s(sk[best.j - 1][best.i], sk[best.j][best.i], sk[best.j + 1][best.i]);
   }
-  return g;
-}
-
-/* ---------- skládání ----------
-   vystup = { W, H, x0, y0, k, d: RGBA } – pixel (X, Y) odpovídá pano bodu (x0 + X/k, y0 + Y/k) */
-function novyVystup(W, H, x0, y0, k) { return { W, H, x0, y0, k, d: new Uint8ClampedArray(W * H * 4) }; }
-/* pořadí skládání: podél delší osy rozmístění středů */
-function poradi(pohledy) {
-  const st = pohledy.map(v => obrazNaPano(v, (v.w - 1) / 2, (v.h - 1) / 2));
-  const sx = Math.max(...st.map(p => p[0])) - Math.min(...st.map(p => p[0]));
-  const sy = Math.max(...st.map(p => p[1])) - Math.min(...st.map(p => p[1]));
-  return st.map((p, i) => i).sort((a, b) => sx >= sy ? st[a][0] - st[b][0] : st[a][1] - st[b][1]);
-}
-/* přidá jeden snímek; v překryvu najde šev (dynamické programování přes rozdíl barev) a prolne pásem šířky pas */
-function pridej(out, v, src, zisk, pas = 0) {
-  const { W, H, x0, y0, k } = out, od = out.d, g = zisk || [1, 1, 1];
-  let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
-  for (const [x, y] of obrys(v)) {
-    const X = (x - x0) * k, Y = (y - y0) * k;
-    if (X < bx0) bx0 = X; if (X > bx1) bx1 = X; if (Y < by0) by0 = Y; if (Y > by1) by1 = Y;
-  }
-  const X0 = Math.max(0, Math.floor(bx0) - 1), X1 = Math.min(W - 1, Math.ceil(bx1) + 1);
-  const Y0 = Math.max(0, Math.floor(by0) - 1), Y1 = Math.min(H - 1, Math.ceil(by1) + 1);
-  if (X1 < X0 || Y1 < Y0) return false;
-  const tw = X1 - X0 + 1, th = Y1 - Y0 + 1, t = new Uint8ClampedArray(tw * th * 3), tv = new Uint8Array(tw * th);
-  const c = [0, 0, 0];
-  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
-    const q = doZdroje(v, src, x0 + (X0 + x) / k, y0 + (Y0 + y) / k);
-    if (!q || !vzorek(src, q[0], q[1], c)) continue;
-    const i = y * tw + x;
-    tv[i] = 1; t[i * 3] = c[0] * g[0]; t[i * 3 + 1] = c[1] * g[1]; t[i * 3 + 2] = c[2] * g[2];
-  }
-  const oi = (x, y) => ((Y0 + y) * W + X0 + x) * 4;
-  // překryv
-  let ox0 = Infinity, oy0 = Infinity, ox1 = -1, oy1 = -1;
-  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
-    if (tv[y * tw + x] && od[oi(x, y) + 3]) { if (x < ox0) ox0 = x; if (x > ox1) ox1 = x; if (y < oy0) oy0 = y; if (y > oy1) oy1 = y; }
-  }
-  let sev = null;
-  if (ox1 >= 0) {
-    const svisly = (oy1 - oy0) >= (ox1 - ox0);
-    const np = svisly ? oy1 - oy0 + 1 : ox1 - ox0 + 1, nq = svisly ? ox1 - ox0 + 1 : oy1 - oy0 + 1;
-    const xy = (p, q) => svisly ? [ox0 + q, oy0 + p] : [ox0 + p, oy0 + q];
-    const C = new Float32Array(np * nq), Z = new Int8Array(np * nq), a = new Int32Array(np).fill(-1), bq = new Int32Array(np).fill(-1);
-    for (let p = 0; p < np; p++) for (let q = 0; q < nq; q++) {
-      const [x, y] = xy(p, q), ti = y * tw + x, o = oi(x, y);
-      let cena = 1e6;
-      if (tv[ti] && od[o + 3]) {
-        cena = 1 + Math.abs(t[ti * 3] - od[o]) + Math.abs(t[ti * 3 + 1] - od[o + 1]) + Math.abs(t[ti * 3 + 2] - od[o + 2]);
-        if (a[p] < 0) a[p] = q;
-        bq[p] = q;
-      }
-      if (p > 0) {
-        let m = C[(p - 1) * nq + q], z = 0;
-        if (q > 0 && C[(p - 1) * nq + q - 1] < m) { m = C[(p - 1) * nq + q - 1]; z = -1; }
-        if (q < nq - 1 && C[(p - 1) * nq + q + 1] < m) { m = C[(p - 1) * nq + q + 1]; z = 1; }
-        cena += m; Z[p * nq + q] = z;
-      }
-      C[p * nq + q] = cena;
-    }
-    const s = new Int32Array(np);
-    let q = 0;
-    for (let j = 1; j < nq; j++) if (C[(np - 1) * nq + j] < C[(np - 1) * nq + q]) q = j;
-    for (let p = np - 1; p >= 0; p--) { s[p] = q; q += Z[p * nq + q]; }
-    const st = obrazNaPano(v, (v.w - 1) / 2, (v.h - 1) / 2);
-    const sx = (st[0] - x0) * k - X0, sy = (st[1] - y0) * k - Y0;
-    const strana = (svisly ? sx - (ox0 + ox1) / 2 : sy - (oy0 + oy1) / 2) >= 0 ? 1 : -1;
-    sev = { svisly, s, a, b: bq, strana };
-  }
-  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
-    const ti = y * tw + x;
-    if (!tv[ti]) continue;
-    const o = oi(x, y);
-    let wn = 1;
-    if (od[o + 3] && sev) {
-      const p = sev.svisly ? y - oy0 : x - ox0, q = sev.svisly ? x - ox0 : y - oy0;
-      const s = sev.s[p], d = (q - s) * sev.strana, h = Math.min(pas / 2, s - sev.a[p], sev.b[p] - s);
-      wn = h < 0.5 ? (d >= 0 ? 1 : 0) : Math.max(0, Math.min(1, 0.5 + d / (2 * h)));
-    }
-    for (let ch = 0; ch < 3; ch++) od[o + ch] = od[o + ch] + (t[ti * 3 + ch] - od[o + ch]) * wn;
-    od[o + 3] = 255;
-  }
-  return true;
-}
-function sloz(out, pohledy, zdroje, zisk, pas) {
-  for (const i of poradi(pohledy)) pridej(out, pohledy[i], zdroje[i], zisk && zisk[i], pas);
-  return out;
-}
-
-/* největší osově rovnoběžný obdélník z platných pixelů (histogram po řádcích, zásobník) */
-function nejvetsiObdelnik(platne, W, H) {
-  const vys = new Int32Array(W + 1), zas = new Int32Array(W + 1);
-  let best = { x: 0, y: 0, w: 0, h: 0 }, bestA = 0;
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) vys[x] = platne(x, y) ? vys[x] + 1 : 0;
-    vys[W] = 0;
-    let top = -1;
-    for (let x = 0; x <= W; x++) {
-      while (top >= 0 && vys[zas[top]] >= vys[x]) {
-        const hh = vys[zas[top--]], left = top >= 0 ? zas[top] + 1 : 0, ww = x - left;
-        if (hh * ww > bestA) { bestA = hh * ww; best = { x: left, y: y - hh + 1, w: ww, h: hh }; }
-      }
-      zas[++top] = x;
-    }
-  }
-  return best;
+  return { x: best.x, y: best.y, ncc: best.ncc };
 }
 
 /* ---------- EXIF z JPEGu (ohnisko, ekvivalent 35 mm, orientace, fotoaparát) ---------- */
@@ -642,21 +850,12 @@ function cti(dv, t, r) {
   if (r.rovinaPx) { r.rovinaPxMm = r.rovinaPx / (jedn === 3 ? 10 : jedn === 4 ? 1 : 25.4); delete r.rovinaPx; }
 }
 
-/* perspektivní snímek z válcové předlohy (ukázka a testy): střed snímku míří na bod (u0, v0) předlohy */
-function pohledZValce(tex, f, u0, v0, w, h, nasob = 1) {
-  const d = new Uint8ClampedArray(w * h * 4), c = [0, 0, 0];
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const [u, v] = naProj(w, h, f, true, x, y), i = (y * w + x) * 4;
-    if (vzorek(tex, u0 + u, v0 + v, c)) { d[i] = c[0] * nasob; d[i + 1] = c[1] * nasob; d[i + 2] = c[2] * nasob; }
-    d[i + 3] = 255;
-  }
-  return { w, h, d };
-}
-
 return {
-  I3, nas, inv, posun, rotace, apl, resLin, prng, MODELY, ransac, fitHomografie, fitEuklid, fitPosun,
-  sedy, rozmaz, harris, naValec, deskriptory, paruj, ham, naProj, zProj, pohled, obrazNaPano, panoNaObraz, obrys, hranice,
-  ohniskoPx, ekv35, zEkv35, zarovnej, upravena, vzorek, zisky, novyVystup, poradi, pridej, sloz, nejvetsiObdelnik,
-  exif, pohledZValce
+  I3, nas, inv, tr, posun, rotace, apl, mv, mtv, norm, rod, rotX, rotY, rotZ, rotKamery, yprZRotace, uhelMezi, RAD,
+  resLin, jacobi, prng, MODELY, ransac, fitHomografie, fitEuklid, fitPosun,
+  sedy, rozmaz, rozmazBox, harris, deskriptory, paruj, ham, naKouli, lokNaObraz, obrazNaLok,
+  ohniskoPx, ekv35, zEkv35, ohniskaZHomografie, rotaceZPaprsku, paprsek,
+  najdiBody, kostra, optimalizuj, ba, chybaBodu, vyrovnani, pohledU, PROJEKCE,
+  vzorek, vzorekEqui, pohledZKoule, dolad, exif
 };
 });

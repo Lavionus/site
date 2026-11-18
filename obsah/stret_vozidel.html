@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>💥 Rekonstrukce střetu vozidel</title>
+<meta name="description" content="Rekonstrukce střetu dvou vozidel ze zachování hybnosti v rovině: rychlosti před a po střetu z úhlů příjezdu a dojezdů do konečných poloh, rychlost na začátku brzdné stopy, Δv, kontrola energie a směru síly, citlivost a nejistota Monte Carlo, interaktivní náčrt, diagram hybnosti, ukázky se známou pravdou a protokol k tisku.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="stret_vozidel/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 7px;font-size:.84rem;font-family:inherit;min-width:0;width:100%}
+
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 390px}
+.levy{position:relative;min-height:0;display:flex;flex-direction:column;background:var(--bg-deep,var(--bg))}
+#pohled{flex:1;min-height:0;position:relative;overflow:hidden}
+#pohled svg{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none}
+#pohled .html-pohled{position:absolute;inset:0;overflow:auto;padding:12px clamp(10px,2.5vw,22px) 30px}
+.souhrn{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:6px 12px;border-top:1px solid var(--border);background:var(--bg-elevated);font-size:.84rem;font-variant-numeric:tabular-nums}
+.souhrn b{font-size:.95rem}
+.souhrn .ukazka-stitek{margin-left:auto;color:var(--text-muted);font-size:.78rem}
+.legenda{position:absolute;left:8px;top:8px;background:color-mix(in srgb,var(--bg-elevated) 90%,transparent);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.74rem;line-height:1.5;pointer-events:none;max-width:calc(100% - 16px)}
+.legenda i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px}
+.tip-tah{position:absolute;right:8px;bottom:8px;font-size:.74rem;color:var(--text-muted);background:color-mix(in srgb,var(--bg-elevated) 85%,transparent);border-radius:5px;padding:3px 7px;pointer-events:none}
+
+/* SVG – barvy jen z proměnných common.css */
+.g-mrizka{stroke:var(--border);stroke-width:1;vector-effect:non-scaling-stroke}
+.g-mrizka.hl{stroke:var(--border-strong)}
+.g-osa{fill:var(--text-faint)}
+.cA{stroke:var(--accent);fill:none}
+.cB{stroke:var(--warn);fill:none}
+.fA{fill:var(--accent)}
+.fB{fill:var(--warn)}
+.voz{stroke-width:2;vector-effect:non-scaling-stroke}
+.voz.duch{stroke-dasharray:5 4;fill-opacity:.08}
+.voz.konec{fill-opacity:.22}
+.cara{stroke-width:2;vector-effect:non-scaling-stroke}
+.cara.cark{stroke-dasharray:7 5}
+.cara.tenka{stroke-width:1;stroke-dasharray:3 4}
+.stopa{stroke:var(--text-muted);stroke-width:5;vector-effect:non-scaling-stroke;stroke-dasharray:2 2;opacity:.8}
+.bod-stretu{fill:var(--danger);stroke:var(--bg);stroke-width:2;vector-effect:non-scaling-stroke}
+.uchop{cursor:grab;stroke:var(--bg);stroke-width:2;vector-effect:non-scaling-stroke}
+.uchop:hover,.uchop.tazeny{stroke:var(--text);cursor:grabbing}
+.txt-svg{fill:var(--text);font-family:system-ui,sans-serif;paint-order:stroke;stroke:var(--bg-deep,var(--bg));stroke-linejoin:round}
+.txt-svg.mdl{fill:var(--text-muted)}
+.txt-svg.tA{fill:var(--accent)} .txt-svg.tB{fill:var(--warn)}
+.mrak{fill:var(--accent);opacity:.35}
+.pravda{fill:var(--ok);stroke:var(--bg);stroke-width:1}
+.ram{stroke:var(--text);fill:none;stroke-dasharray:5 4;vector-effect:non-scaling-stroke}
+.ram-osa{stroke:var(--text-muted);vector-effect:non-scaling-stroke}
+
+.panel{background:var(--bg-elevated);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;font-size:.85rem;min-height:0}
+.zalozky{display:flex;gap:4px;padding:8px 10px 0;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-elevated);z-index:2}
+.zalozky button{flex:1;background:none;border:1px solid transparent;border-bottom:0;color:var(--text-muted);font:inherit;padding:6px 8px;border-radius:7px 7px 0 0;cursor:pointer}
+.zalozky button[aria-selected="true"]{background:var(--bg-panel);border-color:var(--border);color:var(--text);font-weight:600}
+.panel-telo{padding:10px 12px 40px;display:flex;flex-direction:column;gap:12px}
+.panel h2{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:0 0 5px}
+.oddil{display:flex;flex-direction:column;gap:6px}
+.pole{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted)}
+.pole .vstup{color:var(--text)}
+.radek2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.radek3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+table.vst{border-collapse:collapse;width:100%;table-layout:fixed}
+table.vst th,table.vst td{padding:2px 3px;vertical-align:middle;text-align:left}
+table.vst th{font-size:.74rem;color:var(--text-muted);font-weight:600}
+table.vst th:first-child{width:38%}
+table.vst td.lbl{font-size:.78rem;color:var(--text-muted);line-height:1.25}
+table.vst tr.tol td.lbl{padding-left:12px;font-size:.74rem;color:var(--text-faint)}
+table.vst tr.tol .vstup{padding:3px 6px;font-size:.78rem}
+table.vst tr.sekce td{padding-top:8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint)}
+.hlavA{color:var(--accent)} .hlavB{color:var(--warn)}
+.chk{display:flex;gap:6px;align-items:center;font-size:.78rem;color:var(--text-muted)}
+.tip{font-size:.76rem;color:var(--text-muted);line-height:1.45;margin:0}
+.varovani{border-left:3px solid var(--warn);background:var(--bg-panel);padding:6px 9px;border-radius:5px;line-height:1.45;font-size:.78rem;color:var(--text-muted)}
+.varovani b{color:var(--text)}
+.ukazka-info{border-left:3px solid var(--ok);background:var(--bg-panel);padding:6px 9px;border-radius:5px;font-size:.8rem;line-height:1.45}
+.ukazka-info.mimo{border-left-color:var(--danger)}
+.ukazka-info ul{margin:4px 0 0;padding-left:1.1em}
+.ukazka-info summary{cursor:pointer}
+table.vys{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+table.vys th,table.vys td{padding:4px 5px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.vys th{font-size:.74rem;color:var(--text-muted);font-weight:600}
+table.vys{table-layout:fixed}
+table.vys th:first-child{width:36%}
+table.vys td{overflow-wrap:anywhere}
+table.vys td.c{text-align:right}
+table.vys td.c .velke{white-space:nowrap}
+table.vys td small{display:block;color:var(--text-muted);font-size:.74rem}
+.velke{font-size:1.05rem;font-weight:700}
+.kontroly{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.kontroly li{padding:4px 8px 4px 26px;position:relative;border-radius:5px;background:var(--bg-panel);line-height:1.4;font-size:.8rem}
+.kontroly li::before{position:absolute;left:8px;top:4px}
+.kontroly li.ok::before{content:"✓";color:var(--ok)}
+.kontroly li.pozor::before{content:"!";color:var(--warn);font-weight:700}
+.kontroly li.chyba::before{content:"✗";color:var(--danger)}
+.kontroly li.chyba{outline:1px solid var(--danger)}
+.ok-txt{color:var(--ok)} .ne-txt{color:var(--danger)}
+
+.tornado{border-collapse:collapse;width:100%;font-size:.82rem}
+.tornado th,.tornado td{padding:4px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
+.tornado th{color:var(--text-muted);font-size:.74rem}
+.tornado td.c{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pas{position:relative;height:14px;background:var(--bg-panel);border-radius:3px;min-width:90px}
+.pas i{position:absolute;top:2px;bottom:2px;border-radius:2px}
+.pas i.a{background:var(--accent)} .pas i.b{background:var(--warn)}
+.pas b{position:absolute;top:0;bottom:0;width:1px;background:var(--text);left:50%}
+.tab-obal{overflow-x:auto;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px}
+.html-pohled h2{font-size:1rem;margin:4px 0 6px}
+
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.karta{display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;color:var(--text);background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;line-height:1.45}
+.karta:hover,.karta:focus-visible{border-color:var(--accent);background:var(--bg-hover);outline:none}
+.karta b{font-size:.92rem}
+.karta span{font-size:.8rem;color:var(--text-muted)}
+.karta .ik{font-size:1.5rem;line-height:1}
+.karta.mimo{border-color:var(--danger)}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,640px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5);margin:auto}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.55}
+.okno .telo p,.okno .telo ul{margin:0}
+.okno .telo ul{padding-left:1.2em}
+.okno .telo h3{margin:6px 0 0;font-size:.92rem}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.seznam-proj{display:flex;flex-direction:column;gap:6px}
+.seznam-proj .pr{display:flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:6px 8px;background:var(--bg-panel)}
+.seznam-proj .pr span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.seznam-proj small{color:var(--text-muted)}
+.zkratky{display:grid;grid-template-columns:auto 1fr;gap:3px 12px}
+.zkratky kbd{font-family:ui-monospace,monospace;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:4px;padding:0 5px;font-size:.8rem;white-space:nowrap}
+
+@media (max-width:860px){
+  body{height:auto;min-height:100%}
+  html,body{height:auto}
+  main{display:block}
+  .levy{height:68vh;min-height:330px}
+  .panel{border-left:0;border-top:1px solid var(--border);overflow:visible}
+  .zalozky{position:static}
+}
+@media (max-width:520px){
+  .legenda .vic,.tip-tah{display:none}
+}
+@media (max-width:400px){
+  .radek3{grid-template-columns:1fr 1fr}
+  table.vst th:first-child{width:34%}
+  .vstup{padding:4px 5px}
+}
+
+#protokol{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{display:block;height:auto;background:#fff;color:#000}
+  .lista,main,dialog,.nabidka,#podpis-pruh{display:none!important}
+  #protokol{display:block;font-size:9.5pt;line-height:1.4;color:#000;
+    --accent:#1c5fb0;--warn:#b85400;--danger:#b00020;--ok:#1b7a33;--text:#000;--text-muted:#444;--text-faint:#666;--border:#ccc;--border-strong:#999;--bg:#fff;--bg-deep:#fff}
+  #protokol h1{font-size:15pt;margin:0 0 4pt}
+  #protokol h2{font-size:11.5pt;margin:12pt 0 4pt;border-bottom:1px solid #999;break-after:avoid}
+  #protokol table{font-size:8.5pt;width:100%;border-collapse:collapse;margin:3pt 0}
+  #protokol th,#protokol td{border:1px solid #aaa;padding:2pt 4pt;color:#000;text-align:left}
+  #protokol td.c{text-align:right;white-space:nowrap}
+  #protokol figure{margin:6pt 0;break-inside:avoid}
+  #protokol figcaption{font-size:8.5pt;color:#333}
+  #protokol svg{width:100%;height:auto;max-height:110mm;border:1px solid #999}
+  #protokol .dvojobr{display:flex;gap:6pt}
+  #protokol .dvojobr figure{flex:1;min-width:0}
+  #protokol .podpis{margin-top:24pt;display:flex;justify-content:space-between}
+  #protokol p,#protokol li{margin:2pt 0}
+  #protokol .kontroly li{background:none;padding-left:16pt;outline:0}
+  #protokol .kontroly li::before{left:2pt}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>💥 Střet vozidel</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Projekty, JSON, protokol">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-nabidka="nabUkazky" aria-expanded="false" title="Ukázky se známou pravdou (G)">🧪<span class="txt"> Ukázky</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="nacrt" aria-pressed="true" title="Náčrt v plánu – tažením lze měnit bod střetu, konečné polohy a směry příjezdu (1)">🗺️<span class="txt"> Náčrt</span></button>
+    <button class="tl" data-pohled="hybnost" aria-pressed="false" title="Vektorový diagram hybnosti (2)">➕<span class="txt"> Hybnost</span></button>
+    <button class="tl" data-pohled="mc" aria-pressed="false" title="Mrak Monte Carlo – rychlosti A a B (3)">🎯<span class="txt"> Nejistota</span></button>
+    <button class="tl" data-pohled="citlivost" aria-pressed="false" title="Citlivost na jednotlivé vstupy (4)">📊<span class="txt"> Citlivost</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-metoda title="Metoda, vzorce, meze, literatura a ověření na ukázkách">📐<span class="txt"> Metoda a meze</span></button>
+    <button class="tl" data-nabidka="nabNapoveda" aria-expanded="false" title="Nápověda a klávesové zkratky" aria-label="Nápověda">❓ ▾</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">🆕 Nový střet…</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit do prohlížeče</button>
+  <button class="tl" data-prikaz="projekty">📂 Uložené projekty…</button>
+  <hr>
+  <button class="tl" data-prikaz="exportJson">⬇️ Export JSON</button>
+  <button class="tl" data-prikaz="importJson">⬆️ Import JSON…</button>
+  <hr>
+  <button class="tl" data-prikaz="protokol">🖨️ Protokol k tisku…</button>
+</div>
+<div id="nabUkazky" class="nabidka" hidden></div>
+<div id="nabNapoveda" class="nabidka" hidden>
+  <button class="tl" data-prikaz="napoveda">❓ Postup a vysvětlivky</button>
+  <button class="tl" data-prikaz="zkratky">⌨️ Klávesové zkratky</button>
+  <button class="tl" data-metoda>📐 Metoda, literatura, meze</button>
+</div>
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+
+<main>
+  <section class="levy">
+    <div id="pohled"></div>
+    <div class="souhrn" id="souhrn" aria-live="polite"></div>
+  </section>
+  <aside class="panel" id="panel">
+    <div class="zalozky" role="tablist">
+      <button role="tab" data-zal="vstupy" aria-selected="true">📝 Vstupy</button>
+      <button role="tab" data-zal="vysledky" aria-selected="false">📊 Výsledky</button>
+    </div>
+    <div class="panel-telo" id="panelVstupy"></div>
+    <div class="panel-telo" id="panelVysledky" hidden></div>
+  </aside>
+</main>
+
+<div id="protokol"></div>
+
+<dialog class="okno" id="dlgGalerie"><form method="dialog">
+  <header>🧪 Ukázky se známou pravdou</header>
+  <div class="telo">
+    <p>Syntetické střety: rychlosti byly zvoleny předem, dojezdy z nich spočítala dopředná fyzika (ráz s restitucí, dojezd se stálým zpomalením) a vstupy dostaly malé chyby měření. Nástroj počítá zpětně a v panelu Výsledky výsledek porovná s pravdou. Poslední ukázka je záměrně mimo model.</p>
+    <div class="galerie" id="galerie"></div>
+  </div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgProjekty"><form method="dialog">
+  <header>📂 Projekty uložené v prohlížeči</header>
+  <div class="telo"><div class="seznam-proj" id="seznamProj"></div>
+    <p class="tip">Projekty jsou jen v tomto prohlížeči (localStorage). Pro zálohu nebo předání použijte Export JSON.</p></div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgProtokol"><form method="dialog">
+  <header>🖨️ Protokol k tisku</header>
+  <div class="telo">
+    <div class="radek2">
+      <label class="pole">Číslo případu / spisu<input class="vstup" name="cislo" maxlength="80"></label>
+      <label class="pole">Zpracoval<input class="vstup" name="zpracoval" maxlength="80"></label>
+    </div>
+    <label class="pole">Místo a čas události<input class="vstup" name="misto" maxlength="200"></label>
+    <label class="pole">Poznámka (zdroj měření, kdo měřil konečné polohy…)<textarea class="vstup" name="pozn" rows="3" maxlength="600"></textarea></label>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">🖨️ Tisk</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgZkratky"><form method="dialog">
+  <header>⌨️ Klávesové zkratky</header>
+  <div class="telo">
+    <div class="zkratky">
+      <kbd>1 2 3 4</kbd><span>náčrt, diagram hybnosti, nejistota, citlivost</span>
+      <kbd>V</kbd><span>přepnout panel Vstupy / Výsledky</span>
+      <kbd>G</kbd><span>galerie ukázek</span>
+      <kbd>P</kbd><span>protokol k tisku</span>
+      <kbd>S</kbd><span>uložit do prohlížeče</span>
+      <kbd>Esc</kbd><span>zavřít nabídku</span>
+      <kbd>?</kbd><span>tento přehled</span>
+    </div>
+    <p class="tip">V náčrtu se táhne myší nebo prstem: červený bod = místo střetu, plné značky = konečné polohy, kroužky na koncích příjezdových čar = směr příjezdu.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Rekonstrukce střetu vozidel – postup</header>
+  <div class="telo">
+    <p>Výuková a kontrolní pomůcka: z toho, kam vozidla po střetu dojela, zpětně odhaduje, jak rychle jela před ním. Používá zachování hybnosti ve vodorovné rovině – součet hybností obou vozidel bezprostředně před střetem a po něm je stejný. Nenahrazuje znalecký posudek.</p>
+    <h3>Co zadat</h3>
+    <ul>
+      <li><b>Hmotnosti</b> – pohotovostní hmotnost z technického průkazu + posádka a náklad.</li>
+      <li><b>Úhly příjezdu θ</b> – směr jízdy těsně před střetem (stopy, poloha v jízdním pruhu). 0° = doprava v náčrtu, 90° = nahoru, úhly rostou proti směru hodinových ručiček.</li>
+      <li><b>Dojezd</b> – úhel φ a délka d od bodu střetu ke konečné poloze těžiště (měřený plánek místa).</li>
+      <li><b>Součinitel dojezdu f</b> – jak silně vozidlo po střetu zpomalovalo: blokovaná kola nebo smyk bokem = μ povrchu; poškozené, částečně brzděné = podíl μ; volně se otáčející kola = valivý odpor. Rozsahy μ jsou stejné jako ve stránce Rychlost z brzdné stopy.</li>
+      <li><b>Brzdná stopa před střetem</b> (nepovinné) – z rychlosti při střetu dopočítá rychlost na začátku brzdění.</li>
+      <li><b>Známá rychlost</b> – nutná u téměř rovnoběžných směrů (najetí zezadu, čelní srážka v ose); jinak volitelná kontrola.</li>
+      <li><b>± nejistoty</b> – meze, ve kterých může skutečná hodnota ležet. Z nich vznikne interval Monte Carlo a citlivost.</li>
+    </ul>
+    <h3>Jak číst výsledek</h3>
+    <ul>
+      <li><b>Bodový odhad</b> je výpočet ze středů všech rozsahů, <b>interval</b> je 2,5–97,5 % z náhodných kombinací vstupů (rovnoměrně v zadaných mezích).</li>
+      <li><b>Kontroly</b> hlídají fyzikální možnost: kladnou ztrátu energie, směr síly proti přibližování, restituci a soulad směru síly s místem poškození.</li>
+      <li><b>Diagram hybnosti</b> ukazuje klasickou konstrukci: řetěz vektorů před střetem a po něm končí ve stejném bodě.</li>
+    </ul>
+    <p>Vzorce, předpoklady, meze, literatura a tabulka ověření na ukázkách: <button type="button" class="btn" data-metoda>📐 Metoda a meze</button></p>
+    <p>Data zůstávají jen v tomto prohlížeči. Projekt lze exportovat do JSON.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script src="vysetrovani/metoda.js"></script>
+<script src="stret_vozidel/ui.js"></script>
+<script src="stret_vozidel/metoda.js"></script>
+</body>
+</html>

@@ -4,171 +4,318 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🕵️ Časová osa případu</title>
+<meta name="description" content="Časová osa případu: události, důkazy, výpovědi a polohy s mírou jistoty, zdrojem a osobami; plavecké dráhy po osobách, rozpory v poloze a tvrzení proti ověřeným záznamům, import z Časové analýzy a Evidenčního deníku, export JSON, CSV a PDF. Vše lokálně v prohlížeči.">
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
+<script src="vysetrovani/pripad.js"></script>
+<script src="case_timeline/jadro.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-.container{max-width:960px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
-.sub{text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:18px}
-.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:20px}
-h2{font-size:1rem;color:var(--accent);margin-bottom:12px}
-label{display:block;font-size:.78rem;color:var(--text-faint);margin-bottom:4px;margin-top:10px}
-label:first-child{margin-top:0}
-input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:9px 12px;font-size:.9rem;font-family:inherit}
-textarea{resize:vertical;min-height:60px}
-.row{display:flex;gap:12px;flex-wrap:wrap}
-.row>div{flex:1;min-width:160px}
-.btn{margin-top:16px;padding:10px 18px;background:var(--accent);border:none;border-radius:6px;color: var(--on-accent, #fff);font-weight:600;cursor:pointer;font-size:.9rem}
-.btn:hover{background:#5a92e6}
-.btn.sec{background:var(--border);color:var(--text-muted)}
-.btn.sec:hover{background:var(--border-strong)}
-.btn.danger{background:#7a3030;color:#fdd}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.timeline{position:relative;padding-left:26px}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* typy záznamů – barvy jen z common.css */
+.t-udalost{--tb:var(--accent)} .t-dukaz{--tb:var(--warn)} .t-svedek{--tb:var(--ok)}
+.t-poloha{--tb:color-mix(in srgb,var(--accent) 45%,var(--ok))} .t-komunikace{--tb:var(--text-muted)}
+
+/* horní lišta s rozbalovacími nabídkami (vzor prompty.html) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:50}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+select.tl{padding:4px 6px}
+@media (max-width:1000px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka[hidden]{display:none}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+main{max-width:1200px;margin:0 auto;padding:14px 16px 60px}
+.hlavicka{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:10px}
+.hlavicka input{flex:1 1 260px;font-size:1.05rem;font-weight:600}
+.souhrn{display:flex;flex-wrap:wrap;gap:6px;font-size:.8rem;color:var(--text-muted)}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:10px;padding:1px 8px;background:var(--bg-elevated);white-space:nowrap}
+.chip.roz{border-color:var(--danger);color:var(--danger);font-weight:600}
+input,select,textarea{background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:7px 10px;font-size:.88rem;font-family:inherit;width:100%;min-width:0}
+textarea{resize:vertical;min-height:70px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.76rem}
+
+/* jistota: čára vlevo (seznam) / výplň (dráhy) + štítek – nerozlišuje se jen barvou */
+.jist{display:inline-flex;align-items:center;gap:3px;font-size:.7rem;font-weight:600;border-radius:10px;padding:1px 8px;border:1px solid}
+.jist.overeno{color:var(--ok);border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.jist.pravdepodobne{color:var(--warn);border-color:var(--warn);border-style:dashed}
+.jist.tvrzeni{color:var(--text-muted);border-color:var(--text-faint);border-style:dotted;font-style:italic}
+
+.rozpory{border:1px solid var(--danger);border-radius:8px;background:color-mix(in srgb,var(--danger) 7%,var(--bg-elevated));padding:10px 12px;margin-bottom:12px}
+.rozpory h2{font-size:.92rem;color:var(--danger);margin:0 0 6px}
+.rozpory ul{margin:0;padding-left:18px;font-size:.84rem;line-height:1.5}
+.rozpory li{cursor:pointer}
+.rozpory li:hover{text-decoration:underline}
+.rozpory .druh{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)}
+
+/* svislý seznam */
+.timeline{position:relative;padding-left:24px}
 .timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--border)}
-.item{position:relative;margin-bottom:18px;background:var(--bg-panel);border:1px solid #3a3a3a;border-radius:8px;padding:14px 16px}
-.item::before{content:'';position:absolute;left:-23px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
-.item.dukaz::before{background:#e0a63f}
-.item.svedek::before{background:#4caf7d}
-.item.udalost::before{background:var(--accent)}
-.item-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.item-time{font-family:monospace;color:var(--accent);font-size:.85rem;font-weight:600}
-.item-tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:10px;background:var(--bg-hover)}
-.item.dukaz .item-tag{background:#4a3b1a;color:#e0a63f}
-.item.svedek .item-tag{background:#1e3a2a;color:#4caf7d}
-.item.udalost .item-tag{background:#1e2f4a;color:var(--accent)}
-.item-desc{margin-top:6px;font-size:.9rem;white-space:pre-wrap}
-.item-actions{margin-top:8px;display:flex;gap:8px}
-.item-actions button{background:none;border:1px solid var(--border);color:var(--text-faint);border-radius:5px;padding:3px 9px;font-size:.75rem;cursor:pointer}
-.item-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.item{position:relative;margin-bottom:12px;background:var(--bg-panel);border:1px solid var(--border);border-left:5px solid var(--ok);border-radius:8px;padding:10px 14px;cursor:pointer}
+.item:hover{border-color:var(--border-strong)}
+.item.pravdepodobne{border-left:5px dashed var(--warn)}
+.item.tvrzeni{border-left:5px dotted var(--text-faint)}
+.item.tvrzeni .item-desc{font-style:italic}
+.item.rozpor{box-shadow:0 0 0 2px var(--danger)}
+.item.zvyrazneny{outline:3px solid var(--accent);outline-offset:2px}
+.item::before{content:'';position:absolute;left:-24px;top:15px;width:12px;height:12px;border-radius:50%;background:var(--tb);border:2px solid var(--bg)}
+.item-head{display:flex;justify-content:space-between;align-items:baseline;gap:6px 10px;flex-wrap:wrap}
+.item-time{font-family:ui-monospace,Consolas,monospace;color:var(--accent);font-size:.84rem;font-weight:600}
+.item-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.item-tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;padding:1px 8px;border-radius:10px;background:color-mix(in srgb,var(--tb) 16%,transparent);color:color-mix(in srgb,var(--tb) 55%,var(--text))}
+.item-desc{margin-top:5px;font-size:.9rem;white-space:pre-wrap;word-break:break-word}
+.item-meta{margin-top:5px;font-size:.76rem;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:3px 14px}
+.item-meta b{color:var(--text-faint);font-weight:500}
+.roz-znak{color:var(--danger);font-weight:700;font-size:.78rem}
+
+/* plavecké dráhy */
+.drahy-ovl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;font-size:.8rem;color:var(--text-muted)}
+.drahy{border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);overflow:hidden;user-select:none}
+.draha{display:flex;border-top:1px solid var(--border)}
+.draha:first-child{border-top:0}
+.draha .hl{flex:none;width:var(--hl,150px);padding:6px 8px;font-size:.8rem;font-weight:600;background:var(--bg-elevated);border-right:1px solid var(--border);word-break:break-word}
+.draha .hl small{display:block;font-weight:400;color:var(--text-faint)}
+.draha.spolecna .hl{font-style:italic;color:var(--text-muted)}
+.stopa{position:relative;flex:1;min-width:0;overflow:hidden;cursor:grab;touch-action:pan-y}
+.tahne .stopa{cursor:grabbing}
+.osa .stopa{height:24px;cursor:default}
+.znacka{position:absolute;top:0;bottom:0;border-left:1px solid var(--border);font-size:.68rem;color:var(--text-faint);padding:3px 0 0 3px;white-space:nowrap;pointer-events:none}
+.mrizka{position:absolute;top:0;bottom:0;border-left:1px dashed color-mix(in srgb,var(--border) 70%,transparent);pointer-events:none}
+.roz-pas{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--danger) 14%,transparent);border-left:1px solid var(--danger);border-right:1px solid var(--danger);pointer-events:none}
+.blok{position:absolute;height:22px;display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.74rem}
+.blok .pas{flex:none;height:14px;min-width:10px;border-radius:4px;border:2px solid var(--tb);background:var(--tb)}
+.blok.pravdepodobne .pas{background:repeating-linear-gradient(135deg,var(--tb) 0 4px,transparent 4px 8px)}
+.blok.tvrzeni .pas{background:transparent;border-style:dashed}
+.blok.bod .pas{width:12px;border-radius:50%}
+.blok .stitek{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.blok.tvrzeni .stitek{font-style:italic;color:var(--text-muted)}
+.blok.dlouhy .stitek{position:absolute;left:6px;right:6px;pointer-events:none}
+.blok.dlouhy.overeno .stitek{color:var(--on-accent,#fff);text-shadow:0 0 3px rgba(0,0,0,.6)}
+.blok.dlouhy.pravdepodobne .stitek{background:color-mix(in srgb,var(--bg-panel) 80%,transparent);border-radius:3px;padding:0 3px;left:4px;right:auto;max-width:calc(100% - 8px)}
+.blok.rozpor .pas{outline:2px solid var(--danger);outline-offset:1px}
+.blok.zvyrazneny .pas{box-shadow:0 0 0 4px var(--accent-soft)}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.76rem;color:var(--text-muted);margin-top:8px;align-items:center}
+.legenda .blok{position:static;cursor:default}
+
 .empty{text-align:center;color:var(--text-faint);padding:30px;font-size:.9rem}
-.note{font-size:.78rem;color:var(--text-faint);margin-top:8px}
+.note{font-size:.76rem;color:var(--text-faint);margin-top:14px}
+
+dialog{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:16px;width:min(640px,calc(100vw - 16px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{font-size:1.05rem;margin:0 0 10px}
+.mrizka-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px}
+.pole{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pole > span{font-size:.75rem;color:var(--text-muted)}
+.pole.cele{grid-column:1/-1}
+.rychle-osoby{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.jistoty{display:flex;flex-wrap:wrap;gap:6px}
+.jistoty label{display:flex;align-items:center;gap:5px;font-size:.82rem;cursor:pointer;border:1px solid var(--border);border-radius:6px;padding:4px 8px}
+.jistoty input{width:auto}
+.dlg-akce{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px}
+.dlg-akce .vlevo{margin-right:auto}
+.ca-seznam{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.ca-seznam label{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer;font-size:.86rem}
+.ca-seznam input,.volby input[type=checkbox]{width:auto;margin-top:3px}
+.ca-seznam small{color:var(--text-faint)}
+.volby{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;align-items:center}
+.volby label{display:flex;gap:5px;align-items:center}
+.volby input[type=number]{width:72px;padding:3px 6px}
+.napoveda{font-size:.86rem;line-height:1.5}
+.napoveda h3{font-size:.9rem;margin:12px 0 4px;color:var(--accent)}
+.napoveda ul{margin:0;padding-left:18px}
+
+#tisk{display:none}
+@media (max-width:600px){
+  .lista{flex-wrap:wrap;row-gap:4px}
+  main{padding:10px 10px 60px}
+  .draha .hl{--hl:84px;font-size:.72rem;padding:4px 5px}
+}
 @media print{
-  body{background:#fff;color:#000;padding:0}
-  .card.form,.toolbar{display:none}
-  .container{max-width:100%}
-  .item{background:#fff;border:1px solid var(--text-faint);break-inside:avoid}
-  .item-tag{background:#eee!important;color:#000!important}
-  a[href]::after{content:''}
+  body{background:#fff;color:#000}
+  .lista,main,.mp-pruh,dialog{display:none!important}
+  #tisk{display:block;font-size:10pt}
+  #tisk h1{font-size:14pt;margin:0 0 2pt}
+  #tisk .meta{font-size:8.5pt;color:#444;margin-bottom:8pt}
+  #tisk h2{font-size:11pt;margin:10pt 0 4pt}
+  #tisk table{width:100%;border-collapse:collapse}
+  #tisk th,#tisk td{border:1px solid #999;padding:3pt 4pt;text-align:left;vertical-align:top;font-size:8.5pt}
+  #tisk th{background:#eee}
+  #tisk tr{break-inside:avoid}
+  #tisk tr.tvrzeni td{font-style:italic}
+  #tisk tr.rozpor td:first-child{border-left:3pt solid #b5352a}
+  #tisk ul{margin:0;padding-left:14pt}
 }
 </style>
 </head>
 <body>
-<div class="container">
+<header class="lista" id="lista">
   <h1>🕵️ Časová osa případu</h1>
-  <p class="sub">Chronologické řazení událostí, důkazů a výpovědí — vše se ukládá pouze lokálně v tomto prohlížeči.</p>
+  <div class="skup" role="group" aria-label="Záznamy"><span class="skup-nazev" aria-hidden="true">Záznamy</span><div class="skup-tl">
+    <button type="button" class="tl hlavni-tl" data-prikaz="pridat" title="Přidat záznam na osu (N)">✚<span class="txt"> Záznam</span></button>
+    <button type="button" class="tl" data-nabidka="nabImport" aria-expanded="false" title="Časová analýza, Evidenční deník, JSON">📥<span class="txt"> Import</span> ▾</button>
+    <button type="button" class="tl" data-nabidka="nabExport" aria-expanded="false" title="JSON, CSV, tisk / PDF">📤<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazení"><span class="skup-nazev" aria-hidden="true">Zobrazení</span><div class="skup-tl">
+    <button type="button" class="tl" id="tlSeznam" data-pohled="seznam" aria-pressed="true" title="Svislý chronologický seznam">☰<span class="txt"> Seznam</span></button>
+    <button type="button" class="tl" id="tlDrahy" data-pohled="drahy" aria-pressed="false" title="Plavecké dráhy po osobách">🏊<span class="txt"> Dráhy</span></button>
+    <select class="tl" id="filtr" aria-label="Filtr jistoty" title="Které záznamy ukázat">
+      <option value="">vše</option>
+      <option value="bez">bez tvrzení</option>
+      <option value="overeno">jen ověřené</option>
+    </select>
+  </div></div>
+  <span class="vpravo">
+    <button type="button" class="tl" data-nabidka="nabPripad" aria-expanded="false" title="Případ, smazání dat">📁 ▾</button>
+    <button type="button" class="tl" data-nabidka="nabNapoveda" aria-expanded="false" title="Metoda, legenda, meze" aria-label="Nápověda">❓ ▾</button>
+  </span>
+</header>
 
-  <div class="card form">
-    <h2>Přidat záznam</h2>
-    <label>Název případu (pro záhlaví při tisku)</label>
-    <input id="caseName" placeholder="např. ČVS: KRPA-1234/TČ-2026">
-    <div class="row">
-      <div>
-        <label>Datum a čas</label>
-        <input id="fTime" type="datetime-local">
-      </div>
-      <div>
-        <label>Typ záznamu</label>
-        <select id="fType">
-          <option value="udalost">Událost</option>
-          <option value="dukaz">Důkaz</option>
-          <option value="svedek">Výpověď / svědek</option>
-        </select>
-      </div>
-    </div>
-    <label>Popis</label>
-    <textarea id="fDesc" placeholder="Stručný popis události, důkazu nebo výpovědi…"></textarea>
-    <button class="btn" id="btnAdd">➕ Přidat na osu</button>
-  </div>
-
-  <div class="toolbar">
-    <button class="btn sec" id="btnPrint">🖨️ Tisk / export PDF</button>
-    <button class="btn sec" id="btnExport">💾 Export JSON</button>
-    <button class="btn sec" id="btnImport">📂 Import JSON</button>
-    <input type="file" id="fileImport" accept=".json" hidden>
-    <button class="btn danger" id="btnClear">🗑️ Smazat vše</button>
-  </div>
-
-  <div id="timeline" class="timeline"></div>
-  <div id="empty" class="empty">Zatím žádné záznamy. Přidej první výše.</div>
-  <p class="note">Data se ukládají jen v localStorage tohoto prohlížeče/zařízení — pro sdílení nebo zálohu použij export JSON.</p>
+<div id="nabImport" class="nabidka" hidden>
+  <button type="button" class="tl" data-prikaz="importCA">🕰️ Z Časové analýzy (pobyty, hovory, výpovědi)…</button>
+  <button type="button" class="tl" data-prikaz="importEvidence">🧾 Z Evidenčního deníku (stopy)</button>
+  <hr>
+  <button type="button" class="tl" data-prikaz="importJson">📂 Soubor JSON…</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button type="button" class="tl" data-prikaz="tisk">🖨️ Tisk / PDF přehledu</button>
+  <button type="button" class="tl" data-prikaz="exportJson">💾 JSON (záloha, sdílení)</button>
+  <button type="button" class="tl" data-prikaz="exportCsv">📊 CSV (tabulkový procesor)</button>
+</div>
+<div id="nabPripad" class="nabidka" hidden>
+  <button type="button" class="tl" data-prikaz="nazev">✏️ Název případu</button>
+  <hr>
+  <button type="button" class="tl" data-prikaz="smazat">🗑️ Smazat všechny záznamy…</button>
+</div>
+<div id="nabNapoveda" class="nabidka" hidden>
+  <button type="button" class="tl" data-prikaz="metoda">📘 Metoda, jistota a meze…</button>
 </div>
 
-<script>
-const $=id=>document.getElementById(id);
-const KEY='vysetrovani_timeline';
-const KEY_CASE='vysetrovani_timeline_case';
-let items=JSON.parse(localStorage.getItem(KEY)||'[]');
-$('caseName').value=localStorage.getItem(KEY_CASE)||'';
-$('caseName').addEventListener('input',()=>localStorage.setItem(KEY_CASE,$('caseName').value));
+<main>
+  <div class="hlavicka">
+    <input id="caseName" placeholder="Název případu, např. ČVS: KRPA-1234/TČ-2026" aria-label="Název případu (pro záhlaví při tisku)">
+    <div class="souhrn" id="souhrn"></div>
+  </div>
+  <section id="panelRozporu" class="rozpory" hidden>
+    <h2>⚠ Rozpory k prověření (<span id="pocRozporu">0</span>)</h2>
+    <ul id="seznamRozporu"></ul>
+  </section>
+  <div id="pohledSeznam"><div id="timeline" class="timeline"></div></div>
+  <div id="pohledDrahy" hidden>
+    <div class="drahy-ovl">
+      <button type="button" class="btn mini" data-zoom="0.5" title="Přiblížit (Ctrl + kolečko)">+</button>
+      <button type="button" class="btn mini" data-zoom="2" title="Oddálit">−</button>
+      <button type="button" class="btn mini" data-zoom="cele" title="Celý rozsah">⤢ Celé</button>
+      <button type="button" class="btn mini" data-posun="-0.4" title="Posun dřív">◀</button>
+      <button type="button" class="btn mini" data-posun="0.4" title="Posun později">▶</button>
+      <span id="vyrez"></span>
+      <span>· táhněte myší, Ctrl + kolečko = zoom</span>
+    </div>
+    <div class="drahy" id="drahy"></div>
+    <div class="legenda" id="legenda"></div>
+  </div>
+  <div id="empty" class="empty">Zatím žádné záznamy. Přidejte první přes ✚ Záznam nebo importujte z Časové analýzy či Evidenčního deníku.</div>
+  <p class="note">Data se ukládají jen v localStorage tohoto prohlížeče/zařízení — pro sdílení nebo zálohu použijte export JSON. Rozpor je podnět k prověření, ne závěr.</p>
+</main>
 
-const typeLabel={udalost:'Událost',dukaz:'Důkaz',svedek:'Výpověď / svědek'};
+<dialog id="dlgZaznam">
+  <form method="dialog" id="formZaznam">
+    <h2 id="dlgZaznamTitul">Záznam</h2>
+    <div class="mrizka-form">
+      <label class="pole"><span>Čas (od)</span><input id="fTime" type="datetime-local" step="60"></label>
+      <label class="pole"><span>Do (volitelně, rozsah)</span><input id="fEnd" type="datetime-local" step="60"></label>
+      <label class="pole"><span>Nejistota času ± min</span><input id="fTol" type="number" min="0" max="10080" step="1" value="0"></label>
+      <label class="pole"><span>Typ záznamu</span><select id="fType"></select></label>
+      <div class="pole cele"><span>Jistota</span><div class="jistoty" id="fJistota"></div></div>
+      <label class="pole cele"><span>Osoby (oddělte čárkou; bez osoby = společná dráha)</span><input id="fOsoby" autocomplete="off">
+        <span class="rychle-osoby" id="rychleOsoby"></span></label>
+      <label class="pole"><span>Místo</span><input id="fMisto" list="seznamMist" autocomplete="off"></label>
+      <label class="pole"><span>Zdroj</span><select id="fZdroj"></select></label>
+      <label class="pole"><span>Číslo stopy (evidenční deník)</span><input id="fStopa" list="seznamStop" autocomplete="off"></label>
+      <label class="pole"><span>Popis zdroje (kamera č., soubor, protokol…)</span><input id="fZdrojText"></label>
+      <label class="pole cele"><span>Popis</span><textarea id="fDesc" placeholder="Stručný popis události, důkazu nebo výpovědi…"></textarea></label>
+    </div>
+    <div class="dlg-akce">
+      <button type="button" class="btn danger vlevo" id="btnSmazZaznam">🗑️ Smazat</button>
+      <button type="button" class="btn" id="btnZrusZaznam">Zrušit</button>
+      <button type="submit" class="btn primary" id="btnAdd">💾 Uložit</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="seznamMist"></datalist>
+<datalist id="seznamStop"></datalist>
 
-function save(){localStorage.setItem(KEY,JSON.stringify(items));render();}
+<dialog id="dlgCA">
+  <h2>🕰️ Import z Časové analýzy</h2>
+  <p class="note" style="margin-top:0">Čte případy uložené nástrojem Časová analýza v tomto prohlížeči. Pobyty jsou odvozené z polohových bodů, proto se vkládají jako „pravděpodobné“; hovory z výpisu jako „ověřené“; výpovědi jako „tvrzení“. Opakovaný import záznamy nahradí, nezdvojí.</p>
+  <div class="ca-seznam" id="caSeznam"></div>
+  <div class="volby">
+    <label><input type="checkbox" id="caPobyty" checked> pobyty osob</label>
+    <label>okruh <input type="number" id="caVzd" value="150" min="20" max="5000"> m</label>
+    <label>aspoň <input type="number" id="caMin" value="10" min="1" max="600"> min</label>
+    <label><input type="checkbox" id="caKom" checked> hovory a SMS</label>
+    <label><input type="checkbox" id="caDul" checked> ruční a ⭐ záznamy</label>
+  </div>
+  <div class="dlg-akce">
+    <button type="button" class="btn" id="caZrus">Zrušit</button>
+    <button type="button" class="btn primary" id="caOk">📥 Importovat</button>
+  </div>
+</dialog>
 
-function render(){
-  const wrap=$('timeline');
-  wrap.innerHTML='';
-  const sorted=[...items].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-  $('empty').style.display=sorted.length?'none':'block';
-  sorted.forEach(it=>{
-    const div=document.createElement('div');
-    div.className='item '+it.type;
-    const dt=it.time?new Date(it.time).toLocaleString('cs-CZ'):'(bez času)';
-    div.innerHTML=`<div class="item-head"><span class="item-time">${dt}</span><span class="item-tag">${typeLabel[it.type]||it.type}</span></div>
-      <div class="item-desc"></div>
-      <div class="item-actions"><button data-a="del" data-id="${it.id}">🗑️ Smazat</button></div>`;
-    div.querySelector('.item-desc').textContent=it.desc;
-    wrap.appendChild(div);
-  });
-  wrap.querySelectorAll('[data-a="del"]').forEach(b=>b.onclick=()=>{
-    items=items.filter(i=>i.id!==b.dataset.id);
-    save();
-  });
-}
+<dialog id="dlgMetoda">
+  <h2>📘 Metoda, jistota a meze</h2>
+  <div class="napoveda">
+    <h3>Záznam</h3>
+    <ul>
+      <li>Čas jako bod, nebo rozsah od–do; nejistota ± min rozšíří interval na obě strany (např. odhad svědka „kolem druhé“ = 02:00 ± 15 min).</li>
+      <li>Časy jsou místní bez časového pásma – při importu z Časové analýzy se převádějí do pásma nastaveného v ní.</li>
+      <li>Zdroj a číslo stopy navazují na evidenční deník – každé tvrzení na ose má mít dohledatelný původ.</li>
+    </ul>
+    <h3>Míra jistoty</h3>
+    <ul>
+      <li><b>✔ Ověřeno</b> – objektivní zdroj: kamerový záznam, výpis provozních údajů, zajištěná stopa, úřední záznam.</li>
+      <li><b>◐ Pravděpodobné</b> – odvozené nebo nepřímé: pobyt vypočtený z polohových bodů, odhad, souhlasné nezávislé výpovědi.</li>
+      <li><b>? Tvrzení – nepotvrzeno</b> – jen výpověď nebo oznámení. Na ose je čárkovaně a kurzívou, aby nesplývalo s fakty.</li>
+    </ul>
+    <h3>Rozpory</h3>
+    <ul>
+      <li>Hlásí se dvojice záznamů téže osoby, jejichž intervaly (vč. nejistoty) se překrývají a mají různé místo – souřadnice dál než 300 m, jinak odlišný text místa.</li>
+      <li>„Tvrzení proti záznamu“ = jedna strana je nepotvrzené tvrzení, druhá ověřená nebo pravděpodobná – typicky vyvracené alibi.</li>
+      <li>Dvě ověřené polohy v jednom čase ukazují spíš na chybu zdroje: posunuté hodiny, cizí zařízení, chybný zápis.</li>
+    </ul>
+    <h3>Meze</h3>
+    <ul>
+      <li>Rozpor je podnět k prověření, ne důkaz. Místa se porovnávají podle textu – „Horní Lhota“ a „Hlavní 17“ nástroj za totéž nepovažuje; pište místa jednotně.</li>
+      <li>Záznam bez místa nebo bez osoby se do kontroly rozporů nezapočítá. Chybějící záznam neznamená, že se nic nestalo.</li>
+    </ul>
+  </div>
+  <div class="dlg-akce"><button type="button" class="btn primary" onclick="this.closest('dialog').close()">Zavřít</button></div>
+</dialog>
 
-$('btnAdd').onclick=()=>{
-  const desc=$('fDesc').value.trim();
-  if(!desc){$('fDesc').focus();return;}
-  items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),time:$('fTime').value,type:$('fType').value,desc});
-  $('fDesc').value='';
-  save();
-};
+<input type="file" id="fileImport" accept=".json,application/json" hidden>
+<section id="tisk"></section>
 
-$('btnPrint').onclick=()=>window.print();
-
-$('btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({case:$('caseName').value,items},null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=(($('caseName').value||'casova_osa').replace(/[^\w\-]+/g,'_'))+'.json';
-  a.click();
-};
-
-$('btnImport').onclick=()=>$('fileImport').click();
-$('fileImport').onchange=()=>{
-  const f=$('fileImport').files[0];
-  if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const data=JSON.parse(r.result);
-      if(data.case)$('caseName').value=data.case, localStorage.setItem(KEY_CASE,data.case);
-      if(Array.isArray(data.items)){items=data.items;save();}
-    }catch(e){Dialog.info('Neplatný soubor JSON.');}
-  };
-  r.readAsText(f);
-};
-
-$('btnClear').onclick=async ()=>{
-  if(await Dialog.potvrd('Opravdu smazat všechny záznamy časové osy?')){items=[];save();}
-};
-
-render();
-</script>
+<script src="case_timeline/ui.js"></script>
 </body>
 </html>

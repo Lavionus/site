@@ -33,7 +33,7 @@ I18N.pridej('en', {
     'Nothing saved yet. Set the dimensions and click “Save shape” – it is stored in this browser and can be loaded again at any time.',
   'Načíst': 'Load',
   'Přepsat': 'Overwrite',
-  'Název': 'Rename',
+  'Název': 'Name',
   'Smazat': 'Delete',
   'Tvar': 'Shape',
   'Název tvaru': 'Shape name',

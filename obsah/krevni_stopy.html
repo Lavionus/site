@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Úhel dopadu krevních stop</title>
+<meta name="description" content="Analýza krvavých stop (BPA) z fotografií: měřítko i korekce perspektivy, proložení elipsy, úhel dopadu α = arcsin(š/d), směr γ, více ploch v jedné místnosti, robustní hledání více zdrojů a odlehlých stop, oblast původu s Monte Carlo elipsoidem, korekce gravitace, 3D náhled, galerie ukázek, CSV, SVG/PNG a protokol.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="krevni_stopy/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+.pohled{flex:1;min-height:0}
+#pFoto{display:grid;grid-template-columns:minmax(0,1fr) 350px}
+.platno-obal{position:relative;min-height:0;background:var(--bg-deep);overflow:hidden;touch-action:none}
+.platno-obal canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.platno-obal .prazdno{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--text-muted);line-height:1.5}
+.zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+.zoom .btn{background:var(--bg-panel)}
+.panel{background:var(--bg-elevated);border-left:1px solid var(--border);overflow-y:auto;padding:10px 12px 40px;display:flex;flex-direction:column;gap:12px;font-size:.86rem}
+.panel h2{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:0 0 5px}
+.krok .z{width:1.3em;text-align:center}
+.napoveda-nastroje{background:var(--accent-soft);border:1px solid var(--accent);border-radius:7px;padding:7px 9px;line-height:1.45}
+.radek-tl{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;align-items:center}
+.cipy{display:flex;flex-wrap:wrap;gap:4px}
+.cip{font:inherit;font-size:.78rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg-control);color:var(--text);cursor:pointer}
+.cip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.cip.vyrazena{opacity:.55;text-decoration:line-through}
+.cip.bezsmeru{border-style:dashed}
+dl.hodnoty{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0}
+dl.hodnoty dt{color:var(--text-muted)}
+dl.hodnoty dd{margin:0;font-variant-numeric:tabular-nums}
+.velke{font-size:1.15rem;font-weight:700}
+.varovani{border-left:3px solid var(--warn);background:var(--bg-panel);padding:6px 9px;border-radius:5px;line-height:1.45;font-size:.8rem;color:var(--text-muted)}
+.varovani b{color:var(--text)}
+.vysledky{font-size:.88rem}
+.vysledky h2{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:10px 0 5px}
+.ukazka{border-left:3px solid var(--ok);background:var(--bg-panel);padding:6px 9px;border-radius:5px;font-size:.8rem;line-height:1.45}
+
+#pTabulka{overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.tab-obal{overflow-x:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;letter-spacing:.02em}
+td.c,th.c{text-align:right;font-variant-numeric:tabular-nums}
+tr.vybrana td{background:var(--accent-soft)}
+tr.vyrazena td{opacity:.55}
+td input.vstup{width:5.2em;padding:3px 5px;text-align:right}
+td input.vstup.jm{width:5em;text-align:left}
+td input.rucne{border-color:var(--warn)}
+.tip{font-size:.8rem;color:var(--text-muted);margin:8px 0;line-height:1.5}
+
+#p3d{display:grid;grid-template-columns:minmax(0,1fr) 350px}
+#scena3d{position:relative;min-height:0;overflow:hidden;touch-action:none;background:var(--bg-panel)}
+#scena3d canvas{display:block;width:100%;height:100%}
+.legenda3d{position:absolute;left:8px;top:8px;background:color-mix(in srgb,var(--bg-elevated) 88%,transparent);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.75rem;line-height:1.5;pointer-events:none}
+.legenda3d i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+
+.lista select.vstup{padding:3px 6px;font-size:.84rem;max-width:11em}
+.nabidka .tl small{color:var(--text-muted);margin-left:auto;padding-left:12px;font-size:.74rem}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.karta{display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;color:var(--text);background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;line-height:1.45}
+.karta:hover,.karta:focus-visible{border-color:var(--accent);background:var(--bg-hover);outline:none}
+.karta b{font-size:.92rem}
+.karta span{font-size:.8rem;color:var(--text-muted)}
+.karta .ik{font-size:1.6rem;line-height:1}
+.prazdno .galerie{width:min(100%,760px);margin-top:4px}
+.prazdno{overflow-y:auto;justify-content:flex-start!important;padding-top:6vh!important}
+.pruvodce{display:flex;flex-direction:column;gap:2px}
+.krok{display:flex;gap:6px;align-items:center;line-height:1.4;padding:2px 4px;border-radius:6px}
+.krok.dalsi{background:var(--accent-soft);outline:1px solid var(--accent)}
+.krok .t{flex:1}
+.krok .btn{padding:2px 7px;font-size:.76rem}
+.dolad{display:grid;grid-template-columns:repeat(4,auto);gap:4px;justify-content:start;margin-top:6px}
+.dolad .btn{min-width:2.4em}
+.tecka{display:inline-block;width:.75em;height:.75em;border-radius:50%;vertical-align:-1px;margin-right:4px;border:1px solid var(--border-strong)}
+.zdroj{border:1px solid var(--border);border-radius:8px;padding:7px 9px;margin-top:6px;background:var(--bg-panel)}
+.zdroj h3{margin:0 0 4px;font-size:.88rem}
+th button.raz{all:unset;cursor:pointer;color:inherit;display:inline-flex;gap:3px;align-items:center}
+th button.raz:focus-visible{outline:2px solid var(--accent)}
+.zkratky{display:grid;grid-template-columns:auto 1fr;gap:3px 12px}
+.zkratky kbd{font-family:ui-monospace,monospace;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:4px;padding:0 5px;font-size:.8rem;white-space:nowrap}
+.ukazka ul{margin:4px 0 0;padding-left:1.1em}
+@media (max-width:820px){
+  #pFoto,#p3d{display:block;overflow-y:auto}
+  .platno-obal,#scena3d{height:62vh}
+  .panel{border-left:0;border-top:1px solid var(--border)}
+}
+
+dialog.okno{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,600px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5);margin:auto}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.55}
+.okno .telo p,.okno .telo ul{margin:0}
+.okno .telo ul{padding-left:1.2em}
+.okno .telo h3{margin:6px 0 0;font-size:.92rem}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.dvoj{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.dvoj{grid-template-columns:1fr}}
+.vzorec{font-family:ui-monospace,monospace;background:var(--bg-panel);border:1px solid var(--border);border-radius:5px;padding:5px 8px}
+
+#protokol{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{display:block;height:auto;background:#fff;color:#000}
+  .lista,main,dialog,.nabidka,#podpis-pruh{display:none!important}
+  #protokol{display:block;font-size:10pt;line-height:1.4}
+  #protokol h1{font-size:15pt;margin:0 0 4pt}
+  #protokol h2{font-size:11.5pt;margin:12pt 0 4pt;border-bottom:1px solid #999;break-after:avoid}
+  #protokol h3{font-size:10.5pt;margin:8pt 0 3pt}
+  #protokol table{font-size:8.5pt;width:100%;border-collapse:collapse;margin:3pt 0}
+  #protokol th,#protokol td{border:1px solid #aaa;padding:2pt 4pt;white-space:nowrap;color:#000;text-align:left}
+  #protokol figure{margin:6pt 0;break-inside:avoid}
+  #protokol figcaption{font-size:8.5pt;color:#333}
+  #protokol img{max-width:100%;border:1px solid #999}
+  #protokol .dvojobr{display:flex;gap:6pt}
+  #protokol .dvojobr figure{flex:1}
+  #protokol .podpis{margin-top:24pt;display:flex;justify-content:space-between}
+  #protokol p,#protokol li{margin:2pt 0}
+  #protokol .vzorec{font-family:monospace;border:0;padding:0;background:none}
+  #protokol .tip{color:#333}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🩸 Úhel dopadu</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Fotka, projekt, CSV, nákres, protokol">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-nabidka="nabUkazky" aria-expanded="false" title="Ukázky se známým zdrojem (G)">🧪<span class="txt"> Ukázky</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Plocha"><span class="skup-nazev" aria-hidden="true">Plocha</span><div class="skup-tl">
+    <select class="vstup" id="vyberPlochy" aria-label="Aktivní plocha" data-i18n="ne"></select>
+    <button class="tl" data-prikaz="plocha" title="Typ a umístění plochy v místnosti" aria-label="Umístění plochy">⚙</button>
+    <button class="tl" data-prikaz="novaPlocha" title="Přidat další plochu (stěnu, podlahu, strop)" aria-label="Přidat plochu">+</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroj"><span class="skup-nazev" aria-hidden="true">Nástroj</span><div class="skup-tl">
+    <button class="tl" data-nastroj="posun" aria-pressed="true" title="Posun, zoom a výběr stopy (V)">✋<span class="txt"> Výběr</span></button>
+    <button class="tl" data-nastroj="meritko" aria-pressed="false" title="Měřítko – dva body se známou vzdáleností (M)">📏<span class="txt"> Měřítko</span></button>
+    <button class="tl" data-nastroj="perspektiva" aria-pressed="false" title="Korekce perspektivy – 4 rohy obdélníku známých rozměrů (K)">⧉<span class="txt"> Perspektiva</span></button>
+    <button class="tl" data-nastroj="pocatek" aria-pressed="false" title="Referenční bod (počátek souřadnic) (O)">⊕<span class="txt"> Počátek</span></button>
+    <button class="tl" data-nastroj="body" aria-pressed="false" title="Nová stopa – body po okraji elipsy (B)">✏️<span class="txt"> Body</span></button>
+    <button class="tl" data-nastroj="prah" aria-pressed="false" title="Nová stopa – poloautomaticky z prahování (P)">🪄<span class="txt"> Práh</span></button>
+    <button class="tl" data-nastroj="ocasek" aria-pressed="false" title="Směr letu vybrané stopy podle ocásku (T)">➜<span class="txt"> Ocásek</span></button>
+    <button class="tl" data-prikaz="lupa" id="tlLupa" aria-pressed="true" title="Lupa u kurzoru při zakreslování (L)" aria-label="Lupa">🔍</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="foto" aria-pressed="true" title="Fotka (1)">🖼️<span class="txt"> Fotka</span></button>
+    <button class="tl" data-pohled="tabulka" aria-pressed="false" title="Tabulka stop (2)">📋<span class="txt"> Tabulka</span></button>
+    <button class="tl" data-pohled="3d" aria-pressed="false" title="3D místnost (3)">🧊<span class="txt"> 3D</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="nastaveni" title="Nastavení výpočtu: nejistota, více zdrojů, gravitace" aria-label="Nastavení výpočtu">⚙️</button>
+    <button class="tl" data-prikaz="zkratky" title="Klávesové zkratky (?)" aria-label="Klávesové zkratky">⌨️</button>
+    <button class="tl" data-metoda title="Metoda, vzorce, meze, literatura a ověření na ukázkách">📐<span class="txt"> Metoda a meze</span></button>
+    <button class="tl" data-prikaz="napoveda" title="Nápověda – postup práce" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="fotka">📷 Otevřít fotku aktivní plochy…</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit projekt (JSON i s fotkami)</button>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít projekt…</button>
+  <hr>
+  <button class="tl" data-prikaz="csv">📊 Tabulka stop do CSV</button>
+  <button class="tl" data-prikaz="png">🖼️ Nákres plochy do PNG</button>
+  <button class="tl" data-prikaz="svg">✒️ Nákres plochy do SVG</button>
+  <button class="tl" data-prikaz="protokol">🖨️ Protokol k tisku…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazStopy">🧹 Smazat stopy aktivní plochy…</button>
+  <button class="tl" data-prikaz="novy">🗑️ Nový projekt (smazat vše)…</button>
+</div>
+<div id="nabUkazky" class="nabidka" hidden></div>
+<input type="file" id="souborFotka" accept="image/*" hidden>
+<input type="file" id="souborProjekt" accept=".json,application/json" hidden>
+
+<main>
+  <section class="pohled" id="pFoto">
+    <div class="platno-obal" id="obalPlatna">
+      <canvas id="platno"></canvas>
+      <div class="prazdno" id="bezFotky">
+        <div style="font-size:2.4rem" aria-hidden="true">📐</div>
+        <div>Otevřete fotku plochy se stopami a s měřítkem.<br>Fotografujte kolmo k ploše, měřítko ve stejné rovině (šikmou fotku narovná ⧉ Perspektiva).</div>
+        <div class="radek-tl" style="justify-content:center"><button class="btn primary" data-prikaz="fotka">📷 Otevřít fotku</button></div>
+        <div style="margin-top:8px">… nebo si vyzkoušejte, co stránka umí, na ukázce se známým zdrojem:</div>
+        <div class="galerie" id="galerieUvod"></div>
+      </div>
+      <div class="zoom" id="zoomTl" hidden>
+        <button class="btn mini" data-prikaz="zoomPlus" aria-label="Přiblížit">+</button>
+        <button class="btn mini" data-prikaz="zoomMinus" aria-label="Oddálit">−</button>
+        <button class="btn mini" data-prikaz="zoomCela" title="Celá fotka (0)" aria-label="Celá fotka">⤢</button>
+      </div>
+    </div>
+    <aside class="panel" id="panel"></aside>
+  </section>
+
+  <section class="pohled" id="pTabulka" hidden></section>
+
+  <section class="pohled" id="p3d" hidden>
+    <div id="scena3d">
+      <div class="legenda3d" id="legenda3d"></div>
+    </div>
+    <aside class="panel" id="panel3d"></aside>
+  </section>
+</main>
+
+<div id="protokol"></div>
+
+<dialog class="okno" id="dlgUkazky"><form method="dialog">
+  <header>🧪 Ukázky se známým zdrojem</header>
+  <div class="telo">
+    <p>Každá ukázka je vygenerovaná fotka (žádné skutečné stopy) se zdrojem ve známé poloze a předvádí jinou schopnost stránky. Po otevření je v panelu rámeček „Co si tu vyzkoušet“ a porovnání výsledku se skutečností.</p>
+    <div class="galerie" id="galerieDlg"></div>
+  </div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNastaveni"><form method="dialog">
+  <header>⚙️ Nastavení výpočtu</header>
+  <div class="telo">
+    <h3>Nejistota měření (Monte Carlo)</h3>
+    <p>Šířka, délka a směr každé stopy se 300× náhodně rozhodí (normální rozdělení) a zdroje se přepočítají. Výsledkem je 90% elipsoid oblasti původu a 90% intervaly souřadnic.</p>
+    <div class="dvoj">
+      <label class="pole">Směrodatná odchylka šířky a délky (mm)<input class="vstup" name="sRozmer" type="number" min="0" max="10" step="0.01" required></label>
+      <label class="pole">Směrodatná odchylka směru γ (°)<input class="vstup" name="sGamma" type="number" min="0" max="45" step="0.5" required></label>
+    </div>
+    <p class="tip" style="margin:0">Orientačně: chyba odečtu okraje bývá 0,05–0,2 mm podle rozlišení fotky a ostrosti okraje; směr ±2–5°. U stop s α nad 70° je směr nejistý vždy.</p>
+    <h3>Více zdrojů a odlehlé stopy</h3>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="shluky"> Hledat více zdrojů a vyřazovat odlehlé stopy (robustně, RANSAC)</label>
+    <div class="dvoj">
+      <label class="pole">Práh – max. vzdálenost přímky od zdroje (mm)<input class="vstup" name="prahShluku" type="number" min="1" max="2000" step="5" required></label>
+      <label class="pole">Nejmenší počet stop na zdroj<input class="vstup" name="minShluk" type="number" min="2" max="20" step="1" required></label>
+    </div>
+    <h3>Gravitace – rychlost dopadu kapek</h3>
+    <p>Skutečná dráha je oblouk. Pro zadaný rozsah rychlostí dopadu se každá stopa vede zpět po parabole (bez odporu vzduchu) a vypíše se pás výšek zdroje. Typicky: kapání a pomalé kapky 1–3 m/s, rozstřik úderem 1,5–7,5 m/s.</p>
+    <div class="dvoj">
+      <label class="pole">Nejmenší rychlost (m/s)<input class="vstup" name="vMin" type="number" min="0.1" max="100" step="0.1" required></label>
+      <label class="pole">Největší rychlost (m/s)<input class="vstup" name="vMax" type="number" min="0.1" max="100" step="0.1" required></label>
+    </div>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Uložit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgPlocha"><form method="dialog">
+  <header>⚙ Plocha a její umístění v místnosti</header>
+  <div class="telo">
+    <p>Všechny plochy sdílejí souřadnice místnosti: <b>X</b> a <b>Y</b> vodorovně, <b>Z</b> nahoru (mm). Referenční bod plochy (⊕ na fotce) leží v místnosti v bodě <b>O</b>.</p>
+    <div class="dvoj">
+      <label class="pole">Název<input class="vstup" name="nazev" maxlength="40" required></label>
+      <label class="pole">Typ<select class="vstup" name="typ"><option value="podlaha">Podlaha (fotka shora)</option><option value="stena">Stěna (fotka zepředu)</option><option value="strop">Strop (fotka zespodu)</option></select></label>
+    </div>
+    <label class="pole">Natočení – azimut pohledu fotografa (°)<input class="vstup" name="natoceni" type="number" step="any" required></label>
+    <p class="tip" style="margin:0">Stěna: 0° = fotograf se dívá ve směru +Y (fotka doprava = +X), 90° = dívá se ve směru +X. Podlaha: 0° = horní okraj fotky míří k +Y.</p>
+    <div class="dvoj" style="grid-template-columns:1fr 1fr 1fr">
+      <label class="pole">O X (mm)<input class="vstup" name="ox" type="number" step="any" required></label>
+      <label class="pole">O Y (mm)<input class="vstup" name="oy" type="number" step="any" required></label>
+      <label class="pole">O Z (mm)<input class="vstup" name="oz" type="number" step="any" required></label>
+    </div>
+    <p class="tip" style="margin:0">Příklad: roh místnosti – podlaha s počátkem v rohu O = (0, 0, 0); stěna za ní, fotografovaná zepředu, s počátkem na styku s podlahou O = (0, šířka podlahy, 0).</p>
+  </div>
+  <footer><button value="smazat" class="btn danger" formnovalidate id="tlSmazPlochu">🗑️ Smazat plochu</button><span style="flex:1"></span><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Uložit</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgPripad"><form method="dialog">
+  <header>🖨️ Protokol k tisku</header>
+  <div class="telo">
+    <div class="dvoj">
+      <label class="pole">Číslo případu / spisu<input class="vstup" name="cislo" maxlength="80"></label>
+      <label class="pole">Zpracoval<input class="vstup" name="zpracoval" maxlength="80"></label>
+    </div>
+    <label class="pole">Místo<input class="vstup" name="misto" maxlength="200"></label>
+    <label class="pole">Plochy (např. stěna kuchyně, severní, výška počátku nad podlahou)<input class="vstup" name="plocha" maxlength="200"></label>
+    <label class="pole">Poznámka<textarea class="vstup" name="pozn" rows="3" maxlength="500"></textarea></label>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">🖨️ Tisk</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgZkratky"><form method="dialog">
+  <header>⌨️ Klávesové zkratky</header>
+  <div class="telo">
+    <div class="zkratky">
+      <kbd>V M K O B P T</kbd><span>nástroje: výběr, měřítko, perspektiva, počátek, body, práh, ocásek</span>
+      <kbd>L</kbd><span>lupa u kurzoru zapnout / vypnout</span>
+      <kbd>1 2 3</kbd><span>fotka, tabulka, 3D</span>
+      <kbd>N</kbd> <span>další stopa (Shift+N předchozí)</span>
+      <kbd>← → ↑ ↓</kbd><span>posun vybrané elipsy o 0,5 px (se Shiftem 5 px); bez výběru posun pohledu</span>
+      <kbd>Q E</kbd><span>otočení elipsy o 0,5° (se Shiftem 5°)</span>
+      <kbd>A D</kbd><span>šířka elipsy − / + (o 0,5 px, se Shiftem 5 px)</span>
+      <kbd>S W</kbd><span>délka elipsy − / +</span>
+      <kbd>R</kbd><span>obrátit směr letu</span>
+      <kbd>U</kbd><span>vyřadit z výpočtu / zahrnout</span>
+      <kbd>Delete</kbd><span>smazat vybranou stopu</span>
+      <kbd>Z</kbd><span>přiblížit na vybranou stopu</span>
+      <kbd>0</kbd><span>celá fotka; <kbd>+</kbd> <kbd>−</kbd> zoom</span>
+      <kbd>Enter</kbd><span>proložit elipsu body (nástroj ✏️)</span>
+      <kbd>Backspace</kbd><span>odebrat poslední bod</span>
+      <kbd>Esc</kbd><span>zrušit rozpracované body, zavřít nabídku</span>
+      <kbd>G</kbd><span>galerie ukázek</span>
+      <kbd>?</kbd><span>tento přehled</span>
+    </div>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Úhel dopadu krevních stop – postup</header>
+  <div class="telo">
+    <p>Vzdělávací pomůcka k analýze krvavých stop (BPA, <i>bloodstain pattern analysis</i>). Z tvaru eliptických stop na rovných plochách odhaduje, odkud kapky přiletěly. Nenahrazuje znalce ani ověřený software.</p>
+    <h3>Postup (průvodce je v panelu vpravo)</h3>
+    <ul>
+      <li><b>📷 Fotka</b> – nejlépe kolmo k ploše, měřítko (pravítko, ABFO) v rovině stop, dost pixelů na stopu (šířka aspoň 20 px).</li>
+      <li><b>📏 Měřítko</b> – klik na dva body se známou vzdáleností a zadání v mm. Nebo <b>⧉ Perspektiva</b> – u šikmé fotky klik na 4 rohy obdélníku známých rozměrů (list A4, dlaždice) v pořadí levý dolní, pravý dolní, pravý horní, levý horní. Homografie pak převádí fotku na skutečné rozměry roviny.</li>
+      <li><b>⊕ Počátek</b> – referenční bod plochy. Osy plochy: x doprava, y nahoru, z kolmo od plochy.</li>
+      <li><b>Více ploch</b> – + přidá další plochu (stěnu, podlahu, strop) s vlastní fotkou. V ⚙ se zadá, kde plocha v místnosti leží; zdroj se pak hledá ze stop všech ploch najednou.</li>
+      <li><b>Nová stopa</b> – ✏️ body po okraji eliptické části (bez ocásku, aspoň 5) a Enter, nebo 🪄 klik do stopy (souvislá oblast tmavší než práh, elipsa z momentů). 🔍 Lupa ukazuje okolí kurzoru zvětšené.</li>
+      <li><b>➜ Ocásek</b> – klik na stranu ocásku: ocásek a výběžky míří ve směru letu.</li>
+      <li><b>Doladění</b> – vybranou elipsu lze posunout, otočit a změnit tlačítky v panelu nebo klávesami (⌨️). Hodnoty lze přepsat i v <b>📋 Tabulce</b>.</li>
+    </ul>
+    <h3>Metoda, meze a literatura</h3>
+    <p>Vzorce, předpoklady, omezení metody, literatura a tabulka ověření na ukázkách se známým zdrojem jsou v panelu <button type="button" class="btn" data-metoda>📐 Metoda a meze</button></p>
+    <p>Data (fotky a stopy) zůstávají jen v tomto prohlížeči (IndexedDB). Projekt lze uložit do souboru.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script src="vysetrovani/metoda.js"></script>
+<script src="krevni_stopy/ui.js"></script>
+<script src="krevni_stopy/metoda.js"></script>
+</body>
+</html>

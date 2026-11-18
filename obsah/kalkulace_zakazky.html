@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulace truhlářské zakázky</title>
+<meta name="description" content="Kalkulace zakázky truhlářské dílny: desky, hrany, masiv, kování, povrch a spojovací materiál s prořezem, práce po operacích, režie, marže, DPH podle data, varianty nabídky, vlastní ceník (CSV), nabídka k tisku s logem, plán vs. skutečnost a import kusovníku z Řezného plánu a Návrhu skříní.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="kalkulace_zakazky/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+select.tl{padding:4px 6px;max-width:220px}
+@media (max-width:1200px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;font-family:inherit;min-width:0;width:100%}
+.vstup.chyba{border-color:var(--danger);outline:1px solid var(--danger)}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1300px;margin:0 auto}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;margin-bottom:12px;min-width:0}
+.panel > h2,.panel > summary{font-size:.95rem;margin:0 0 8px;font-weight:600}
+details.panel > summary{cursor:pointer;margin:0}
+details.panel[open] > summary{margin-bottom:8px}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 10px}
+.pole{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted);min-width:0}
+.pole .vstup{color:var(--text)}
+.pole.siroke{grid-column:1/-1}
+.kalk{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start}
+@media (max-width:900px){.kalk{grid-template-columns:minmax(0,1fr)}}
+.souhrn{position:sticky;top:0}
+.souhrn table td{padding:3px 4px}
+.souhrn .velke td{font-size:1.05rem;font-weight:700;border-top:2px solid var(--border-strong)}
+.souhrn .cena td{color:var(--accent);font-weight:700}
+
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.zalozky .tl[aria-pressed="true"]{font-weight:600}
+.hvezda{color:var(--warn)}
+
+.tab-obal{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:4px 5px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td.cislo,th.cislo{text-align:right;white-space:nowrap}
+tfoot td{font-weight:600}
+table.edit td{padding:3px 3px}
+table.edit .vstup{padding:4px 6px;font-size:.84rem}
+table.edit .w-kat{min-width:120px}.w-naz{min-width:200px}.w-mn{width:110px}.w-j{width:68px}.w-c{width:90px}.w-p{width:62px}
+.plus{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tip{font-size:.78rem;color:var(--text-muted);margin:6px 0 0;line-height:1.45}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+.kladne{color:var(--ok)} .zaporne{color:var(--danger)}
+.varovani{color:var(--warn);font-size:.8rem}
+
+/* nabídka */
+.nab-rozvrh{display:grid;grid-template-columns:260px minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:900px){.nab-rozvrh{grid-template-columns:minmax(0,1fr)}}
+.volby label{display:flex;gap:6px;align-items:center;font-size:.84rem;margin:4px 0}
+.dokument{background:#fff;color:#111;border-radius:4px;padding:28px 32px;box-shadow:var(--shadow);font-size:13px;line-height:1.45;max-width:800px;overflow-x:auto}
+.dokument table{font-size:12.5px}
+.dokument th,.dokument td{border-bottom:1px solid #ccc;color:#111}
+.dokument th{color:#555}
+.dok-hlava{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:2px solid #333;padding-bottom:12px;margin-bottom:14px;flex-wrap:wrap}
+.dok-hlava img{max-height:70px;max-width:240px}
+.dok-firma{text-align:right;font-size:12px;color:#333;white-space:pre-line}
+.dokument h2{font-size:20px;margin:0 0 4px}
+.dokument h3{font-size:15px;margin:16px 0 6px}
+.dok-strany{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0}
+.dok-strany div{white-space:pre-line}
+.dok-mala{color:#555;font-size:11.5px}
+.dok-cena td{font-size:14px}
+.dok-cena tr.celkem td{font-weight:700;font-size:16px;border-top:2px solid #333}
+.dok-podpis{margin-top:40px;display:flex;justify-content:flex-end}
+.dok-podpis div{border-top:1px solid #333;padding-top:4px;width:220px;text-align:center;font-size:12px}
+.logo-nahled{max-height:60px;max-width:200px;background:#fff;padding:4px;border-radius:4px;border:1px solid var(--border)}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,620px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.55}
+.okno .telo p{margin:0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.okno code{background:var(--bg-control);padding:0 4px;border-radius:3px;font-size:.82rem}
+
+@media print{
+  .lista,.nabidka,dialog,.volby,.netisk,#podpis-pruh{display:none!important}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .nab-rozvrh{display:block}
+  .dokument{box-shadow:none;padding:0;max-width:none}
+  .panel{break-inside:avoid;background:#fff;color:#000;border-color:#999}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🧮 Kalkulace</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Zakázky, import kusovníku, záloha">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zakázka"><span class="skup-nazev" aria-hidden="true">Zakázka</span><div class="skup-tl">
+    <select class="tl" id="vyberZakazky" aria-label="Zakázka"></select>
+    <button class="tl hlavni-tl" data-prikaz="nova" title="Nová zakázka">✚<span class="txt"> Nová</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-pohled="kalkulace" aria-pressed="true" title="Kalkulace">🧮<span class="txt"> Kalkulace</span></button>
+    <button class="tl" data-pohled="varianty" aria-pressed="false" title="Srovnání variant">⚖️<span class="txt"> Varianty</span></button>
+    <button class="tl" data-pohled="skutecnost" aria-pressed="false" title="Plán vs. skutečnost">📊<span class="txt"> Skutečnost</span></button>
+    <button class="tl" data-pohled="nabidka" aria-pressed="false" title="Nabídka k tisku">📄<span class="txt"> Nabídka</span></button>
+    <button class="tl" data-pohled="zakazky" aria-pressed="false" title="Seznam zakázek">🗂️<span class="txt"> Zakázky</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Dílna"><span class="skup-nazev" aria-hidden="true">Dílna</span><div class="skup-tl">
+    <button class="tl" data-pohled="cenik" aria-pressed="false" title="Ceník materiálů">📦<span class="txt"> Ceník</span></button>
+    <button class="tl" data-pohled="nastaveni" aria-pressed="false" title="Firma, sazby, DPH, logo">⚙️<span class="txt"> Sazby</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nova">✚ Nová zakázka</button>
+  <button class="tl" data-prikaz="ukazka">🪄 Ukázková zakázka (kuchyňská linka)</button>
+  <button class="tl" data-prikaz="duplikuj">⧉ Duplikovat zakázku</button>
+  <button class="tl" data-prikaz="smazZakazku">🗑️ Smazat zakázku…</button>
+  <hr>
+  <button class="tl" data-prikaz="importKus">📥 Import kusovníku (Řezný plán, Návrh skříní, CSV)…</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk / PDF nabídky</button>
+  <hr>
+  <button class="tl" data-prikaz="export">💾 Záloha všeho (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+</div>
+<input type="file" id="souborZaloha" accept=".json,application/json" hidden>
+<input type="file" id="souborCenik" accept=".csv,.txt,.tsv,text/csv" hidden>
+<input type="file" id="souborKus" accept=".json,.csv,.txt,.tsv,application/json,text/csv" hidden>
+<input type="file" id="souborLogo" accept="image/*" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+<datalist id="seznamCeniku"></datalist>
+
+<dialog class="okno" id="dlgImport"><form method="dialog">
+  <header>📥 Import kusovníku</header>
+  <div class="telo">
+    <p>Načte dílce a spočítá <b>m² desek</b> podle materiálu, <b>bm hran</b> a <b>bm tyčí</b> (masiv). Ceny se doplní z vašeho ceníku podle názvu (nebo z ceny desky v kusovníku). Přidá se do aktuální varianty.</p>
+    <p class="tip">Formáty: <a href="rezny_plan.html" style="color:var(--accent)">Řezný plán</a> – „Export kusovníku (JSON)“ nebo „CSV dílců“ (pozná i počet desek); <a href="navrh_skrini.html" style="color:var(--accent)">Návrh skříní</a> – „JSON pro řezný plán“ nebo „CSV kusovníku“; obecné CSV s hlavičkou <code>nazev;delka;sirka;ks;material</code> (mm, řádek bez šířky = tyč).</p>
+    <textarea class="vstup" id="importText" rows="8" placeholder="Vložte obsah souboru sem, nebo vyberte soubor…" data-i18n="ne"></textarea>
+    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="importPrace" checked> Doplnit odhad práce (řezání podle počtu dílců, olepování podle bm – normy v Firma a sazby)</label>
+  </div>
+  <footer>
+    <button type="button" class="btn vlevo" id="importSoubor">📂 Vybrat soubor…</button>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Importovat</button>
+  </footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak počítat zakázku</header>
+  <div class="telo">
+    <p><b>1. Ceník a sazby.</b> V <i>📦 Ceník</i> si nastavte své nákupní ceny bez DPH (import/export CSV, oddělovač se pozná sám). V <i>⚙️ Sazby</i> hodinové sazby operací, režii, marži, logo a údaje do nabídky. Výchozí ceny a sazby jsou jen orientační (stav 11/2026).</p>
+    <p><b>2. Materiál.</b> Řádek po kategoriích: desky m², hranování bm, masiv m³, kování ks, povrchová úprava m², spojovací materiál. Do množství lze psát výraz, např. <code>2*0,8*0,6</code> nebo <code>2,8×2,07×3</code>. <b>Prořez %</b> navýší spotřebu – rozdíl je vidět v souhrnu jako odpad. Název z ceníku vyplní cenu sám.</p>
+    <p><b>3. Práce</b> po operacích (řezání, olepování, CNC, montáž, doprava…) – množství × sazba.</p>
+    <p><b>4. Cena</b> = (materiál s prořezem + práce) → + režie (z přímých nákladů, nebo jen z práce) → + zisk. <b>Přirážka</b> se počítá z nákladů, <b>marže</b> z prodejní ceny (25 % marže = 33,3 % přirážky). Pak zaokrouhlení a DPH.</p>
+    <p><b>DPH</b> se volí podle data uskutečnění plnění (sazby od roku 2013 v tabulce v Nastavení; od 1. 1. 2024 je 21 % a 12 %). Sníženou sazbu u montáže nábytku v bytě či rodinném domě (sociální bydlení, § 48 zákona o DPH) posuďte s účetní – na samotnou dodávku nábytku se nevztahuje.</p>
+    <p><b>Varianty</b> (např. lamino × dýha × masiv) se srovnávají v <i>⚖️ Varianty</i>; ★ označuje přijatou variantu, ke které se vede <i>📊 Plán vs. skutečnost</i>: skutečné ceny materiálu z faktur, skutečné hodiny a nečekané náklady → skutečný zisk a výdělek na hodinu.</p>
+    <p><b>Nabídka</b> se tiskne nebo ukládá do PDF tiskem prohlížeče (Uložit jako PDF). Obsahuje logo, vaše údaje, zákazníka, popis, rozsah dodávky a cenu.</p>
+    <p>Data jsou jen v tomto prohlížeči (zakázky a ceník v localStorage, logo v IndexedDB) – zálohujte přes <i>Soubor → Záloha</i>.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script>
+(function () {
+'use strict';
+const J = window.KZ;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const kc = (x, d) => J.formatKc(x, d);
+const cis = (x, d) => J.formatCislo(x, d);
+const datumCz = s => s ? s.split('-').reverse().map(Number).join('. ') : '';
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data = J.prazdna();
+try { const t = localStorage.getItem(J.KLIC); if (t) data = J.migruj(JSON.parse(t)); } catch (e) { data = J.prazdna(); }
+const UI = { pohled: 'kalkulace', varianta: null, nabVse: false, nabRozsah: true, nabRozpis: false, filtrCeniku: '' };
+try { Object.assign(UI, JSON.parse(localStorage.getItem(J.KLIC + '_ui') || '{}')); } catch (e) {}
+let logo = null; // dataURL z IndexedDB
+
+let casovac = null;
+function uloz(hned) {
+  clearTimeout(casovac);
+  const f = () => {
+    try { localStorage.setItem(J.KLIC, JSON.stringify(data)); localStorage.setItem(J.KLIC + '_ui', JSON.stringify(UI)); }
+    catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+  };
+  if (hned) f(); else casovac = setTimeout(f, 300);
+}
+addEventListener('pagehide', () => uloz(true));
+
+/* ---------- IndexedDB pro logo ---------- */
+function db() {
+  return new Promise((ok, chyba) => {
+    const r = indexedDB.open(J.KLIC, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('soubory');
+    r.onsuccess = () => ok(r.result); r.onerror = () => chyba(r.error);
+  });
+}
+async function dbOp(rezim, fn) {
+  const d = await db();
+  return new Promise((ok, chyba) => {
+    const tx = d.transaction('soubory', rezim), r = fn(tx.objectStore('soubory'));
+    tx.oncomplete = () => { ok(r && r.result); d.close(); }; tx.onerror = () => { chyba(tx.error); d.close(); };
+  });
+}
+const nactiLogo = () => dbOp('readonly', s => s.get('logo')).then(v => { logo = v || null; }).catch(() => {});
+
+/* ---------- stav ---------- */
+const zakazka = () => data.zakazky.find(z => z.id === data.aktivni) || null;
+function varianta(z) {
+  z = z || zakazka(); if (!z) return null;
+  return z.varianty.find(v => v.id === UI.varianta) || z.varianty.find(v => v.id === z.vybrana) || z.varianty[0];
+}
+const operace = id => data.nastaveni.operace.find(o => o.id === id);
+const vypocet = (z, v) => J.spocitejVariantu(v, data.nastaveni, J.dphZakazky(z));
+function zmeneno() { const z = zakazka(); if (z) z.upraveno = J.dnesIso(); uloz(); }
+
+/* ---------- výběr zakázky ---------- */
+function obnovVyber() {
+  const s = $('vyberZakazky');
+  s.innerHTML = data.zakazky.length ? data.zakazky.map(z => `<option value="${esc(z.id)}">${esc(z.cislo)} · ${esc(z.nazev)}</option>`).join('') : '<option value="">— žádná zakázka —</option>';
+  s.value = data.aktivni || '';
+  $('seznamCeniku').innerHTML = data.cenik.map(c => `<option value="${esc(c.nazev)}">${esc(c.kod)} · ${cis(c.cena)} Kč/${esc(c.jednotka)}</option>`).join('');
+}
+
+/* ================= KALKULACE ================= */
+const opt = (pole, akt) => pole.map(([v, t]) => `<option value="${esc(v)}"${v === akt ? ' selected' : ''}>${esc(t)}</option>`).join('');
+function radekMat(p) {
+  const r = J.radekMaterialu(p);
+  return `<tr data-typ="polozky" data-id="${p.id}">
+    <td><select class="vstup w-kat" data-p="kategorie" aria-label="Kategorie">${opt(J.KATEGORIE.map(k => [k.id, k.nazev]), p.kategorie)}</select></td>
+    <td><input class="vstup w-naz" data-p="nazev" value="${esc(p.nazev)}" list="seznamCeniku" placeholder="materiál z ceníku…" aria-label="Název" data-i18n="ne"></td>
+    <td><input class="vstup w-mn${r.ok ? '' : ' chyba'}" data-p="mnozstvi" value="${esc(p.mnozstvi)}" inputmode="decimal" placeholder="0" aria-label="Množství" title="Číslo nebo výraz, např. 2*0,8*0,6"></td>
+    <td><select class="vstup w-j" data-p="jednotka" aria-label="Jednotka">${opt(J.JEDNOTKY.map(j => [j, j]), p.jednotka)}</select></td>
+    <td><input class="vstup w-c" data-p="cena" value="${p.cena || ''}" inputmode="decimal" placeholder="0" aria-label="Cena za jednotku bez DPH"></td>
+    <td><input class="vstup w-p" data-p="prorez" value="${p.prorez}" inputmode="decimal" aria-label="Prořez %"></td>
+    <td class="cislo" data-soucet>${kc(r.celkem)}</td>
+    <td><button class="btn mini danger" data-akce="smazRadek" title="Smazat řádek" aria-label="Smazat řádek">✕</button></td></tr>`;
+}
+function radekPrace(p) {
+  const r = J.radekPrace(p);
+  const ops = data.nastaveni.operace.map(o => [o.id, o.nazev]);
+  if (p.operace && !operace(p.operace)) ops.push([p.operace, p.operace]);
+  return `<tr data-typ="prace" data-id="${p.id}">
+    <td><select class="vstup w-kat" data-p="operace" aria-label="Operace"><option value="">— vlastní —</option>${opt(ops, p.operace)}</select></td>
+    <td><input class="vstup w-naz" data-p="nazev" value="${esc(p.nazev)}" placeholder="popis (nepovinné)" aria-label="Popis" data-i18n="ne"></td>
+    <td><input class="vstup w-mn${r.ok ? '' : ' chyba'}" data-p="mnozstvi" value="${esc(p.mnozstvi)}" inputmode="decimal" placeholder="0" aria-label="Množství"></td>
+    <td><select class="vstup w-j" data-p="jednotka" aria-label="Jednotka">${opt(J.JEDNOTKY.map(j => [j, j]), p.jednotka)}</select></td>
+    <td><input class="vstup w-c" data-p="sazba" value="${p.sazba || ''}" inputmode="decimal" aria-label="Sazba za jednotku"></td>
+    <td class="cislo" data-soucet>${kc(r.celkem)}</td>
+    <td><button class="btn mini danger" data-akce="smazRadek" title="Smazat řádek" aria-label="Smazat řádek">✕</button></td></tr>`;
+}
+function souhrnHtml(z, v) {
+  const r = vypocet(z, v), n = data.nastaveni;
+  const kat = J.KATEGORIE.filter(k => r.kategorie[k.id]).map(k => `<tr><td class="dok-mala">&nbsp;&nbsp;${esc(k.nazev)}</td><td class="cislo dok-mala">${kc(r.kategorie[k.id])}</td></tr>`).join('');
+  return `<h2>Souhrn – ${esc(v.nazev)}</h2><table>
+    <tr><td>Materiál bez prořezu</td><td class="cislo">${kc(r.materialZaklad)}</td></tr>
+    <tr><td>Prořez a odpad</td><td class="cislo">${kc(r.prorez)}</td></tr>
+    <tr><td><b>Materiál celkem</b></td><td class="cislo"><b>${kc(r.material)}</b></td></tr>${kat}
+    <tr><td><b>Práce</b> (${cis(r.hodiny, 1)} h)</td><td class="cislo"><b>${kc(r.prace)}</b></td></tr>
+    <tr><td>Přímé náklady</td><td class="cislo">${kc(r.prime)}</td></tr>
+    <tr><td>Režie ${cis(v.rezie)} %</td><td class="cislo">${kc(r.rezie)}</td></tr>
+    <tr><td><b>Vlastní náklady</b></td><td class="cislo"><b>${kc(r.naklady)}</b></td></tr>
+    <tr><td>Zisk (marže ${cis(r.marzeNaCene, 1)} %)</td><td class="cislo ${r.zisk < 0 ? 'zaporne' : 'kladne'}">${kc(r.zisk)}</td></tr>
+    <tr class="velke cena"><td>Cena bez DPH</td><td class="cislo">${kc(r.cenaBezDph)}</td></tr>
+    ${n.platce ? `<tr><td>DPH ${r.sazbaDph} %</td><td class="cislo">${kc(r.dph, 2)}</td></tr><tr class="velke"><td>Cena s DPH</td><td class="cislo">${kc(r.cenaSDph, 2)}</td></tr>` : '<tr><td colspan="2" class="tip">Neplátce DPH – cena je konečná.</td></tr>'}
+  </table>
+  ${r.hodiny > 0 ? `<p class="tip">Výdělek na hodinu práce (cena − materiál) ÷ h: <b>${kc((r.cenaBezDph - r.material) / r.hodiny)}</b></p>` : ''}
+  ${r.chyby ? `<p class="varovani">⚠ ${r.chyby} řádků má neplatné množství (počítá se 0).</p>` : ''}
+  ${r.bezCeny ? `<p class="varovani">⚠ ${r.bezCeny} položek materiálu je bez ceny.</p>` : ''}`;
+}
+function vykresliKalkulace() {
+  const z = zakazka();
+  if (!z) {
+    $('obsah').innerHTML = `<div class="prazdno">Zatím žádná zakázka.<br><button class="btn primary" data-prikaz="nova">✚ Nová zakázka</button> <button class="btn" data-prikaz="ukazka">🪄 Ukázková zakázka</button><br><span class="tip">Nejdřív si v <b>📦 Ceník</b> a <b>⚙️ Sazby</b> nastavte své ceny a sazby.</span></div>`;
+    return;
+  }
+  const v = varianta(z);
+  const stavy = opt(J.STAVY.map(s => [s.id, s.nazev]), z.stav);
+  const druhy = J.DRUHY_DPH.map(d => [d.id, `${d.nazev} – ${J.sazbaDph(z.plneni || z.datum, d.id)} %`]);
+  $('obsah').innerHTML = `
+  <details class="panel" ${z.nazev === 'Nová zakázka' || UI.hlavickaOtevrena ? 'open' : ''} id="hlavicka"><summary>📋 ${esc(z.cislo)} · <span data-i18n="ne">${esc(z.nazev)}</span> ${z.zakaznik.jmeno ? '· ' + esc(z.zakaznik.jmeno) : ''}</summary>
+    <div class="mrizka">
+      <label class="pole">Číslo<input class="vstup" data-z="cislo" value="${esc(z.cislo)}" maxlength="30"></label>
+      <label class="pole" style="grid-column:span 2">Název zakázky<input class="vstup" data-z="nazev" value="${esc(z.nazev)}" maxlength="150" data-i18n="ne"></label>
+      <label class="pole">Stav<select class="vstup" data-z="stav">${stavy}</select></label>
+      <label class="pole">Datum nabídky<input class="vstup" type="date" data-z="datum" value="${esc(z.datum)}"></label>
+      <label class="pole">Datum plnění (pro DPH)<input class="vstup" type="date" data-z="plneni" value="${esc(z.plneni)}" title="Prázdné = datum nabídky"></label>
+      <label class="pole">Sazba DPH<select class="vstup" data-z="druhDph">${opt(druhy, z.druhDph)}</select></label>
+      <label class="pole">Zákazník<input class="vstup" data-z="zakaznik.jmeno" value="${esc(z.zakaznik.jmeno)}" maxlength="120" data-i18n="ne"></label>
+      <label class="pole">Adresa<input class="vstup" data-z="zakaznik.adresa" value="${esc(z.zakaznik.adresa)}" maxlength="200" data-i18n="ne"></label>
+      <label class="pole">Telefon / e-mail<input class="vstup" data-z="zakaznik.kontakt" value="${esc(z.zakaznik.kontakt)}" maxlength="120" data-i18n="ne"></label>
+      <label class="pole siroke">Popis dodávky (do nabídky)<textarea class="vstup" data-z="popis" rows="2" maxlength="3000" data-i18n="ne">${esc(z.popis)}</textarea></label>
+    </div>
+  </details>
+  <div class="zalozky" role="tablist" aria-label="Varianty">
+    ${z.varianty.map(x => `<button class="tl" data-varianta="${x.id}" aria-pressed="${x.id === v.id}">${x.id === z.vybrana ? '<span class="hvezda" title="Přijatá varianta">★</span> ' : ''}<span data-i18n="ne">${esc(x.nazev)}</span> · ${kc(vypocet(z, x).cenaBezDph)}</button>`).join('')}
+    <button class="tl" data-akce="novaVar" title="Nová prázdná varianta">✚ Varianta</button>
+    <button class="tl" data-akce="dupVar" title="Kopie této varianty">⧉</button>
+    <button class="tl" data-akce="prejmenujVar" title="Přejmenovat variantu">✎</button>
+    <button class="tl" data-akce="vybratVar" title="Označit jako přijatou (★) – k ní se vede skutečnost">★</button>
+    ${z.varianty.length > 1 ? '<button class="tl" data-akce="smazVar" title="Smazat variantu">🗑️</button>' : ''}
+  </div>
+  <div class="kalk">
+    <div>
+      <section class="panel"><h2>🪵 Materiál</h2>
+        <div class="tab-obal"><table class="edit"><thead><tr><th>Kategorie</th><th>Název</th><th>Množství</th><th>MJ</th><th>Kč/MJ</th><th>Prořez %</th><th class="cislo">Celkem</th><th></th></tr></thead>
+        <tbody>${v.polozky.map(radekMat).join('') || '<tr><td colspan="8" class="tip">Žádný materiál – přidejte řádek nebo importujte kusovník.</td></tr>'}</tbody></table></div>
+        <div class="plus">${J.KATEGORIE.map(k => `<button class="btn mini" data-akce="pridejMat" data-kat="${k.id}">+ ${esc(k.nazev)}</button>`).join('')}
+          <button class="btn mini" data-prikaz="importKus">📥 Import kusovníku</button></div>
+        <p class="tip">Množství může být výraz (<code>2*0,8*0,6</code>). Ceny bez DPH. Název z ceníku doplní cenu, jednotku a prořez.</p>
+      </section>
+      <section class="panel"><h2>🛠️ Práce</h2>
+        <div class="tab-obal"><table class="edit"><thead><tr><th>Operace</th><th>Popis</th><th>Množství</th><th>MJ</th><th>Kč/MJ</th><th class="cislo">Celkem</th><th></th></tr></thead>
+        <tbody>${v.prace.map(radekPrace).join('') || '<tr><td colspan="7" class="tip">Žádná práce.</td></tr>'}</tbody></table></div>
+        <div class="plus">${data.nastaveni.operace.map(o => `<button class="btn mini" data-akce="pridejPraci" data-op="${esc(o.id)}">+ ${esc(o.nazev)}</button>`).join('')}<button class="btn mini" data-akce="pridejPraci" data-op="">+ vlastní</button></div>
+      </section>
+      <section class="panel"><h2>📐 Režie a zisk varianty</h2>
+        <div class="mrizka">
+          <label class="pole">Režie %<input class="vstup" data-v="rezie" value="${v.rezie}" inputmode="decimal"></label>
+          <label class="pole">Režie z<select class="vstup" data-v="rezieZaklad">${opt([['prime', 'přímých nákladů'], ['prace', 'jen z práce']], v.rezieZaklad)}</select></label>
+          <label class="pole">Zisk %<input class="vstup" data-v="marze" value="${v.marze}" inputmode="decimal"></label>
+          <label class="pole">Počítat jako<select class="vstup" data-v="marzeRezim">${opt([['prirazka', 'přirážka z nákladů'], ['marze', 'marže z ceny']], v.marzeRezim)}</select></label>
+        </div>
+      </section>
+    </div>
+    <aside class="panel souhrn" id="souhrn">${souhrnHtml(z, v)}</aside>
+  </div>`;
+}
+function prepocitej() {
+  const z = zakazka(), v = varianta(z);
+  document.querySelectorAll('tr[data-typ]').forEach(tr => {
+    const p = v[tr.dataset.typ].find(x => x.id === tr.dataset.id); if (!p) return;
+    const r = tr.dataset.typ === 'polozky' ? J.radekMaterialu(p) : J.radekPrace(p);
+    tr.querySelector('[data-soucet]').textContent = kc(r.celkem);
+    tr.querySelector('[data-p="mnozstvi"]').classList.toggle('chyba', !r.ok);
+  });
+  $('souhrn').innerHTML = souhrnHtml(z, v);
+  document.querySelectorAll('[data-varianta]').forEach(b => {
+    const x = z.varianty.find(q => q.id === b.dataset.varianta);
+    b.innerHTML = `${x.id === z.vybrana ? '<span class="hvezda" title="Přijatá varianta">★</span> ' : ''}<span data-i18n="ne">${esc(x.nazev)}</span> · ${kc(vypocet(z, x).cenaBezDph)}`;
+  });
+}
+
+/* ================= VARIANTY ================= */
+function vykresliVarianty() {
+  const z = zakazka(); if (!z) return vykresliKalkulace();
+  const R = z.varianty.map(v => ({ v, r: vypocet(z, v) }));
+  const min = Math.min(...R.map(x => x.r.cenaBezDph));
+  const radek = (nazev, f, tucne) => `<tr><td>${tucne ? '<b>' + nazev + '</b>' : nazev}</td>${R.map(x => `<td class="cislo">${tucne ? '<b>' + f(x) + '</b>' : f(x)}</td>`).join('')}</tr>`;
+  $('obsah').innerHTML = `<section class="panel"><h2>⚖️ Srovnání variant – <span data-i18n="ne">${esc(z.nazev)}</span></h2>
+    <div class="tab-obal"><table><thead><tr><th></th>${R.map(x => `<th class="cislo">${x.v.id === z.vybrana ? '★ ' : ''}<span data-i18n="ne">${esc(x.v.nazev)}</span></th>`).join('')}</tr></thead><tbody>
+    ${radek('Materiál (s prořezem)', x => kc(x.r.material))}
+    ${radek('z toho prořez', x => kc(x.r.prorez))}
+    ${radek('Práce', x => kc(x.r.prace))}
+    ${radek('Hodiny', x => cis(x.r.hodiny, 1) + ' h')}
+    ${radek('Režie', x => kc(x.r.rezie))}
+    ${radek('Vlastní náklady', x => kc(x.r.naklady), true)}
+    ${radek('Zisk', x => `<span class="${x.r.zisk < 0 ? 'zaporne' : 'kladne'}">${kc(x.r.zisk)}</span>`)}
+    ${radek('Marže na ceně', x => cis(x.r.marzeNaCene, 1) + ' %')}
+    ${radek('Cena bez DPH', x => kc(x.r.cenaBezDph) + (R.length > 1 && x.r.cenaBezDph === min ? ' ✓' : ''), true)}
+    ${data.nastaveni.platce ? radek('Cena s DPH', x => kc(x.r.cenaSDph), true) : ''}
+    ${radek('Rozdíl proti nejlevnější', x => x.r.cenaBezDph === min ? '–' : '+ ' + kc(x.r.cenaBezDph - min))}
+    <tr><td></td>${R.map(x => `<td class="cislo"><button class="btn mini" data-varianta="${x.v.id}" data-otevrit="1">Upravit</button> ${x.v.id === z.vybrana ? '<b class="hvezda">★ přijatá</b>' : `<button class="btn mini" data-vybrat="${x.v.id}">★ Přijmout</button>`}</td>`).join('')}</tr>
+    </tbody></table></div>
+    <p class="tip">Do nabídky můžete dát všechny varianty najednou (📄 Nabídka → „všechny varianty“). Přijatá ★ varianta je základ pro plán vs. skutečnost.</p></section>`;
+}
+
+/* ================= PLÁN VS. SKUTEČNOST ================= */
+function vykresliSkutecnost() {
+  const z = zakazka(); if (!z) return vykresliKalkulace();
+  const v = z.varianty.find(x => x.id === z.vybrana) || z.varianty[0];
+  if (!z.skutecnost) {
+    $('obsah').innerHTML = `<div class="prazdno">Skutečnost se vede k přijaté variantě <b>★ <span data-i18n="ne">${esc(v.nazev)}</span></b>.<br>
+      Převezmou se plánované částky materiálu a hodiny – pak je přepisujte podle faktur a výkazu práce.<br><button class="btn primary" data-akce="zacniSkut">📊 Začít evidovat skutečnost</button></div>`;
+    return;
+  }
+  const S = J.srovnani(z, data.nastaveni), sk = z.skutecnost;
+  const roz = (x, obracene) => { const c = obracene ? -x : x; return `<span class="${Math.abs(x) < 0.5 ? '' : c > 0 ? 'zaporne' : 'kladne'}">${x > 0 ? '+' : ''}${kc(x)}</span>`; };
+  const vst = (typ, id, pole, h) => `<input class="vstup w-c" data-s="${typ}" data-id="${id}" data-p="${pole}" value="${String(J.zaokr(h)).replace('.', ',')}" inputmode="decimal">`;
+  $('obsah').innerHTML = `<div class="kalk"><div>
+    <section class="panel"><h2>🪵 Materiál – skutečné náklady (Kč bez DPH)</h2><div class="tab-obal"><table class="edit">
+      <thead><tr><th>Položka</th><th class="cislo">Plán</th><th class="cislo">Skutečnost</th><th class="cislo">Rozdíl</th></tr></thead><tbody>
+      ${sk.material.map(m => `<tr><td data-i18n="ne">${esc(m.nazev)}</td><td class="cislo">${kc(m.plan)}</td><td class="cislo">${vst('material', m.id, 'castka', m.castka)}</td><td class="cislo">${roz(m.castka - m.plan)}</td></tr>`).join('')}
+      ${sk.jine.map(m => `<tr><td><input class="vstup" data-s="jine" data-id="${m.id}" data-p="nazev" value="${esc(m.nazev)}" placeholder="nečekaný náklad" data-i18n="ne"></td><td class="cislo">–</td><td class="cislo">${vst('jine', m.id, 'castka', m.castka)}</td><td class="cislo"><button class="btn mini danger" data-smaz-jine="${m.id}" aria-label="Smazat">✕</button></td></tr>`).join('')}
+      </tbody></table></div><div class="plus"><button class="btn mini" data-akce="pridejJine">+ další náklad (přeřez, reklamace, pronájem…)</button></div></section>
+    <section class="panel"><h2>🛠️ Práce – skutečné množství</h2><div class="tab-obal"><table class="edit">
+      <thead><tr><th>Operace</th><th class="cislo">Plán</th><th class="cislo">Skutečnost</th><th class="cislo">Kč/MJ</th><th class="cislo">Rozdíl Kč</th></tr></thead><tbody>
+      ${sk.prace.map(p => `<tr><td>${esc(p.nazev)}</td><td class="cislo">${cis(p.plan, 2)} ${esc(p.jednotka)}</td><td class="cislo">${vst('prace', p.id, 'mnozstvi', p.mnozstvi)}</td><td class="cislo">${vst('prace', p.id, 'sazba', p.sazba)}</td><td class="cislo">${roz((p.mnozstvi - p.plan) * p.sazba)}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="plus"><button class="btn mini danger" data-akce="resetSkut">↺ Znovu převzít z plánu…</button></div></section>
+    </div>
+    <aside class="panel souhrn"><h2>📊 ★ <span data-i18n="ne">${esc(v.nazev)}</span></h2><table>
+      <thead><tr><th></th><th class="cislo">Plán</th><th class="cislo">Skut.</th></tr></thead>
+      <tr><td>Materiál + ostatní</td><td class="cislo">${kc(S.plan.material)}</td><td class="cislo">${kc(S.skut.material + S.skut.jine)}</td></tr>
+      <tr><td>Práce</td><td class="cislo">${kc(S.plan.prace)}</td><td class="cislo">${kc(S.skut.prace)}</td></tr>
+      <tr><td>Hodiny</td><td class="cislo">${cis(S.plan.hodiny, 1)}</td><td class="cislo">${cis(S.skut.hodiny, 1)}</td></tr>
+      <tr><td>Režie</td><td class="cislo">${kc(S.plan.rezie)}</td><td class="cislo">${kc(S.skut.rezie)}</td></tr>
+      <tr><td><b>Náklady</b></td><td class="cislo"><b>${kc(S.plan.naklady)}</b></td><td class="cislo"><b>${kc(S.skut.naklady)}</b></td></tr>
+      <tr><td>Cena bez DPH</td><td class="cislo">${kc(S.plan.cenaBezDph)}</td><td class="cislo">${kc(S.plan.cenaBezDph)}</td></tr>
+      <tr class="velke"><td>Zisk</td><td class="cislo">${kc(S.plan.zisk)}</td><td class="cislo ${S.skut.zisk < 0 ? 'zaporne' : 'kladne'}">${kc(S.skut.zisk)}</td></tr>
+      <tr><td>Marže na ceně</td><td class="cislo">${cis(S.plan.marzeNaCene, 1)} %</td><td class="cislo">${cis(S.skut.marzeNaCene, 1)} %</td></tr>
+    </table>
+    <p class="tip">Rozdíl zisku: <b>${roz(S.rozdil.zisk, true)}</b><br>Hodiny navíc: <b>${S.rozdil.hodiny > 0 ? '+' : ''}${cis(S.rozdil.hodiny, 1)} h</b>
+    ${S.hodinovyVydelek != null ? `<br>Skutečný výdělek na hodinu (cena − materiál) ÷ h: <b>${kc(S.hodinovyVydelek)}</b>` : ''}</p>
+    <p class="tip">Cena zůstává podle nabídky; režie se počítá stejným % jako v kalkulaci.</p></aside></div>`;
+}
+
+/* ================= NABÍDKA ================= */
+function dokumentHtml(z) {
+  const n = data.nastaveni, f = n.firma;
+  const vars = UI.nabVse ? z.varianty : z.varianty.filter(v => v.id === z.vybrana);
+  const firma = [f.adresa, f.ico && 'IČO: ' + f.ico, f.dic && 'DIČ: ' + f.dic, f.telefon, f.email, f.web].filter(Boolean).join('\n');
+  const podminky = z.podminky != null ? z.podminky : n.podminky;
+  const blok = v => {
+    const r = vypocet(z, v), rp = J.rozpisCeny(r);
+    const rozsah = UI.nabRozsah && (v.polozky.length || v.prace.length) ? `<table><thead><tr><th>Položka</th><th class="cislo">Množství</th></tr></thead><tbody>
+      ${v.polozky.filter(p => p.nazev).map(p => `<tr><td>${esc(p.nazev)}</td><td class="cislo">${cis(J.radekMaterialu(p).mnozstvi, 2)} ${esc(p.jednotka)}</td></tr>`).join('')}
+      ${v.prace.map(p => `<tr><td>${esc((operace(p.operace) || {}).nazev || '')}${p.nazev && !/^odhad:/.test(p.nazev) ? (operace(p.operace) ? ' – ' : '') + esc(p.nazev) : ''}</td><td class="cislo">${cis(J.radekPrace(p).mnozstvi, 1)} ${esc(p.jednotka)}</td></tr>`).join('')}
+      </tbody></table>` : '';
+    return `${vars.length > 1 || z.varianty.length > 1 ? `<h3>${esc(v.nazev)}</h3>` : '<h3>Rozsah dodávky</h3>'}${rozsah}
+      <table class="dok-cena" style="margin-top:8px">
+      ${UI.nabRozpis ? `<tr><td>Materiál</td><td class="cislo">${kc(rp.material)}</td></tr><tr><td>Práce a doprava</td><td class="cislo">${kc(rp.prace)}</td></tr>` : ''}
+      ${n.platce ? `<tr><td>Cena bez DPH</td><td class="cislo">${kc(r.cenaBezDph, 2)}</td></tr><tr><td>DPH ${r.sazbaDph} %</td><td class="cislo">${kc(r.dph, 2)}</td></tr><tr class="celkem"><td>Celkem s DPH</td><td class="cislo">${kc(r.cenaSDph, 2)}</td></tr>`
+        : `<tr class="celkem"><td>Cena celkem</td><td class="cislo">${kc(r.cenaBezDph, 2)}</td></tr><tr><td colspan="2" class="dok-mala">Nejsme plátci DPH.</td></tr>`}
+      </table>`;
+  };
+  return `<div class="dok-hlava">
+      <div>${logo ? `<img src="${logo}" alt="logo">` : ''}${!logo && f.nazev ? `<b style="font-size:18px">${esc(f.nazev)}</b>` : ''}</div>
+      <div class="dok-firma">${logo && f.nazev ? `<b>${esc(f.nazev)}</b>\n` : ''}${esc(firma) || '<i>Údaje firmy doplňte v ⚙️ Sazby</i>'}</div>
+    </div>
+    <h2>Cenová nabídka č. ${esc(z.cislo)}</h2>
+    <div class="dok-mala">Datum: ${datumCz(z.datum)} · Platnost do: ${datumCz(J.platnostDo(z.datum, n.platnostDni))}</div>
+    <div class="dok-strany">
+      <div><span class="dok-mala">Odběratel</span>\n<b>${esc(z.zakaznik.jmeno) || '—'}</b>${z.zakaznik.adresa ? '\n' + esc(z.zakaznik.adresa) : ''}${z.zakaznik.kontakt ? '\n' + esc(z.zakaznik.kontakt) : ''}</div>
+      <div><span class="dok-mala">Předmět</span>\n<b>${esc(z.nazev)}</b></div>
+    </div>
+    ${z.popis ? `<p style="white-space:pre-line">${esc(z.popis)}</p>` : ''}
+    ${vars.map(blok).join('')}
+    ${podminky ? `<h3>Podmínky</h3><p style="white-space:pre-line">${esc(podminky)}</p>` : ''}
+    ${f.banka ? `<p class="dok-mala">Bankovní spojení: ${esc(f.banka)}</p>` : ''}
+    <div class="dok-podpis"><div>${esc(f.nazev) || 'Razítko a podpis'}</div></div>`;
+}
+function vykresliNabidku() {
+  const z = zakazka(); if (!z) return vykresliKalkulace();
+  const n = data.nastaveni;
+  $('obsah').innerHTML = `<div class="nab-rozvrh">
+    <section class="panel volby"><h2>📄 Nabídka</h2>
+      <label><input type="radio" name="nabVar" value="0" ${UI.nabVse ? '' : 'checked'}> jen přijatá varianta ★</label>
+      <label><input type="radio" name="nabVar" value="1" ${UI.nabVse ? 'checked' : ''}> všechny varianty (${z.varianty.length})</label>
+      <label><input type="checkbox" data-ui="nabRozsah" ${UI.nabRozsah ? 'checked' : ''}> rozsah dodávky (položky s množstvím)</label>
+      <label><input type="checkbox" data-ui="nabRozpis" ${UI.nabRozpis ? 'checked' : ''}> rozpis ceny materiál / práce</label>
+      <label class="pole" style="display:grid;margin-top:8px">Podmínky v této nabídce<textarea class="vstup" data-z="podminky" rows="5" data-i18n="ne">${esc(z.podminky != null ? z.podminky : n.podminky)}</textarea></label>
+      <div class="plus"><button class="btn primary" data-prikaz="tisk">🖨️ Tisk / Uložit PDF</button></div>
+      <p class="tip">V tiskovém okně zvolte „Uložit jako PDF“. Logo a údaje firmy: ⚙️ Sazby. Ceny v nabídce jsou prodejní (s režií a ziskem), nákupní ceny se netisknou.</p>
+    </section>
+    <div class="dokument" id="dok" data-i18n="ne">${dokumentHtml(z)}</div></div>`;
+}
+
+/* ================= ZAKÁZKY ================= */
+function vykresliZakazky() {
+  if (!data.zakazky.length) return vykresliKalkulace();
+  const st = Object.fromEntries(J.STAVY.map(s => [s.id, s.nazev]));
+  const rad = data.zakazky.map(z => {
+    const v = z.varianty.find(x => x.id === z.vybrana) || z.varianty[0], r = vypocet(z, v);
+    const s = z.skutecnost ? J.srovnani(z, data.nastaveni).skut.zisk : null;
+    return `<tr><td><button class="btn mini" data-otevri-z="${z.id}">${esc(z.cislo)}</button></td><td data-i18n="ne">${esc(z.nazev)}</td><td data-i18n="ne">${esc(z.zakaznik.jmeno)}</td><td>${datumCz(z.datum)}</td><td>${esc(st[z.stav])}</td>
+      <td class="cislo">${kc(r.cenaBezDph)}</td><td class="cislo">${kc(r.zisk)}</td><td class="cislo">${s == null ? '–' : `<span class="${s < 0 ? 'zaporne' : 'kladne'}">${kc(s)}</span>`}</td></tr>`;
+  }).join('');
+  $('obsah').innerHTML = `<section class="panel"><h2>🗂️ Zakázky (${data.zakazky.length})</h2><div class="tab-obal"><table>
+    <thead><tr><th>Číslo</th><th>Název</th><th>Zákazník</th><th>Datum</th><th>Stav</th><th class="cislo">Cena bez DPH</th><th class="cislo">Zisk plán</th><th class="cislo">Zisk skut.</th></tr></thead><tbody>${rad}</tbody></table></div></section>`;
+}
+
+/* ================= CENÍK ================= */
+function vykresliCenik() {
+  const f = J.normNazev(UI.filtrCeniku);
+  const rad = data.cenik.filter(c => !f || J.normNazev(c.nazev + ' ' + c.kod).includes(f));
+  $('obsah').innerHTML = `<section class="panel"><h2>📦 Ceník materiálů (${data.cenik.length})</h2>
+    <div class="plus netisk" style="margin:0 0 8px"><input class="vstup" id="filtrCeniku" placeholder="🔍 Hledat…" value="${esc(UI.filtrCeniku)}" style="max-width:240px">
+      <button class="btn" data-akce="pridejCenik">✚ Položka</button><button class="btn" data-akce="importCenik">📥 Import CSV…</button><button class="btn" data-akce="exportCenik">📤 Export CSV</button><button class="btn danger" data-akce="vychoziCenik">↺ Výchozí ceník…</button></div>
+    <div class="tab-obal"><table class="edit"><thead><tr><th>Kód</th><th>Název</th><th>Kategorie</th><th>MJ</th><th>Kč/MJ bez DPH</th><th>Prořez %</th><th></th></tr></thead><tbody>
+    ${rad.map(c => `<tr data-c="${c.id}"><td><input class="vstup" style="width:90px" data-cp="kod" value="${esc(c.kod)}" aria-label="Kód"></td><td><input class="vstup w-naz" data-cp="nazev" value="${esc(c.nazev)}" aria-label="Název" data-i18n="ne"></td>
+      <td><select class="vstup w-kat" data-cp="kategorie" aria-label="Kategorie">${opt(J.KATEGORIE.map(k => [k.id, k.nazev]), c.kategorie)}</select></td>
+      <td><select class="vstup w-j" data-cp="jednotka" aria-label="Jednotka">${opt(J.JEDNOTKY.map(j => [j, j]), c.jednotka)}</select></td>
+      <td><input class="vstup w-c" data-cp="cena" value="${c.cena}" inputmode="decimal" aria-label="Cena"></td><td><input class="vstup w-p" data-cp="prorez" value="${c.prorez}" inputmode="decimal" aria-label="Prořez %"></td>
+      <td><button class="btn mini danger" data-smaz-c="${c.id}" aria-label="Smazat">✕</button></td></tr>`).join('') || '<tr><td colspan="7" class="tip">Nic nenalezeno.</td></tr>'}
+    </tbody></table></div>
+    <p class="tip">Ceny zadávejte <b>nákupní bez DPH</b>. Výchozí ceny jsou orientační (stav 11/2026, běžné velkoobchody s deskovým materiálem) – přepište je svými. CSV: <code>kod;nazev;kategorie;jednotka;cena_bez_dph;prorez_pct</code> (oddělovač ; , nebo tabulátor, desetinná čárka i tečka; stačí i <code>nazev;jednotka;cena</code>). Kategorie: ${J.KATEGORIE.map(k => k.id).join(', ')}.</p></section>`;
+}
+
+/* ================= NASTAVENÍ ================= */
+function vykresliNastaveni() {
+  const n = data.nastaveni, f = n.firma;
+  const fp = (k, t, max) => `<label class="pole">${t}<input class="vstup" data-f="${k}" value="${esc(f[k])}" maxlength="${max || 120}" data-i18n="ne"></label>`;
+  $('obsah').innerHTML = `
+  <section class="panel"><h2>🏢 Firma (hlavička nabídky)</h2><div class="mrizka">
+    ${fp('nazev', 'Název firmy / jméno')}${fp('adresa', 'Adresa', 200)}${fp('ico', 'IČO', 20)}${fp('dic', 'DIČ', 20)}${fp('telefon', 'Telefon')}${fp('email', 'E-mail')}${fp('web', 'Web')}${fp('banka', 'Bankovní účet')}
+    <div class="pole">Logo<div class="plus" style="margin:0;align-items:center">${logo ? `<img class="logo-nahled" src="${logo}" alt="logo">` : ''}<button class="btn mini" data-akce="nahrajLogo">🖼️ ${logo ? 'Změnit' : 'Nahrát'}</button>${logo ? '<button class="btn mini danger" data-akce="smazLogo">✕</button>' : ''}</div></div>
+  </div></section>
+  <section class="panel"><h2>💰 Výchozí přirážky a DPH</h2><div class="mrizka">
+    <label class="pole">Plátce DPH<select class="vstup" data-n="platce">${opt([['1', 'ano'], ['0', 'ne']], n.platce ? '1' : '0')}</select></label>
+    <label class="pole">Režie % (nové varianty)<input class="vstup" data-n="rezie" value="${n.rezie}" inputmode="decimal"></label>
+    <label class="pole">Režie z<select class="vstup" data-n="rezieZaklad">${opt([['prime', 'přímých nákladů'], ['prace', 'jen z práce']], n.rezieZaklad)}</select></label>
+    <label class="pole">Zisk % (nové varianty)<input class="vstup" data-n="marze" value="${n.marze}" inputmode="decimal"></label>
+    <label class="pole">Počítat jako<select class="vstup" data-n="marzeRezim">${opt([['prirazka', 'přirážka z nákladů'], ['marze', 'marže z ceny']], n.marzeRezim)}</select></label>
+    <label class="pole">Zaokrouhlit cenu bez DPH na<select class="vstup" data-n="zaokrouhleni">${opt([['0', 'haléře'], ['1', '1 Kč'], ['10', '10 Kč'], ['100', '100 Kč'], ['1000', '1000 Kč']], String(n.zaokrouhleni))}</select></label>
+    <label class="pole">Platnost nabídky (dní)<input class="vstup" data-n="platnostDni" value="${n.platnostDni}" inputmode="numeric"></label>
+    <label class="pole siroke">Výchozí podmínky nabídky<textarea class="vstup" data-n="podminky" rows="3" data-i18n="ne">${esc(n.podminky)}</textarea></label>
+  </div>
+  <div class="tab-obal" style="margin-top:10px"><table><thead><tr><th>Sazby DPH v ČR od</th><th class="cislo">Základní</th><th class="cislo">Snížená</th><th class="cislo">Druhá snížená</th></tr></thead><tbody>
+    ${J.SAZBY_DPH.map(s => `<tr><td>${datumCz(s.od)}</td><td class="cislo">${s.zakladni} %</td><td class="cislo">${s.snizena} %</td><td class="cislo">${s.druha == null ? '–' : s.druha + ' %'}</td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="tip">Zdroj: zákon č. 235/2004 Sb. o DPH, § 47; od 1. 1. 2024 novela č. 349/2023 Sb. (stav 11/2026). Sazba se volí podle data plnění zakázky.</p></section>
+  <section class="panel"><h2>🛠️ Operace a hodinové sazby</h2><div class="tab-obal"><table class="edit"><thead><tr><th>Operace</th><th>MJ</th><th>Kč/MJ bez DPH</th><th></th></tr></thead><tbody>
+    ${n.operace.map(o => `<tr data-o="${esc(o.id)}"><td><input class="vstup w-naz" data-op="nazev" value="${esc(o.nazev)}" aria-label="Název operace"></td><td><select class="vstup w-j" data-op="jednotka" aria-label="Jednotka">${opt(J.JEDNOTKY.map(j => [j, j]), o.jednotka)}</select></td>
+      <td><input class="vstup w-c" data-op="sazba" value="${o.sazba}" inputmode="decimal" aria-label="Sazba"></td><td><button class="btn mini danger" data-smaz-o="${esc(o.id)}" aria-label="Smazat">✕</button></td></tr>`).join('')}
+  </tbody></table></div><div class="plus"><button class="btn mini" data-akce="pridejOperaci">✚ Operace</button></div>
+  <p class="tip">Výchozí sazby jsou orientační (stav 11/2026). Změna sazby se projeví u nově přidaných řádků práce; existující řádky si nesou svou sazbu.</p>
+  <h2 style="margin-top:12px">⏱️ Normy pro odhad práce z kusovníku</h2><div class="mrizka">
+    <label class="pole">Řezání – minut na dílec<input class="vstup" data-norma="rezaniMinDilec" value="${n.normy.rezaniMinDilec}" inputmode="decimal"></label>
+    <label class="pole">Olepování – bm za hodinu<input class="vstup" data-norma="olepovaniBmH" value="${n.normy.olepovaniBmH}" inputmode="decimal"></label>
+  </div></section>`;
+}
+
+/* ---------- vykreslení ---------- */
+const POHLEDY = { kalkulace: vykresliKalkulace, varianty: vykresliVarianty, skutecnost: vykresliSkutecnost, nabidka: vykresliNabidku, zakazky: vykresliZakazky, cenik: vykresliCenik, nastaveni: vykresliNastaveni };
+function vykresli() {
+  if (!POHLEDY[UI.pohled]) UI.pohled = 'kalkulace';
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === UI.pohled)));
+  obnovVyber();
+  POHLEDY[UI.pohled]();
+}
+function prepni(p) { UI.pohled = p; uloz(); vykresli(); $('obsah').parentElement.scrollTop = 0; }
+
+/* ---------- úpravy polí ---------- */
+function nastavCestu(o, cesta, h) { const c = cesta.split('.'); const k = c.pop(); c.forEach(x => { o = o[x]; }); o[k] = h; }
+document.addEventListener('input', e => {
+  const t = e.target, z = zakazka();
+  if (t.id === 'filtrCeniku') { UI.filtrCeniku = t.value; const p = t.selectionStart; vykresliCenik(); $('filtrCeniku').focus(); $('filtrCeniku').setSelectionRange(p, p); return; }
+  if (t.dataset.z && z) { nastavCestu(z, t.dataset.z, t.value); zmeneno(); if (UI.pohled === 'nabidka') $('dok').innerHTML = dokumentHtml(z); return; }
+  const tr = t.closest('tr[data-typ]');
+  if (tr && t.dataset.p && z) {
+    const v = varianta(z), p = v[tr.dataset.typ].find(x => x.id === tr.dataset.id);
+    if (!p) return;
+    const k = t.dataset.p;
+    p[k] = ['cena', 'sazba', 'prorez'].includes(k) ? J.cislo(t.value) : t.value;
+    zmeneno(); prepocitej(); return;
+  }
+  if (t.dataset.v && z) { const v = varianta(z); v[t.dataset.v] = ['rezie', 'marze'].includes(t.dataset.v) ? J.cislo(t.value) : t.value; zmeneno(); prepocitej(); return; }
+  if (t.dataset.s && z && z.skutecnost) {
+    const x = z.skutecnost[t.dataset.s].find(q => q.id === t.dataset.id); if (!x) return;
+    x[t.dataset.p] = t.dataset.p === 'nazev' ? t.value : J.cislo(t.value); zmeneno(); return; // přepočet při change
+  }
+  if (t.dataset.cp) { const c = data.cenik.find(q => q.id === t.closest('tr').dataset.c); c[t.dataset.cp] = ['cena', 'prorez'].includes(t.dataset.cp) ? J.cislo(t.value) : t.value; uloz(); obnovVyber(); return; }
+  if (t.dataset.f) { data.nastaveni.firma[t.dataset.f] = t.value; uloz(); return; }
+  if (t.dataset.n) {
+    const k = t.dataset.n, n = data.nastaveni;
+    n[k] = k === 'platce' ? t.value === '1' : ['rezie', 'marze', 'zaokrouhleni', 'platnostDni'].includes(k) ? J.cislo(t.value) : t.value; uloz(); return;
+  }
+  if (t.dataset.op) { const o = operace(t.closest('tr').dataset.o); o[t.dataset.op] = t.dataset.op === 'sazba' ? J.cislo(t.value) : t.value; uloz(); return; }
+  if (t.dataset.norma) { data.nastaveni.normy[t.dataset.norma] = J.cislo(t.value); uloz(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target, z = zakazka();
+  if (t.name === 'nabVar') { UI.nabVse = t.value === '1'; uloz(); return vykresliNabidku(); }
+  if (t.dataset.ui) { UI[t.dataset.ui] = t.checked; uloz(); return vykresliNabidku(); }
+  if (t.dataset.s && z) return vykresliSkutecnost();
+  if (t.dataset.z && z && ['nazev', 'cislo', 'datum', 'plneni', 'druhDph', 'zakaznik.jmeno'].includes(t.dataset.z)) { UI.hlavickaOtevrena = true; vykresli(); UI.hlavickaOtevrena = false; return; }
+  const tr = t.closest('tr[data-typ]');
+  if (tr && z) {
+    const v = varianta(z), p = v[tr.dataset.typ].find(x => x.id === tr.dataset.id);
+    if (!p) return;
+    if (tr.dataset.typ === 'polozky' && t.dataset.p === 'nazev') {
+      const c = data.cenik.find(x => J.normNazev(x.nazev) === J.normNazev(t.value));
+      if (c) { Object.assign(p, { kategorie: c.kategorie, jednotka: c.jednotka, cena: c.cena, prorez: c.prorez }); zmeneno(); vykresliKalkulace(); }
+    } else if (tr.dataset.typ === 'polozky' && t.dataset.p === 'kategorie') {
+      const k = J.KAT[p.kategorie]; p.jednotka = k.jednotka; p.prorez = k.prorez; zmeneno(); vykresliKalkulace();
+    } else if (tr.dataset.typ === 'prace' && t.dataset.p === 'operace') {
+      const o = operace(p.operace); if (o) { p.jednotka = o.jednotka; p.sazba = o.sazba; } zmeneno(); vykresliKalkulace();
+    } else if (t.dataset.p === 'jednotka') prepocitej();
+    return;
+  }
+  if (t.dataset.cp && ['kategorie', 'jednotka'].includes(t.dataset.cp)) { const c = data.cenik.find(q => q.id === t.closest('tr').dataset.c); c[t.dataset.cp] = t.value; uloz(); }
+  if (t.dataset.n === 'platce') vykresli();
+});
+$('vyberZakazky').addEventListener('change', e => { data.aktivni = e.target.value; UI.varianta = null; uloz(); vykresli(); });
+
+/* ---------- soubory ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function otevriDialog(d) { d.showModal(); return new Promise(ok => d.addEventListener('close', () => ok(d.returnValue), { once: true })); }
+
+async function importKusovniku() {
+  const z = zakazka();
+  if (!z) return Dialog.info('Nejdřív založte zakázku.');
+  $('importText').value = '';
+  if (await otevriDialog($('dlgImport')) !== 'ok') return;
+  let k, p;
+  try { k = J.prectiKusovnik($('importText').value); p = J.kusovnikNaPolozky(k, data.cenik, data.nastaveni); }
+  catch (e) { return Dialog.chyba(e.message); }
+  if (!p.polozky.length) return Dialog.chyba('Kusovník neobsahuje žádné dílce.');
+  const v = varianta(z);
+  v.polozky.push(...p.polozky);
+  if ($('importPrace').checked) v.prace.push(...p.prace);
+  if (k.projekt && z.nazev === 'Nová zakázka') z.nazev = k.projekt;
+  zmeneno(); prepni('kalkulace');
+  Dialog.info(`Načteno z „${k.zdroj}“: ${p.pocetDilcu} dílců, ${cis(p.m2, 2)} m² desek, ${cis(p.bmHran, 1)} bm hran → ${p.polozky.length} řádků materiálu.` + (p.bezCeny.length ? ` Bez ceny (doplňte nebo přidejte do ceníku): ${p.bezCeny.join(', ')}.` : ''));
+}
+$('importSoubor').onclick = () => $('souborKus').click();
+$('souborKus').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (f) $('importText').value = await f.text(); };
+
+$('souborCenik').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const r = J.cenikZCsv(await f.text());
+  if (!r.polozky.length) return Dialog.chyba('V souboru není žádná položka s cenou.' + (r.chyby.length ? ' ' + r.chyby.slice(0, 3).join(' ') : ''));
+  const nahradit = await Dialog.potvrd(`Soubor obsahuje ${r.polozky.length} položek${r.chyby.length ? ` (${r.chyby.length} řádků přeskočeno)` : ''}.\n\nNahradit celý ceník? (Zrušit = jen sloučit: shodné kódy/názvy se přepíšou, nové přidají.)`, { ok: 'Nahradit', zrus: 'Sloučit' });
+  const s = J.slucCenik(data.cenik, r.polozky, nahradit ? 'nahradit' : 'sloucit');
+  data.cenik = s.cenik; uloz(); vykresli();
+  Dialog.info(`Ceník: ${s.pridano} přidáno, ${s.zmeneno} změněno.`);
+};
+
+$('souborLogo').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const img = await createImageBitmap(f);
+    const k = Math.min(1, 600 / img.width, 240 / img.height);
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    logo = c.toDataURL('image/png');
+    await dbOp('readwrite', s => s.put(logo, 'logo'));
+    vykresli();
+  } catch (er) { Dialog.chyba('Obrázek se nepodařilo načíst.'); }
+};
+
+$('souborZaloha').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.zakazky) || !Array.isArray(d.cenik)) return Dialog.chyba('Tohle není záloha Kalkulace zakázky.');
+  const m = J.migruj(d);
+  if (!await Dialog.potvrd(`Záloha obsahuje ${m.zakazky.length} zakázek a ${m.cenik.length} položek ceníku. Nahradit jimi současná data?`)) return;
+  data = m;
+  if (d.logo) { logo = d.logo; dbOp('readwrite', s => s.put(logo, 'logo')).catch(() => {}); }
+  uloz(true); vykresli(); Dialog.info('Obnoveno.');
+};
+
+function ukazkovaZakazka() {
+  const z = J.novaZakazka(data);
+  const c = kod => data.cenik.find(x => x.kod === kod) || { nazev: kod, cena: 0, kategorie: 'jine', jednotka: 'ks', prorez: 0 };
+  const m = (kod, mn) => { const x = c(kod); return { kategorie: x.kategorie, nazev: x.nazev, mnozstvi: mn, jednotka: x.jednotka, cena: x.cena, prorez: x.prorez }; };
+  const pr = (op, mn, nazev) => { const o = operace(op) || { jednotka: 'h', sazba: 0 }; return { operace: op, nazev: nazev || '', mnozstvi: mn, jednotka: o.jednotka, sazba: o.sazba }; };
+  Object.assign(z, { nazev: 'Kuchyňská linka 2,4 m', zakaznik: { jmeno: 'Jan Novák', adresa: 'Lipová 12, Brno', kontakt: '777 123 456' },
+    popis: 'Kuchyňská linka 2 400 mm: 4 spodní a 4 horní skříňky, korpusy bílé lamino, dvířka podle varianty, pracovní deska zákazníka. Včetně dopravy a montáže.' });
+  const prace = [pr('navrh', '3'), pr('rezani', '4'), pr('olepovani', '3,5'), pr('montaz', '10'), pr('montazu', '6'), pr('doprava', '2*35', 'Brno a zpět')];
+  const a = J.normVarianta({ nazev: 'Lamino', polozky: [m('DTD18B', '4,8*2,07'), m('DTD18D', '2,4*0,72+2,4*0,72'), m('HDF3', '2,4*1,4'), m('ABS2', '48'), m('ABS08', '60'),
+    m('ZAV110', '12'), m('VYS500', '3'), m('UCH128', '8'), m('NOH100', '16'), m('KONF', '120'), m('KOLIK8', '80')], prace }, data.nastaveni);
+  const b = J.duplikujVariantu(a, 'Dvířka masiv dub');
+  b.polozky[1] = J.normPolozka(m('SPAR20D', '2,4*0,72+2,4*0,72')); b.polozky.push(J.normPolozka(m('OLEJ', '2*(2,4*0,72+2,4*0,72)')));
+  b.prace.push(J.normPrace(pr('cnc', '2', 'frézování profilu dvířek')), J.normPrace(pr('povrch', '5')));
+  z.varianty = [a, b]; z.vybrana = a.id;
+  return z;
+}
+
+const PRIKAZY = {
+  nova: () => { const z = J.novaZakazka(data); data.zakazky.unshift(z); data.aktivni = z.id; UI.varianta = null; uloz(); prepni('kalkulace'); },
+  ukazka: () => { const z = ukazkovaZakazka(); data.zakazky.unshift(z); data.aktivni = z.id; UI.varianta = null; uloz(); prepni('kalkulace'); },
+  duplikuj: () => { const z = zakazka(); if (!z) return; const k = J.duplikujZakazku(data, z); data.zakazky.unshift(k); data.aktivni = k.id; UI.varianta = null; uloz(); prepni('kalkulace'); Dialog.info('Zakázka zkopírována jako ' + k.cislo + '.'); },
+  smazZakazku: async () => {
+    const z = zakazka(); if (!z) return;
+    if (!await Dialog.potvrd(`Smazat zakázku ${z.cislo} „${z.nazev}“ včetně všech variant a skutečnosti?`)) return;
+    data.zakazky = data.zakazky.filter(x => x !== z); data.aktivni = data.zakazky[0] ? data.zakazky[0].id : null; UI.varianta = null; uloz(); vykresli();
+  },
+  importKus: importKusovniku,
+  tisk: () => { if (UI.pohled !== 'nabidka') prepni('nabidka'); setTimeout(() => print(), 50); },
+  export: () => stahni('kalkulace-zakazek-' + J.dnesIso() + '.json', JSON.stringify(Object.assign({}, data, { logo }), null, 1), 'application/json'),
+  import: () => $('souborZaloha').click(),
+  napoveda: () => $('dlgNapoveda').showModal(),
+};
+
+const AKCE = {
+  novaVar: async z => { const n = await Dialog.zeptej('Název varianty', 'Varianta ' + String.fromCharCode(65 + z.varianty.length)); if (!n) return; const v = J.normVarianta({ nazev: n }, data.nastaveni); z.varianty.push(v); UI.varianta = v.id; },
+  dupVar: async z => { const v = varianta(z); const n = await Dialog.zeptej('Název kopie', v.nazev + ' 2'); if (!n) return; const k = J.duplikujVariantu(v, n); z.varianty.push(k); UI.varianta = k.id; },
+  prejmenujVar: async z => { const v = varianta(z); const n = await Dialog.zeptej('Nový název varianty', v.nazev); if (n) v.nazev = n.slice(0, 80); },
+  vybratVar: async z => { z.vybrana = varianta(z).id; Dialog.info('Varianta označena jako přijatá ★.'); },
+  smazVar: async z => {
+    const v = varianta(z); if (z.varianty.length < 2 || !await Dialog.potvrd(`Smazat variantu „${v.nazev}“?`)) return;
+    z.varianty = z.varianty.filter(x => x !== v); if (z.vybrana === v.id) z.vybrana = z.varianty[0].id; UI.varianta = null;
+  },
+  pridejMat: async (z, b) => { const k = J.KAT[b.dataset.kat]; varianta(z).polozky.push(J.normPolozka({ kategorie: k.id, jednotka: k.jednotka, prorez: k.prorez })); },
+  pridejPraci: async (z, b) => { const o = operace(b.dataset.op); varianta(z).prace.push(J.normPrace(o ? { operace: o.id, jednotka: o.jednotka, sazba: o.sazba } : {})); },
+  smazRadek: async (z, b) => { const tr = b.closest('tr'), v = varianta(z); v[tr.dataset.typ] = v[tr.dataset.typ].filter(x => x.id !== tr.dataset.id); },
+  zacniSkut: async z => { z.skutecnost = J.skutecnostZPlanu(z.varianty.find(x => x.id === z.vybrana) || z.varianty[0], data.nastaveni); },
+  resetSkut: async z => { if (await Dialog.potvrd('Přepsat zadanou skutečnost znovu plánem přijaté varianty?')) z.skutecnost = J.skutecnostZPlanu(z.varianty.find(x => x.id === z.vybrana) || z.varianty[0], data.nastaveni); },
+  pridejJine: async z => { z.skutecnost.jine.push({ id: J.id(), nazev: '', castka: 0 }); },
+};
+const AKCE_DILNA = {
+  pridejCenik: async () => { data.cenik.unshift(J.normCenik({ nazev: 'Nová položka', kategorie: 'deska' })); UI.filtrCeniku = ''; },
+  importCenik: async () => $('souborCenik').click(),
+  exportCenik: async () => stahni('cenik-materialu.csv', J.cenikDoCsv(data.cenik), 'text/csv;charset=utf-8'),
+  vychoziCenik: async () => { if (await Dialog.potvrd('Nahradit celý ceník výchozími orientačními cenami?')) data.cenik = J.prazdna().cenik; },
+  pridejOperaci: async () => { data.nastaveni.operace.push({ id: J.id(), nazev: 'Nová operace', jednotka: 'h', sazba: 500 }); },
+  nahrajLogo: async () => $('souborLogo').click(),
+  smazLogo: async () => { logo = null; await dbOp('readwrite', s => s.delete('logo')).catch(() => {}); },
+};
+
+/* ---------- nabídky a kliky ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky(); if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', async e => {
+  const t = e.target;
+  const p = t.closest('[data-prikaz]');
+  if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
+  if (!t.closest('.nabidka')) zavriNabidky();
+  const pv = t.closest('[data-pohled]'); if (pv) return prepni(pv.dataset.pohled);
+  const z = zakazka();
+  const vb = t.closest('[data-varianta]');
+  if (vb && z) { UI.varianta = vb.dataset.varianta; uloz(); return vb.dataset.otevrit ? prepni('kalkulace') : vykresliKalkulace(); }
+  const vy = t.closest('[data-vybrat]'); if (vy && z) { z.vybrana = vy.dataset.vybrat; zmeneno(); return vykresli(); }
+  const oz = t.closest('[data-otevri-z]'); if (oz) { data.aktivni = oz.dataset.otevriZ; UI.varianta = null; uloz(); return prepni('kalkulace'); }
+  const sc = t.closest('[data-smaz-c]'); if (sc) { data.cenik = data.cenik.filter(c => c.id !== sc.dataset.smazC); uloz(); return vykresli(); }
+  const so = t.closest('[data-smaz-o]'); if (so) { if (await Dialog.potvrd('Smazat operaci? Existující řádky práce zůstanou.')) { data.nastaveni.operace = data.nastaveni.operace.filter(o => o.id !== so.dataset.smazO); uloz(); vykresli(); } return; }
+  const sj = t.closest('[data-smaz-jine]'); if (sj && z) { z.skutecnost.jine = z.skutecnost.jine.filter(x => x.id !== sj.dataset.smazJine); zmeneno(); return vykresli(); }
+  const a = t.closest('[data-akce]'); if (!a) return;
+  if (AKCE_DILNA[a.dataset.akce]) { await AKCE_DILNA[a.dataset.akce](a); uloz(); return vykresli(); }
+  if (AKCE[a.dataset.akce] && z) { await AKCE[a.dataset.akce](z, a); zmeneno(); vykresli(); }
+});
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+addEventListener('storage', e => { if (e.key === J.KLIC && e.newValue) { data = J.migruj(JSON.parse(e.newValue)); vykresli(); } });
+
+vykresli();
+nactiLogo().then(() => { if (logo && (UI.pohled === 'nabidka' || UI.pohled === 'nastaveni')) vykresli(); });
+window.KZ_APP = { data: () => data, UI, vykresli, prepni, PRIKAZY };
+})();
+</script>
+</body>
+</html>

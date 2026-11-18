@@ -147,10 +147,144 @@
     return s;
   }
 
+  /** Nejmenší sada adaptérů pro víc zemí (hladový výběr): [{typ, zeme: [kódy]}].
+      Země, kam vidlice z domova projdou, se nepočítají. */
+  function sadaAdapteru(a, cile) {
+    let zbyva = cile.map(b => ({ kod: b.kod, typy: adapter(a, b).doporucene })).filter(x => x.typy.length);
+    const sada = [];
+    while (zbyva.length) {
+      const pocet = {};
+      for (const x of zbyva) for (const t of x.typy) pocet[t] = (pocet[t] || 0) + 1;
+      const typ = Object.keys(pocet).sort((p, q) => pocet[q] - pocet[p] || p.localeCompare(q))[0];
+      sada.push({ typ, zeme: zbyva.filter(x => x.typy.includes(typ)).map(x => x.kod) });
+      zbyva = zbyva.filter(x => !x.typy.includes(typ));
+    }
+    return sada;
+  }
+
+  /** Kontrolní seznam pro cestu přes víc zemí – sloučený podle id, přísnější varianta vyhrává
+      (země mimo EU/EHP se projdou první, takže „pas“ přebije „občanský průkaz“). */
+  function kontrolniSeznamTrasy(a, cile, opt) {
+    const poradi = cile.slice().sort((p, q) => volnyPohyb(p.kod) - volnyPohyb(q.kod));
+    const vysl = [], podleId = {};
+    for (const b of poradi) {
+      for (const p of kontrolniSeznam(a, b, opt)) {
+        const x = podleId[p.id];
+        if (!x) { podleId[p.id] = Object.assign({}, p, { detaily: p.detail ? [p.detail] : [], zeme: [b.kod] }); vysl.push(podleId[p.id]); continue; }
+        x.dulezite = x.dulezite || p.dulezite;
+        x.zeme.push(b.kod);
+        if (p.detail && !x.detaily.includes(p.detail)) x.detaily.push(p.detail);
+        if (p.id === 'cas' && parseInt(p.text.replace(/\D+/, ''), 10) > parseInt(x.text.replace(/\D+/, ''), 10)) x.text = p.text;
+      }
+    }
+    const sada = sadaAdapteru(a, cile);
+    for (const x of vysl) {
+      if (x.id === 'adapter') { x.detail = sada.map(s => s.typ).join(', '); x.dulezite = cile.some(b => adapter(a, b).stav === 'ano'); }
+      else if (x.id === 'mena') x.detail = [...new Set(cile.flatMap(b => b.meny))].join(' / ');
+      else if (x.id === 'vineta') x.detail = x.zeme.join(', ');
+      else x.detail = x.detaily.join(' · ');
+      delete x.detaily;
+    }
+    return vysl;
+  }
+
+  /** Místní čas (rok, měsíc 1–12, den, hodina, minuta) v pásmu → Date (UTC). Dvě iterace kvůli letnímu času. */
+  function mistniNaUtc(r, mes, d, h, min, pasmo) {
+    const zaklad = Date.UTC(r, mes - 1, d, h, min || 0);
+    let t = zaklad - posunUtc(pasmo, new Date(zaklad)) * 60000;
+    t = zaklad - posunUtc(pasmo, new Date(t)) * 60000;
+    return new Date(t);
+  }
+
+  /** Místní hodina a den v pásmu k okamžiku: {h, min, den: 'YYYY-MM-DD'}. */
+  function mistniCas(pasmo, kdy) {
+    const t = new Date(kdy.getTime() + posunUtc(pasmo, kdy) * 60000);
+    return { h: t.getUTCHours(), min: t.getUTCMinutes(), den: t.toISOString().slice(0, 10) };
+  }
+
+  /** Míry a teplota tam, kde se liší od metrických a °C. */
+  const JEDNOTKY = {
+    US: 'imperiální: míle, stopy, palce, libry, galony (US); teplota ve °F',
+    LR: 'převážně imperiální (míle, libry, galony); teplota ve °F',
+    MM: 'místní a imperiální jednotky (viss, míle) vedle metrických',
+    GB: 'metrické, ale silnice v mílích (mph), pivo a mléko v pintách',
+    BS: 'metrické i imperiální, teplota ve °F', BZ: 'imperiální i metrické, teplota ve °F',
+    PW: 'teplota ve °F', FM: 'teplota ve °F', MH: 'teplota ve °F',
+    AG: 'silnice v mílích', LC: 'silnice v mílích', VC: 'silnice v mílích', KN: 'silnice v mílích', GD: 'silnice v mílích', DM: 'silnice v mílích', WS: 'silnice v mílích'
+  };
+  const jednotky = kod => JEDNOTKY[kod] || 'metrické, teplota ve °C';
+
+  /** Převod částky: kurzy = {MĚNA: počet jednotek za 1 základní}. Chybí-li kurz, null. */
+  function prevedMenu(castka, z, na, kurzy) {
+    if (z === na) return castka;
+    const a = kurzy[z], b = kurzy[na];
+    return a > 0 && b > 0 ? castka / a * b : null;
+  }
+
+  /* ---------- itinerář: zastávky {kod, od, do} s volitelnými daty 'YYYY-MM-DD' ---------- */
+  const DEN = 864e5;
+  const dnyMezi = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / DEN);
+  const pridejDny = (d, n) => new Date(Date.parse(d) + n * DEN).toISOString().slice(0, 10);
+
+  /** Kontrola termínů: {varovani: [{i, typ, text}], od, do, dni, noci: [počet nocí po zastávkách]}. */
+  function kontrolaZastavek(zast) {
+    const varovani = [], noci = [];
+    let od = '', doo = '';
+    zast.forEach((z, i) => {
+      noci.push(z.od && z.do ? dnyMezi(z.od, z.do) : null);
+      for (const d of [z.od, z.do]) if (d) { if (!od || d < od) od = d; if (!doo || d > doo) doo = d; }
+      if (z.od && z.do && z.do < z.od) varovani.push({ i, typ: 'chyba', text: 'odjezd je dřív než příjezd' });
+      const pred = zast[i - 1];
+      if (pred && pred.do && z.od) {
+        if (z.od < pred.do) varovani.push({ i, typ: 'chyba', text: 'překrývá se s předchozí zastávkou' });
+        else if (z.od > pred.do) { const n = dnyMezi(pred.do, z.od); varovani.push({ i, typ: 'info', text: `mezera ${n} ${n === 1 ? 'den' : n < 5 ? 'dny' : 'dní'} bez plánu` }); }
+      }
+    });
+    return { varovani, od, do: doo, dni: od && doo ? dnyMezi(od, doo) + 1 : 0, noci };
+  }
+
+  /** Nová zastávka navazuje na konec předchozí. */
+  function novaZastavka(zast, kod) {
+    const pred = zast[zast.length - 1];
+    return { kod, od: pred && pred.do ? pred.do : '', do: '' };
+  }
+
+  /** Po změně odjezdu se příjezd do další zastávky doplní, je-li prázdný nebo navazoval na starý odjezd. */
+  function navazOdjezd(zast, i, novy) {
+    const stary = zast[i].do;
+    zast[i].do = novy;
+    const dalsi = zast[i + 1];
+    if (dalsi && novy && (!dalsi.od || dalsi.od === stary)) dalsi.od = novy;
+    return zast;
+  }
+
+  /** Přesun zastávky z indexu a na index b. */
+  function presun(zast, a, b) {
+    if (a === b || a < 0 || b < 0 || a >= zast.length || b >= zast.length) return zast;
+    const [x] = zast.splice(a, 1);
+    zast.splice(b, 0, x);
+    return zast;
+  }
+
+  /** Odkaz: „AT.20270701.20270705,SI“ ↔ zastávky (data volitelná). */
+  function kodujTrasu(zast) {
+    return zast.map(z => [z.kod, (z.od || '').replace(/-/g, ''), (z.do || '').replace(/-/g, '')].join('.').replace(/\.+$/, '')).join(',');
+  }
+  function dekodujTrasu(text, zname) {
+    const datum = s => /^\d{8}$/.test(s || '') ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6)}` : '';
+    const videno = new Set();
+    return String(text || '').split(',').map(c => {
+      const [kod, od, doo] = c.trim().split('.');
+      return { kod: (kod || '').toUpperCase(), od: datum(od), do: datum(doo) };
+    }).filter(z => (!zname || zname(z.kod)) && !videno.has(z.kod) && videno.add(z.kod));
+  }
+
   const api = {
-    OBLASTI, SPROPITNE, VODA, NEJISTE, EHP, PASUJE, TYPY, POPIS_TYPU,
+    OBLASTI, SPROPITNE, VODA, NEJISTE, EHP, PASUJE, TYPY, POPIS_TYPU, JEDNOTKY,
     rozeberRadek, nactiZeme, adapter, napeti, posunUtc, rozdilCasu, formatRozdil,
-    norm, hledej, vEhp, placeneSilnice, kontrolniSeznam
+    norm, hledej, vEhp, placeneSilnice, kontrolniSeznam,
+    sadaAdapteru, kontrolniSeznamTrasy, mistniNaUtc, mistniCas, jednotky, prevedMenu,
+    kontrolaZastavek, novaZastavka, navazOdjezd, presun, kodujTrasu, dekodujTrasu, dnyMezi, pridejDny
   };
   if (typeof module !== 'undefined') module.exports = api;
   else window.ZVK = api;

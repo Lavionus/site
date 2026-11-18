@@ -190,7 +190,7 @@ const Tvary = (function () {
         akce.append(
           tlacitko('Načíst', () => nactiTvar(z)),
           tlacitko('Přepsat', () => prepis(z)),
-          tlacitko('Název', () => prejmenuj(z)),
+          tlacitko('Přejmenovat', () => prejmenuj(z)),
           tlacitko('Smazat', () => smaz(z))
         );
 

@@ -208,7 +208,7 @@
   }
 
   /* ---------- DPP / DPČ (měsíčně) ----------
-     DPP: pojistné od rozhodné částky včetně (25 % průměrné mzdy zaokr. na 500 dolů), srážková daň 15 % bez prohlášení do rozhodné částky včetně.
+     DPP: pojistné od rozhodné částky včetně (25 % průměrné mzdy zaokr. na 500 dolů), srážková daň 15 % bez prohlášení jen pod rozhodnou částkou (§ 6 odst. 4 ZDP „nedosáhne“).
      DPČ: pojistné od 4 500 Kč včetně, srážková daň bez prohlášení pod 4 500 Kč. S prohlášením záloha 15 % − sleva 2 570 Kč. */
   function dohoda(typ, odmena, prohlaseni, rok) {
     const P = PARAMETRY[rok] || PARAMETRY[ROKY[ROKY.length - 1]], D = P[typ];
@@ -216,7 +216,7 @@
     const pojistne = odmena >= D.limit;
     const spZam = pojistne ? ceil(odmena * D.spZam) : 0, zpZam = pojistne ? ceil(odmena * D.zpZam) : 0;
     const spFirma = pojistne ? ceil(odmena * D.spFirma) : 0, zpFirma = pojistne ? ceil(odmena * D.zpFirma) : 0;
-    const srazkova = !prohlaseni && (typ === 'dpp' ? odmena <= D.limit : odmena < D.limit);
+    const srazkova = !prohlaseni && odmena < D.limit;   // § 6 odst. 4 ZDP: „nedosáhne“ rozhodné částky (ověřeno 17. 11. 2026)
     const zakladDane = Math.ceil(odmena / 100) * 100;   // záloha: základ zaokrouhlený na stovky nahoru
     let danCastka, druhDane;
     if (srazkova) { danCastka = Math.round(odmena * P.sazbaDan); druhDane = 'srážková daň 15 %'; }

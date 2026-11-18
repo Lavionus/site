@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tréninkový případ – najdi rozpor</title>
+<meta name="description" content="Cvičení pro budoucí vyšetřovatele: projdi smyšlený spis (výpovědi, úřední záznamy, kamera, výpis hovorů, polohová data, účtenky), najdi rozpory, odliš ověřené od tvrzení a vyvoď závěr. Hodnocení s rozborem, nápovědy po stupních, tabulka výsledků pro náborové akce.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="treninkovy_pripad/pripady.js"></script>
+<script src="treninkovy_pripad/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:var(--font,system-ui,sans-serif);display:flex;flex-direction:column}
+[hidden]{display:none !important}
+/* horní lišta podle vzoru prompty / časová analýza */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px;align-items:center}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus,.v:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1000px){.lista .txt{display:none}}
+@media (max-width:600px){.lista h1 .t{display:none}.lista .skup-nazev{display:none}}
+/* úzký displej: lišta se zalomí na dva řádky, aby ✅ Odevzdat nezmizel za okrajem (posuvník lišty je skrytý) */
+@media (max-width:480px){.lista{flex-wrap:wrap;row-gap:4px}}
+#nazevPripadu{display:inline-block;max-width:200px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;white-space:nowrap}
+.hodiny{font-variant-numeric:tabular-nums;font-weight:600;font-size:.88rem;padding:4px 6px;white-space:nowrap}
+.hodiny.pres{color:var(--warn)}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .pozn{font-size:.74rem;color:var(--text-muted);padding:2px 10px 4px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.86rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn:disabled{opacity:.45;cursor:default}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.95rem;font-family:inherit;min-width:0}
+
+/* plocha: spis vlevo, panel vpravo */
+#plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 330px}
+#spis{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border)}
+#zalozky{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--border);background:var(--bg-panel);overflow-x:auto;scrollbar-width:thin;flex-shrink:0}
+#zalozky .zal{display:flex;align-items:center;gap:4px;background:var(--bg-control);border:1px solid var(--border);border-bottom:0;border-radius:7px 7px 0 0;padding:5px 8px;font:inherit;font-size:.8rem;color:var(--text-muted);cursor:pointer;white-space:nowrap;max-width:220px}
+#zalozky .zal span.n{overflow:hidden;text-overflow:ellipsis}
+#zalozky .zal[aria-selected="true"]{background:var(--bg);color:var(--text);font-weight:600;border-color:var(--border-strong)}
+#zalozky .zavri{border:0;background:none;color:var(--text-muted);cursor:pointer;padding:0 2px;font-size:.9rem;line-height:1}
+#zalozky .zavri:hover{color:var(--danger)}
+#obsah{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--bg)}
+#panel{display:flex;flex-direction:column;min-height:0;overflow:auto;background:var(--bg-panel)}
+@media (max-width:900px){
+  #plocha{display:flex;flex-direction:column;overflow:auto}
+  #spis{border-right:0;flex-shrink:0}
+  #obsah{overflow:visible;min-height:60vh}
+  #panel{overflow:visible;border-top:1px solid var(--border);padding-bottom:150px}
+}
+
+/* stůl */
+.zadani{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.9rem;line-height:1.55;max-width:900px}
+.zadani h2{margin:0 0 4px;font-size:1.05rem}
+.zadani .znacka{font-family:ui-monospace,monospace;font-size:.76rem;color:var(--text-muted)}
+.zadani p{margin:6px 0}
+.zadani ul{margin:6px 0 0;padding-left:18px;font-size:.84rem;color:var(--text-muted)}
+.ukol{font-size:.84rem;color:var(--text-muted);margin:4px 0 0}
+.stul{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;max-width:1100px}
+.karta{position:relative;text-align:left;background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px 4px 10px 4px;padding:10px 12px 12px;cursor:pointer;color:var(--text);font:inherit;box-shadow:var(--shadow);transition:transform .12s;min-height:104px;display:flex;flex-direction:column;gap:3px}
+.karta:nth-child(3n+1){transform:rotate(-.6deg)} .karta:nth-child(3n+2){transform:rotate(.5deg)}
+.karta:hover{transform:translateY(-2px);border-color:var(--accent)}
+.karta .ik{font-size:1.4rem;line-height:1}
+.karta .typ{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.karta .nz{font-weight:600;font-size:.86rem;line-height:1.3}
+.karta .dt{font-size:.72rem;color:var(--text-faint)}
+.karta .precteno{position:absolute;top:6px;right:8px;font-size:.7rem;color:var(--ok)}
+
+/* dokument */
+.dokument{max-width:860px;margin:0 auto;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:18px 22px 22px;box-shadow:var(--shadow);line-height:1.7}
+.dokument .dhlava{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;border-bottom:2px solid var(--border-strong);padding-bottom:6px;margin-bottom:10px}
+.dokument .dhlava h2{margin:0;font-size:1.1rem;flex:1 1 220px}
+.dokument .dhlava .typ{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.dokument .dhlava .dt{font-size:.8rem;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.dokument dl{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;font-size:.82rem;margin:0 0 12px;color:var(--text-muted)}
+.dokument dt{font-weight:600}
+.dokument dd{margin:0}
+.dokument p{margin:0 0 10px;font-size:.95rem}
+.dokument .tabobal{overflow-x:auto;margin:6px 0 10px}
+.dokument table{border-collapse:collapse;width:100%;font-size:.86rem;line-height:1.45}
+.dokument th,.dokument td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--border);vertical-align:top}
+.dokument th{color:var(--text-muted);font-size:.72rem;text-transform:uppercase;font-weight:600}
+.dokument td.cas{white-space:nowrap;font-variant-numeric:tabular-nums}
+.dokument .foto{display:flex;gap:12px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
+.dokument .foto svg{width:170px;max-width:100%;height:auto;flex-shrink:0;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;color:var(--text-muted)}
+.dokument .foto .v{flex:1 1 200px}
+.navod{font-size:.78rem;color:var(--text-muted);margin:0 0 10px}
+
+/* výroky */
+.v{cursor:pointer;border-radius:3px;padding:1px 1px;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background .1s}
+.v:hover{background:var(--bg-hover)}
+tr.v td{transition:background .1s}
+tr.v:hover td{background:var(--bg-hover)}
+.v.zv1,tr.v.zv1 td{background:color-mix(in srgb,var(--warn) 32%,transparent)}
+.v.zv2,tr.v.zv2 td{background:color-mix(in srgb,var(--ok) 28%,transparent)}
+.v.zv3,tr.v.zv3 td{background:color-mix(in srgb,var(--danger) 24%,transparent)}
+.v.sel{outline:2px solid var(--accent);outline-offset:1px}
+tr.v.sel td{outline:0;box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
+.v.stranaA{outline:2px dashed var(--danger);outline-offset:1px}
+tr.v.stranaA td{box-shadow:inset 0 2px 0 var(--danger),inset 0 -2px 0 var(--danger)}
+.v.blik,tr.v.blik td{animation:blik 1s ease-in-out 3}
+@keyframes blik{50%{background:var(--accent-soft)}}
+.znk{font-size:.72rem;margin-left:2px;white-space:nowrap;user-select:none}
+.znk b{font-weight:600;padding:0 3px;border-radius:3px;border:1px solid var(--border-strong);color:var(--text-muted)}
+.ukaz-reseni .v.reseni{text-decoration:underline wavy var(--danger);text-underline-offset:3px}
+.ukaz-reseni tr.v.reseni td:first-child{border-left:3px solid var(--danger)}
+
+/* panel */
+.sekce{padding:10px 12px;border-bottom:1px solid var(--border)}
+.sekce h3{margin:0 0 6px;font-size:.86rem;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.sekce h3 .pocet{font-weight:400;color:var(--text-muted);font-size:.78rem}
+.prazdno{color:var(--text-muted);font-size:.8rem;line-height:1.5}
+#vyber{background:var(--bg-panel)}
+#vyber .text{font-size:.86rem;line-height:1.5;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-bottom:6px;max-height:9em;overflow:auto}
+#vyber .zdroj{font-size:.74rem;color:var(--text-muted);margin-bottom:6px}
+#vyber .akce{display:flex;flex-wrap:wrap;gap:4px}
+#vyber .akce .btn{padding:5px 8px;font-size:.8rem}
+#vyber .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.strA{border:1px dashed var(--danger);border-radius:6px;padding:6px 8px;font-size:.8rem;line-height:1.45;margin-bottom:6px}
+.strA .btn{margin-top:4px}
+@media (max-width:900px){
+  #vyber.ma{position:fixed;left:0;right:0;bottom:0;z-index:900;border-top:2px solid var(--accent);box-shadow:var(--shadow);max-height:48vh;overflow:auto}
+}
+ul.seznam{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+ul.seznam li{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:.78rem;line-height:1.4;display:flex;gap:6px;align-items:flex-start}
+ul.seznam li .t{flex:1;min-width:0;cursor:pointer;word-break:break-word}
+ul.seznam li .t:hover{color:var(--accent)}
+ul.seznam li .x{border:0;background:none;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:0 2px}
+ul.seznam li .x:hover{color:var(--danger)}
+ul.seznam li .vs{color:var(--text-muted);font-size:.72rem;display:block;margin:2px 0}
+.mini-text{color:var(--text-muted);font-size:.74rem}
+
+/* start */
+#start{flex:1;min-height:0;overflow:auto;padding:16px}
+#start .box{max-width:880px;margin:10px auto;display:grid;gap:14px}
+#start h2{margin:0;font-size:1.35rem}
+#start .podtitul{color:var(--text-muted);margin:0;line-height:1.55}
+#start .pripady{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+#start .pk{text-align:left;background:var(--bg-elevated);border:2px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;color:var(--text);font:inherit;display:flex;flex-direction:column;gap:5px;line-height:1.45}
+#start .pk:hover{border-color:var(--border-strong)}
+#start .pk[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+#start .pk .obt{font-size:.8rem;color:var(--text-muted)}
+#start .pk b{font-size:1rem}
+#start .pk .u{font-size:.82rem;color:var(--text-muted)}
+#start .jmeno{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#start .jmeno .vstup{flex:1 1 220px}
+#start .pravidla{font-size:.84rem;color:var(--text-muted);line-height:1.55;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+#start .pravidla ul{margin:4px 0 0;padding-left:18px}
+#start .tlac{display:flex;gap:8px;flex-wrap:wrap}
+#start .btn.velke{font-size:1rem;padding:10px 18px}
+
+/* rozbor */
+#rozbor{flex:1;min-height:0;overflow:auto;padding:16px}
+#rozbor .box{max-width:920px;margin:6px auto 40px;display:grid;gap:14px}
+.vysl-hlava{background:var(--bg-elevated);border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:10px;padding:14px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.vysl-hlava .skore{font-size:2.4rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.vysl-hlava .skore small{font-size:1rem;color:var(--text-muted);font-weight:400}
+.vysl-hlava .info{flex:1 1 240px;line-height:1.55}
+.vysl-hlava .hodn{font-size:1.05rem;font-weight:600}
+.blok{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.blok h3{margin:0 0 8px;font-size:1rem}
+.slozky{width:100%;border-collapse:collapse;font-size:.86rem}
+.slozky td{padding:4px 6px;border-bottom:1px solid var(--border)}
+.slozky td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.slozky tr.soucet td{font-weight:700;border-top:2px solid var(--border-strong)}
+.rz{border:1px solid var(--border);border-left:4px solid var(--border-strong);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:var(--bg-elevated);font-size:.86rem;line-height:1.5}
+.rz.ok{border-left-color:var(--ok)} .rz.ne{border-left-color:var(--danger)} .rz.pul{border-left-color:var(--warn)}
+.rz h4{margin:0 0 4px;font-size:.9rem}
+.rz .par{color:var(--text-muted);font-size:.8rem;margin:3px 0}
+.rz .par q{color:var(--text)}
+.stav-ok{color:var(--ok);font-weight:600} .stav-ne{color:var(--danger);font-weight:600} .stav-pul{color:var(--warn);font-weight:600}
+.pouceni li{margin-bottom:6px;font-size:.88rem;line-height:1.55}
+.tlac-rozbor{display:flex;gap:8px;flex-wrap:wrap}
+
+/* dialogy */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,600px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,860px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno .ramec{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.9rem;line-height:1.55}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.okno h4{margin:8px 0 2px;font-size:.95rem}
+.okno p{margin:0}
+.okno ul{margin:0;padding-left:20px}
+.otazka{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--bg-panel)}
+.otazka > b{display:block;margin-bottom:6px}
+.otazka label{display:flex;gap:8px;align-items:flex-start;padding:3px 0;cursor:pointer;font-size:.88rem;line-height:1.45}
+.otazka label input{margin-top:3px;flex-shrink:0}
+.otazka details{margin-top:6px}
+.otazka summary{cursor:pointer;font-size:.82rem;color:var(--accent)}
+.otazka .dukazy{max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:4px 8px;margin-top:4px;background:var(--bg)}
+.otazka .dukazy label{font-size:.8rem}
+.otazka .dukazy small{color:var(--text-muted)}
+.tab-vysl{width:100%;border-collapse:collapse;font-size:.84rem}
+.tab-vysl th,.tab-vysl td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--border)}
+.tab-vysl th{color:var(--text-muted);font-size:.72rem;text-transform:uppercase}
+.tab-vysl td.c{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tab-vysl tr.ja td{background:var(--accent-soft);font-weight:600}
+.tab-obal{overflow-x:auto}
+.filtr{display:flex;gap:4px;flex-wrap:wrap}
+.filtr .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+@media print{
+  body > *:not(#rozbor){display:none !important}
+  #rozbor{position:static;overflow:visible;background:#fff;color:#000;padding:0}
+  .tlac-rozbor{display:none !important}
+  .blok,.vysl-hlava,.rz{break-inside:avoid;background:#fff;color:#000}
+  body{display:block;height:auto;background:#fff}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🎓<span class="t"> Tréninkový případ</span></h1>
+  <div class="skup" role="group" aria-label="Případ"><span class="skup-nazev" aria-hidden="true">Případ</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPripad" aria-expanded="false" title="Hráč, případ, tisk výsledku">📁<span class="txt"> <span id="nazevPripadu">Případ</span></span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Spis"><span class="skup-nazev" aria-hidden="true">Spis</span><div class="skup-tl">
+    <button class="tl" data-prikaz="stul" title="Všechny dokumenty spisu na stole">🗂️<span class="txt"> Stůl</span></button>
+    <button class="tl" data-prikaz="napoveda" id="tlNapoveda" title="Nápověda po stupních – stojí body">💡<span class="txt"> Nápověda</span></button>
+    <button class="tl hlavni-tl" data-prikaz="odevzdat" id="tlOdevzdat" title="Vyplnit závěr a nechat vyhodnotit">✅<span class="txt"> Odevzdat</span></button>
+  </div></div>
+  <span class="vpravo">
+    <span class="hodiny" id="hodiny" title="Čas řešení">⏱ 0:00</span>
+    <button class="tl" data-prikaz="vysledky" title="Tabulka výsledků na tomto zařízení">🏆<span class="txt"> Výsledky</span></button>
+    <button class="tl" data-nabidka="nabLektor" aria-expanded="false" title="Režim lektora: řešení, přepnutí případu, smazání tabulky">🧑‍🏫<span class="txt"> Lektor</span> ▾</button>
+    <button class="tl" data-nabidka="nabPomoc" aria-expanded="false" title="Jak hrát, jak hodnotit stopy" aria-label="Nápověda">❓ ▾</button>
+  </span>
+</header>
+
+<div id="nabPripad" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novyHrac">🧑 Nový hráč…</button>
+  <button class="tl" data-prikaz="znovu">🔁 Začít tento případ znovu…</button>
+  <button class="tl" data-prikaz="rozbor" id="tlRozbor">📊 Zobrazit rozbor výsledku</button>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk výsledku</button>
+</div>
+<div id="nabLektor" class="nabidka" hidden>
+  <div class="pozn">Pro lektora náborové akce nebo výuky.</div>
+  <button class="tl" data-prikaz="reseni">👁️ Zobrazit řešení…</button>
+  <button class="tl" data-prikaz="prepni">🔀 Přepnout případ…</button>
+  <button class="tl" data-prikaz="smazTabulku">🗑️ Smazat tabulku výsledků…</button>
+</div>
+<div id="nabPomoc" class="nabidka" hidden>
+  <button class="tl" data-prikaz="jakHrat">📖 Jak hrát</button>
+  <button class="tl" data-prikaz="jakHodnotit">⚖️ Jak hodnotit stopy</button>
+</div>
+
+<div id="plocha">
+  <section id="spis" aria-label="Spis">
+    <div id="zalozky" role="tablist"></div>
+    <div id="obsah"></div>
+  </section>
+  <aside id="panel" aria-label="Pracovní panel">
+    <div class="sekce" id="vyber"></div>
+    <div class="sekce">
+      <h3>⚡ Moje rozpory <span class="pocet" id="pocetRozporu"></span></h3>
+      <ul class="seznam" id="seznamRozporu"></ul>
+    </div>
+    <div class="sekce">
+      <h3>📌 Zvýraznění a poznámky <span class="pocet" id="pocetPozn"></span></h3>
+      <ul class="seznam" id="seznamPozn"></ul>
+    </div>
+    <div class="sekce">
+      <h3>💡 Nápovědy <span class="pocet" id="pocetNapoved"></span></h3>
+      <ul class="seznam" id="seznamNapoved"></ul>
+    </div>
+  </aside>
+</div>
+
+<section id="start" hidden>
+  <div class="box">
+    <div>
+      <h2>🎓 Tréninkový případ – najdi rozpor</h2>
+      <p class="podtitul">Máš před sebou spis smyšleného případu. Přečti dokumenty, najdi výroky a údaje, které si odporují, odliš ověřené zjištění od pouhého tvrzení a na konci vyvoď závěr. Dostaneš body i rozbor, co ti uteklo.</p>
+    </div>
+    <div class="pripady" id="startPripady"></div>
+    <div class="jmeno">
+      <label for="startJmeno" style="font-weight:600">Jméno nebo přezdívka:</label>
+      <input class="vstup" id="startJmeno" maxlength="40" placeholder="např. Jana K." autocomplete="off">
+    </div>
+    <div class="pravidla">
+      <b>Jak se hraje</b>
+      <ul>
+        <li>Klikni na dokument na stole, otevře se v záložce. Klikni na větu nebo řádek tabulky – vpravo (na mobilu dole) se ukážou akce.</li>
+        <li><b>⚡ Rozpor:</b> označ první výrok, pak druhý, který mu odporuje. Za nalezený rozpor +10 bodů, za dvojici, která si neodporuje, −4 (zdánlivý rozpor −2).</li>
+        <li><b>✔ Ověřené / 💬 Tvrzení:</b> roztřiď výroky – správně +1, špatně −1 (nejvýš +10).</li>
+        <li><b>💡 Nápověda</b> má tři stupně a stojí 1, 2 a 4 body. Bonus až 10 bodů za čas.</li>
+        <li><b>✅ Odevzdat:</b> odpovíš na otázky kdo, kdy, jak a co je slabé místo a opřeš je o důkazy, které sis zvýraznil.</li>
+      </ul>
+    </div>
+    <div class="tlac">
+      <button class="btn primary velke" id="startZacni">▶ Začít vyšetřování</button>
+      <button class="btn" data-prikaz="vysledky">🏆 Tabulka výsledků</button>
+      <button class="btn" data-prikaz="jakHodnotit">⚖️ Jak hodnotit stopy</button>
+      <button class="btn" id="startZpet" hidden>↩ Zpět do rozpracovaného případu</button>
+    </div>
+  </div>
+</section>
+
+<section id="rozbor" hidden><div class="box" id="rozborObsah"></div></section>
+
+<dialog class="okno siroke" id="dlgZaver"><div class="ramec">
+  <header><span>✅ Závěr vyšetřování</span><button class="btn mini" data-zavri>✕</button></header>
+  <div class="telo" id="zaverTelo"></div>
+  <footer><button class="btn vlevo" data-zavri>↩ Zpět do spisu</button><button class="btn primary" id="zaverOdevzdej">✅ Odevzdat a vyhodnotit</button></footer>
+</div></dialog>
+
+<dialog class="okno siroke" id="dlgVysledky"><div class="ramec">
+  <header><span>🏆 Tabulka výsledků na tomto zařízení</span><button class="btn mini" data-zavri>✕</button></header>
+  <div class="telo"><div class="filtr" id="vyslFiltr"></div><div class="tab-obal" id="vyslTabulka"></div></div>
+  <footer><button class="btn" data-zavri>Zavřít</button></footer>
+</div></dialog>
+
+<dialog class="okno siroke" id="dlgReseni"><div class="ramec">
+  <header><span>👁️ Řešení případu (lektor)</span><button class="btn mini" data-zavri>✕</button></header>
+  <div class="telo" id="reseniTelo"></div>
+  <footer><button class="btn vlevo" id="reseniVyznac">🖍️ Vyznačit rozpory ve spisu</button><button class="btn" data-zavri>Zavřít</button></footer>
+</div></dialog>
+
+<dialog class="okno" id="dlgPomoc"><div class="ramec">
+  <header><span id="pomocNadpis"></span><button class="btn mini" data-zavri>✕</button></header>
+  <div class="telo" id="pomocTelo"></div>
+  <footer><button class="btn" data-zavri>Zavřít</button></footer>
+</div></dialog>
+
+<template id="tplHodnotit">
+  <p>Ve spisu se míchají dvě věci: to, co někdo <b>říká</b>, a to, co bylo <b>zjištěno</b>. Dobrý vyšetřovatel je drží od sebe.</p>
+  <h4>✔ Ověřené × 💬 tvrzení</h4>
+  <p>Tvrzení je cokoli, co uvádí osoba – oznamovatel, svědek, podezřelý, ale i úsudek policisty („rukavice svědčí o tom, že…“). Ověřené je to, co vzniklo nezávisle na tom, kdo co říká: měření a nález při ohledání, záznam kamery, výpis operátora, účtenka, technický log. I ověřený údaj ale ukazuje jen to, co skutečně zaznamenal – poloha telefonu je poloha telefonu, ne člověka.</p>
+  <h4>🔗 Nezávislost zdrojů</h4>
+  <p>Dva lidé, kteří se znají a mluví spolu, nejsou dva nezávislé zdroje. Alibi od kamaráda je slabší než údaj, který vznikl bez lidského rozhodnutí (bankovní terminál, operátor, zámek s pamětí). Když se shodnou zdroje, které se nemohly domluvit, je to silné potvrzení.</p>
+  <h4>⏱ Časová razítka a jejich přesnost</h4>
+  <p>Každý čas pochází z nějakých hodin. Kamery a fotopasti mívají hodiny posunuté nebo nepřestavené na zimní čas, lidé odhadují čas „kolem půl třetí“. Než porovnáš dva časy, zjisti, odkud jsou a jak přesné jsou. Pomůže kalibrace – událost, jejíž přesný čas znáš z jiného zdroje (příjezd hlídky, telefonát).</p>
+  <h4>🔀 Alternativní vysvětlení</h4>
+  <p>Ke každé stopě si polož otázku: „Jak jinak se sem mohla dostat?“ Stopa, která má rozumné nevinné vysvětlení, je slabá. Stopa, která pachatele „sama podepisuje“, zaslouží zvláštní nedůvěru – mohl ji tam někdo dát.</p>
+  <h4>🧠 Pasti v myšlení</h4>
+  <ul>
+    <li><b>Tunelové vidění</b> – jakmile máš podezřelého, přestaneš vidět ostatní možnosti.</li>
+    <li><b>Konfirmační zkreslení</b> – hledáš jen to, co tvou verzi potvrzuje. Zkus aktivně hledat, co ji vyvrací.</li>
+    <li><b>Ochotné vodítko</b> – kdo ti sám od sebe podává „řešení“, má možná důvod.</li>
+  </ul>
+  <h4>⚡ Co je rozpor</h4>
+  <p>Rozpor jsou dva údaje, které nemohou platit zároveň. Dva údaje, které jen „nevypadají hezky“, ale vysvětlit se dají (posunuté hodiny, přibližný odhad času), jsou zdánlivý rozpor – za jeho označení se strhávají 2 body.</p>
+</template>
+<template id="tplJakHrat">
+  <ol>
+    <li>Na <b>stole</b> 🗂️ jsou všechny dokumenty spisu. Kliknutím otevřeš dokument v záložce.</li>
+    <li>Klikni na větu nebo řádek tabulky. V panelu se ukážou akce: <b>🖍️ zvýraznit</b> (opakovaným klikem měníš barvu), <b>✔ ověřené</b> / <b>💬 tvrzení</b>, <b>📌 poznámka</b>.</li>
+    <li><b>⚡ Rozpor:</b> u prvního výroku zvol „⚡ Rozpor – 1. strana“, otevři jiný dokument (nebo zůstaň v tomtéž) a u druhého výroku zvol „⚡ Spojit jako rozpor“. Rozpory se vyhodnotí až po odevzdání.</li>
+    <li>Když nevíš kudy kam, <b>💡 Nápověda</b> ukáže směr (1 bod), pak dokumenty (2 body) a nakonec jednu stranu rozporu (4 body).</li>
+    <li><b>✅ Odevzdat:</b> vyber odpovědi a ke každé až 3 důkazy ze svých zvýrazněných výroků. Za důkaz, který odpověď podporuje, +1 (nejvýš 2), za klamný důkaz −1.</li>
+    <li>Na náborové akci po hodnocení stiskni <b>🧑 Nový hráč</b> – další člověk začne s čistým spisem a výsledky se sbírají v <b>🏆 tabulce</b> na tomto zařízení.</li>
+  </ol>
+  <p class="mini-text">Všechny případy jsou smyšlené. Data zůstávají jen v tomto prohlížeči.</p>
+</template>
+
+<script src="treninkovy_pripad/ui.js"></script>
+</body>
+</html>

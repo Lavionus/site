@@ -1,8 +1,8 @@
 /* Gamebook – stránka (vykreslení, ovládání, ukládání) společná všem příběhům.
    Obálka obsah/gamebook*.html načte jadro.js, data příběhu (window.GAMEBOOK_PRIBEH) a tenhle soubor.
-   Z příběhu se čte: nazev, ikona, podtitul, klic (localStorage, povinný), obrazky (složka), uvodObr, nazvy (popisky vlastností), pravidlo. */
+   Z příběhu se čte: nazev, ikona, podtitul, klic (localStorage, povinný), obrazky (složka), uvodObr, nazvy (popisky vlastností), pravidlo,
+   popisky (texty rozhraní – výchozí jsou ve 2. osobě, příběh ve 3. osobě si je přepíše, viz POPISKY). */
 (function () {
-'use strict';
 'use strict';
 const J = window.GamebookJadro, P = window.GAMEBOOK_PRIBEH;
 const KLIC = P.klic;
@@ -10,6 +10,19 @@ const OBR = P.obrazky || 'gamebook/obr/';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const NAZVY = Object.assign({ obratnost: '🤸 Obratnost', zdravi: '❤️ Zdraví', stesti: '🍀 Štěstí', olej: '🪔 Olej v kahanu', zlato: '🪙 Groše' }, P.nazvy);
+/* Texty rozhraní, které oslovují hrdinu. Výchozí = 2. osoba (hráč je hrdina); příběh je může přepsat v P.popisky.
+   pravidla* jsou HTML, {n} v pravidlaKonce = počet konců. */
+const POPISKY = Object.assign({
+  torba: 'Torba', prazdna: 'prázdná',
+  hrdina: 'Ty',                       // hlavička souboje „Ty – zdraví 18“
+  bojJa: 'ty',                        // záznam kola „Kolo 1: ty 15 proti 12 – …“
+  bojZasah: 'zasáhneš (−2 soupeři)', bojZraneni: 'zasáhne tě (−2 zdraví)', bojNikdo: 'nikdo nezasáhl',
+  vlastnosti: 'Tvoje vlastnosti',     // „Tvoje vlastnosti: obratnost 9, …“ po nové hře
+  pravidlaUvod: 'Čteš příběh a na konci každého oddílu (§) volíš, co uděláš. Některé volby jsou dostupné jen s určitým předmětem nebo když se ti něco podařilo dřív.',
+  pravidlaZkouska: '<b>Zkouška</b>: hodíš 2 kostkami; když padne součet menší nebo rovný vlastnosti, uspěješ. Každá zkouška štěstí ho sníží o 1.',
+  pravidlaSouboj: '<b>Souboj</b> běží po kolech: ty i soupeř hodíte 2 kostkami a přičtete obratnost. Kdo má víc, ubere druhému 2 zdraví.',
+  pravidlaKonce: 'Najdi všech {n} konců!'
+}, P.popisky);
 
 /* Kostra stránky je společná pro všechny příběhy – obálka HTML má jen <head>. */
 document.body.insertAdjacentHTML('afterbegin', `<header class="lista">
@@ -83,7 +96,7 @@ function panelPostavy() {
     return `<li title="${esc(d.popis || '')}"><span>${esc(d.nazev)}${pocty[x] > 1 ? ' ×' + pocty[x] : ''}</span>${lze ? `<button class="btn" data-pouzij="${esc(x)}">Použít</button>` : ''}</li>`;
   }).join('');
   return `<aside class="postava" aria-label="Postava"><h2>Postava</h2>${vl}
-    <div class="sekce"><h2>Torba</h2>${pr ? `<ul class="predmety">${pr}</ul>` : '<div class="malo">prázdná</div>'}</div></aside>`;
+    <div class="sekce"><h2>${esc(POPISKY.torba)}</h2>${pr ? `<ul class="predmety">${pr}</ul>` : `<div class="malo">${esc(POPISKY.prazdna)}</div>`}</div></aside>`;
 }
 
 function hodHtml(z) {
@@ -94,10 +107,10 @@ function hodHtml(z) {
 
 function bojHtml() {
   const b = st.boj;
-  const log = b.log.slice().reverse().map(k => `Kolo ${k.kolo}: ty ${k.ja} proti ${k.on} – ${k.vysledek === 'zasah' ? 'zasáhneš (−2 soupeři)' : k.vysledek === 'zraneni' ? 'zasáhne tě (−2 zdraví)' : 'nikdo nezasáhl'}`).join('<br>');
+  const log = b.log.slice().reverse().map(k => `Kolo ${k.kolo}: ${esc(POPISKY.bojJa)} ${k.ja} proti ${k.on} – ${esc(k.vysledek === 'zasah' ? POPISKY.bojZasah : k.vysledek === 'zraneni' ? POPISKY.bojZraneni : POPISKY.bojNikdo)}`).join('<br>');
   return `<div class="boj" role="region" aria-label="Souboj"><h3>⚔️ Souboj: ${esc(b.jmeno)}</h3>
     <div class="souperi">
-      <div><div class="jm">Ty – zdraví ${st.zdravi}</div><div class="mer zdravi"><i style="width:${Math.round(100 * st.zdravi / st.zdraviMax)}%"></i></div></div>
+      <div><div class="jm">${esc(POPISKY.hrdina)} – zdraví ${st.zdravi}</div><div class="mer zdravi"><i style="width:${Math.round(100 * st.zdravi / st.zdraviMax)}%"></i></div></div>
       <div><div class="jm">${esc(b.jmeno)} – zdraví ${b.zdravi} · obratnost ${b.obratnost}</div><div class="mer zdravi"><i style="width:${Math.round(100 * b.zdravi / b.zdraviMax)}%"></i></div></div>
     </div>
     <div class="malo">Každé kolo: 2 kostky + obratnost. Kdo má víc, zasáhne za 2 zdraví.</div>
@@ -142,12 +155,12 @@ function vykresliUvod() {
 }
 
 function pravidla() {
-  return `<p>Čteš příběh a na konci každého oddílu (§) volíš, co uděláš. Některé volby jsou dostupné jen s určitým předmětem nebo když se ti něco podařilo dřív.</p>
+  return `<p>${POPISKY.pravidlaUvod}</p>
   <p><b>Vlastnosti</b> se hodí na začátku kostkami: obratnost 7–12, zdraví 14–24, štěstí 7–12.</p>
-  <p><b>Zkouška</b>: hodíš 2 kostkami; když padne součet menší nebo rovný vlastnosti, uspěješ. Každá zkouška štěstí ho sníží o 1.</p>
-  <p><b>Souboj</b> běží po kolech: ty i soupeř hodíte 2 kostkami a přičtete obratnost. Kdo má víc, ubere druhému 2 zdraví.</p>
+  <p>${POPISKY.pravidlaZkouska}</p>
+  <p>${POPISKY.pravidlaSouboj}</p>
   <p>${P.pravidlo || '<b>Kahan</b>: v hloubi hory ubývá oleje. Když dojde, zůstaneš ve tmě. <b>Zdraví</b> doplní krajíc chleba z torby.'}</p>
-  <p>Hra se ukládá sama; v nabídce Hra jsou navíc tři pozice pro uložení. Najdi všech ${Object.keys(P.konce).length} konců!</p>`;
+  <p>Hra se ukládá sama; v nabídce Hra jsou navíc tři pozice pro uložení. ${POPISKY.pravidlaKonce.replace('{n}', Object.keys(P.konce).length)}</p>`;
 }
 
 function vykresli() { if (st) vykresliHru(); else vykresliUvod(); }
@@ -168,7 +181,7 @@ function pouzij(x) { const zm = J.pouzij(st, P, x); posledni = { zmeny: zm }; st
 async function novaHra() {
   if (st && !st.konec && !await Dialog.potvrd('Začít novou hru? Rozehraná hra se přepíše (uložené pozice zůstanou).')) return;
   st = J.novaHra(P); posledni = null; uloz(); vykresliHru();
-  Dialog.info(`Tvoje vlastnosti: obratnost ${st.obratnost}, zdraví ${st.zdravi}, štěstí ${st.stesti}.`);
+  Dialog.info(`${POPISKY.vlastnosti}: obratnost ${st.obratnost}, zdraví ${st.zdravi}, štěstí ${st.stesti}.`);
 }
 
 function okno(titul, html) { $('dlgTitul').textContent = titul; $('dlgTelo').innerHTML = html; $('dlg').showModal(); }

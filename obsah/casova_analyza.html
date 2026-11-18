@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Časová analýza záznamů GPS a telefonu</title>
+<meta name="description" content="Forenzní časová analýza poloh a komunikace: import GPX, KML, GeoJSON, Google Takeout, výpisů hovorů v CSV a fotek s EXIF, sjednocení časových pásem a posunů hodin, časová osa s mapou, pobyty, nemožné rychlosti, mezery, souběh osob, ověření alibi, protokol. Vše lokálně v prohlížeči.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="vysetrovani/pripad.js"></script>
+<script src="casova_analyza/jadro.js"></script>
+<script src="vysetrovani/metoda.js"></script>
+<script src="casova_analyza/metoda.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.76rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+select.vstup{padding:5px 6px}
+
+/* plocha: mapa + osa vlevo, panel vpravo */
+#plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:minmax(0,1fr) auto}
+#mapaObal{position:relative;min-height:200px;border-right:1px solid var(--border)}
+#mapa{position:absolute;inset:0;background:var(--bg)}
+#osaObal{grid-column:1;border-top:1px solid var(--border);border-right:1px solid var(--border);background:var(--bg-panel);display:flex;flex-direction:column}
+#panel{grid-column:2;grid-row:1 / span 2;display:flex;flex-direction:column;min-height:0;background:var(--bg-panel)}
+@media (max-width:900px){
+  #plocha{display:flex;flex-direction:column;overflow:auto}
+  #mapaObal{height:52vh;flex-shrink:0;border-right:0}
+  #osaObal{border-right:0}
+  #panel{min-height:60vh;border-top:1px solid var(--border)}
+}
+.ovl{display:flex;align-items:center;gap:4px;padding:5px 8px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.ovl .kurzor{font-variant-numeric:tabular-nums;font-weight:600;font-size:.86rem;margin:0 6px;white-space:nowrap}
+.ovl .tz{font-size:.74rem;color:var(--text-muted)}
+.ovl .mezera{flex:1}
+#osaSvitek{max-height:300px;overflow-y:auto;overflow-x:hidden}
+#osa{display:block;width:100%;touch-action:none;cursor:crosshair}
+
+.zalozky{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.zalozky::-webkit-scrollbar{display:none}
+.zalozky button{flex:1 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-muted);padding:9px 3px;cursor:pointer;font:inherit;font-size:.76rem;white-space:nowrap}
+.zalozky button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.zalozky .pocet{font-size:.72rem;color:var(--text-muted);margin-left:3px}
+#panelTelo{flex:1;min-height:0;overflow:auto;padding:10px}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-left:4px solid var(--pruh,var(--border-strong));border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:.82rem;display:grid;gap:3px}
+.karta h3{margin:0;font-size:.9rem;display:flex;gap:6px;align-items:center;justify-content:space-between;word-break:break-word}
+.karta .meta{color:var(--text-muted);font-size:.76rem;line-height:1.45}
+.karta .akce{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.karta.skryty{opacity:.55}
+.varov{color:var(--warn)}
+.prazdno{color:var(--text-muted);border:1px dashed var(--border-strong);border-radius:8px;padding:16px;text-align:center;line-height:1.6;font-size:.86rem}
+.radek-f{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.radek-f .vstup{flex:1 1 120px}
+table{border-collapse:collapse;width:100%;font-size:.78rem}
+th,td{text-align:left;padding:4px 5px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.7rem;text-transform:uppercase;position:sticky;top:-10px;background:var(--bg-panel)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--bg-hover)}
+td.cas{white-space:nowrap;font-variant-numeric:tabular-nums}
+.tecka{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:baseline}
+.vysl h3{font-size:.86rem;margin:12px 0 4px}
+.vysl .param{font-size:.74rem;color:var(--text-muted);margin-bottom:4px}
+.vysl ul{list-style:none;padding:0;margin:0}
+.vysl li{padding:5px 7px;border-radius:6px;font-size:.8rem;line-height:1.4;cursor:pointer;border:1px solid transparent}
+.vysl li:hover{background:var(--bg-hover);border-color:var(--border)}
+.verdikt{font-size:1rem;font-weight:700;margin:4px 0}
+.verdikt.uvnitr{color:var(--ok)} .verdikt.mimo{color:var(--danger)} .verdikt.nejiste{color:var(--warn)}
+
+/* prázdný případ */
+#uvod{position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--bg-deep,var(--bg)) 82%,transparent)}
+#uvod .box{max-width:520px;background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:12px;padding:20px;text-align:center;line-height:1.55;font-size:.9rem}
+#uvod .box h2{margin:0 0 8px;font-size:1.15rem}
+#uvod .box .akce{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+body.tahne #uvod .box,body.tahne #mapaObal{outline:3px dashed var(--accent);outline-offset:-6px}
+.vyber-mapy{cursor:crosshair !important}
+.hlaska-mapa{position:absolute;z-index:600;top:8px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:6px 12px;border-radius:6px;font-size:.84rem;box-shadow:var(--shadow)}
+
+/* značky na mapě */
+.znacka-osoba{border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);color:#fff;font:700 11px/22px system-ui,sans-serif;text-align:center;text-shadow:0 0 2px #000}
+.leaflet-popup-content{font-size:.8rem;line-height:1.45}
+.leaflet-container{font-family:inherit}
+
+/* dialogy */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,820px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.pole .spolu{display:flex;gap:4px}
+.pole .spolu .vstup{flex:1}
+.radek{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.radek{grid-template-columns:1fr}}
+.info{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info.pozor{border-left:3px solid var(--warn)}
+.mapovani{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.nahled{overflow:auto;max-height:180px;border:1px solid var(--border);border-radius:6px}
+.nahled td,.nahled th{white-space:nowrap;position:static}
+#protokolText{width:100%;min-height:50vh;font:12px/1.45 ui-monospace,Consolas,monospace;white-space:pre;color:var(--text)}
+.napoveda p,.napoveda li{margin:0 0 6px;font-size:.86rem;line-height:1.55}
+.napoveda h4{margin:10px 0 4px;font-size:.9rem}
+.napoveda ul{margin:0;padding-left:20px}
+#tisk{display:none}
+#nazevPripadu{display:inline-block;max-width:190px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;white-space:nowrap}
+.ovl.hledani{padding-top:3px;padding-bottom:3px}
+.ovl.hledani .vstup{flex:1 1 160px;padding:3px 8px;font-size:.8rem}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.uk{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:.8rem;line-height:1.45}
+.uk h3{margin:0;font-size:.95rem}
+.uk .co{color:var(--text-muted)}
+.uk ul{margin:0;padding-left:18px}
+.uk .najde{border-left:3px solid var(--accent);padding-left:7px}
+.uk .btn{align-self:flex-start;margin-top:auto}
+.uvod-ukazky{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
+.uvod-ukazky .btn{font-size:.78rem;padding:4px 9px}
+.ukazka-info{border:1px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:.8rem;line-height:1.45}
+.ukazka-info h4{margin:0 0 4px;font-size:.88rem;display:flex;justify-content:space-between;gap:6px}
+.ukazka-info ul{margin:4px 0;padding-left:18px}
+.tepl{border-collapse:collapse;font-size:.62rem;width:auto;margin:4px 0}
+.tepl td,.tepl th{padding:0;border:1px solid color-mix(in srgb,var(--border) 50%,transparent);width:12px;height:13px;text-align:center;position:static;text-transform:none;color:var(--text-muted);font-weight:400;background:none}
+.tepl th.r{width:auto;padding:0 4px;text-align:left;white-space:nowrap}
+.tepl-obal{overflow-x:auto;max-width:100%}
+.hv{background:none;border:0;cursor:pointer;font-size:.95rem;padding:0 2px;line-height:1;opacity:.35;filter:grayscale(1)}
+.hv.ano{opacity:1;filter:none}
+.vysl .akce-v{margin:4px 0}
+.zkratky td{padding:5px 6px;cursor:default}
+.zkratky tr:hover{background:none}
+kbd{background:var(--bg-control);border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;padding:1px 5px;font:600 .78rem ui-monospace,monospace}
+.pruvodce{position:fixed;z-index:1200;right:12px;bottom:12px;width:min(360px,calc(100vw - 24px));background:var(--bg-elevated);border:2px solid var(--accent);border-radius:10px;box-shadow:var(--shadow);padding:10px 12px;font-size:.84rem;line-height:1.5}
+.pr-hlava{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.pr-hlava b{flex:1}
+.pr-akce{display:flex;gap:6px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+.zvyrazni{outline:3px solid var(--accent) !important;outline-offset:2px;animation:pulz 1s ease-in-out 3}
+@keyframes pulz{50%{outline-color:transparent}}
+.znacka-misto{font-size:20px;line-height:20px;text-align:center;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+@media print{
+  body > *:not(#tisk){display:none!important}
+  #tisk{display:block;white-space:pre-wrap;font:10pt/1.4 ui-monospace,Consolas,monospace;color:#000;background:#fff}
+  body{display:block;height:auto;background:#fff}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🕰️ Časová analýza</h1>
+  <div class="skup" role="group" aria-label="Případ"><span class="skup-nazev" aria-hidden="true">Případ</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPripad" aria-expanded="false" title="Případy, záloha, ukázková data">📁<span class="txt"> <span id="nazevPripadu">Případ</span></span> ▾</button>
+    <button class="tl" data-prikaz="galerie" title="Galerie ukázek se syntetickými daty (G)">🧪<span class="txt"> Ukázky</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Data"><span class="skup-nazev" aria-hidden="true">Data</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="import" title="Import souborů: GPX, KML, GeoJSON, Google Takeout, CSV, fotky JPEG">📥<span class="txt"> Import</span></button>
+    <button class="tl" data-nabidka="nabPridat" aria-expanded="false" title="Ruční událost, poznámka, zájmové místo">✚<span class="txt"> Přidat</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Analýza"><span class="skup-nazev" aria-hidden="true">Analýza</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabAnalyza" aria-expanded="false" title="Pobyty, rychlosti, mezery, souběh, alibi, místa, vzorce, konzistence">🔬<span class="txt"> Analýza</span> ▾</button>
+    <button class="tl" data-nabidka="nabExport" aria-expanded="false" title="Protokol, CSV, GeoJSON, KML">📤<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazení"><span class="skup-nazev" aria-hidden="true">Zobrazit časy v pásmu</span><div class="skup-tl">
+    <input class="vstup" id="zobrazTz" list="seznamTz" style="width:150px;padding:3px 6px" aria-label="Časové pásmo zobrazení" title="Časové pásmo, ve kterém se zobrazují všechny časy">
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-metoda title="Princip, vzorce, předpoklady, meze, ověření na ukázkách a literatura">📐<span class="txt"> Metoda a meze</span></button>
+    <button class="tl" data-nabidka="nabNapoveda" aria-expanded="false" title="Nápověda, průvodce, klávesové zkratky" aria-label="Nápověda">❓ ▾</button>
+  </span>
+</header>
+
+<div id="nabPripad" class="nabidka" hidden>
+  <button class="tl" data-prikaz="pripady">🗂️ Případy…</button>
+  <button class="tl" data-prikaz="novy">🆕 Nový případ</button>
+  <button class="tl" data-prikaz="prejmenuj">✏️ Název a spisová značka…</button>
+  <button class="tl" data-prikaz="galerie">🧪 Galerie ukázek (syntetická data)…</button>
+  <hr>
+  <button class="tl" data-prikaz="zaloha">💾 Záloha případu (JSON)</button>
+  <button class="tl" data-prikaz="obnov">📂 Načíst zálohu…</button>
+  <hr>
+  <button class="tl" data-prikaz="smazPripad">🗑️ Smazat tento případ…</button>
+</div>
+<div id="nabPridat" class="nabidka" hidden>
+  <button class="tl" data-prikaz="import">📥 Soubory (GPX, KML, GeoJSON, Takeout, CSV, JPEG)…</button>
+  <button class="tl" data-prikaz="rucni">✍️ Ruční událost…</button>
+  <button class="tl" data-prikaz="poznamka">📝 Poznámka v čase kurzoru…</button>
+  <button class="tl" data-prikaz="noveMisto">📍 Zájmové místo (klik do mapy)…</button>
+  <hr>
+  <button class="tl" data-prikaz="overHash">#️⃣ Ověřit otisk souboru (SHA-256)…</button>
+</div>
+<div id="nabAnalyza" class="nabidka" hidden>
+  <button class="tl" data-analyza="pobyty">🏠 Pobyty a přesuny…</button>
+  <button class="tl" data-analyza="rychlosti">🚀 Nemožné rychlosti…</button>
+  <button class="tl" data-analyza="mezery">🕳️ Mezery v datech…</button>
+  <button class="tl" data-analyza="soubeh">👥 Souběh dvou osob…</button>
+  <button class="tl" data-analyza="alibi">🎯 Ověření alibi (čas T, okruh R)…</button>
+  <hr>
+  <button class="tl" data-analyza="mista">📍 Návštěvy zájmových míst…</button>
+  <button class="tl" data-analyza="opakovana">🔁 Opakovaná místa (domov, práce)…</button>
+  <button class="tl" data-analyza="vzorce">🗓️ Denní a týdenní vzorce…</button>
+  <button class="tl" data-analyza="konzistence">🧩 Konzistence zdrojů (GPS × BTS × fotky)…</button>
+  <button class="tl" data-analyza="posun">⏱️ Odhad posunu hodin zdroje…</button>
+  <hr>
+  <button class="tl" data-prikaz="vsechnyAnalyzy">⚡ Spustit pobyty, rychlosti a mezery s výchozím nastavením</button>
+  <button class="tl" data-prikaz="smazVysledky">🧹 Vymazat výsledky analýz</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-prikaz="protokol">📄 Protokol (náhled, TXT, tisk)…</button>
+  <button class="tl" data-prikaz="csv">📊 Záznamy do CSV (vše)</button>
+  <button class="tl" data-prikaz="csvVyrez">📊 Záznamy do CSV (jen výřez osy)</button>
+  <button class="tl" data-prikaz="geojson">🗺️ GeoJSON (trasy, události, pobyty)</button>
+  <button class="tl" data-prikaz="kml">🌍 KML (Google Earth: trasy s časem, události, místa)</button>
+</div>
+<div id="nabNapoveda" class="nabidka" hidden>
+  <button class="tl" data-prikaz="napoveda">❓ Nápověda…</button>
+  <button class="tl" data-prikaz="pruvodce">🧭 Průvodce v 6 krocích</button>
+  <button class="tl" data-prikaz="zkratky">⌨️ Klávesové zkratky…</button>
+  <button class="tl" data-prikaz="galerie">🧪 Galerie ukázek…</button>
+</div>
+<input type="file" id="souborImport" multiple hidden accept=".gpx,.kml,.json,.geojson,.csv,.txt,.tsv,.jpg,.jpeg,image/jpeg,application/json">
+<input type="file" id="souborZaloha" accept=".json,application/json" hidden>
+<input type="file" id="souborOvereni" hidden>
+<datalist id="seznamTz"></datalist>
+<datalist id="seznamOsob"></datalist>
+
+<div id="plocha">
+  <section id="mapaObal">
+    <div id="mapa"></div>
+    <div id="hlaskaMapa" class="hlaska-mapa" hidden>Klikněte do mapy na místo (Esc = zrušit)</div>
+    <div id="uvod" hidden><div class="box">
+      <h2>🕰️ Časová analýza záznamů</h2>
+      <p>Přetáhněte sem soubory nebo je vyberte: <b>GPX, KML, GeoJSON</b>, <b>Google Takeout</b> (Records.json, Semantic Location History, Timeline.json z telefonu), <b>CSV</b> výpisy hovorů/SMS/dat a <b>fotky JPEG</b> s EXIF.</p>
+      <p style="font-size:.8rem;color:var(--text-muted)">🔒 Soubory se nikam neodesílají – zpracování i uložení probíhá jen v tomto prohlížeči (IndexedDB).</p>
+      <div class="akce"><button class="btn primary" data-prikaz="import">📥 Vybrat soubory</button><button class="btn" data-prikaz="galerie">🧪 Galerie ukázek</button><button class="btn" data-prikaz="pruvodce">🧭 Průvodce</button><button class="btn" data-prikaz="napoveda">❓ Nápověda</button></div>
+      <div class="uvod-ukazky" id="uvodUkazky"></div>
+    </div></div>
+  </section>
+  <section id="osaObal">
+    <div class="ovl">
+      <button class="tl" id="hraj" title="Přehrávat (mezerník)" aria-label="Přehrávat">▶</button>
+      <select class="tl" id="rychlost" aria-label="Rychlost přehrávání" title="Rychlost přehrávání">
+        <option value="60">1 min/s</option><option value="600" selected>10 min/s</option><option value="3600">1 h/s</option><option value="21600">6 h/s</option>
+      </select>
+      <span class="kurzor" id="kurzorText">–</span><span class="tz" id="kurzorTz"></span>
+      <span class="mezera"></span>
+      <button class="tl" id="krokZpet" title="Předchozí záznam (←)" aria-label="Předchozí záznam">⏮</button>
+      <button class="tl" id="krokVpred" title="Další záznam (→)" aria-label="Další záznam">⏭</button>
+      <button class="tl" id="zoomVen" title="Oddálit" aria-label="Oddálit osu">−</button>
+      <button class="tl" id="zoomDo" title="Přiblížit" aria-label="Přiblížit osu">+</button>
+      <button class="tl" id="celaOsa" title="Celé období a celá mapa" aria-label="Celé období">⤢</button>
+      <label class="tl" title="Mapa ukazuje jen data z viditelného výřezu osy"><input type="checkbox" id="jenVyrez" checked> výřez</label>
+      <label class="tl" title="Kreslit u hovorů, SMS a dat výseč antény BTS (oblast nejistoty)"><input type="checkbox" id="vysece" checked> výseče</label>
+    </div>
+    <div class="ovl hledani">
+      <input class="vstup" id="hledej" type="search" placeholder="🔍 hledat na ose: číslo, popis, typ:hovor, ⭐" aria-label="Hledat na ose" title="Hledání (/): slova, část čísla, typ:hovor / typ:sms / typ:foto, ⭐ = označené. Enter = další shoda, Shift+Enter = předchozí">
+      <span class="tz" id="hledejPocet"></span>
+      <button class="tl" id="shodaZpet" title="Předchozí shoda (Shift+Enter)" aria-label="Předchozí shoda">▲</button>
+      <button class="tl" id="shodaVpred" title="Další shoda (Enter)" aria-label="Další shoda">▼</button>
+      <button class="tl" id="oznacKurzor" title="Označit ⭐ záznam nejblíže kurzoru (M) – vstoupí do chronologie protokolu">⭐<span class="txt"> označit</span></button>
+    </div>
+    <div id="osaSvitek"><canvas id="osa" height="80" aria-label="Časová osa záznamů po osobách a zařízeních"></canvas></div>
+  </section>
+  <aside id="panel">
+    <div class="zalozky" role="tablist">
+      <button role="tab" data-zal="zdroje" aria-selected="true">📚 Zdroje<span class="pocet" id="pocZdroje"></span></button>
+      <button role="tab" data-zal="zaznamy" aria-selected="false">🧾 Záznamy</button>
+      <button role="tab" data-zal="vysledky" aria-selected="false">🔬 Výsledky<span class="pocet" id="pocVysl"></span></button>
+      <button role="tab" data-zal="mista" aria-selected="false">📍 Místa<span class="pocet" id="pocMista"></span></button>
+      <button role="tab" data-zal="poznamky" aria-selected="false">📝 Poznámky<span class="pocet" id="pocPozn"></span></button>
+    </div>
+    <div id="panelTelo"></div>
+  </aside>
+</div>
+
+<!-- zdroj (import i úprava) -->
+<dialog class="okno" id="dlgZdroj"><form method="dialog">
+  <header id="dlgZdrojTitul">Zdroj dat</header>
+  <div class="telo">
+    <div class="info" id="dlgZdrojInfo"></div>
+    <div class="radek">
+      <label class="pole">Osoba<input class="vstup" name="osoba" required maxlength="60" list="seznamOsob" autocomplete="off"></label>
+      <label class="pole">Zařízení / identifikátor<input class="vstup" name="zarizeni" maxlength="60" placeholder="telefon, SIM, IMEI, fotoaparát…"></label>
+    </div>
+    <label class="pole">Název zdroje<input class="vstup" name="nazev" maxlength="120"></label>
+    <div class="radek">
+      <label class="pole">Pásmo pro časy bez údaje o pásmu<input class="vstup" name="tz" list="seznamTz" autocomplete="off"></label>
+      <label class="pole">Posun hodin zařízení (s, + = hodiny se opožďovaly)<input class="vstup" name="posun" inputmode="numeric" placeholder="0"></label>
+    </div>
+    <details class="info"><summary style="cursor:pointer">⏱️ Spočítat posun hodin ze srovnání</summary>
+      <div style="display:grid;gap:8px;margin-top:8px">
+        <span>Zařízení ukazovalo čas <b>A</b> ve chvíli, kdy skutečný čas (např. podle snímku obrazovky s časem sítě, fotky hodin) byl <b>B</b>. Oba časy v pásmu výše.</span>
+        <div class="radek">
+          <label class="pole">A – čas na zařízení<input class="vstup" type="datetime-local" step="1" name="posunA"></label>
+          <label class="pole">B – skutečný čas<input class="vstup" type="datetime-local" step="1" name="posunB"></label>
+        </div>
+        <button type="button" class="btn mini" id="spocitejPosun" style="justify-self:start">Spočítat</button>
+      </div>
+    </details>
+    <label class="pole">Barva<input class="vstup" type="color" name="barva" style="height:34px;padding:2px"></label>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- mapování sloupců CSV -->
+<dialog class="okno siroke" id="dlgCsv"><form method="dialog">
+  <header id="dlgCsvTitul">Sloupce CSV</header>
+  <div class="telo">
+    <p class="info" style="margin:0">Přiřaďte sloupce. Čas může být v jednom sloupci (datum i čas), nebo ve dvou. Formáty: <i>2026-10-14 08:33:00</i>, <i>14.10.2026 8:33</i>, ISO s pásmem, unixový čas. Časy bez pásma se převedou podle pásma zdroje.</p>
+    <div class="mapovani" id="csvMapovani"></div>
+    <label class="pole" style="max-width:240px">Typ řádku, když ho nelze určit<select class="vstup" name="vychoziTyp"></select></label>
+    <div class="nahled" id="csvNahled"></div>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Pokračovat</button>
+  </footer>
+</form></dialog>
+
+<!-- analýza (formulář se skládá podle druhu) -->
+<dialog class="okno" id="dlgAnalyza"><form method="dialog">
+  <header id="dlgAnalyzaTitul">Analýza</header>
+  <div class="telo" id="dlgAnalyzaTelo"></div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Spustit</button>
+  </footer>
+</form></dialog>
+
+<!-- ruční událost -->
+<dialog class="okno" id="dlgRucni"><form method="dialog">
+  <header>✍️ Ruční událost</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Osoba<input class="vstup" name="osoba" required maxlength="60" list="seznamOsob" autocomplete="off"></label>
+      <label class="pole">Typ<select class="vstup" name="typ"></select></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Začátek (v zobrazeném pásmu)<input class="vstup" type="datetime-local" step="1" name="od" required></label>
+      <label class="pole">Konec (nepovinné)<input class="vstup" type="datetime-local" step="1" name="do"></label>
+    </div>
+    <label class="pole">Poloha (šířka, délka – nepovinné)<span class="spolu"><input class="vstup" name="poloha" placeholder="50.0705, 14.4040"><button type="button" class="btn" data-vyber="dlgRucni" title="Vybrat v mapě">📍</button></span></label>
+    <label class="pole">Přesnost polohy (m)<input class="vstup" name="acc" inputmode="numeric" placeholder="např. 50"></label>
+    <label class="pole">Popis (zdroj informace, svědek…)<textarea class="vstup" name="popis" rows="2" maxlength="300"></textarea></label>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Přidat</button>
+  </footer>
+</form></dialog>
+
+<!-- případy -->
+<dialog class="okno" id="dlgPripady"><form method="dialog">
+  <header>🗂️ Případy v tomto prohlížeči</header>
+  <div class="telo" id="seznamPripadu"></div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<!-- protokol -->
+<dialog class="okno siroke" id="dlgProtokol"><form method="dialog">
+  <header>📄 Protokol</header>
+  <div class="telo">
+    <p class="info" style="margin:0">Protokol obsahuje údaje o případu, zdroje s otisky SHA-256 (řetězec důkazů), zájmová místa, chronologii označených ⭐ záznamů a poznámek, výsledky spuštěných analýz, metodiku a omezení. Text lze před uložením upravit; k uloženému souboru se připojí otisk SHA-256 jeho textu.</p>
+    <textarea class="vstup" id="protokolText" spellcheck="false" data-i18n="ne"></textarea>
+    <div class="info" style="word-break:break-all">#️⃣ SHA-256 textu protokolu: <code id="protokolHash" data-i18n="ne">…</code></div>
+  </div>
+  <footer>
+    <button type="button" class="btn vlevo" id="protokolTisk">🖨️ Tisk</button>
+    <button type="button" class="btn" id="protokolUloz">💾 Uložit TXT</button>
+    <button value="zrusit" class="btn primary">Zavřít</button>
+  </footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno siroke" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Časová analýza – jak na to</header>
+  <div class="telo napoveda">
+    <p>Nástroj skládá polohové a komunikační záznamy více osob a zařízení na <b>jednu časovou osu</b> s mapou. Je určen pro rekonstrukci událostí, ověřování výpovědí a kontrolu alibi.</p>
+    <h4>📥 Podporované zdroje</h4>
+    <ul>
+      <li><b>GPX</b> (trkpt, wpt, rtept), <b>KML</b> (gx:Track, značky s TimeStamp/TimeSpan), <b>GeoJSON</b> (body s vlastností <i>time</i>, linie s <i>coordTimes</i>).</li>
+      <li><b>Google Takeout</b>: <i>Records.json</i> (surové polohy), <i>Semantic Location History</i> (měsíční soubory s návštěvami a přesuny) a nový export <b>Časové osy z telefonu</b> (<i>Timeline.json</i> se <i>semanticSegments</i> a <i>rawSignals</i>, Android i iOS).</li>
+      <li><b>CSV</b> výpisy hovorů, SMS a datových relací (oddělovač středník, čárka i tabulátor se pozná sám) – sloupce přiřadíte v náhledu; souřadnice BTS a přesnost lze namapovat.</li>
+      <li><b>Fotky JPEG</b> – čas pořízení (DateTimeOriginal + OffsetTime) a GPS z EXIF. Pokud fotka nese i čas GPS (UTC ze satelitů), nabídne se posun hodin fotoaparátu.</li>
+      <li><b>Ruční události</b> – výpovědi, záznamy kamer, platby kartou… s polohou nebo bez ní.</li>
+    </ul>
+    <h4>🕐 Časová pásma a posuny hodin</h4>
+    <p>Časy s údajem o pásmu (ISO s <i>Z</i> nebo <i>+02:00</i>, unixový čas, Takeout) se berou přesně. Časy <b>bez pásma</b> (výpisy operátorů, EXIF bez OffsetTime, CSV) se převedou podle pásma zdroje <b>včetně letního času</b> – pozor na hodinu po změně času v říjnu, která je dvojznačná. <b>Posun hodin</b> zařízení (sekundy) se přičte ke všem jeho časům; dá se spočítat ze srovnání času zařízení se skutečným. Zobrazení přepnete polem „Zobrazit časy v pásmu“; exporty nesou UTC i místní čas.</p>
+    <h4>🧭 Osa a mapa</h4>
+    <p>Na ose je řádek pro každou osobu (pobyty, souběhy, alibi) a pod ním řádky jejích zařízení (svislé čárky = záznamy, pruhy = hovory a návštěvy, červené šrafy = mezery). Kolečko myši přibližuje, tažení posouvá, klik nastaví kurzor. Mapa ukazuje data z výřezu osy a polohu každé osoby v čase kurzoru (mezi body lineárně dopočtenou, nejvýše 30 min od záznamu). ▶ přehrává, ←/→ skáče po záznamech.</p>
+    <h4>🔬 Analýzy</h4>
+    <ul>
+      <li><b>Pobyty</b> (stay points): body v okruhu R po dobu aspoň T; mezi pobyty přesuny s délkou trasy a průměrnou rychlostí.</li>
+      <li><b>Nemožné rychlosti</b>: sousední body, mezi kterými by osoba musela jet rychleji než limit (po odečtení přesnosti obou bodů) – typicky chybný fix, přepnutí na BTS, nebo dvě zařízení u dvou lidí.</li>
+      <li><b>Mezery</b>: úseky bez záznamu delší než práh – vypnutý telefon, režim letadlo, chybějící data.</li>
+      <li><b>Souběh</b>: kdy byly dvě osoby současně (±Δt) blíž než R. „Jisté“ = i se započtením přesnosti.</li>
+      <li><b>Alibi</b>: byla osoba v čase T (± okno) v okruhu R od místa? Verdikt počítá s přesností bodů; „nelze rozhodnout“ = v okně nejsou data.</li>
+    </ul>
+    <ul>
+      <li><b>Návštěvy zájmových míst</b>: kdy se osoba zdržela v okruhu místa (záložka 📍 Místa) – i krátké průjezdy.</li>
+      <li><b>Opakovaná místa</b>: shluky pobytů; domov = nejvíc času v noci (22–6 h), práce = nejvíc času v pracovní dny 8–18 h. Ukáže i rozložení po hodinách.</li>
+      <li><b>Denní a týdenní vzorce</b>: tepelná mapa dnů × hodin (kolik minut záznamů) a mřížka na mapě, kde osoba bývá.</li>
+      <li><b>Konzistence zdrojů</b>: poloha z výpisu (BTS), fotky nebo ručního zápisu se porovná s GPS ve stejný okamžik. U buněk s azimutem se ověří, zda poloha leží ve výseči antény. Rozpor = jiné zařízení, chybný čas nebo podvržená poloha.</li>
+      <li><b>Odhad posunu hodin</b>: najde posun zdroje (např. fotek), při kterém jeho polohy nejlépe sedí na trasu z ostatních zařízení. Celé hodiny obvykle znamenají špatné pásmo. Posun jde jedním klikem použít.</li>
+    </ul>
+    <h4>📡 Výpisy operátora a BTS</h4>
+    <p>V CSV lze namapovat souřadnice antény, poloměr buňky, <b>azimut</b> a šířku svazku. Hovory, SMS a data se pak na mapě kreslí jako <b>výseč nejistoty</b>. Poloha antény není poloha telefonu – proto se do pobytů, souběhu ani alibi nezapočítává, porovnává se jen v analýze konzistence.</p>
+    <h4>⭐ Označení, hledání a chronologie</h4>
+    <p>Důležité záznamy označte hvězdičkou (v tabulce záznamů, v bublině na mapě nebo klávesou M u kurzoru). Označené záznamy a poznámky tvoří <b>chronologii</b> v protokolu. Hledání nad osou zvýrazní shody na ose a Enter mezi nimi skáče; filtruje i tabulku záznamů.</p>
+    <h4>⚖️ Meze</h4>
+    <p>Poloha zařízení ≠ poloha osoby. Polohy z buněk (BTS) mají přesnost stovky metrů až kilometry, Takeout „návštěvy“ jsou odvozené Googlem. Výsledky jsou podklad pro další prověřování, ne důkaz samy o sobě.</p>
+    <p>Vzorce, předpoklady, všechny meze, literatura a tabulka ověření na ukázkách se známou pravdou jsou v panelu <button type="button" class="btn" data-metoda>📐 Metoda a meze</button></p>
+    <h4>🔒 Soukromí</h4>
+    <p>Vše běží v prohlížeči; případy se ukládají do IndexedDB tohoto prohlížeče a mažou se v menu Případ. Jediné síťové požadavky jsou mapové dlaždice (server vidí zobrazenou oblast) – při citlivé práci zvolte v přepínači vrstev podklad „Bez podkladu“. Dlaždice: © přispěvatelé OpenStreetMap (ODbL), hosting openstreetmap.de / OSM France, Esri.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<!-- galerie ukázek -->
+<dialog class="okno siroke" id="dlgGalerie"><form method="dialog">
+  <header>🧪 Galerie ukázek – co nástroj umí</header>
+  <div class="telo">
+    <p class="info" style="margin:0">Každá ukázka je samostatný případ se <b>syntetickými daty</b> (smyšlené osoby a události, generované v prohlížeči). Otevře se jako nový případ; ten současný zůstane uložený.</p>
+    <div class="galerie" id="galerie"></div>
+  </div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<!-- zájmové místo -->
+<dialog class="okno" id="dlgMisto"><form method="dialog">
+  <header id="dlgMistoTitul">📍 Zájmové místo</header>
+  <div class="telo">
+    <label class="pole">Název<input class="vstup" name="nazev" required maxlength="80" placeholder="např. bydliště svědka, místo činu, bankomat"></label>
+    <label class="pole">Poloha (šířka, délka)<span class="spolu"><input class="vstup" name="poloha" required placeholder="50.0705, 14.4040"><button type="button" class="btn" data-vyber="dlgMisto" title="Vybrat v mapě">📍</button></span></label>
+    <label class="pole">Okruh (m)<input class="vstup" name="R" type="number" min="5" max="50000" value="100"></label>
+    <label class="pole">Popis<textarea class="vstup" name="popis" rows="2" maxlength="300"></textarea></label>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn" formnovalidate>Zrušit</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- klávesové zkratky -->
+<dialog class="okno" id="dlgZkratky"><form method="dialog">
+  <header>⌨️ Klávesové zkratky</header>
+  <div class="telo">
+    <table class="zkratky"><tbody>
+      <tr><td><kbd>Mezerník</kbd></td><td>přehrát / zastavit</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>předchozí / další záznam</td></tr>
+      <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>přiblížit / oddálit osu</td></tr>
+      <tr><td><kbd>0</kbd></td><td>celé období a celá mapa</td></tr>
+      <tr><td><kbd>/</kbd></td><td>hledání na ose (Enter = další shoda, Shift+Enter = předchozí)</td></tr>
+      <tr><td><kbd>M</kbd></td><td>označit ⭐ záznam nejblíže kurzoru</td></tr>
+      <tr><td><kbd>N</kbd></td><td>poznámka v čase kurzoru</td></tr>
+      <tr><td><kbd>G</kbd></td><td>galerie ukázek</td></tr>
+      <tr><td><kbd>P</kbd></td><td>protokol</td></tr>
+      <tr><td><kbd>?</kbd></td><td>tento přehled</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>zavřít nabídku, zrušit výběr v mapě</td></tr>
+    </tbody></table>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Zavřít</button></footer>
+</form></dialog>
+
+<!-- průvodce -->
+<div id="pruvodce" class="pruvodce" hidden role="dialog" aria-label="Průvodce">
+  <div class="pr-hlava"><b id="prTitul"></b><span class="tz" id="prKrok"></span><button class="tl" id="prZavri" aria-label="Zavřít průvodce" title="Zavřít">✕</button></div>
+  <div id="prText"></div>
+  <div class="pr-akce"><button class="btn mini" id="prZpet">◀ Zpět</button><button class="btn mini" id="prAkce" hidden></button><button class="btn mini primary" id="prDal">Další ▶</button></div>
+</div>
+
+<div id="tisk" data-i18n="ne"></div>
+<script src="casova_analyza/ui.js"></script>
+</body>
+</html>

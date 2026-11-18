@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📰 Mozaika zpráv</title>
+<link rel="manifest" href="zpravy/manifest.webmanifest">
+<meta name="theme-color" content="#1b2230">
+<link rel="apple-touch-icon" href="zpravy/apple-touch-icon.png">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="zpravy/jadro.js"></script>
+<script src="zpravy/stranka.js" defer></script>
+<style>
+body{background:var(--bg-deep);margin:0;color:var(--text);font-family:var(--font, system-ui, sans-serif)}
+[hidden]{display:none !important}
+button,input,select,textarea{font-family:inherit}
+
+/* horní lišta */
+.lista{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.samostatne .lista{padding-right:72px}
+.lista h1{font-size:1.05rem;margin:0 2px 0 0;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;line-height:1.2}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus,.cip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.tl .n{color:var(--text-faint);font-size:.75rem;margin-left:3px}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem}
+@media (max-width:1050px){.lista .mensi{display:none}}
+@media (max-width:760px){.lista .txt{display:none}}
+
+.mezera{flex:1}
+/* přepínač režimů */
+.rezimy{display:inline-flex}
+.rezimy .tl{border-radius:0}
+.rezimy .tl:first-child{border-radius:6px 0 0 6px}
+.rezimy .tl:last-child{border-radius:0 6px 6px 0;margin-left:-1px}
+.rezimy .tl[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+/* ⟳ se při načítání točí */
+#tl-obnovit .ikona{display:inline-block}
+#tl-obnovit.toci .ikona{animation:toc .9s linear infinite}
+#tl-obnovit:disabled{opacity:1;cursor:progress}
+@keyframes toc{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#tl-obnovit.toci .ikona{animation-duration:3s}}
+.cip-rubriky{font-weight:600}
+.filtr-zdroje{border-style:dashed}
+/* hledání: jen lupa, pole se rozbalí po kliknutí */
+.hledat{display:flex;align-items:center;gap:4px}
+.hledat input{width:0;padding:6px 0;border-width:0;opacity:0;transition:width .18s,opacity .18s}
+.hledat.otevreno input{width:min(300px,42vw);padding:6px 9px;border-width:1px;opacity:1}
+@media (max-width:600px){.hledat.otevreno{order:10;flex:1 1 100%}.hledat.otevreno input{width:100%}}
+
+/* rozbalovací nabídky */
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:1px;min-width:220px;max-height:min(70vh,560px);overflow:auto}
+.nabidka button{display:flex;align-items:center;gap:8px;text-align:left;background:none;border:0;color:var(--text);padding:6px 10px;border-radius:5px;cursor:pointer;font-size:.85rem}
+.nabidka button:hover{background:var(--bg-hover)}
+.nabidka button .n{margin-left:auto;color:var(--text-faint);font-size:.75rem;padding-left:12px}
+.nabidka .prep::before{content:'';display:inline-block;width:1em;color:var(--accent);font-weight:700}
+.nabidka .prep[aria-pressed="true"]::before{content:'✓'}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0;width:100%}
+.nabidka .titulek{font-size:.7rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.05em}
+
+/* obsah */
+main{padding:10px 12px 60px;max-width:1700px;margin:0 auto}
+.banner{position:sticky;top:calc(var(--vyska-listy,44px) + 8px);z-index:20;display:block;margin:0 auto 10px;background:var(--accent);color:var(--on-accent,#fff);border:0;border-radius:999px;padding:7px 18px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+.hlaseni{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:8px;padding:10px 14px;margin:0 0 12px;font-size:.88rem;color:var(--text-muted)}
+.hlaseni.chyba{border-left-color:var(--danger)}
+.prazdno{text-align:center;color:var(--text-muted);padding:50px 10px}
+h2.oddil{display:flex;align-items:center;gap:10px;font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin:18px 0 8px}
+h2.oddil::after{content:'';flex:1;border-top:1px solid var(--border)}
+
+/* hlavní témata */
+.temata{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-bottom:6px}
+.tema-karta{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--rb);border-radius:8px;padding:9px 11px;cursor:pointer;color:var(--text);font-size:.88rem;line-height:1.3}
+.tema-karta:hover{background:var(--bg-hover)}
+.tema-karta b{font-weight:600}
+@media (max-width:700px){.tema-karta:nth-child(n+4){display:none}}
+.tema-karta .znaky{display:flex;gap:3px;flex-wrap:wrap;align-items:center;font-size:.75rem;color:var(--text-faint)}
+
+/* mozaika: všechny dlaždice stejně velké; zdroj nahoře a titulek dole na poloprůhledném podkladu, 5 px od kraje (4 px + 1px rámeček) */
+.mozaika{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--sirka,250px),1fr));grid-auto-rows:var(--vyska,200px);gap:10px}
+.husta .mozaika{--sirka:200px;--vyska:165px;gap:7px}
+.dl{--podklad:rgba(0,0,0,.66);--na-podkladu:#fff;position:relative;border-radius:10px;overflow:hidden;min-width:0;background:color-mix(in srgb,var(--rb) 30%,var(--bg-panel));border:1px solid var(--border)}
+.dl-odkaz{position:absolute;inset:0;display:block;color:inherit;text-decoration:none;cursor:pointer}
+.dl-odkaz:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;border-radius:10px}
+.dl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .25s}
+.dl:hover img{transform:scale(1.03)}
+.dl-zdroj{position:absolute;top:4px;left:4px;right:4px;z-index:1;display:flex;align-items:center;gap:6px;min-width:0;background:var(--podklad);color:var(--na-podkladu);border-radius:7px;padding:4px 7px 4px 4px;font-size:.74rem;line-height:1.2;backdrop-filter:blur(3px)}
+.dl-zdroj .zdroj{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-zdroj .cas{white-space:nowrap;opacity:.85}
+.dl-zdroj .vic{background:var(--accent);color:var(--on-accent,#fff);border-radius:999px;padding:1px 6px;font-weight:700;font-size:.68rem}
+.dl-zdroj .nove{background:var(--warn);color:#000;font-size:.6rem;font-weight:700;border-radius:4px;padding:1px 5px;letter-spacing:.04em}
+.dl-titulek{position:absolute;left:4px;right:4px;bottom:4px;z-index:1;margin:0;background:var(--podklad);color:var(--na-podkladu);border-left:4px solid var(--rb);border-radius:7px;padding:6px 9px;font-size:.93rem;line-height:1.28;font-weight:650;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;backdrop-filter:blur(3px)}
+.husta .dl-titulek{font-size:.85rem;-webkit-line-clamp:3}
+.dl-perex{display:none}
+.znak{flex-shrink:0;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--zb);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+.dl.precteno{opacity:.5}
+.dl.precteno img{filter:grayscale(.7)}
+.dl.zvyraznit{box-shadow:0 0 0 3px var(--warn)}
+
+/* seznam a titulky */
+.seznam{display:flex;flex-direction:column;gap:6px}
+.seznam .dl{--podklad:transparent;--na-podkladu:var(--text);background:var(--bg-panel);border-left:4px solid var(--rb)}
+.seznam .dl-odkaz{position:relative;display:grid;grid-template-columns:130px 1fr;grid-template-rows:auto auto 1fr;column-gap:12px;padding:7px 10px 8px 7px}
+.seznam .dl.bez-foto .dl-odkaz{grid-template-columns:1fr}
+.seznam .dl img{position:static;grid-row:1 / 4;width:130px;height:82px;border-radius:6px}
+.seznam .dl:hover img{transform:none}
+.seznam .dl-zdroj,.seznam .dl-titulek{position:static;backdrop-filter:none;padding:0;border:0;border-radius:0}
+.seznam .dl-zdroj{color:var(--text-muted);padding-bottom:3px}
+.seznam .dl-zdroj .zdroj{flex:0 1 auto}
+.seznam .dl-titulek{font-size:1rem;-webkit-line-clamp:2}
+.seznam .dl-perex{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:3px 0 0;font-size:.82rem;line-height:1.35;color:var(--text-muted)}
+@media (max-width:520px){.seznam .dl-odkaz{grid-template-columns:84px 1fr}.seznam .dl img{width:84px;height:60px}.seznam .dl-perex{display:none}}
+.titulky .seznam{gap:0}
+.titulky .seznam .dl{border-radius:0;border:0;border-bottom:1px solid var(--border);border-left:3px solid var(--rb);background:transparent}
+.titulky .seznam .dl-odkaz{display:flex;align-items:baseline;gap:12px;padding:6px 10px}
+.titulky .seznam .dl img,.titulky .seznam .dl-perex{display:none}
+.titulky .seznam .dl-zdroj{width:230px;flex-shrink:0;padding:0}
+.titulky .seznam .dl-zdroj .zdroj{flex:1}
+.titulky .seznam .dl-titulek{flex:1;min-width:0;font-size:.9rem;font-weight:500;-webkit-line-clamp:1}
+@media (max-width:620px){.titulky .seznam .dl-odkaz{flex-direction:column;gap:2px}.titulky .seznam .dl-zdroj{width:100%}}
+.bez-obrazku .dl img{display:none}
+
+.dalsi{display:block;margin:16px auto;padding:8px 20px}
+footer.stav{font-size:.76rem;color:var(--text-faint);text-align:center;padding:14px 10px 40px}
+footer.stav button{background:none;border:0;color:var(--accent);cursor:pointer;font-size:inherit;text-decoration:underline;padding:0}
+
+/* dialogy */
+dialog{margin:auto;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:0;width:min(860px,96vw);max-height:90vh}
+#dlg-nastaveni{margin:6vh auto auto;height:min(720px,86vh)}   /* pevně – při přepínání záložek neposkakuje */
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog[open]{display:flex;flex-direction:column}
+.okno-hlava{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.okno-hlava h2{margin:0;font-size:1.05rem;flex:1}
+.okno-telo{padding:14px 16px;overflow:auto;flex:1;min-height:0}
+.okno-pata{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border)}
+.okno-hlava,.okno-pata,.karty{flex-shrink:0}
+.karty{display:flex;gap:4px;padding:8px 16px 0;border-bottom:1px solid var(--border);overflow-x:auto}
+.karty button{background:none;border:0;border-bottom:3px solid transparent;color:var(--text-muted);padding:7px 10px;cursor:pointer;font-size:.88rem;white-space:nowrap}
+.karty button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.panel h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:14px 0 6px;display:flex;gap:8px;align-items:center}
+.panel h3:first-child{margin-top:0}
+.panel h3 .mini{margin-left:auto}
+.panel h3 .mini + .mini{margin-left:0}
+.mini{font-size:.75rem;padding:2px 8px}
+.pozn{font-size:.8rem;color:var(--text-muted);line-height:1.45}
+.radek-nastroje{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.zdroje-mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 10px}
+.zdroj-volba{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;cursor:pointer;font-size:.86rem;min-width:0}
+.zdroj-volba:hover{background:var(--bg-hover)}
+.zdroj-volba input{flex-shrink:0;accent-color:var(--accent);width:16px;height:16px}
+.zdroj-volba .jm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zdroj-volba .info{font-size:.72rem;color:var(--text-faint);white-space:nowrap}
+.zdroj-volba .info.chyba{color:var(--danger)}
+.volby-radek{display:flex;flex-wrap:wrap;gap:6px 16px;margin:4px 0}
+.volby-radek label{display:flex;align-items:center;gap:6px;font-size:.88rem;cursor:pointer}
+textarea.vstup{width:100%;min-height:90px;box-sizing:border-box;resize:vertical}
+.vlastni-seznam{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.vlastni-radek{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.85rem}
+.vlastni-radek .url{color:var(--text-faint);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.formular{display:grid;grid-template-columns:1fr 2fr 140px auto;gap:6px}
+@media (max-width:640px){.formular{grid-template-columns:1fr}}
+pre.kod{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.75rem;overflow:auto;white-space:pre}
+/* náhled zprávy */
+#dlg-nahled{width:min(720px,96vw);margin:5vh auto auto}   /* pevně nahoře – při listování neposkakuje */
+#dlg-nahled .okno-telo{padding:0}
+.nahled-obr{display:block;background:#000;line-height:0}
+.nahled-obr img{width:100%;max-height:min(42vh,380px);object-fit:cover}
+.nahled-obsah{padding:14px 18px 6px}
+.nahled-zavrit{position:absolute;top:8px;right:8px;z-index:2;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer}
+.nahled-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:.82rem;color:var(--text-muted);padding-right:30px}
+.nahled-meta b{color:var(--text)}
+.nahled-meta .rubrika{border-left:4px solid var(--rb);background:var(--bg-elevated);border-radius:5px;padding:1px 7px}
+#nahled-titulek{font-size:1.3rem;line-height:1.3;margin:10px 0 8px}
+#nahled-titulek a{color:var(--text);text-decoration:none}
+#nahled-titulek a:hover{text-decoration:underline}
+#nahled-perex{font-size:.98rem;line-height:1.55;margin:0 0 14px;color:var(--text)}
+#nahled-perex.prazdny{color:var(--text-faint);font-style:italic;font-size:.88rem}
+.nahled-akce{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.nahled-akce .tl{padding:7px 12px;font-size:.9rem;text-decoration:none}
+.nahled-akce .tl.hlavni{font-weight:600}
+#nahled-tema h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 4px}
+.clen{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:7px 6px;color:var(--text);font-size:.88rem;line-height:1.3;cursor:pointer}
+.clen:hover{background:var(--bg-hover)}
+.clen.aktivni{background:var(--accent-soft)}
+.clen small{display:block;color:var(--text-muted);font-size:.74rem}
+.clen .cas{font-size:.75rem;color:var(--text-faint);white-space:nowrap}
+.nahled-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.nahled-nav span{font-size:.78rem;color:var(--text-faint)}
+.nahled-nav .tl:disabled{opacity:.4;cursor:default}
+/* vývoj tématu v náhledu: čas | znak | titulek */
+.clen{grid-template-columns:auto 22px 1fr}
+.clen .cas{min-width:3.2em;text-align:right}
+/* rubriky po webech v nastavení */
+.rub-web{flex-shrink:0;opacity:.55}
+.zdroj-volba:hover .rub-web,.rub-web.omezeno{opacity:1}
+.rub-web.omezeno{border-color:var(--accent)}
+.volby-sloupec{display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.volby-sloupec label{display:flex;align-items:flex-start;gap:8px;font-size:.88rem;cursor:pointer}
+.volby-sloupec input,.volby-radek input[type=checkbox]{accent-color:var(--accent)}
+.sync-qr{background:#fff;padding:10px;border-radius:8px;width:max-content;max-width:100%;margin:6px 0}
+.sync-qr img,.sync-qr canvas{max-width:min(360px,80vw);height:auto;display:block}
+/* předčítání titulků */
+.predcitani{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:8px;max-width:min(680px,94vw);background:var(--bg-panel);border:1px solid var(--border-strong);border-radius:999px;box-shadow:var(--shadow);padding:6px 8px 6px 16px;font-size:.86rem}
+.predcitani span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Zajímavosti s tlumenými barvami: teplý akcent, ztlumené fotky (večer před spaním) */
+body.tlumene{--accent:#a8661f;--accent-hover:#935818;--accent-soft:color-mix(in srgb,#a8661f 24%,transparent);--on-accent:#fff}
+body.tlumene .dl img,body.tlumene .nahled-obr img{filter:brightness(.72) saturate(.65) sepia(.18)}
+body.tlumene .dl{--podklad:rgba(28,16,6,.72);background:color-mix(in srgb,var(--rb) 14%,var(--bg-panel))}
+body.tlumene .dl-titulek{border-left-color:color-mix(in srgb,var(--rb) 55%,#a8661f)}
+/* zrcadlo */
+#zrcadlo h4{font-size:.78rem;color:var(--text-muted);margin:14px 0 4px;font-weight:600}
+.zrcadlo-souhrn{font-size:.92rem;margin:0 0 6px}
+.graf-radek{display:grid;grid-template-columns:minmax(90px,170px) 1fr 52px;gap:8px;align-items:center;font-size:.82rem;margin:2px 0}
+.graf-popis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.graf-pruh{height:12px;background:var(--bg-elevated);border-radius:6px;overflow:hidden}
+.graf-pruh i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.graf-hodnota{text-align:right;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.graf-hodiny{display:flex;align-items:flex-end;gap:2px;height:70px;padding:4px 0;border-bottom:1px solid var(--border)}
+.graf-hodiny span{flex:1;background:var(--accent);border-radius:2px 2px 0 0;min-height:2px}
+.graf-hodiny span.noc{background:#7d5a9e}
+.graf-osa{display:flex;gap:2px;font-size:.68rem;color:var(--text-faint)}
+.graf-osa span{flex:1;white-space:nowrap;overflow:visible}
+input.cislo{width:4.2em;padding:3px 6px}
+/* ranní souhrn */
+#dlg-souhrn{width:min(640px,96vw)}
+.souhrn-polozka{display:grid;grid-template-columns:28px 1fr;gap:2px 10px;width:100%;text-align:left;background:var(--bg-elevated);border:1px solid var(--border);border-left:4px solid var(--rb);border-radius:8px;padding:9px 12px;margin:0 0 8px;color:var(--text);cursor:pointer;font-size:.92rem;line-height:1.35}
+.souhrn-polozka:hover{background:var(--bg-hover)}
+.souhrn-polozka > *:not(.souhrn-cislo){grid-column:2}
+.souhrn-cislo{grid-row:1 / 4;font-size:1.4rem;font-weight:700;color:var(--text-faint)}
+.souhrn-veta{color:var(--text-muted);font-size:.84rem}
+.souhrn-polozka small{color:var(--text-faint);font-size:.74rem}
+/* dost pro dnešek */
+#dlg-dost{width:min(440px,94vw)}
+.dost{text-align:center;padding:22px 22px 8px}
+.dost-mesic{font-size:3rem;line-height:1}
+.dost h2{margin:10px 0 6px;font-size:1.25rem}
+.dost p{color:var(--text-muted);line-height:1.5;margin:0}
+.dobrou-noc{position:fixed;inset:0;z-index:200;background:#05060a;color:#8a8fa3;display:grid;place-items:center;text-align:center;font-size:4rem;cursor:pointer}
+.dobrou-noc p{font-size:1.3rem;margin:12px 0 6px;color:#b4b8c8}
+.dobrou-noc small{font-size:.8rem;color:#5c6070}
+kbd{font-size:.75rem;border:1px solid var(--border-strong);border-radius:4px;padding:0 5px;background:var(--bg-elevated)}
+.klavesy{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:.88rem}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>📰 Mozaika zpráv</h1>
+  <div class="rezimy" role="group" aria-label="Režim">
+    <button class="tl" id="rezim-zpravy" aria-pressed="true" title="Zprávy – Česko, svět, politika (M)">📰 <span class="txt">Zprávy</span></button>
+    <button class="tl" id="rezim-pohoda" aria-pressed="false" title="Zajímavosti – věda, technika, hry, příroda… bez politiky (M)">🌙 <span class="txt">Zajímavosti</span></button>
+  </div>
+  <button class="tl cip-rubriky" id="tl-rubriky" data-nabidka="rubrika" aria-haspopup="menu" title="Které rubriky zobrazovat">🗂️ <span id="popis-rubrik">Rubriky</span> ▾</button>
+  <button class="tl filtr-zdroje" id="filtr-zdroje" hidden title="Zrušit omezení na jeden web"></button>
+  <button class="tl filtr-zdroje" id="filtr-tema" hidden title="Zpět na všechny zprávy" data-i18n="ne"></button>
+  <span class="mezera"></span>
+  <div class="hledat" id="hledat-box">
+    <button class="tl" id="tl-hledat" title="Hledat ve zprávách (/)" aria-label="Hledat">🔍</button>
+    <input type="search" id="hledat" class="vstup" placeholder="Hledat… (-slovo vyloučí)" aria-label="Hledat ve zprávách" data-i18n="ne" tabindex="-1">
+  </div>
+  <button class="tl" id="tl-obnovit" title="Načíst znovu (R)"><span class="ikona">⟳</span> <span class="txt" id="stav-obnovy">Načítám…</span></button>
+  <button class="tl" data-nabidka="zobrazeni" aria-haspopup="menu" title="Zobrazení">👁 <span class="txt mensi">Zobrazení</span> ▾</button>
+  <button class="tl" id="tl-ulozene" aria-pressed="false" title="Uložené na později">★ <span class="txt mensi">Uložené</span><span class="n" id="pocet-ulozenych"></span></button>
+  <button class="tl" id="tl-nastaveni" title="Weby, filtry, vlastní kanály, nápověda">⚙️ <span class="txt mensi">Nastavení</span></button>
+</header>
+<main id="obsah">
+  <button class="banner" id="banner" hidden></button>
+  <div id="hlaseni"></div>
+  <section id="hlavni-temata" hidden>
+    <h2 class="oddil"><span id="temata-nadpis">🔥 Hlavní témata – o čem píše nejvíc webů</span><button class="tl mini" id="zmeskane-zavrit" hidden>✕ Skrýt</button></h2>
+    <div class="temata" id="temata"></div>
+  </section>
+  <div id="osa"></div>
+  <button class="tl dalsi" id="tl-dalsi" hidden>Zobrazit další</button>
+  <button class="tl dalsi" id="tl-starsi" hidden>Načíst starší zprávy (6–48 h)</button>
+</main>
+<footer class="stav" id="pata"></footer>
+<div class="predcitani" id="predcitani" hidden role="status">
+  <span id="predcitani-text" data-i18n="ne"></span>
+  <button class="tl" id="predcitani-dalsi" title="Další titulek">⏭</button>
+  <button class="tl" id="predcitani-stop">⏹ Zastavit</button>
+</div>
+
+<!-- Nastavení -->
+<dialog id="dlg-nastaveni" aria-labelledby="dlg-nastaveni-h">
+  <div class="okno-hlava"><h2 id="dlg-nastaveni-h">⚙️ Nastavení zpráv</h2><button class="tl" data-zavrit>✕</button></div>
+  <div class="karty" role="tablist">
+    <button role="tab" data-karta="zdroje" aria-selected="true">📡 Weby</button>
+    <button role="tab" data-karta="vecer">🌙 Večer</button>
+    <button role="tab" data-karta="rubriky">🌐 Jazyky a kraj</button>
+    <button role="tab" data-karta="filtry">🔇 Filtry</button>
+    <button role="tab" data-karta="vlastni">➕ Vlastní kanály</button>
+    <button role="tab" data-karta="data">🔄 Obnova a data</button>
+    <button role="tab" data-karta="zrcadlo">📊 Zrcadlo</button>
+    <button role="tab" data-karta="napoveda">❓ Nápověda</button>
+  </div>
+  <div class="okno-telo">
+    <section class="panel" data-panel="zdroje">
+      <div class="radek-nastroje">
+        <input type="search" class="vstup" id="hledat-zdroj" placeholder="Najít web…" style="flex:1;min-width:150px">
+        <button class="tl mini" id="zdroje-vychozi">Výchozí výběr</button>
+        <button class="tl mini" id="zdroje-vse">Vybrat vše</button>
+        <button class="tl mini" id="zdroje-nic">Zrušit vše</button>
+        <button class="tl mini" id="zdroje-problemove" aria-pressed="false" title="Jen weby, které teď nebo dlouhodobě nefungují">⚠ Jen problémové</button>
+      </div>
+      <p class="pozn" id="zdroje-souhrn"></p>
+      <div id="zdroje-skupiny"></div>
+    </section>
+    <section class="panel" data-panel="vecer" hidden>
+      <h3>Automaticky přepínat</h3>
+      <div class="volby-radek"><label><input type="checkbox" id="auto-pohoda"> Večer přepnout na 🌙 Zajímavosti a ráno zpět na 📰 Zprávy</label></div>
+      <div class="volby-radek"><label>od <input type="time" id="auto-od" class="vstup"></label><label>do <input type="time" id="auto-do" class="vstup"></label></div>
+      <p class="pozn">Přepíná se jen na začátku a na konci tohoto času – když si uprostřed večera přepnete ručně, platí to až do rána.</p>
+      <h3>V režimu 🌙 Zajímavosti</h3>
+      <div class="volby-sloupec">
+        <label><input type="checkbox" id="pohoda-politika"> 🚫 Skrývat politiku a válku i v ostatních rubrikách</label>
+        <label><input type="checkbox" id="pohoda-negativni"> 😌 Skrývat neštěstí, nehody a krimi (jen dobré a klidné zprávy)</label>
+        <label><input type="checkbox" id="pohoda-tlumene"> 🕯️ Tlumené, teplé barvy a ztlumené fotky</label>
+      </div>
+      <h3>Zdravé čtení</h3>
+      <div class="volby-sloupec">
+        <label><input type="checkbox" id="dost-limit"> 🌙 Večer po <input type="number" id="dost-zprav" class="vstup cislo" min="3" max="200"> přečtených zprávách navrhnout „Dost pro dnešek“</label>
+        <label><input type="checkbox" id="ranni-souhrn"> ☀️ Ráno při prvním otevření ukázat souhrn noci (5 největších témat)</label>
+      </div>
+      <p class="pozn">Skrývání podle slov (Babiš, vláda, válka, nehoda, zemřel…) je odhad – občas něco propustí nebo schová navíc. Které rubriky Zajímavosti ukazují, vyberete tlačítkem 🗂️ Rubriky v liště.</p>
+    </section>
+    <section class="panel" data-panel="rubriky" hidden>
+      <h3>Jazyky</h3>
+      <div class="volby-radek" id="volby-jazyku"></div>
+      <p class="pozn">Rubriky se vybírají tlačítkem 🗂️ Rubriky v liště – zvlášť pro režim 📰 Zprávy a 🌙 Zajímavosti.</p>
+      <h3>📍 Můj kraj</h3>
+      <div class="volby-radek"><select class="vstup" id="muj-kraj"></select></div>
+      <p class="pozn">Regionální zprávy (Deník, iDNES a Český rozhlas z krajů) se ukážou v rubrice 📍 Můj kraj – jen z vybraného kraje. Sportovní zprávy z kraje jdou do rubriky Sport.</p>
+    </section>
+    <section class="panel" data-panel="zrcadlo" hidden>
+      <h3>📊 Čtenářské zrcadlo – posledních 7 dní <button class="tl mini" id="zrcadlo-smazat">Smazat historii</button></h3>
+      <p class="pozn">Kolik a co čtete – počítají se otevřené náhledy a články. Zůstává jen v tomto prohlížeči.</p>
+      <div id="zrcadlo"></div>
+    </section>
+    <section class="panel" data-panel="filtry" hidden>
+      <h3>Ztlumená slova a témata</h3>
+      <p class="pozn">Zprávy, jejichž titulek nebo perex obsahuje některé z těchto slov, se skryjí. Jedno slovo nebo fráze na řádek, velikost písmen a diakritika nehrají roli. Slova do 3 znaků se hledají jako celá slova.</p>
+      <textarea class="vstup" id="ztlumit" placeholder="např.&#10;horoskop&#10;Kardašian" data-i18n="ne"></textarea>
+      <h3>Zvýrazněná slova</h3>
+      <p class="pozn">Zprávy s těmito slovy dostanou žlutý rámeček – hodí se pro sledování obce, firmy nebo tématu.</p>
+      <textarea class="vstup" id="zvyraznit" placeholder="např.&#10;Lukavice&#10;elektromobil" data-i18n="ne"></textarea>
+      <h3>Lákavé titulky</h3>
+      <div class="volby-sloupec"><label><input type="checkbox" id="bez-clickbaitu"> 🎣 Skrývat clickbait („Neuvěříte, co…“, „Tohle musíte vidět“, titulky VELKÝMI PÍSMENY)</label></div>
+      <div class="volby-sloupec"><label><input type="checkbox" id="upozorneni"> 🔔 Upozornit na nové zprávy se zvýrazněnými slovy (oznámení prohlížeče, když je stránka otevřená)</label></div>
+      <h3>Skryté články</h3>
+      <div class="radek-nastroje"><span class="pozn" id="pocet-skrytych"></span><button class="tl mini" id="obnovit-skryte">Znovu zobrazit skryté</button></div>
+    </section>
+    <section class="panel" data-panel="vlastni" hidden>
+      <h3>Vlastní RSS / Atom kanály</h3>
+      <p class="pozn">Přidejte libovolný kanál. Prohlížeč ho stahuje sám, takže to funguje jen u webů, které čtení z cizí stránky povolují (CORS), nebo přes vaši proxy níže. Vlastní kanály vidíte jen vy.</p>
+      <div class="vlastni-seznam" id="vlastni-seznam"></div>
+      <form class="formular" id="vlastni-form">
+        <input class="vstup" name="nazev" placeholder="Název" required data-i18n="ne">
+        <input class="vstup" name="url" type="url" placeholder="https://…/rss" required data-i18n="ne">
+        <select class="vstup" name="rubrika" id="vlastni-rubrika"></select>
+        <button class="tl hlavni" type="submit">Vyzkoušet a přidat</button>
+      </form>
+      <h3>Proxy pro kanály bez CORS</h3>
+      <input class="vstup" id="proxy" style="width:100%;box-sizing:border-box" placeholder="https://moje-proxy.example.workers.dev/?url={url}" data-i18n="ne">
+      <p class="pozn">Šablona adresy, <code>{url}</code> se nahradí zakódovanou adresou kanálu. Prázdné = bez proxy. Veřejné proxy neznámých provozovatelů nepoužívejte – vidí vše, co přes ně jde. Vlastní proxy zdarma: Cloudflare Workers.</p>
+      <details><summary class="pozn">Kód Cloudflare Workeru (zkopírovat do nového Workeru)</summary>
+<pre class="kod" data-i18n="ne">export default {
+  async fetch(req) {
+    const cil = new URL(req.url).searchParams.get('url');
+    if (!cil || !/^https?:\/\//.test(cil)) return new Response('?url=', { status: 400 });
+    const r = await fetch(cil, { headers: { 'User-Agent': 'Mozilla/5.0 RSS' } });
+    const h = new Headers(r.headers);
+    h.set('Access-Control-Allow-Origin', '*');
+    return new Response(r.body, { status: r.status, headers: h });
+  }
+};</pre></details>
+    </section>
+    <section class="panel" data-panel="data" hidden>
+      <h3>Automatická obnova</h3>
+      <div class="volby-radek"><label>Kontrolovat nové zprávy
+        <select class="vstup" id="obnova">
+          <option value="0">nikdy (jen ručně)</option><option value="5">každých 5 min</option>
+          <option value="10">každých 10 min</option><option value="20">každých 20 min</option><option value="30">každých 30 min</option>
+        </select></label></div>
+      <p class="pozn">Weby se stahují centrálně každých 20 minut (GitHub Actions) a stránka si hotový přehled jen načte – nezatěžuje tím zpravodajské weby ani vaše připojení. Poslední data zůstávají v prohlížeči i pro čtení offline.</p>
+      <h3>Stav webů při posledním stažení</h3>
+      <div class="pozn" id="stav-zdroju"></div>
+      <h3>Přenos do jiného zařízení</h3>
+      <p class="pozn">Nastavení, uložené a přečtené články zůstávají jen v tomto prohlížeči. Přenesete je kódem, souborem nebo QR kódem – nic se neposílá na server.</p>
+      <div class="radek-nastroje">
+        <button class="tl mini" id="sync-kopirovat">📋 Kopírovat kód</button>
+        <button class="tl mini" id="sync-vlozit">📥 Vložit kód</button>
+        <button class="tl mini" id="sync-ulozit">💾 Uložit soubor</button>
+        <button class="tl mini" id="sync-nacist">📂 Načíst soubor</button>
+        <button class="tl mini" id="sync-qr">📱 QR kód pro telefon</button>
+        <input type="file" id="sync-soubor" accept=".json,application/json" hidden>
+      </div>
+      <div class="sync-qr" id="sync-qr-box" hidden></div>
+      <p class="pozn" id="sync-qr-info"></p>
+      <h3>📲 Aplikace na ploše</h3>
+      <div class="radek-nastroje"><button class="tl mini hlavni" id="instalovat" hidden>📲 Nainstalovat Mozaiku zpráv</button></div>
+      <p class="pozn">Na telefonu: v prohlížeči nabídka ⋮ → „Přidat na plochu“ (Android), v Safari Sdílet → „Přidat na plochu“ (iPhone). Otevře se jako aplikace a uložené zprávy jdou číst i bez připojení.</p>
+      <h3>Uložená data</h3>
+      <div class="radek-nastroje">
+        <button class="tl mini" id="smazat-prectene">Zapomenout přečtené</button>
+        <button class="tl mini" id="smazat-ulozene">Smazat uložené články</button>
+        <button class="tl mini" id="obnovit-vychozi">Obnovit výchozí nastavení</button>
+      </div>
+    </section>
+    <section class="panel" data-panel="napoveda" hidden>
+    <p class="pozn">Mozaika skládá titulky z vybraných zpravodajských webů do jednoho přehledu seřazeného podle času. Klik na dlaždici ukáže <b>náhled s anotací</b>, teprve tlačítko „Číst na …“ (nebo klik na titulek či obrázek) otevře článek na webu, který ho napsal. Ctrl+klik nebo prostřední tlačítko otevře web rovnou. Když o stejné události píše víc webů, spojí se do <b>tématu</b> – dlaždice má štítek „+N“ a náhled ukáže, jak o tom píší ostatní.</p>
+    <p class="pozn"><b>Režimy:</b> 📰 Zprávy ukazují všechno včetně politiky, 🌙 Zajímavosti jen vědu, techniku, hry, přírodu, kulturu… a skrývají politiku a válku i v ostatních rubrikách (třeba na večer před spaním). Každý režim má vlastní výběr v tlačítku 🗂️ Rubriky.</p>
+    <p class="pozn"><b>Večer:</b> od 21:00 se stránka sama přepne na 🌙 Zajímavosti – bez politiky, neštěstí a s tlumenými barvami; ráno zpět (nastavení → 🌙 Večer). Po delší nepřítomnosti ukáže nahoře „co jste zmeškali“. V náhledu zprávy je 🧵 vývoj tématu od první zprávy po nejnovější.</p>
+    <p class="pozn"><b>Sledovaná témata:</b> zvýrazněná slova (Nastavení → Filtry) mají v 🗂️ Rubriky vlastní pohled 📌 – všechny zprávy o tématu i ze starších dnů. <b>Můj kraj:</b> regionální zprávy z vybraného kraje (Nastavení → Jazyky a kraj). Kopie téhož článku od jednoho vydavatele (iDNES + Lidovky) se počítají jako jedna redakce.</p>
+    <p class="pozn"><b>Obnova:</b> všechny weby se stahují centrálně každých 20 minut. Tlačítko ⟳ navíc hned načte živě ty weby, které to prohlížeči dovolují (iDNES, ČT24, iROZHLAS, NYT…), a ostatní přes vaši proxy, pokud ji máte nastavenou. Hledání otevře lupa 🔍 nebo klávesa /.</p>
+    <p class="pozn">Které weby sledujete, nastavíte v ⚙️ Nastavení → Weby. Výběr, přečtené a uložené články zůstávají jen ve vašem prohlížeči.</p>
+    <h3>Klávesy</h3>
+    <div class="klavesy">
+      <span><kbd>J</kbd> / <kbd>K</kbd></span><span>další / předchozí zpráva</span>
+      <span><kbd>Enter</kbd> / <kbd>O</kbd></span><span>náhled zprávy (v náhledu Enter = číst na webu)</span>
+      <span><kbd>←</kbd> / <kbd>→</kbd></span><span>v náhledu předchozí / další zpráva</span>
+      <span><kbd>S</kbd></span><span>uložit na později</span>
+      <span><kbd>H</kbd></span><span>skrýt zprávu</span>
+      <span><kbd>/</kbd></span><span>hledat (<code>-slovo</code> vyloučí, <code>"fráze"</code> přesně)</span>
+      <span><kbd>R</kbd></span><span>načíst znovu (i živě z webů)</span>
+      <span><kbd>M</kbd></span><span>přepnout Zprávy / Zajímavosti</span>
+      <span>Přejetí prstem</span><span>v náhledu doleva/doprava = další/předchozí, dolů = zavřít</span>
+      <span><kbd>P</kbd></span><span>předčítat titulky (v náhledu: přečíst zprávu)</span>
+      <span><kbd>?</kbd></span><span>tato nápověda</span>
+      <span><kbd>Esc</kbd></span><span>zavřít náhled / vyčistit hledání</span>
+    </div>
+  </section>
+  </div>
+  <div class="okno-pata"><button class="tl hlavni" data-zavrit>Hotovo</button></div>
+</dialog>
+
+<!-- Ranní souhrn -->
+<dialog id="dlg-souhrn" aria-labelledby="dlg-souhrn-h">
+  <div class="okno-hlava"><h2 id="dlg-souhrn-h">☀️ Dobré ráno</h2><button class="tl" data-zavrit>✕</button></div>
+  <div class="okno-telo">
+    <p class="pozn" id="souhrn-od"></p>
+    <div id="souhrn-seznam"></div>
+  </div>
+  <div class="okno-pata"><button class="tl hlavni" data-zavrit>Číst zprávy</button></div>
+</dialog>
+
+<!-- Dost pro dnešek -->
+<dialog id="dlg-dost" aria-labelledby="dlg-dost-h">
+  <div class="okno-telo dost">
+    <div class="dost-mesic" aria-hidden="true">🌙</div>
+    <h2 id="dlg-dost-h">Dost pro dnešek?</h2>
+    <p id="dost-text"></p>
+  </div>
+  <div class="okno-pata"><button class="tl" id="dost-jeste">Ještě chvíli</button><button class="tl hlavni" id="dost-noc">😴 Dobrou noc</button></div>
+</dialog>
+<div class="dobrou-noc" id="dobrou-noc" hidden role="button" tabindex="0" aria-label="Zpět ke zprávám">
+  <div>🌙<p>Dobrou noc</p><small>Klepnutím zpět ke zprávám</small></div>
+</div>
+
+<!-- Náhled zprávy: první klik na dlaždici; na web až tlačítkem / klikem na titulek či obrázek -->
+<dialog id="dlg-nahled" aria-labelledby="nahled-titulek">
+  <button class="nahled-zavrit" data-zavrit title="Zavřít (Esc)" aria-label="Zavřít">✕</button>
+  <div class="okno-telo">
+    <a class="nahled-obr na-web" target="_blank" rel="noopener noreferrer" tabindex="-1"><img id="nahled-obr" alt="" referrerpolicy="no-referrer"></a>
+    <div class="nahled-obsah" data-i18n="ne">
+      <div class="nahled-meta" id="nahled-meta"></div>
+      <h2 id="nahled-titulek"><a class="na-web" target="_blank" rel="noopener noreferrer"></a></h2>
+      <p id="nahled-perex"></p>
+    </div>
+    <div class="nahled-obsah">
+      <div class="nahled-akce">
+        <a class="tl hlavni na-web" id="nahled-otevrit" target="_blank" rel="noopener noreferrer">Číst na webu ↗</a>
+        <button class="tl" id="nahled-cist" title="Přečíst nahlas (P)">🔊 Přečíst</button>
+        <button class="tl" id="nahled-ulozit" title="Uložit na později (S)">☆ Uložit</button>
+        <button class="tl" id="nahled-skryt" title="Skrýt zprávu (H)">✕ Skrýt</button>
+        <button class="tl" id="nahled-vice" title="Další možnosti" aria-haspopup="menu">⋯</button>
+      </div>
+      <section id="nahled-tema" hidden>
+        <h3 id="nahled-tema-h">Píší o tom také</h3>
+        <div id="nahled-clenove"></div>
+      </section>
+    </div>
+  </div>
+  <div class="nahled-nav">
+    <button class="tl" id="nahled-pred" title="Předchozí zpráva (←)">← Předchozí</button>
+    <span id="nahled-pozice"></span>
+    <button class="tl" id="nahled-dalsi" title="Další zpráva (→)">Další →</button>
+  </div>
+</dialog>
+
+</body>
+</html>

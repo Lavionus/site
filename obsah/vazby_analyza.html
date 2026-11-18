@@ -8,6 +8,49 @@
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
+<script src="vysetrovani/pripad.js"></script>
+<script src="vysetrovani/metoda.js"></script>
+<script>
+/* obsah panelu „📐 Metoda, literatura, meze“ (vysetrovani/metoda.js) */
+MetodaPanel.nastav({
+  nastroj: 'vazby_analyza',
+  princip: [
+    'Případ je neorientovaný graf: entity (osoby, telefony, vozidla, adresy, firmy, účty, e-maily, události) jsou vrcholy, vazby hrany se silou 1–5. Metriky se počítají jen ze zobrazených entit (filtr typů).',
+    'Stupeň = počet vazeb entity (souběžné vazby se počítají každá zvlášť), Σ síla = součet jejich sil. Vysoký stupeň = entita s mnoha přímými kontakty.',
+    'Mezilehlost (betweenness) = podíl nejkratších cest mezi všemi dvojicemi ostatních entit, které vedou přes danou entitu. Počítá se Brandesovým algoritmem (prohledávání do šířky z každého vrcholu a zpětné sčítání závislostí) bez ohledu na sílu; souběžné vazby se sloučí. Vysoká hodnota = prostředník, most mezi skupinami.',
+    'Nejkratší cesta: „nejméně kroků“ = prohledávání do šířky; „přes nejsilnější vazby“ = Dijkstrův algoritmus s cenou hrany 1/síla (silná vazba je „levná“). Při více stejně dlouhých cestách se ukáže jedna z nich.',
+    'Souvislé skupiny (komponenty) = množiny entit, mezi kterými vede nějaká cesta.'
+  ],
+  vzorce: [
+    'stupeň(v) = počet vazeb v;   Σ síla(v) = Σ síla vazeb v',
+    'C_B(v) = Σ_{s≠v≠t} σ_st(v) / σ_st\nσ_st = počet nejkratších cest s–t, σ_st(v) = z toho přes v',
+    'normalizace: C_B(v) / [(n − 1)(n − 2)/2]  → 0 až 1 (1 = střed hvězdy)',
+    'Brandes: δ_s(v) = Σ_{w: v∈pred(w)} σ_sv/σ_sw · (1 + δ_s(w))\nC_B(v) = ½ Σ_s δ_s(v)      složitost O(n·m)',
+    'cena cesty (síla) = Σ 1/síla_i;   cesta (kroky) = počet hran'
+  ],
+  predpoklady: [
+    'Vazby jsou zadané úplně a správně a síla vazby odpovídá doloženosti (1 = nepotvrzená, 5 = doložená).',
+    'Vazba je souměrná (graf je neorientovaný): hovor A → B se počítá stejně jako B → A, směr peněz se nerozlišuje.',
+    'Všechny entity jsou v jednom případu a duplicitní identifikátory (stejné číslo zapsané jinak) jsou sloučené.'
+  ],
+  meze: [
+    'Graf zachycuje kontakty, ne jejich obsah ani úmysl: hovor nebo společná adresa neznamená spolupachatelství. Metriky ukazují, kam se podívat, nic nedokazují.',
+    'Chybějící data: jediná nezjištěná vazba (jiné číslo, hotovostní platba) může mezilehlost i nejkratší cestu úplně změnit. Kriminální sítě bývají neúplné, s nejasnými hranicemi a měnící se v čase.',
+    'Entity nejsou osoby: telefon, účet nebo vozidlo může používat víc lidí, jedna osoba může mít víc čísel. Prostředníkem v grafu bývá často telefon nebo adresa, ne člověk.',
+    'Velikost grafu ovlivňuje hodnoty: normalizovaná mezilehlost se mezi případy různé velikosti nedá přímo porovnávat. Stupeň roste se souběžnými vazbami (10 hovorů = 10 vazeb).',
+    'Mezilehlost nepočítá se silou ani datem vazby; časový sled (kdo komu volal dřív) graf neukazuje – na to slouží časová osa a časová analýza.',
+    'Ověření v tabulce níže je na malých grafech se známým výsledkem: dokládá správnost výpočtu, ne užitečnost metrik na skutečném spisu.'
+  ],
+  literatura: [
+    'L. C. Freeman: A set of measures of centrality based on betweenness. Sociometry 40, 1977 – definice mezilehlosti.',
+    'L. C. Freeman: Centrality in social networks: conceptual clarification. Social Networks 1, 1978/79 – stupeň, blízkost, mezilehlost a jejich normalizace.',
+    'U. Brandes: A faster algorithm for betweenness centrality. Journal of Mathematical Sociology 25, 2001 – algoritmus použitý v nástroji.',
+    'E. W. Dijkstra: A note on two problems in connexion with graphs. Numerische Mathematik 1, 1959 – nejkratší cesta s cenami hran.',
+    'S. Wasserman, K. Faust: Social Network Analysis: Methods and Applications. Cambridge University Press, 1994.',
+    'M. K. Sparrow: The application of network analysis to criminal intelligence: An assessment of the prospects. Social Networks 13, 1991 – meze analýzy sítí v kriminalistice (neúplnost, nejasné hranice, dynamika).'
+  ]
+});
+</script>
 <style>
 body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px clamp(8px,2vw,20px)}
 .container{max-width:1280px;margin:0 auto}
@@ -88,6 +131,8 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     <button class="b" id="impJson">📂 JSON</button>
     <button class="b" id="expJson">💾 JSON</button>
     <button class="b" id="expPng">🖼️ PNG</button>
+    <span class="sep"></span>
+    <button class="b" data-metoda title="Princip, vzorce, předpoklady, meze, ověření na grafech se známým výsledkem a literatura">📐 Metoda a meze</button>
     <input type="file" id="soubor" hidden>
   </div>
 
@@ -131,7 +176,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
       <div class="karta">
         <h2>Metriky (zobrazené entity)</h2>
         <div class="tabwrap"><table class="metriky" id="metriky"></table></div>
-        <p class="pozn"><b>Stupeň</b> = počet vazeb, <b>Σ síla</b> = součet sil vazeb, <b>mezilehlost</b> = podíl nejkratších cest mezi ostatními dvojicemi, které vedou přes entitu (0–1). Vysoká mezilehlost = prostředník, „most“ mezi skupinami.</p>
+        <p class="pozn"><b>Stupeň</b> = počet vazeb, <b>Σ síla</b> = součet sil vazeb, <b>mezilehlost</b> = podíl nejkratších cest mezi ostatními dvojicemi, které vedou přes entitu (0–1). Vysoká mezilehlost = prostředník, „most“ mezi skupinami. Vzorce, meze a ověření: <a href="#" data-metoda>📐 Metoda a meze</a>.</p>
       </div>
     </div>
   </div>
@@ -399,8 +444,47 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     return { entity: ent, vazby: vaz };
   }
 
+  // graf z modelového případu (window.MODELOVY_PRIPAD z vysetrovani/pripad.js); hovory = vazby telefon → telefon,
+  // čas a délka v popisu, síla podle délky hovoru (delší hovor = silnější vazba)
+  function zModelovehoPripadu(P) {
+    const gr = prazdnyGraf(), E = (t, n, p) => pridejEntitu(gr, t, n, p).id, L = (a, b, p, d, s) => { if (a && b) pridejVazbu(gr, a, b, p, d, s); };
+    const os = {}, tel = {}, M = P.mista || {}, adr = {};
+    for (const o of P.osoby || []) {
+      os[o.id] = E('osoba', o.jmeno, o.role + ' – ' + o.popis);
+      if (o.telefon) { tel[o.id] = E('telefon', o.telefon, 'používá ' + o.jmeno); L(os[o.id], tel[o.id], 'používá', '', 5); }
+    }
+    for (const k in M) adr[k] = E('adresa', M[k].nazev, `GPS ${M[k].lat.toFixed(5)}, ${M[k].lon.toFixed(5)}`);
+    const ud = E('udalost', 'Vloupání 15. 11. 2026 02:08', P.shrnuti || '');
+    for (const v of P.vozidla || []) {
+      const vid = E('vozidlo', v.rz, v.popis);
+      L(os[v.drzitel], vid, 'držitel', '', 5);
+      L(vid, adr.cerpaci, 'kamera 01:52 a 02:21 (tmavé kombi)', '2026-11-15', 3);
+      L(vid, ud, 'tmavé kombi podle svědkyně', '2026-11-15', 2);
+    }
+    L(ud, adr.prodejna, 'místo činu', '2026-11-15', 5);
+    L(os.novotny, adr.prodejna, 'majitel', '', 5); L(os.novotny, ud, 'poškozený', '2026-11-15', 5);
+    L(os.dvorakova, ud, 'svědkyně 02:10', '2026-11-15', 4);
+    L(os.brabec, adr.domBrabec, 'bydliště', '', 5); L(os.fiala, adr.domFiala, 'bydliště (tvrzené alibi)', '', 5);
+    L(os.kriz, adr.bazar, 'provozuje – 16. 11. nabízel 4 notebooky shodného typu', '', 5);
+    L(tel.fiala, ud, 'poloha telefonu 01:58–02:14 v Horní Lhotě', '2026-11-15', 4);
+    for (const h of P.hovory || []) {
+      const s = +h.s || 0, kdy = String(h.kdy || '');
+      L(tel[h.od], tel[h.komu], `hovor ${kdy.slice(11, 16)} (${s} s)`, kdy.slice(0, 10), s >= 180 ? 5 : s >= 90 ? 4 : s >= 60 ? 3 : s >= 30 ? 2 : 1);
+    }
+    // výchozí rozložení (silové rozvržení tu končí zamotané): místo činu vlevo, Fiala uprostřed, překupník vpravo
+    const POL = { novotny: [-430, -40], dvorakova: [-330, 170], brabec: [-20, -230], fiala: [-60, 200], kriz: [360, 20],
+      'tel:brabec': [70, -100], 'tel:fiala': [10, 60], 'tel:kriz': [210, -20],
+      prodejna: [-440, 110], cerpaci: [-300, -260], domFiala: [-170, 300], domBrabec: [90, -330], bazar: [470, 130], udalost: [-270, 20], vozidlo: [-160, -160] };
+    const umisti = (id, k) => { const e = gr.entity.find(x => x.id === id), q = POL[k]; if (e && q) { e.x = q[0]; e.y = q[1]; } };
+    for (const k in os) umisti(os[k], k);
+    for (const k in tel) umisti(tel[k], 'tel:' + k);
+    for (const k in adr) umisti(adr[k], k);
+    umisti(ud, 'udalost'); const vz = gr.entity.find(e => e.typ === 'vozidlo'); if (vz) umisti(vz.id, 'vozidlo');
+    return gr;
+  }
+
   g.VAZBY = { TYPY, typZNazvu, odhadTypu, klicNazvu, prazdnyGraf, najdiEntitu, pridejEntitu, pridejVazbu, smazEntitu, podgraf, sousede, stupne,
-    mezilehlost, nejkratsiCesta, komponenty, vychoziPozice, silovyKrok, rozdelCsv, importCsv, normDatum, zkontrolujGraf, noveId };
+    mezilehlost, nejkratsiCesta, komponenty, vychoziPozice, silovyKrok, rozdelCsv, importCsv, normDatum, zkontrolujGraf, noveId, zModelovehoPripadu };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 
@@ -443,7 +527,8 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
         localStorage.setItem(KLIC + 'pripady', JSON.stringify(pripady.map(p => ({ id: p.id, nazev: p.nazev,
           entity: p.entity.map(e => ({ id: e.id, typ: e.typ, nazev: e.nazev, pozn: e.pozn, x: Math.round(e.x * 10) / 10, y: Math.round(e.y * 10) / 10, pevny: !!e.pevny })),
           vazby: p.vazby }))));
-        localStorage.setItem(KLIC + 'aktivni', aktivni.id);
+        // modelový případ otevřený průvodcem (?pripad=17) si jako aktivní nepamatovat – bez parametru zůstane případ uživatele
+        if (!(window.ModelovyPripad && window.ModelovyPripad.aktivni && aktivni.id === 'modelovy-pripad-17')) localStorage.setItem(KLIC + 'aktivni', aktivni.id);
       } catch (e) { dlg.chyba('Uložení se nepovedlo (plné úložiště?).'); }
     };
     if (hned) f(); else casUlozeni = setTimeout(f, 400);
@@ -690,7 +775,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
 
   // ---------- výběr a detail ----------
   function vyber(v) { vybrano = v; obnovDetail(); oznacMetriky(); prekresli(); }
-  const datumCz = d => d ? d.split('-').reverse().join('. ').replace(/^0/, '') : '';
+  const datumCz = d => d ? esc(d.split('-').reverse().join('. ').replace(/^0/, '')) : ''; // datum z importu CSV může být libovolný text
   function obnovDetail() {
     const el = $('detail');
     if (!vybrano) { el.innerHTML = '<span class="pozn">Klikni na entitu nebo vazbu v grafu.</span>'; return; }
@@ -701,7 +786,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
       el.innerHTML = `<div class="typ">${T.ikona} ${T.nazev}${e.pevny ? ' · 📌 připnuto' : ''}</div><div class="nadpis">${esc(e.nazev)}</div>
         ${e.pozn ? `<div style="white-space:pre-wrap;color:var(--text-muted)">${esc(e.pozn)}</div>` : ''}
         <div class="pozn">Vazeb: ${vaz.length}${m ? ` · Σ síla ${m.sila}` : ''}${mz != null ? ` · mezilehlost ${mz.toFixed(3)}` : ''}</div>
-        <ul>${vaz.map(v => { const o = entita(v.z === e.id ? v.do : v.z); return `<li data-e="${o.id}" data-v="${v.id}">${V.TYPY[o.typ].ikona} ${esc(o.nazev)} <span style="color:var(--text-faint)">— ${esc(v.popis || 'vazba')}${v.datum ? ', ' + datumCz(v.datum) : ''} · síla ${v.sila}</span></li>`; }).join('')}</ul>
+        <ul>${vaz.map(v => { const o = entita(v.z === e.id ? v.do : v.z); return `<li data-e="${esc(o.id)}" data-v="${esc(v.id)}">${V.TYPY[o.typ].ikona} ${esc(o.nazev)} <span style="color:var(--text-faint)">— ${esc(v.popis || 'vazba')}${v.datum ? ', ' + datumCz(v.datum) : ''} · síla ${v.sila}</span></li>`; }).join('')}</ul>
         <div class="akce"><button class="b" data-a="upr">✏️ Upravit</button><button class="b" data-a="spoj">🔗 Propojit…</button><button class="b" data-a="pin">${e.pevny ? '📍 Uvolnit' : '📌 Připnout'}</button><button class="b" data-a="stred">🎯 Na střed</button><button class="b nebezp" data-a="smaz">🗑️</button></div>`;
     } else {
       const v = aktivni.vazby.find(x => x.id === vybrano.id); if (!v) { vybrano = null; obnovDetail(); return; }
@@ -750,7 +835,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
   });
   function naplnVyber(sel, hodn) {
     const E = [...aktivni.entity].sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
-    sel.innerHTML = E.map(e => `<option value="${e.id}">${V.TYPY[e.typ].ikona} ${esc(e.nazev)}</option>`).join('');
+    sel.innerHTML = E.map(e => `<option value="${esc(e.id)}">${V.TYPY[e.typ].ikona} ${esc(e.nazev)}</option>`).join('');
     if (hodn) sel.value = hodn;
   }
   function formularVazby(v, z, d) {
@@ -821,7 +906,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     radky.sort((a, b) => razeni === 'nazev' ? a.e.nazev.localeCompare(b.e.nazev, 'cs') : razeni === 'stupen' ? b.st - a.st || b.mz - a.mz : razeni === 'sila' ? b.si - a.si : b.mz - a.mz || b.st - a.st);
     const komp = V.komponenty(gr).length;
     $('metriky').innerHTML = `<thead><tr><th data-r="nazev">Entita</th><th data-r="stupen">Stupeň</th><th data-r="sila">Σ síla</th><th data-r="mezi">Mezilehlost</th></tr></thead><tbody>` +
-      radky.map(r => `<tr class="radek" data-e="${r.e.id}"><td>${V.TYPY[r.e.typ].ikona} ${esc(r.e.nazev)}</td><td class="n">${r.st}</td><td class="n">${r.si}</td><td class="n">${r.mz.toFixed(3)}</td></tr>`).join('') +
+      radky.map(r => `<tr class="radek" data-e="${esc(r.e.id)}"><td>${V.TYPY[r.e.typ].ikona} ${esc(r.e.nazev)}</td><td class="n">${r.st}</td><td class="n">${r.si}</td><td class="n">${r.mz.toFixed(3)}</td></tr>`).join('') +
       `</tbody><tfoot><tr><td colspan="4" class="pozn">${gr.entity.length} entit, ${gr.vazby.length} vazeb, ${komp} ${komp === 1 ? 'souvislá skupina' : komp < 5 ? 'oddělené skupiny' : 'oddělených skupin'}</td></tr></tfoot>`;
     oznacMetriky();
   }
@@ -845,7 +930,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
   $('zrusCestu').onclick = () => { cesta = null; $('cestaVysl').innerHTML = ''; prekresli(); };
 
   // ---------- případy ----------
-  function seznamPripadu() { $('pripad').innerHTML = pripady.map(p => `<option value="${p.id}">${esc(p.nazev)} (${p.entity.length})</option>`).join(''); $('pripad').value = aktivni.id; }
+  function seznamPripadu() { $('pripad').innerHTML = pripady.map(p => `<option value="${esc(p.id)}">${esc(p.nazev)} (${p.entity.length})</option>`).join(''); $('pripad').value = aktivni.id; }
   // nové entity bez uložené polohy: rozvrhnout předem, ať se graf při otevření „nerozbaluje“
   function predpocitej(p) {
     const nove = p.entity.filter(e => !Number.isFinite(e.x)).length;
@@ -916,10 +1001,23 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
 
   if (window.ResizeObserver) new ResizeObserver(() => { velikostPlatna(); prekresli(); }).observe($('obal'));
   nactiVse();
+  // modelový případ 17/2026 (?pripad=17): vlastní případ v seznamu, případy uživatele zůstávají
+  const MP = window.ModelovyPripad && window.ModelovyPripad.aktivni ? window.MODELOVY_PRIPAD : null, MP_ID = 'modelovy-pripad-17';
+  if (MP) {
+    let p = pripady.find(x => x.id === MP_ID);
+    if (!p) { p = { id: MP_ID, nazev: 'Modelový případ 17/2026', ...V.zModelovehoPripadu(MP) }; pripady.push(p); }
+    aktivni = p;
+  }
   velikostPlatna();
   predpocitej(aktivni);
   alpha = 0.05;
   zmena(false); zobrazVse(); stavSim(); spust();
+  if (MP) { // hned ukázat prostředníka: velikost uzlů podle mezilehlosti + nejsilnější cesta Brabec → Kříž
+    $('velikost').value = 'mezi';
+    const a = V.najdiEntitu(aktivni, 'Tomáš Brabec'), b = V.najdiEntitu(aktivni, 'Roman Kříž');
+    if (a && b) { $('cestaA').value = a.id; $('cestaB').value = b.id; $('cestaRezim').value = 'sila'; $('najdiCestu').click(); }
+    uloz(true);
+  }
   window.addEventListener('resize', () => { velikostPlatna(); prekresli(); });
 })();
 </script>

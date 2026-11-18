@@ -5,7 +5,7 @@
   const C = J.cislo;
   const KLIC = 'webapp_meraky_nastaveni';
   const VYCHOZI = {
-    zalozka: 'vodovaha', kal: { x: 0, y: 0, lat: 0, sklon: 0 }, hrana: 'dlouha',
+    zalozka: 'prehled', kal: { x: 0, y: 0, lat: 0, sklon: 0 }, hrana: 'dlouha',
     dbPosun: 110, vaha: 'A', casK: 0.125, spekVaha: 'Z',
     luxFaktor: 1, clona: 1.8, kamera: 'user',
     str: { f: 10, znacek: 1, strida: 10, zdroj: 'displej' }
@@ -30,20 +30,32 @@
 
   /* ---------- záložky ---------- */
   let zalozka = nast.zalozka;
+  /* Moduly přístrojů (poloha.js, pohyb.js…): {start, stop, zapis} podle id panelu. */
+  const MODULY = {};
+  const ZVUKOVE = ['hluk', 'spektrum', 'ladicka'];
+  const panelPohyb = z => { const p = document.querySelector(`[data-panel="${z}"]`); return !!(p && p.hasAttribute('data-pohyb')); };
   function prepni(z) {
-    if (!document.querySelector(`[data-panel="${z}"]`)) z = 'vodovaha';
+    if (!document.querySelector(`[data-panel="${z}"]`)) z = 'prehled';
+    const pred = zalozka;
     zalozka = z; nast.zalozka = z; uloz();
-    document.querySelectorAll('[data-zalozka]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.zalozka === z)));
+    const panel = document.querySelector(`[data-panel="${z}"]`), kat = panel.dataset.kat;
+    document.querySelectorAll('.lista [data-zalozka]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.zalozka === z)));
+    document.querySelectorAll('.lista [data-kat]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kat === kat)));
+    document.querySelectorAll('.nabidka [data-zalozka]').forEach(b => { b.style.fontWeight = b.dataset.zalozka === z ? '700' : ''; });
     document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== z; });
-    if (z === 'vodovaha' || z === 'sklon') startPohyb();
-    if (z !== 'hluk' && z !== 'spektrum') stopZvuk();
+    if (pred !== z && MODULY[pred] && MODULY[pred].stop) MODULY[pred].stop();
+    if (panelPohyb(z)) startPohyb();
+    if (!ZVUKOVE.includes(z)) stopZvuk();
+    else if (Z.ctx && Z.demo && Z.demoLad !== (z === 'ladicka')) startZvuk(true);   // ladička má vlastní ukázku
     if (z !== 'svetlo') stopSvetlo();
     if (z !== 'strobo') stopStrobo();
+    if (MODULY[z] && MODULY[z].start) MODULY[z].start();
+    if (z === 'denik') kresliDenik();
     hlaskaSenzory();
   }
 
   /* ---------- senzory pohybu ---------- */
-  const P = { u: null, uOri: null, znam: null, motion: false, posledni: 0, demo: false, spusteno: false, stav: null, poloha: null, raw: {} };
+  const P = { rot: null, u: null, uOri: null, znam: null, motion: false, posledni: 0, demo: false, spusteno: false, stav: null, poloha: null, raw: {} };
   function startPohyb() {
     if (P.spusteno) return;
     P.spusteno = true;
@@ -78,7 +90,9 @@
     P.uOri = J.zOrientace(e.beta, e.gamma);
     if (!P.motion) prijmi(P.uOri);
   }
+  const odberPohybu = [];   // moduly chtějí celou událost devicemotion (zrychlení, gyroskop)
   function naPohyb(e) {
+    for (const f of odberPohybu) f(e);
     const g = e.accelerationIncludingGravity;
     if (!g || g.x == null) return;
     const v = [g.x, g.y, g.z];
@@ -92,7 +106,7 @@
     return J.zOrientace(0.9 * Math.sin(t / 4), 0.25 + 0.6 * Math.sin(t / 2.7));
   }
   function hlaskaSenzory() {
-    const pohyb = zalozka === 'vodovaha' || zalozka === 'sklon';
+    const pohyb = panelPohyb(zalozka);
     let t = '';
     if (pohyb && P.stav === 'povolit') t = 'Na tomto zařízení je potřeba přístup k senzorům pohybu povolit. Do té doby běží ukázkový režim.';
     else if (pohyb && P.stav === 'chybi') t = 'Senzor náklonu nebyl nalezen – jste nejspíš na počítači, nebo prohlížeč přístup nepovolil (stránka musí běžet přes https). Zobrazuji ukázkový režim se simulovanými daty.';
@@ -149,7 +163,7 @@
     } else {
       const [ox, oy] = h.osa, delka = R, tl = R * 0.16;
       x.save(); x.translate(cx, cy); x.rotate(Math.atan2(oy, ox));
-      x.strokeStyle = B.border; x.lineWidth = 2; x.beginPath(); x.roundRect(-delka, -tl, 2 * delka, 2 * tl, tl); x.stroke();
+      x.strokeStyle = B.border; x.lineWidth = 2; x.beginPath(); if (x.roundRect) x.roundRect(-delka, -tl, 2 * delka, 2 * tl, tl); else x.rect(-delka, -tl, 2 * delka, 2 * tl); x.stroke();
       x.lineWidth = 1;
       for (const s of [0.5, 1, 2, 5]) for (const z of [-1, 1]) { const p = z * meritko(s, delka - tl); x.beginPath(); x.moveTo(p, -tl); x.lineTo(p, tl); x.stroke(); }
       const p = h.strana * meritko(Math.abs(h.uhel), delka - tl);
@@ -227,7 +241,7 @@
   }
 
   /* ---------- zvuk (hlukoměr + spektrum) ---------- */
-  const Z = { ctx: null, stream: null, uzly: [], anZ: null, anA: null, anS: null, timer: 0, demo: false, ms: null, energ: 0, cas: 0, max: -Infinity, min: Infinity, hist: [], posl: 0, spicky: null, preb: 0, L: null };
+  const Z = { gen: 0, startuje: false, ctx: null, stream: null, uzly: [], anZ: null, anA: null, anS: null, timer: 0, demo: false, ms: null, energ: 0, cas: 0, max: -Infinity, min: Infinity, hist: [], posl: 0, spicky: null, preb: 0, L: null };
   function analyzator(n, vyhlazeni) {
     const a = Z.ctx.createAnalyser(); a.fftSize = n; a.smoothingTimeConstant = vyhlazeni; a.minDecibels = -140; a.maxDecibels = 0;
     return a;
@@ -235,6 +249,12 @@
   function demoZdroj(ctx) {
     const out = ctx.createGain();
     const osc = (typ, f, g) => { const o = ctx.createOscillator(), z = ctx.createGain(); o.type = typ; o.frequency.value = f; z.gain.value = g; o.connect(z).connect(out); o.start(); Z.uzly.push(o); return z; };
+    Z.demoLad = zalozka === 'ladicka';
+    if (Z.demoLad) {   // struna A2 o 8 centů výš, s vyššími harmonickými a pomalým doznějím
+      const f = 110 * Math.pow(2, 8 / 1200);
+      [[1, 0.05], [2, 0.03], [3, 0.015], [4, 0.008]].forEach(([k, g]) => osc('sine', f * k, g));
+      return out;
+    }
     osc('sine', 440, 0.02); osc('sawtooth', 100, 0.006);
     const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -247,17 +267,21 @@
   function hlukInfo(t) { $('hlukInfo').textContent = t || ''; }
   async function startZvuk(demo) {
     stopZvuk();
+    const gen = ++Z.gen;   // přepnutí/zastavení během čekání na povolení zvýší Z.gen → tento start se zahodí
+    Z.startuje = true;
     try { Z.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { hlukInfo('Prohlížeč nepodporuje Web Audio – měření zvuku není možné.'); return; }
     let src = null;
     if (!demo) {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { hlukInfo('Mikrofon není dostupný (starý prohlížeč nebo stránka bez https). Běží ukázka.'); demo = true; }
       else {
         try {
-          Z.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+          if (gen !== Z.gen) { stream.getTracks().forEach(t => t.stop()); return; }
+          Z.stream = stream;
           src = Z.ctx.createMediaStreamSource(Z.stream);
           const nazev = Z.stream.getAudioTracks()[0].label || 'výchozí', fs = Z.ctx.sampleRate;
           hlukInfo('Mikrofon: ' + nazev + ', vzorkování ' + fs + ' Hz.');
-        } catch (e) { hlukInfo('Mikrofon se nepodařilo spustit (' + e.name + ') – nejspíš chybí povolení. Běží ukázka.'); demo = true; }
+        } catch (e) { if (gen !== Z.gen) return; hlukInfo('Mikrofon se nepodařilo spustit (' + e.name + ') – nejspíš chybí povolení. Běží ukázka.'); demo = true; }
       }
     }
     if (demo) { src = demoZdroj(Z.ctx); if (!$('hlukInfo').textContent) hlukInfo('Ukázka: simulovaný tón 440 Hz, bzučení 100 Hz a kolísavý šum.'); }
@@ -276,10 +300,12 @@
     } catch (e) { Z.anA = null; }
     Z.zdroj = src;
     $('spekRozliseni').textContent = C(Z.ctx.sampleRate / Z.anS.fftSize, 1);
-    nulujHluk(); Z.posl = performance.now(); Z.timer = setInterval(merHluk, 50);
+    Z.startuje = false;
+    nulujHluk(); Z.posl = Z.ctx.currentTime; Z.timer = setInterval(merHluk, 50);
     stavZvuk();
   }
   function stopZvuk() {
+    Z.gen++; Z.startuje = false;
     if (!Z.ctx) return;
     clearInterval(Z.timer);
     Z.uzly.forEach(u => { try { u.stop(); } catch (e) { /* už stojí */ } }); Z.uzly = [];
@@ -292,30 +318,37 @@
     document.querySelectorAll('[data-zvuk-tl]').forEach(b => { b.textContent = Z.ctx && !Z.demo ? '⏹ Zastavit mikrofon' : '🎙️ Spustit mikrofon'; });
     document.querySelectorAll('[data-demo="zvuk"]').forEach(e => { e.hidden = !(Z.ctx && Z.demo); });
   }
-  function nulujHluk() { Object.assign(Z, { ms: null, energ: 0, cas: 0, max: -Infinity, min: Infinity, hist: [], preb: 0 }); }
+  function nulujHluk() { Object.assign(Z, { ms: null, energ: 0, cas: 0, max: -Infinity, min: Infinity, hist: [], preb: 0, zaznam: [], zazE: 0, zazT: 0, start: new Date() }); }
   const cas = new Float32Array(4096);
   function merHluk() {
     if (!Z.ctx) return;
-    if (Z.ctx.state !== 'running') { Z.posl = performance.now(); return; }
+    if (Z.ctx.state !== 'running') { Z.posl = Z.ctx.currentTime; return; }
     const vahaA = nast.vaha === 'A' && Z.anA;
     (vahaA ? Z.anA : Z.anZ).getFloatTimeDomainData(cas);
     const ms = J.stredniKvadrat(cas);
     let spicka = 0;
     Z.anZ.getFloatTimeDomainData(cas);
     for (let i = 0; i < cas.length; i++) { const a = Math.abs(cas[i]); if (a > spicka) spicka = a; }
-    const ted = performance.now(), dt = Math.min(0.5, (ted - Z.posl) / 1000); Z.posl = ted;
+    const ted = Z.ctx.currentTime, dt = Math.min(2, Math.max(0, ted - Z.posl)); Z.posl = ted;
     Z.ms = J.casoveVazeni(Z.ms, ms, dt, nast.casK);
     const L = J.db(Z.ms) + nast.dbPosun;
     Z.L = L; Z.energ += ms * dt; Z.cas += dt;
     if (spicka > 0.99) Z.preb = 20;
     if (Z.cas > 0.6) { Z.max = Math.max(Z.max, L); Z.min = Math.min(Z.min, L); }
     Z.hist.push(L); if (Z.hist.length > 1200) Z.hist.shift();
+    Z.zazE += ms * dt; Z.zazT += dt;
+    if (Z.zazT >= 1) { Z.zaznam.push([new Date(), J.db(Z.zazE / Z.zazT) + nast.dbPosun]); Z.zazE = 0; Z.zazT = 0; if (Z.zaznam.length > 43200) Z.zaznam.shift(); }
     if (zalozka !== 'hluk') return;
     const jed = vahaA ? 'dB(A)' : 'dB';
     $('hlukVelke').innerHTML = C(Math.max(0, L), 1) + '<small>' + jed + '</small>';
     const leq = Z.cas > 0 ? J.db(Z.energ / Z.cas) + nast.dbPosun : null;
     $('hlukLeq').textContent = C(leq, 1); $('hlukMax').textContent = C(Z.max, 1); $('hlukMin').textContent = C(Z.min, 1);
     $('hlukCas').textContent = minSek(Z.cas);
+    const dlouho = Z.cas >= 10 && leq != null;
+    $('hlukLex').textContent = dlouho ? C(J.lex8h(leq, Z.cas), 1) : '—';
+    $('hlukDavka').textContent = dlouho ? C(J.davka(leq, Z.cas), J.davka(leq, Z.cas) < 10 ? 2 : 0) + ' %' : '—';
+    const dob = J.povolenaDoba(Z.L);
+    $('hlukDoba').textContent = dob > 24 ? 'bez omezení' : dob >= 1 ? C(dob, 1) + ' h' : C(dob * 60, dob * 60 < 1 ? 1 : 0) + ' min';
     $('hlukPopis').textContent = Z.preb-- > 0 ? '⚠️ Mikrofon je přebuzený – skutečná hladina je vyšší, než ukazuje.' : '≈ ' + J.popisHladiny(L) + (nast.vaha === 'A' && !Z.anA ? ' · A-filtr prohlížeč nepodporuje, měří se bez vážení' : '');
     kresliGrafHluku(leq);
   }
@@ -336,6 +369,11 @@
   $('hlukCasK').addEventListener('change', e => { nast.casK = +e.target.value; uloz(); });
   $('hlukPosun').addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v)) { nast.dbPosun = v; uloz(); } else e.target.value = nast.dbPosun; });
   $('hlukNuluj').addEventListener('click', nulujHluk);
+  $('hlukCsv').addEventListener('click', () => {
+    if (!Z.zaznam || !Z.zaznam.length) return Dialog.info('Zatím není co uložit – spusťte mikrofon a nechte ho aspoň pár sekund měřit.');
+    const jed = nast.vaha === 'A' && Z.anA ? 'dB(A)' : 'dB';
+    stahni('hluk_' + datumSoubor() + '.csv', J.csv([['čas', 'L (' + jed + ', průměr 1 s)']].concat(Z.zaznam.map(([t, l]) => [t.toLocaleString('cs-CZ'), Math.round(l * 10) / 10]))), 'text/csv');
+  });
   async function kalHluk() {
     prepni('hluk');
     if (!Z.ctx || Z.L == null) return Dialog.info('Nejdřív spusťte mikrofon a nechte ho chvíli měřit ustálený zvuk (např. šum nebo tón).');
@@ -364,6 +402,14 @@
     else if (!spekZamek) for (let i = 0; i < n; i++) Z.spicky[i] = Math.max(Z.spicky[i] - 0.25, v[i]);
     const od = Math.max(1, +$('spekOd').value || 40), doF = Math.max(od + 1, +$('spekDo').value || fs / 2);
     const dom = J.dominantni(v, fs, Z.anS.fftSize, od, doF);
+    if (dom) {
+      const no = J.nota(dom.f);
+      $('spekF').textContent = fmtHz(dom.f);
+      $('spekNota').textContent = no ? no.nazev + ' ' + (no.centy >= 0 ? '+' : '−') + Math.abs(no.centy) + ' c' : '—';
+      $('spekRpm').textContent = C(dom.f * 60, 0) + ' ot/min';
+    }
+    if (nast.spekZobr === 'vodopad') return kresliVodopad(v, fs, df, dom);
+    if (nast.spekZobr === 'tretiny') return kresliTretiny(spek, fs);
     const { x, w, h } = platno($('platnoSpektrum'), $('platnoSpektrum').clientWidth < 500 ? 0.7 : 0.35), B = barvy();
     const fmin = 20, fmax = Math.min(20000, fs / 2), L = Math.log(fmax / fmin);
     const px = f => 34 + (w - 38) * Math.log(f / fmin) / L;
@@ -386,10 +432,6 @@
     if (dom) {
       x.strokeStyle = B.warn; x.setLineDash([4, 4]); x.beginPath(); x.moveTo(px(dom.f), 4); x.lineTo(px(dom.f), h - 18); x.stroke(); x.setLineDash([]);
       x.fillStyle = B.text; x.textAlign = px(dom.f) > w - 90 ? 'right' : 'left'; x.fillText(' ' + fmtHz(dom.f) + ' ', px(dom.f), 16); x.textAlign = 'left';
-      const no = J.nota(dom.f);
-      $('spekF').textContent = fmtHz(dom.f);
-      $('spekNota').textContent = no ? no.nazev + ' ' + (no.centy >= 0 ? '+' : '−') + Math.abs(no.centy) + ' c' : '—';
-      $('spekRpm').textContent = C(dom.f * 60, 0) + ' ot/min';
     }
     if (kurzorF) {
       x.strokeStyle = B.muted; x.beginPath(); x.moveTo(px(kurzorF), 4); x.lineTo(px(kurzorF), h - 18); x.stroke();
@@ -399,12 +441,63 @@
     platnoSpektrumInfo = { w, fmin, L };
   }
   let platnoSpektrumInfo = null;
+  /* Vodopád: čas shora dolů, frekvence logaritmicky vodorovně, barva = hladina. Řádky se posouvají v pomocném plátně. */
+  const vodopad = document.createElement('canvas');
+  function barvaHladiny(t) {   // 0–1 → tma → modrá → zelená → žlutá → bílá (čitelné v obou tématech, plocha je vlastní)
+    const k = [[0, 0, 0], [20, 30, 140], [0, 160, 120], [240, 220, 40], [255, 255, 255]], p = Math.min(0.9999, Math.max(0, t)) * 4, i = Math.floor(p), f = p - i;
+    return k[i].map((c, j) => Math.round(c + f * (k[i + 1][j] - c)));
+  }
+  function kresliVodopad(v, fs, df, dom) {
+    const c = $('platnoSpektrum'), { x, w, h } = platno(c, c.clientWidth < 500 ? 0.9 : 0.45), B = barvy();
+    const sir = Math.max(64, Math.round(w - 34)), vys = Math.max(32, Math.round(h - 18));
+    if (vodopad.width !== sir || vodopad.height !== vys) { vodopad.width = sir; vodopad.height = vys; const g = vodopad.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, sir, vys); }
+    const g = vodopad.getContext('2d');
+    if (!spekZamek) {
+      g.drawImage(vodopad, 0, 0, sir, vys - 1, 0, 1, sir, vys - 1);
+      const radek = g.createImageData(sir, 1), fmin = 20, fmax = Math.min(20000, fs / 2), L = Math.log(fmax / fmin), hi = nast.dbPosun, lo = hi - 100;
+      for (let i = 0; i < sir; i++) {
+        const f = fmin * Math.exp(L * i / sir), k = Math.min(v.length - 1, Math.max(1, Math.round(f / df)));
+        const [r, gg, b] = barvaHladiny((v[k] - lo) / (hi - lo));
+        radek.data.set([r, gg, b, 255], i * 4);
+      }
+      g.putImageData(radek, 0, 0);
+    }
+    x.drawImage(vodopad, 34, 0, sir, vys);
+    const fmin = 20, fmax = Math.min(20000, fs / 2), L = Math.log(fmax / fmin), px = f => 34 + sir * Math.log(f / fmin) / L;
+    x.font = '11px system-ui'; x.fillStyle = B.muted; x.textAlign = 'center';
+    for (const f of [50, 100, 200, 500, 1000, 2000, 5000, 10000]) if (f <= fmax) x.fillText(f >= 1000 ? f / 1000 + 'k' : f, px(f), h - 5);
+    x.save(); x.translate(12, vys / 2); x.rotate(-Math.PI / 2); x.fillText('čas ↓', 0, 0); x.restore();
+    if (dom) { x.strokeStyle = B.warn; x.setLineDash([4, 4]); x.beginPath(); x.moveTo(px(dom.f), 0); x.lineTo(px(dom.f), vys); x.stroke(); x.setLineDash([]); }
+    x.textAlign = 'left';
+    if (kurzorF) {
+      x.strokeStyle = B.text; x.beginPath(); x.moveTo(px(kurzorF), 0); x.lineTo(px(kurzorF), vys); x.stroke();
+      const i = Math.round(kurzorF / df), no = J.nota(kurzorF);
+      $('spekKurzor').textContent = fmtHz(kurzorF) + (i < v.length ? ' · ' + C(v[i], 0) + ' dB' : '') + (no ? ' · ' + no.nazev : '');
+    }
+    platnoSpektrumInfo = { w: sir + 38, fmin, L };
+  }
+  function kresliTretiny(spekRaw, fs) {
+    const c = $('platnoSpektrum'), { x, w, h } = platno(c, c.clientWidth < 500 ? 0.8 : 0.35), B = barvy();
+    const pasma = J.tretinoveOktavy(spekRaw, fs, Z.anS.fftSize, nast.spekVaha).filter(p => p.db != null);
+    const hi = nast.dbPosun, lo = hi - 100, py = d => 4 + (h - 34) * (hi - Math.min(hi, Math.max(lo, d))) / (hi - lo);
+    x.font = '11px system-ui'; x.strokeStyle = B.border; x.fillStyle = B.muted; x.lineWidth = 1;
+    for (let d = Math.ceil(lo / 20) * 20; d <= hi; d += 20) { x.beginPath(); x.moveTo(30, py(d)); x.lineTo(w, py(d)); x.stroke(); x.fillText(Math.round(d), 2, py(d) + 4); }
+    const n = pasma.length, sl = (w - 34) / n;
+    pasma.forEach((p, i) => {
+      const db0 = p.db + nast.dbPosun, X = 34 + i * sl;
+      x.fillStyle = B.accent; x.fillRect(X + 1, py(db0), Math.max(1, sl - 2), h - 30 - py(db0));
+      if (i % (sl < 22 ? 3 : 1) === 0) { x.save(); x.fillStyle = B.muted; x.translate(X + sl / 2 + 4, h - 2); x.rotate(-Math.PI / 2.6); x.fillText(p.f >= 1000 ? p.f / 1000 + 'k' : p.f, 0, 0); x.restore(); }
+    });
+    platnoSpektrumInfo = null;
+  }
   $('platnoSpektrum').addEventListener('pointermove', e => {
     if (!platnoSpektrumInfo) return;
     const r = e.currentTarget.getBoundingClientRect(), t = (e.clientX - r.left - 34) / (platnoSpektrumInfo.w - 38);
     kurzorF = t < 0 || t > 1 ? null : platnoSpektrumInfo.fmin * Math.exp(t * platnoSpektrumInfo.L);
   });
   $('platnoSpektrum').addEventListener('pointerleave', () => { kurzorF = null; $('spekKurzor').textContent = '—'; });
+  $('spekZobr').value = nast.spekZobr || 'krivka';
+  $('spekZobr').addEventListener('change', e => { nast.spekZobr = e.target.value; uloz(); });
   $('spekVaha').value = nast.spekVaha;
   $('spekVaha').addEventListener('change', e => { nast.spekVaha = e.target.value; Z.spicky = null; uloz(); });
   $('spekZamek').addEventListener('click', e => { spekZamek = !spekZamek; e.currentTarget.setAttribute('aria-pressed', String(spekZamek)); });
@@ -415,7 +508,7 @@
   })();
 
   /* ---------- světlo ---------- */
-  const S = { stream: null, track: null, rucni: false, cap: null, t: 0, iso: 0, cekej: 0, timer: 0, senzor: null, demo: false, posledni: null };
+  const S = { gen: 0, startuje: false, stream: null, track: null, rucni: false, cap: null, t: 0, iso: 0, cekej: 0, timer: 0, senzor: null, demo: false, posledni: null };
   const vzorek = document.createElement('canvas'); vzorek.width = 64; vzorek.height = 48;
   function luxRezim(t, varovani) { const e = $('luxRezim'); e.textContent = t; e.style.color = varovani ? 'var(--warn)' : ''; }
   function zobrazLux(lux, jas, ev, expo, relativni) {
@@ -432,6 +525,7 @@
   $('luxTabulka').innerHTML = J.DOPORUCENI_LUX.map(([l, t]) => `<tr><td>${t}</td><td class="cislo">${l.toLocaleString('cs-CZ')}</td></tr>`).join('');
   async function startSvetlo(demo) {
     stopSvetlo();
+    S.startuje = !demo;
     $('svetloDemoStitek').hidden = !demo;
     $('luxStart').textContent = '⏹ Zastavit';
     if (demo) {
@@ -452,10 +546,13 @@
     startKamera();
   }
   async function startKamera() {
+    const gen = ++S.gen;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { luxRezim('Kamera není dostupná (prohlížeč nebo stránka bez https). Zkuste 🧪 Ukázku.', true); $('luxStart').textContent = '📷 Spustit kameru'; return; }
     try {
-      S.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: nast.kamera, width: { ideal: 320 }, height: { ideal: 240 } } });
-    } catch (e) { luxRezim('Kameru se nepodařilo spustit (' + e.name + '). Zkontrolujte povolení. Můžete zkusit 🧪 Ukázku.', true); $('luxStart').textContent = '📷 Spustit kameru'; return; }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: nast.kamera, width: { ideal: 320 }, height: { ideal: 240 } } });
+      if (gen !== S.gen) { stream.getTracks().forEach(t => t.stop()); return; }
+      S.stream = stream;
+    } catch (e) { if (gen !== S.gen) return; S.startuje = false; luxRezim('Kameru se nepodařilo spustit (' + e.name + '). Zkontrolujte povolení. Můžete zkusit 🧪 Ukázku.', true); $('luxStart').textContent = '📷 Spustit kameru'; return; }
     S.track = S.stream.getVideoTracks()[0];
     const v = $('luxVideo'); v.srcObject = S.stream; v.hidden = false;
     try { await v.play(); } catch (e) { /* přehraje se po interakci */ }
@@ -467,6 +564,8 @@
       S.iso = Math.min(cap.iso.max, Math.max(cap.iso.min, 100));
       try { await S.track.applyConstraints({ advanced: [{ exposureMode: 'manual', exposureTime: S.t, iso: S.iso }] }); S.rucni = true; S.cekej = 3; } catch (e) { S.rucni = false; }
     }
+    if (gen !== S.gen) return;
+    S.startuje = false;
     luxRezim(S.rucni ? 'Pevná expozice řízená stránkou – odhad v luxech z času, ISO a clony (orientační).'
       : 'Prohlížeč nedovolí ruční expozici – automatika kamery vyrovnává jas, takže číslo je jen relativní. Pro lux potřebujete Chrome na Androidu.', !S.rucni);
     S.timer = setInterval(merSvetlo, 250);
@@ -489,6 +588,7 @@
     if (t !== S.t) { S.t = t; S.cekej = 2; S.track.applyConstraints({ advanced: [{ exposureMode: 'manual', exposureTime: t, iso: S.iso }] }).catch(() => {}); }
   }
   function stopSvetlo() {
+    S.gen++; S.startuje = false;
     clearInterval(S.timer);
     if (S.senzor) { try { S.senzor.stop(); } catch (e) { /* nic */ } }
     if (S.stream) S.stream.getTracks().forEach(t => t.stop());
@@ -496,7 +596,7 @@
     $('luxVideo').hidden = true; $('luxVideo').srcObject = null;
     $('luxStart').textContent = '📷 Spustit kameru'; $('svetloDemoStitek').hidden = true;
   }
-  $('luxStart').addEventListener('click', () => (S.timer || S.senzor) ? stopSvetlo() : startSvetlo(false));
+  $('luxStart').addEventListener('click', () => (S.timer || S.senzor || S.startuje) ? stopSvetlo() : startSvetlo(false));
   $('luxDemo').addEventListener('click', () => startSvetlo(true));
   $('luxKamera').value = nast.kamera; $('luxClona').value = nast.clona; $('luxFaktor').value = nast.luxFaktor;
   $('luxKamera').addEventListener('change', e => { nast.kamera = e.target.value; uloz(); if (S.stream) startSvetlo(false); });
@@ -516,7 +616,7 @@
   }
 
   /* ---------- stroboskop ---------- */
-  const STR = { bezi: false, raf: 0, timer: 0, t0: 0, stream: null, track: null, svetlo: false, varovano: false };
+  const STR = { gen: 0, bezi: false, raf: 0, timer: 0, t0: 0, stream: null, track: null, svetlo: false, varovano: false };
   let fps = 60;
   (function merFps() {
     const iv = []; let pred = 0;
@@ -568,12 +668,16 @@
       STR.raf = requestAnimationFrame(k);
       return;
     }
+    const gen = ++STR.gen;
     try {
-      STR.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      if (gen !== STR.gen) { stream.getTracks().forEach(t => t.stop()); return; }
+      STR.stream = stream;
       STR.track = STR.stream.getVideoTracks()[0];
       const cap = STR.track.getCapabilities ? STR.track.getCapabilities() : {};
       if (!cap.torch) throw new Error('bez svítilny');
     } catch (e) {
+      if (gen !== STR.gen) return;
       stopStrobo();
       return Dialog.chyba('Svítilnu tento prohlížeč neumí ovládat (funguje hlavně Chrome na Androidu). Použijte displej.');
     }
@@ -586,6 +690,7 @@
     tik();
   }
   function stopStrobo() {
+    STR.gen++;
     if (!STR.bezi && !STR.stream) return;
     STR.bezi = false; cancelAnimationFrame(STR.raf); clearTimeout(STR.timer);
     const el = $('zablesky'); el.hidden = true; el.classList.remove('sviti');
@@ -600,15 +705,117 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && STR.bezi) stopStrobo(); });
 
   /* ---------- nabídky a příkazy ---------- */
+  /* ---------- deník měření ---------- */
+  const KLIC_DENIK = 'webapp_meraky_denik';
+  let denik = [];
+  try { denik = JSON.parse(localStorage.getItem(KLIC_DENIK) || '[]') || []; } catch (e) { denik = []; }
+  function ulozDenik() { try { localStorage.setItem(KLIC_DENIK, JSON.stringify(denik)); } catch (e) { Dialog.chyba('Deník se nepodařilo uložit – úložiště prohlížeče je plné.'); } pocetDenik(); }
+  const pocetDenik = () => { $('denikPocet').textContent = denik.length ? '(' + denik.length + ')' : ''; };
+  const datumSoubor = () => new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '_');
+  function stahni(nazev, obsah, typ) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([obsah], { type: typ + ';charset=utf-8' })); a.download = nazev;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  const NAZVY = {};
+  document.querySelectorAll('.nabidka [data-zalozka]').forEach(b => { NAZVY[b.dataset.zalozka] = b.textContent.trim(); });
+  /* Hodnoty k zápisu ze starých přístrojů (nové je mají v modulu). */
+  const ZAPIS = {
+    vodovaha: () => ({ hodnota: $('vodVelke').textContent, detail: $('vodPoloha').textContent + ' · ' + [...$('vodCisla').querySelectorAll('div')].map(d => d.querySelector('b').textContent + ' ' + d.querySelector('span').textContent).join(' · ') }),
+    sklon: () => ({ hodnota: $('sklonVelke').textContent, detail: $('sklonProc').textContent + ' · 1 : ' + $('sklonPomer').textContent.replace('1 : ', '') + ($('sklonRel').textContent !== '—' ? ' · od A ' + $('sklonRel').textContent : '') + ' · ' + $('sklonHrana').selectedOptions[0].text }),
+    hluk: () => ({ hodnota: $('hlukVelke').textContent, detail: 'Leq ' + $('hlukLeq').textContent + ' · max ' + $('hlukMax').textContent + ' · min ' + $('hlukMin').textContent + ' · ' + $('hlukCas').textContent + ' · LEX,8h ' + $('hlukLex').textContent + (Z.demo ? ' · UKÁZKA' : '') }),
+    spektrum: () => ({ hodnota: $('spekF').textContent, detail: $('spekNota').textContent + ' · ' + $('spekRpm').textContent + (Z.demo ? ' · UKÁZKA' : '') }),
+    svetlo: () => ({ hodnota: $('luxVelke').textContent, detail: $('luxRezim').textContent.slice(0, 80) + ' · ' + $('luxExpo').textContent }),
+    strobo: () => ({ hodnota: C(strF(), 3) + ' Hz', detail: C(J.hzNaRpm(strF(), nast.str.znacek), 1) + ' ot/min · značek ' + nast.str.znacek })
+  };
+  function zapisDenik(pristroj, hodnota, detail) {
+    denik.unshift({ t: Date.now(), p: pristroj, h: hodnota, d: detail || '', n: '' });
+    if (denik.length > 1000) denik.length = 1000;
+    ulozDenik();
+  }
+  async function zapis() {
+    const f = (MODULY[zalozka] && MODULY[zalozka].zapis) || ZAPIS[zalozka];
+    if (!f) return Dialog.info('Otevřete nějaký přístroj – zapíše se jeho aktuální hodnota.');
+    const r = f();
+    if (!r || r.hodnota == null || /^—/.test(r.hodnota)) return Dialog.info('Přístroj zatím nic nenaměřil.');
+    const demo = !!document.querySelector(`[data-panel="${zalozka}"] .demo-stitek:not([hidden])`);
+    zapisDenik(NAZVY[zalozka] || zalozka, r.hodnota, (r.detail || '') + (demo && !/UKÁZKA/.test(r.detail || '') ? ' · UKÁZKA' : ''));
+    const tl = document.querySelector('[data-prikaz="zapis"]'); tl.textContent = '✔'; setTimeout(() => { tl.innerHTML = '📝<span class="txt"> Zapsat</span>'; }, 900);
+  }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function kresliDenik() {
+    $('denikTelo').innerHTML = denik.length ? denik.map((r, i) => `<tr><td style="white-space:nowrap">${esc(new Date(r.t).toLocaleString('cs-CZ'))}</td><td>${esc(r.p)}</td><td class="cislo"><b>${esc(r.h)}</b></td><td class="pozn" style="margin:0">${esc(r.d)}</td><td class="pozn-bunka" contenteditable="plaintext-only" data-i="${i}" data-i18n="ne">${esc(r.n)}</td><td><button class="btn mini" data-smaz="${i}" aria-label="Smazat záznam">✖</button></td></tr>`).join('')
+      : '<tr><td colspan="6" class="pozn">Deník je prázdný.</td></tr>';
+  }
+  $('denikTelo').addEventListener('focusout', e => { const i = e.target.dataset.i; if (i != null && denik[i]) { denik[i].n = e.target.textContent.trim(); ulozDenik(); } });
+  $('denikTelo').addEventListener('click', e => { const i = e.target.dataset.smaz; if (i != null) { denik.splice(+i, 1); ulozDenik(); kresliDenik(); } });
+  const denikRadky = () => [['čas', 'přístroj', 'hodnota', 'podrobnosti', 'poznámka']].concat(denik.map(r => [new Date(r.t).toLocaleString('cs-CZ'), r.p, r.h, r.d, r.n]));
+  $('denikCsv').addEventListener('click', () => denik.length ? stahni('mereni_' + datumSoubor() + '.csv', J.csv(denikRadky()), 'text/csv') : Dialog.info('Deník je prázdný.'));
+  $('denikKopie').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(denikRadky().map(r => r.join('\t')).join('\n')); Dialog.info('Zkopírováno – vložíte do tabulky nebo zprávy.'); }
+    catch (e) { Dialog.chyba('Schránka není dostupná.'); }
+  });
+  $('denikSmaz').addEventListener('click', async () => { if (denik.length && await Dialog.potvrd('Smazat všech ' + denik.length + ' záznamů deníku?')) { denik = []; ulozDenik(); kresliDenik(); } });
+  pocetDenik();
+
+  /* ---------- displej nezhasíná (Wake Lock) ---------- */
+  let zamekDispleje = null, chciDisplej = false;
+  async function displej(ano) {
+    chciDisplej = ano;
+    $('tlDisplej').setAttribute('aria-pressed', String(ano));
+    if (ano && !zamekDispleje && navigator.wakeLock && document.visibilityState === 'visible') {
+      try { zamekDispleje = await navigator.wakeLock.request('screen'); zamekDispleje.addEventListener('release', () => { zamekDispleje = null; }); }
+      catch (e) { chciDisplej = false; $('tlDisplej').setAttribute('aria-pressed', 'false'); Dialog.chyba('Prohlížeč nedovolil držet displej rozsvícený (' + e.name + ').'); }
+    } else if (!ano && zamekDispleje) { zamekDispleje.release().catch(() => {}); zamekDispleje = null; }
+  }
+  $('tlDisplej').addEventListener('click', () => {
+    if (!navigator.wakeLock) return Dialog.info('Tento prohlížeč neumí zabránit zhasnutí displeje. Prodlužte dobu do zhasnutí v nastavení telefonu.');
+    displej(!chciDisplej);
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && chciDisplej) displej(true); });
+
+  /* ---------- přehled ---------- */
+  function senzoryStav() {
+    const ano = '✅', mozna = '❔', ne = '❌', https = window.isSecureContext;   // ❔ se nezobrazuje
+    const pohyb = typeof DeviceMotionEvent !== 'undefined' && https ? (P.posledni ? ano : mozna) : ne;
+    const media = navigator.mediaDevices && navigator.mediaDevices.getUserMedia && https ? mozna : ne;
+    return {
+      pohyb, media, kompas: typeof DeviceOrientationEvent !== 'undefined' && https ? mozna : ne,
+      gps: navigator.geolocation && https ? mozna : ne, vzdy: mozna
+    };
+  }
+  const POPISY = {
+    vodovaha: ['🫧', 'naplocho i na hraně', 'pohyb'], sklon: ['📐', 'střechy, rampy, úhel ploch', 'pohyb'], kompas: ['🧭', 'azimut, deklinace, cíl', 'kompas'],
+    vyska: ['🌳', 'strom, dům, stožár', 'pohyb'], pravitko: ['📏', 'měření na displeji', 'vzdy'],
+    vibrace: ['📳', 'otřesy, frekvence, seismograf', 'pohyb'], otacky: ['💿', 'gramofon, točna', 'pohyb'], kroky: ['🚶', 'kroky, vzdálenost', 'pohyb'], gps: ['🚗', 'rychlost, trasa GPX', 'gps'],
+    hluk: ['🔊', 'dB(A), Leq, denní dávka', 'media'], spektrum: ['📊', 'frekvence, vodopád', 'media'], ladicka: ['🎵', 'kytara, housle, chromatická', 'media'], generator: ['🔈', 'tóny, šum, přeladění', 'vzdy'],
+    svetlo: ['💡', 'osvětlení v luxech', 'media'], strobo: ['🌀', 'otáčky bliknutím', 'vzdy'], tep: ['❤️', 'puls kamerou', 'media']
+  };
+  function kresliPrehled() {
+    const st = senzoryStav();
+    let html = '';
+    document.querySelectorAll('.lista [data-nabidka][data-kat]').forEach(k => {
+      html += `<div class="kat">${esc(k.textContent.replace('▾', '').trim())}</div>`;
+      $(k.dataset.nabidka).querySelectorAll('[data-zalozka]').forEach(b => {
+        const z = b.dataset.zalozka, p = POPISY[z] || ['', '', 'vzdy'];
+        html += `<button data-zalozka="${z}"><span class="ikona">${p[0]}</span><span>${esc(b.textContent.replace(p[0], '').trim())} ${st[p[2]] === '❔' ? '' : st[p[2]]}</span><small>${esc(p[1])}</small></button>`;
+      });
+    });
+    $('prehledDlazdice').innerHTML = html;
+  }
+  MODULY.prehled = { start: kresliPrehled };
+
   const PRIKAZY = {
     napoveda: () => $('dlgNapoveda').showModal(),
+    zapis,
     nulaVodovaha: () => { prepni('vodovaha'); nulaVodovaha(); },
     otoceniVodovaha, nulaSklon, kalHluk, kalSvetlo,
-    zvukStart: () => (Z.ctx && !Z.demo) ? stopZvuk() : startZvuk(false),
+    zvukStart: () => ((Z.ctx && !Z.demo) || Z.startuje) ? stopZvuk() : startZvuk(false),
     zvukDemo: () => startZvuk(true),
     zrusKalibrace: async () => {
       if (!await Dialog.potvrd('Vrátit všechny kalibrace (vodováha, sklon, hlukoměr, luxmetr) na výchozí hodnoty?')) return;
-      nast.kal = Object.assign({}, VYCHOZI.kal); nast.dbPosun = VYCHOZI.dbPosun; nast.luxFaktor = VYCHOZI.luxFaktor; uloz();
+      nast.kal = Object.assign({}, VYCHOZI.kal); nast.dbPosun = VYCHOZI.dbPosun; nast.luxFaktor = VYCHOZI.luxFaktor; nast.pxNaMm = null; uloz();
       $('hlukPosun').value = nast.dbPosun; $('luxFaktor').value = nast.luxFaktor;
       Dialog.info('Kalibrace zrušeny.');
     }
@@ -626,18 +833,31 @@
     const r = b.getBoundingClientRect();
     n.style.top = (r.bottom + 4) + 'px';
     n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+    const prvni = n.querySelector('button'); if (prvni) prvni.focus();
   }));
+  document.addEventListener('keydown', e => {
+    const n = document.querySelector('.nabidka:not([hidden])');
+    if (!n) return;
+    const tl = [...n.querySelectorAll('button')], i = tl.indexOf(document.activeElement);
+    if (e.key === 'Escape') { const b = document.querySelector('[data-nabidka][aria-expanded="true"]'); zavriNabidky(); if (b) b.focus(); e.preventDefault(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { tl[(i + (e.key === 'ArrowDown' ? 1 : tl.length - 1)) % tl.length].focus(); e.preventDefault(); }
+  });
   document.addEventListener('click', e => {
     const p = e.target.closest('[data-prikaz]');
     if (p) { e.stopPropagation(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](); }
     if (!e.target.closest('.nabidka')) zavriNabidky();
     const z = e.target.closest('[data-zalozka]');
-    if (z) prepni(z.dataset.zalozka);
+    if (z) { zavriNabidky(); prepni(z.dataset.zalozka); }
   });
   $('povolSenzory').addEventListener('click', povolSenzory);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stopStrobo(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { stopStrobo(); stopZvuk(); stopSvetlo(); } });   // ať nesvítí kontrolka kamery/mikrofonu
 
-  infoStrobo();
-  prepni(zalozka);
-  window.MerakyApp = { prepni, startZvuk, startSvetlo, P, Z };
+  window.MerakyApp = {
+    J, $, C, nast, uloz, barvy, platno, minSek, fmtHz, esc, stahni, datumSoubor, zapisDenik, P, Z, odberPohybu,
+    prepni, startZvuk, stopZvuk, startSvetlo, startPohyb, aktualniU, uhelObrazovky, hlaskaSenzory,
+    get zalozka() { return zalozka; },
+    registruj(id, m) { MODULY[id] = m; },
+    prikaz(nazev, f) { PRIKAZY[nazev] = f; },
+    spust() { infoStrobo(); prepni(zalozka); }
+  };
 })();

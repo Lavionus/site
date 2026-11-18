@@ -370,6 +370,215 @@
   /** Světový soubor (.pgw) pro PNG v EPSG:3857. */
   const worldFile = m => [m.d, 0, 0, -m.d, m.x0 + m.d / 2, m.y0 - m.d / 2].map(x => x.toFixed(6)).join('\n') + '\n';
 
+
+  // ---------- rádiový spoj: Fresnelova zóna, útlum ----------
+  const C_SVETLA = 299792458;
+  /** Poloměr n-té Fresnelovy zóny (m) v bodě d1 od A a d2 od B. */
+  const fresnelR = (lambda, d1, d2, n) => Math.sqrt((n || 1) * lambda * d1 * d2 / (d1 + d2));
+  /** Difrakční útlum ostří nože (dB) podle ITU-R P.526: J(ν) = 6,9 + 20·log(√((ν−0,1)²+1) + ν − 0,1), pro ν ≤ −0,78 nula. */
+  const utlumNoze = v => v <= -0.78 ? 0 : 6.9 + 20 * Math.log10(Math.sqrt((v - 0.1) ** 2 + 1) + v - 0.1);
+  /** Útlum volného prostoru (dB) pro vzdálenost D (m) a frekvenci f (MHz). */
+  const utlumVolny = (D, fMHz) => 20 * Math.log10(D / 1000) + 20 * Math.log10(fMHz) + 32.44;
+  /** Rozbor čáry pohledu pro rádiový spoj na frekvenci fMHz: nejhorší vůle ve zlomcích 1. Fresnelovy zóny,
+      parametr ν a útlum ostří nože u nejhorší překážky, poloměr F1 uprostřed, útlum volného prostoru. */
+  function radioSpoj(los, fMHz) {
+    const lambda = C_SVETLA / (fMHz * 1e6), D = los.D;
+    let minPomer = Infinity, nej = null, maxV = -Infinity;
+    for (const v of los.vzorky) {
+      const d1 = v.d, d2 = D - d1;
+      if (!(v.zEf === v.zEf) || d1 <= 0 || d2 <= 0) continue;
+      const r1 = fresnelR(lambda, d1, d2), h = v.cara - v.zEf, pomer = h / r1;
+      if (pomer < minPomer) { minPomer = pomer; nej = { d: d1, vule: h, r1 }; }
+      const nu = -h * Math.sqrt(2 / lambda * (1 / d1 + 1 / d2));
+      if (nu > maxV) maxV = nu;
+    }
+    if (!nej) return null;
+    const difrakce = utlumNoze(maxV);
+    return { lambda, fMHz, minPomer, nejhorsi: nej, nu: maxV, difrakce, r1Stred: fresnelR(lambda, D / 2, D / 2),
+      volny: utlumVolny(D, fMHz), celkem: utlumVolny(D, fMHz) + difrakce,
+      verdikt: minPomer >= 0.6 ? 'volno' : minPomer >= 0 ? 'zasah' : 'zakryto' };
+  }
+
+  // ---------- Slunce a Měsíc ----------
+  /** Dny od J2000.0 (TT ≈ UT – rozdíl ~70 s je pod přesností metody). */
+  const dnyJ2000 = t => t / 86400000 + 2440587.5 - 2451545.0;
+  const norm360 = x => ((x % 360) + 360) % 360;
+  /** Rovníkové souřadnice (°) → výška a azimut (°, 0 = sever) pro místo a čas. */
+  function rovnikNaObzor(ra, dec, t, lat, lon) {
+    const d = dnyJ2000(t), gmst = norm360(280.46061837 + 360.98564736629 * d);
+    const H = (gmst + lon - ra) * D2R, f = lat * D2R, de = dec * D2R;
+    const sinH = Math.sin(f) * Math.sin(de) + Math.cos(f) * Math.cos(de) * Math.cos(H);
+    const alt = Math.asin(Math.max(-1, Math.min(1, sinH)));
+    const az = Math.atan2(-Math.cos(de) * Math.sin(H), Math.sin(de) * Math.cos(f) - Math.cos(de) * Math.sin(f) * Math.cos(H));
+    return { alt: alt * R2D, az: norm360(az * R2D) };
+  }
+  function eklNaRovnik(l, b, d) {
+    const e = (23.4393 - 3.563e-7 * d) * D2R, L = l * D2R, B = b * D2R;
+    const ra = Math.atan2(Math.sin(L) * Math.cos(e) - Math.tan(B) * Math.sin(e), Math.cos(L));
+    const dec = Math.asin(Math.sin(B) * Math.cos(e) + Math.cos(B) * Math.sin(e) * Math.sin(L));
+    return { ra: norm360(ra * R2D), dec: dec * R2D };
+  }
+  /** Ekliptikální délka Slunce (°) – zkrácená metoda Astronomical Almanac, přesnost ~0,01°. */
+  function delkaSlunce(d) {
+    const g = (357.529 + 0.98560028 * d) * D2R, q = 280.459 + 0.98564736 * d;
+    return norm360(q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g));
+  }
+  /** Geometrická (pravá) poloha středu Slunce: { alt, az }. */
+  function poziceSlunce(t, lat, lon) {
+    const d = dnyJ2000(t), r = eklNaRovnik(delkaSlunce(d), 0, d);
+    return rovnikNaObzor(r.ra, r.dec, t, lat, lon);
+  }
+  /** Měsíc: hlavní poruchy (evekce, variace, roční rovnice), přesnost ~0,1–0,2°; topocentrická výška (paralaxa ~1°). */
+  function poziceMesice(t, lat, lon) {
+    const d = dnyJ2000(t);
+    const L = 218.316 + 13.176396 * d, M = (134.963 + 13.064993 * d) * D2R, F = (93.272 + 13.229350 * d) * D2R;
+    const Dm = (297.850 + 12.190749 * d) * D2R, Ms = (357.529 + 0.98560028 * d) * D2R;
+    const l = L + 6.289 * Math.sin(M) - 1.274 * Math.sin(M - 2 * Dm) + 0.658 * Math.sin(2 * Dm) - 0.186 * Math.sin(Ms)
+      + 0.214 * Math.sin(2 * M) - 0.114 * Math.sin(2 * F);
+    const b = 5.128 * Math.sin(F) - 0.173 * Math.sin(F - 2 * Dm);
+    const vzd = 385001 - 20905 * Math.cos(M) - 3699 * Math.cos(2 * Dm - M) - 2956 * Math.cos(2 * Dm);   // km
+    const r = eklNaRovnik(l, b, d), o = rovnikNaObzor(r.ra, r.dec, t, lat, lon);
+    const paralaxa = Math.asin(6378.14 / vzd) * R2D;
+    const elong = Math.acos(Math.cos(b * D2R) * Math.cos((l - delkaSlunce(d)) * D2R)) * R2D;
+    return { alt: o.alt - paralaxa * Math.cos(o.alt * D2R), az: o.az, vzd, osvetleni: (1 - Math.cos(elong * D2R)) / 2,
+      dorusta: norm360(l - delkaSlunce(d)) < 180 };
+  }
+  /** Astronomická refrakce (°) pro pravou výšku h (°) – Sæmundsson; pod −2° se nepočítá. */
+  const refrakceAtm = h => h < -2 ? 0 : 1.02 / Math.tan((h + 10.3 / (h + 5.11)) * D2R) / 60;
+  const POLOMER_SLUNCE = 0.2666, POLOMER_MESICE = 0.259;
+  /** Úhel obzoru panoramatu (°) v azimutu az – lineární interpolace. */
+  function obzorVAzimutu(pan, az) {
+    const x = norm360(az) / pan.krokAz, a = Math.floor(x) % pan.pocet, b = (a + 1) % pan.pocet, f = x - Math.floor(x);
+    const u = pan.obzor[a], v = pan.obzor[b];
+    if (!(u === u)) return v; if (!(v === v)) return u;
+    return u + (v - u) * f;
+  }
+  /** Zdánlivá výška horního okraje tělesa: pravá výška + refrakce + poloměr kotouče. */
+  function horniOkraj(teleso, t, lat, lon) {
+    const p = teleso === 'mesic' ? poziceMesice(t, lat, lon) : poziceSlunce(t, lat, lon);
+    return Object.assign(p, { zdanliva: p.alt + refrakceAtm(p.alt) + (teleso === 'mesic' ? POLOMER_MESICE : POLOMER_SLUNCE) });
+  }
+  /** Východy a západy tělesa v intervalu [t0, t1] (ms) proti obzoru obzorFn(az) (°); krok v minutách.
+      obzorFn = () => 0 dává astronomický (matematický) obzor. Vrací [{ t, typ: 'vychod'|'zapad', az }]. */
+  function vychodyZapady(teleso, lat, lon, t0, t1, obzorFn, krokMin) {
+    const krok = (krokMin || 2) * 60000, out = [];
+    const f = t => { const p = horniOkraj(teleso, t, lat, lon); return { r: p.zdanliva - obzorFn(p.az), az: p.az }; };
+    let ta = t0, fa = f(ta);
+    for (let tb = t0 + krok; tb <= t1 + 1; tb += krok) {
+      const fb = f(tb);
+      if ((fa.r < 0) !== (fb.r < 0)) {
+        // zpřesnění půlením intervalu na sekundy
+        let lo = ta, hi = tb, flo = fa.r;
+        while (hi - lo > 1000) { const mid = (lo + hi) / 2, fm = f(mid).r; if ((fm < 0) === (flo < 0)) { lo = mid; flo = fm; } else hi = mid; }
+        const tt = (lo + hi) / 2;
+        out.push({ t: tt, typ: fa.r < 0 ? 'vychod' : 'zapad', az: f(tt).az });
+      }
+      ta = tb; fa = fb;
+    }
+    return out;
+  }
+  /** Dráha tělesa po krocích (min): [{ t, alt (zdánlivá výška středu), az }]. */
+  function drahaTelesa(teleso, lat, lon, t0, t1, krokMin) {
+    const out = [];
+    for (let t = t0; t <= t1; t += krokMin * 60000) {
+      const p = teleso === 'mesic' ? poziceMesice(t, lat, lon) : poziceSlunce(t, lat, lon);
+      out.push({ t, alt: p.alt + refrakceAtm(p.alt), az: p.az });
+    }
+    return out;
+  }
+
+  // ---------- více stanovisek ----------
+  /** Obdélník v Mercatoru pokrývající dosah všech stanovisek. */
+  function oblastStanovist(seznam, dosah) {
+    const o = { xmin: Infinity, ymin: Infinity, xmax: -Infinity, ymax: -Infinity };
+    for (const s of seznam) {
+      const b = oblastKolem(s.lat, s.lon, dosah);
+      o.xmin = Math.min(o.xmin, b.xmin); o.ymin = Math.min(o.ymin, b.ymin); o.xmax = Math.max(o.xmax, b.xmax); o.ymax = Math.max(o.ymax, b.ymax);
+    }
+    return o;
+  }
+  /** Kumulace: pro výšku cíle t bitová maska stanovisek, která buňku vidí (max. 32), a jejich počet.
+      pocet = 255 → buňka mimo dosah všech stanovisek / bez dat. */
+  function kumuluj(potreby, t) {
+    const n = potreby[0].length, maska = new Uint32Array(n), pocet = new Uint8Array(n).fill(255);
+    potreby.forEach((q, k) => {
+      const bit = 2 ** k;
+      for (let i = 0; i < n; i++) {
+        const v = q[i];
+        if (!(v === v)) continue;
+        if (pocet[i] === 255) pocet[i] = 0;
+        if (v <= t) { maska[i] += bit; pocet[i]++; }
+      }
+    });
+    return { maska, pocet };
+  }
+  /** Plochy kumulace: celkem vidí aspoň jedno, všechna, podle počtu, a pro každé stanoviště plocha a plocha „jen odsud“. */
+  function statistikaKumulace(m, kum, nStan) {
+    const W = m.sirka, cr = cosRadku(m), poPoctu = new Float64Array(nStan + 1), stan = [];
+    for (let k = 0; k < nStan; k++) stan.push({ plocha: 0, jen: 0 });
+    let pokryto = 0;
+    for (let r = 0; r < m.vyska; r++) {
+      const a = (m.d * cr[r]) ** 2;
+      for (let s = 0; s < W; s++) {
+        const i = r * W + s, p = kum.pocet[i];
+        if (p === 255) continue;
+        pokryto += a; poPoctu[p] += a;
+        if (!p) continue;
+        const mk = kum.maska[i];
+        for (let k = 0; k < nStan; k++) if (Math.floor(mk / 2 ** k) % 2) { stan[k].plocha += a; if (p === 1) stan[k].jen += a; }
+      }
+    }
+    return { pokryto, aspon1: pokryto - poPoctu[0], vsechna: poPoctu[nStan], poPoctu: Array.from(poPoctu), stan };
+  }
+
+  // ---------- KML a GeoTIFF ----------
+  const xmlEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  /** KML: viditelná oblast (obdélníky jako polygony) + body { nazev, lat, lon, popis }. */
+  function kmlViditelnosti(obdelniky, body, nazev) {
+    const sour = ([x, y]) => `${zaokr(x)},${zaokr(y)},0`;
+    const poly = obdelniky.map(([[x0, y0], [x1, y1]]) => `<Polygon><outerBoundaryIs><LinearRing><coordinates>${[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]].map(sour).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon>`).join('');
+    const pm = (body || []).map(b => `<Placemark><name>${xmlEsc(b.nazev)}</name>${b.popis ? `<description>${xmlEsc(b.popis)}</description>` : ''}<Point><coordinates>${zaokr(b.lon)},${zaokr(b.lat)},0</coordinates></Point></Placemark>`).join('\n');
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${xmlEsc(nazev || 'Viditelnost')}</name>
+<Style id="vid"><LineStyle><width>0</width></LineStyle><PolyStyle><color>8822c55e</color><outline>0</outline></PolyStyle></Style>
+<Placemark><name>${xmlEsc(nazev || 'Viditelná oblast')}</name><styleUrl>#vid</styleUrl><MultiGeometry>${poly}</MultiGeometry></Placemark>
+${pm}
+</Document></kml>`;
+  }
+  /** Jednopásmový GeoTIFF uint8 v EPSG:3857 (PixelIsArea), nodata 255. data = Uint8Array(sirka·vyska). */
+  function geotiffU8(m, data) {
+    const W = m.sirka, H = m.vyska, nTag = 15;
+    const ifd = 8, ifdLen = 2 + nTag * 12 + 4;
+    let ofs = ifd + ifdLen;
+    const scaleOfs = ofs; ofs += 24;
+    const tieOfs = ofs; ofs += 48;
+    const geo = [1, 1, 0, 3, 1024, 0, 1, 1, 1025, 0, 1, 1, 3072, 0, 1, 3857];
+    const geoOfs = ofs; ofs += geo.length * 2;
+    const nodata = '255\0', ndOfs = ofs; ofs += 4;
+    const dataOfs = ofs, buf = new ArrayBuffer(dataOfs + W * H), dv = new DataView(buf);
+    dv.setUint8(0, 0x49); dv.setUint8(1, 0x49); dv.setUint16(2, 42, true); dv.setUint32(4, ifd, true);
+    dv.setUint16(ifd, nTag, true);
+    const tagy = [[256, 4, 1, W], [257, 4, 1, H], [258, 3, 1, 8], [259, 3, 1, 1], [262, 3, 1, 1], [273, 4, 1, dataOfs], [277, 3, 1, 1],
+      [278, 4, 1, H], [279, 4, 1, W * H], [284, 3, 1, 1], [339, 3, 1, 1], [33550, 12, 3, scaleOfs], [33922, 12, 6, tieOfs], [34735, 3, geo.length, geoOfs], [42113, 2, 4, ndOfs]];
+    tagy.forEach(([id, typ, poc, v], i) => {
+      const o = ifd + 2 + i * 12;
+      dv.setUint16(o, id, true); dv.setUint16(o + 2, typ, true); dv.setUint32(o + 4, poc, true);
+      if (typ === 3 && poc === 1) dv.setUint16(o + 8, v, true); else dv.setUint32(o + 8, v, true);
+    });
+    dv.setUint32(ifd + 2 + nTag * 12, 0, true);
+    [m.d, m.d, 0].forEach((v, i) => dv.setFloat64(scaleOfs + i * 8, v, true));
+    [0, 0, 0, m.x0, m.y0, 0].forEach((v, i) => dv.setFloat64(tieOfs + i * 8, v, true));
+    geo.forEach((v, i) => dv.setUint16(geoOfs + i * 2, v, true));
+    for (let i = 0; i < 4; i++) dv.setUint8(ndOfs + i, nodata.charCodeAt(i));
+    new Uint8Array(buf, dataOfs).set(data);
+    return new Uint8Array(buf);
+  }
+  /** Maska pro GeoTIFF z potřeb: 1 = vidět, 0 = skryto, 255 = mimo dosah / bez dat. */
+  function maskaViditelnosti(potreba, t) {
+    const out = new Uint8Array(potreba.length);
+    for (let i = 0; i < potreba.length; i++) { const v = potreba[i]; out[i] = v === v ? (v <= t ? 1 : 0) : 255; }
+    return out;
+  }
+
   // ---------- formát ----------
   const cislo = (x, des) => (x === null || x === undefined || !isFinite(x)) ? '–' : x.toLocaleString('cs-CZ', { minimumFractionDigits: des || 0, maximumFractionDigits: des || 0 }).replace(/ /g, ' ');
   const delkaText = mm => mm >= 10000 ? cislo(mm / 1000, 0) + ' km' : mm >= 1000 ? cislo(mm / 1000, 1) + ' km' : cislo(mm, 0) + ' m';
@@ -381,7 +590,9 @@
     R_ZEME, R_MERC, OBVOD, K_REFR, mercNaLat, mercNaLon, latNaMerc, lonNaMerc, vzdalenost, azimut, cilovyBod,
     pokles, vzdalenostObzoru, dohledDvou, vytvorMrizku, cosRadku, bodNaBunku, bunkaNaBod, hranice, bunkaMetru, obsahujeBod, vyskaV,
     viewshed, statistika, panorama, caraPohledu, terrariumVyska, pixelyProObdelnik, volbaZoomu, mrizkaZPixelu, oblastKolem, oblastUsecky, ctiTiffF32,
-    vrcholyZOsm, ohodnotVrcholy, obdelnikyViditelnosti, geojsonViditelnosti, worldFile, cislo, delkaText, plochaText, smer
+    vrcholyZOsm, ohodnotVrcholy, obdelnikyViditelnosti, geojsonViditelnosti, worldFile, cislo, delkaText, plochaText, smer,
+    fresnelR, utlumNoze, utlumVolny, radioSpoj, poziceSlunce, poziceMesice, refrakceAtm, obzorVAzimutu, horniOkraj, vychodyZapady, drahaTelesa,
+    oblastStanovist, kumuluj, statistikaKumulace, kmlViditelnosti, geotiffU8, maskaViditelnosti
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else self.VIDITELNOST = API;

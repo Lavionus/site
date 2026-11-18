@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Výška osoby z fotky</title>
+<meta name="description" content="Forenzní fotogrammetrie: odhad výšky osoby z jedné fotografie nebo snímku kamery. Úběžníky, horizont, referenční výška, dvojpoměr (Criminisi), korekce na obuv a chůzi, Monte Carlo nejistota, korekce zkreslení objektivu a protokol k tisku.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="vysetrovani/pripad.js"></script>
+<script src="vyska_z_fotky/jadro.js"></script>
+<script src="vysetrovani/metoda.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px;max-width:160px}
+@media (max-width:1450px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.82rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.mini{padding:3px 8px;font-size:.76rem}
+.btn.danger{color:var(--danger)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:.84rem;font-family:inherit;min-width:0}
+
+/* pracovní plocha */
+.prace{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
+.plocha{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--bg-deep)}
+.stav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 10px;font-size:.82rem;background:var(--bg-panel);border-bottom:1px solid var(--border);min-height:34px}
+.stav .rada{flex:1;min-width:180px;color:var(--text-muted)}
+.stav .rada b{color:var(--text)}
+.platno-obal{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none}
+#platno{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#platno.posun{cursor:grab}
+#lupa{position:absolute;top:10px;left:10px;width:170px;height:170px;border-radius:50%;border:2px solid var(--accent);box-shadow:var(--shadow);background:#000;pointer-events:none}
+#lupa.vpravo{left:auto;right:10px}
+.prazdna{position:absolute;inset:0;display:flex;padding:14px;text-align:center;color:var(--text-muted);line-height:1.55}
+.prazdna{overflow:auto}
+.prazdna .karta-uvod{background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:10px;padding:18px;max-width:620px;margin:auto}
+.zoom{position:absolute;right:10px;bottom:10px;display:flex;gap:4px}
+
+aside.panel{border-left:1px solid var(--border);background:var(--bg);overflow-y:auto;min-width:0;padding:8px 10px 60px}
+.panel details{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.panel summary{padding:8px 10px;cursor:pointer;font-weight:600;font-size:.9rem;list-style-position:inside}
+.panel .obsah{padding:2px 10px 10px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;font-size:.84rem}
+.vysledek-hlavni{font-size:1.7rem;font-weight:700;line-height:1.1}
+.vysledek-hlavni small{font-size:.9rem;font-weight:500;color:var(--text-muted)}
+.muted{color:var(--text-muted);font-size:.8rem;line-height:1.45}
+.varovani{border-left:3px solid var(--warn);background:var(--bg);padding:6px 8px;border-radius:4px;font-size:.8rem;line-height:1.45}
+.chyba-txt{border-left:3px solid var(--danger);background:var(--bg);padding:6px 8px;border-radius:4px;font-size:.8rem;line-height:1.45}
+.pravda{color:var(--ok);font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{text-align:left;padding:4px 5px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.72rem}
+td.c,th.c{text-align:right;white-space:nowrap}
+.polozka{border:1px solid var(--border);border-radius:6px;padding:7px 8px;display:grid;gap:6px;background:var(--bg)}
+.polozka.vybrana{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.polozka .hlava{display:flex;gap:6px;align-items:center}
+.polozka .hlava .vstup{flex:1;width:0;min-width:0}
+.polozka{grid-template-columns:minmax(0,1fr)}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:6px}
+.pole{display:grid;gap:2px;font-size:.74rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.korekce{display:grid;grid-template-columns:minmax(0,1fr) 62px 62px 26px;gap:4px;align-items:center}
+.korekce .vstup{padding:3px 5px;font-size:.78rem}
+.znak{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.4)}
+.sady{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center}
+.radek-tl{display:flex;gap:6px;flex-wrap:wrap}
+
+/* úvod a galerie ukázek */
+.uvod-ukazky{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:12px;text-align:left}
+.uvod-ukazky .tl{white-space:normal;text-align:left;padding:6px 8px;font-size:.8rem}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.karta-uk{border:1px solid var(--border);border-radius:8px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.karta-uk canvas{width:100%;aspect-ratio:3/2;display:block;background:var(--bg-deep);border-bottom:1px solid var(--border)}
+.karta-uk .telo-k{padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.karta-uk h3{margin:0;font-size:.92rem}
+.karta-uk p{margin:0}
+.karta-uk ul{margin:0;padding-left:18px;font-size:.78rem;line-height:1.45}
+.karta-uk .btn{margin-top:auto;align-self:flex-start}
+dialog.okno.siroke{width:min(96vw,1040px)}
+/* průvodce */
+.kroky{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.kroky li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;align-items:center;padding:4px 6px;border-radius:6px;border:1px solid transparent}
+.kroky li.ted{border-color:var(--accent);background:var(--accent-soft)}
+.kroky .st{text-align:center}
+.kroky .k-nazev{font-weight:600;font-size:.82rem}
+.kroky .k-info{color:var(--text-muted);font-size:.74rem}
+/* citlivost, osoby, podezřelí */
+.osoba-blok{display:grid;gap:4px;padding-bottom:8px;border-bottom:1px dashed var(--border)}
+.osoba-blok:last-of-type{border-bottom:0}
+.osoba-stitek{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--accent);margin-right:6px;vertical-align:3px}
+canvas.histogram{width:100%;max-width:100%;height:110px;display:block}
+.osoba-blok{min-width:0}
+.tab-obal{overflow-x:auto;max-width:100%}
+.sloupce{display:grid;gap:5px}
+.sloupec{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:2px 8px;font-size:.78rem;align-items:center}
+.sloupec .pruh{grid-column:1/-1;height:7px;border-radius:4px;background:var(--bg-control);overflow:hidden}
+.sloupec .pruh > span{display:block;height:100%;background:var(--accent)}
+.sloupec .c{text-align:right;color:var(--text-muted)}
+.verdikt-shoda{color:var(--ok);font-weight:600}
+.verdikt-malo{color:var(--warn);font-weight:600}
+.verdikt-vyloucen{color:var(--danger);font-weight:600}
+.pod-radek{display:grid;grid-template-columns:minmax(0,1fr) 64px 52px 26px;gap:4px;align-items:center}
+.pod-radek .vstup{padding:3px 5px;font-size:.78rem}
+tr.vyrazeno td{opacity:.55;text-decoration:line-through}
+.zatrz{display:flex;align-items:center;gap:4px;font-size:.74rem;color:var(--text-muted);white-space:nowrap}
+.ukazka-info ul{margin:0;padding-left:18px;font-size:.8rem;line-height:1.5}
+kbd{font-family:ui-monospace,monospace;font-size:.78rem;background:var(--bg-control);border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.zkratky td{padding:3px 6px}
+#protokol .souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:6px 0}
+#protokol .souhrn > div{border:1px solid #bbb;border-radius:6px;padding:8px 10px}
+#protokol .velke{font-size:20px;font-weight:700}
+#protokol .mala{font-size:11px;color:#444}
+#protokol .pruh{display:inline-block;height:8px;background:#4a74b8;vertical-align:middle}
+
+/* protokol */
+#protokolObal{position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto;padding:12px}
+#protokolObal .ovl{display:flex;gap:8px;justify-content:flex-end;max-width:820px;margin:0 auto 10px}
+#protokol{max-width:820px;margin:0 auto;background:#fff;color:#111;padding:28px 32px;border-radius:6px;font-size:13px;line-height:1.45}
+#protokol h2{font-size:20px;margin:0 0 4px}
+#protokol h3{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #999;padding-bottom:2px}
+#protokol img{max-width:100%;display:block;margin:6px 0;border:1px solid #999}
+#protokol table{font-size:12px}
+#protokol th,#protokol td{border-bottom:1px solid #ccc;color:#111}
+#protokol p,#protokol li{margin:4px 0}
+#protokol ol,#protokol ul{padding-left:20px}
+#protokol .podpis{margin-top:30px;display:flex;justify-content:space-between;gap:20px}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,640px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;max-height:70vh;font-size:.88rem;line-height:1.55}
+.okno .telo ol,.okno .telo ul{padding-left:20px}
+.okno .telo li{margin:3px 0}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+
+@media (max-width:420px){
+  .pod-radek{grid-template-columns:minmax(0,1fr) 58px 46px 26px}
+  .galerie{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  body{height:auto;min-height:100%}
+  .prace{grid-template-columns:1fr;flex:none}
+  .plocha{height:min(62vh,560px);min-height:330px}
+  aside.panel{border-left:0;border-top:1px solid var(--border);overflow:visible}
+  #lupa{width:120px;height:120px}
+}
+@media print{
+  body{display:block;height:auto;background:#fff}
+  body > *:not(#protokolObal){display:none !important}
+  #protokolObal{position:static;padding:0;background:#fff;overflow:visible}
+  #protokolObal .ovl{display:none}
+  #protokol{padding:0;max-width:none}
+  #protokol h3{break-after:avoid}
+  #protokol img,#protokol table{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>📏 Výška z fotky</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Fotka, ukázky, uložení, protokol">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl" data-prikaz="protokol" title="Protokol k tisku (P)">📄<span class="txt"> Protokol</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl" id="tlZpet" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+    <button class="tl" id="tlVpred" data-prikaz="vpred" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Snímek"><span class="skup-nazev" aria-hidden="true">Snímek</span><div class="skup-tl">
+    <select class="tl" id="volbaSnimku" aria-label="Aktivní snímek"></select>
+    <button class="tl" data-nabidka="nabSnimek" aria-expanded="false" title="Přidat, přejmenovat, odebrat snímek">▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Nástroj"><span class="skup-nazev" aria-hidden="true">Nástroj</span><div class="skup-tl" id="nastroje">
+    <button class="tl" data-nastroj="posun" title="Posun obrazu a úprava bodů (V)">✋<span class="txt"> Upravit</span></button>
+    <button class="tl" data-nastroj="svisle" title="Svislá úsečka – hrana zdi, rám dveří, sloup (1)"><span class="znak" style="background:#ff4d4d"></span><span class="txt">Svislé</span></button>
+    <button class="tl" data-nastroj="vodA" title="Vodorovná úsečka na zemi, směr A (2)"><span class="znak" style="background:#3ddc84"></span><span class="txt">Směr A</span></button>
+    <button class="tl" data-nastroj="vodB" title="Vodorovná úsečka na zemi, směr B (3)"><span class="znak" style="background:#4da3ff"></span><span class="txt">Směr B</span></button>
+    <button class="tl" data-nastroj="horizont" title="Horizont ručně – jen když nejsou čáry A a B (4)"><span class="znak" style="background:#ffd23f"></span><span class="txt">Horizont</span></button>
+    <button class="tl" data-nastroj="reference" title="Referenční objekt: pata a vrchol (R)">🚪<span class="txt"> Reference</span></button>
+    <button class="tl" data-nastroj="osoba" title="Osoba: bod na zemi pod temenem a temeno (O)">🧍<span class="txt"> Osoba</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="prizpusob" title="Celý snímek (F)">🔳</button>
+    <button class="tl" id="tlLupa" data-prikaz="lupa" aria-pressed="true" title="Lupa při umisťování bodů (L)">🔍<span class="txt"> Lupa</span></button>
+    <button class="tl" id="tlPrichyt" data-prikaz="prichyt" aria-pressed="true" title="Přichytávat k existujícím bodům a rohům v obraze (M, Shift dočasně vypne)">🧲<span class="txt"> Přichytávat</span></button>
+    <button class="tl" id="tlPomocne" data-prikaz="pomocne" aria-pressed="true" title="Prodloužení čar k úběžníkům a horizont (H)">📐<span class="txt"> Pomocné čáry</span></button>
+  </div></div>
+  <div class="vpravo">
+    <button class="tl" data-metoda title="Princip, vzorce, předpoklady, meze, ověření na ukázkách a literatura">📐<span class="txt"> Metoda a meze</span></button>
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </div>
+</header>
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">🖼️ Otevřít fotku jako nový snímek…</button>
+  <button class="tl" data-prikaz="galerie">🧪 Galerie ukázek se známou pravdou… <kbd>G</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="protokol">📄 Protokol k tisku</button>
+  <button class="tl" data-prikaz="export">💾 Uložit případ (JSON s obrázky)</button>
+  <button class="tl" data-prikaz="import">📂 Načíst případ…</button>
+  <hr>
+  <button class="tl" data-prikaz="novy">🗑️ Nový případ (smazat vše)…</button>
+  <hr>
+  <button class="tl" data-prikaz="zkratky">⌨️ Klávesové zkratky <kbd>?</kbd></button>
+</div>
+<div id="nabSnimek" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">➕ Přidat snímek (fotka)…</button>
+  <button class="tl" data-prikaz="prejmenuj">✏️ Přejmenovat snímek…</button>
+  <button class="tl" data-prikaz="smazSadu">🧹 Smazat zakreslené čáry…</button>
+  <button class="tl" data-prikaz="odeberSnimek">🗑️ Odebrat snímek…</button>
+</div>
+<input type="file" id="souborFoto" accept="image/*" hidden>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+
+<div class="prace">
+  <section class="plocha">
+    <div class="stav">
+      <span class="rada" id="rada">Otevřete fotku nebo ukázkovou scénu.</span>
+      <button class="btn mini" id="tlZrusit" hidden>✖ Zrušit rozpracované</button>
+      <button class="btn mini danger" id="tlSmazVybrane" hidden>🗑️ Smazat vybrané</button>
+    </div>
+    <div class="platno-obal" id="platnoObal">
+      <canvas id="platno" aria-label="Snímek s měřením"></canvas>
+      <canvas id="lupa" width="170" height="170" hidden></canvas>
+      <div class="prazdna" id="prazdna">
+        <div class="karta-uvod">
+          <p><b>📏 Odhad výšky osoby z jedné fotografie</b></p>
+          <p class="muted">Zakreslete svislé hrany, vodorovné čáry na zemi, objekt se známou výškou a osobu. Výpočet probíhá jen ve vašem prohlížeči.</p>
+          <p style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" data-prikaz="otevrit">🖼️ Otevřít fotku</button>
+            <button class="btn" data-prikaz="galerie">🧪 Galerie ukázek</button>
+          </p>
+          <p class="muted" style="margin:12px 0 0">Ukázkové scény se známou pravdou – každá předvádí jinou schopnost:</p>
+          <div class="uvod-ukazky" id="uvodUkazky"></div>
+        </div>
+      </div>
+      <div class="zoom">
+        <button class="tl" data-prikaz="zoomPlus" aria-label="Přiblížit">+</button>
+        <button class="tl" data-prikaz="zoomMinus" aria-label="Oddálit">−</button>
+      </div>
+    </div>
+  </section>
+  <aside class="panel" id="panel">
+    <details open id="dPruvodce"><summary>🧭 Průvodce postupem</summary><div class="obsah" id="pruvodce"></div></details>
+    <details open id="dUkazka" hidden><summary>🧪 Ukázka – co si vyzkoušet</summary><div class="obsah ukazka-info" id="ukazkaInfo"></div></details>
+    <details open id="dVysledek"><summary>📊 Výsledek</summary><div class="obsah" id="vysledek"></div></details>
+    <details id="dCitlivost"><summary>🎯 Citlivost – co nejvíc přispívá k nejistotě</summary><div class="obsah" id="citlivost"></div></details>
+    <details id="dPodezreli"><summary>🔎 Porovnání s podezřelými</summary><div class="obsah" id="podezreli"></div></details>
+    <details open><summary>🧍 Měření osoby</summary><div class="obsah" id="mereni"></div></details>
+    <details open><summary>🚪 Reference</summary><div class="obsah" id="reference"></div></details>
+    <details><summary>📐 Kalibrace snímku</summary><div class="obsah" id="kalibrace"></div></details>
+    <details><summary>🗂️ Případ</summary><div class="obsah" id="pripad">
+      <label class="pole">Název / popis případu<input class="vstup" data-pripad="nazev"></label>
+      <div class="mrizka">
+        <label class="pole">Číslo jednací<input class="vstup" data-pripad="cj"></label>
+        <label class="pole">Zpracovatel<input class="vstup" data-pripad="zpracovatel"></label>
+      </div>
+      <label class="pole">Poznámka (zdroj záznamu, čas, kamera…)<textarea class="vstup" rows="3" data-pripad="poznamka"></textarea></label>
+      <label class="pole">Počet vzorků Monte Carlo<input class="vstup" type="number" min="200" max="20000" step="100" data-pripad="mcN"></label>
+    </div></details>
+    <button class="btn" type="button" data-metoda>📐 Metoda, meze a ověření přesnosti…</button>
+  </aside>
+</div>
+
+<div id="protokolObal" hidden>
+  <div class="ovl">
+    <button class="btn primary" data-prikaz="tisk">🖨️ Tisk / PDF</button>
+    <button class="btn" data-prikaz="zavriProtokol">✖ Zavřít</button>
+  </div>
+  <div id="protokol"></div>
+</div>
+
+<dialog class="okno" id="dlgNapoveda">
+  <header>❓ Jak měřit</header>
+  <div class="telo">
+    <ol>
+      <li><b>Snímek:</b> otevřete fotku (nejlépe originál, ne zmenšený nebo oříznutý – střed snímku je důležitý pro korekci zkreslení).</li>
+      <li><b>Svislé</b> (červené): zakreslete aspoň 2–3 svislé hrany co nejdál od sebe (rohy budov, zárubně, sloupy). Každá úsečka = dvě kliknutí.</li>
+      <li><b>Směr A a B</b> (zelené, modré): vodorovné rovnoběžné čáry na zemi ve dvou různých směrech (spáry dlažby, obrubníky, hrany zdi u země). Každý směr aspoň 2, lépe 3–4. Z nich vznikne horizont. Když to nejde, zakreslete <b>horizont</b> ručně.</li>
+      <li><b>Reference:</b> klikněte na patu a vrchol svislého objektu se známou výškou (zárubeň dveří, výška obkladu, značka na sloupu). Víc referencí = kontrola navzájem.</li>
+      <li><b>Osoba:</b> první bod je na zemi <i>přesně pod temenem</i> (u stojící osoby mezi patami, u kráčející pod hlavou), druhý bod temeno hlavy. Čárkovaná svislice ukazuje, kudy má temeno vést.</li>
+      <li>Upravte <b>korekce</b> (obuv, fáze chůze, sklon hlavy) a <b>nejistotu kliknutí</b> v Kalibraci. Výsledek ukáže interval 95 %.</li>
+    </ol>
+    <p><b>Ovládání:</b> kolečko myši = přiblížení, nástroj ✋ = posun obrazu a tažení bodů, klik na bod = výběr (Delete smaže, šipky posouvají). Při umisťování se bod dá ještě táhnout – lupa ukazuje přesné místo. 🧲 Přichytávání přitáhne bod k existujícímu bodu nebo k rohu v obraze (u osoby jen k bodům), Shift ho dočasně vypne. Všechny zkratky: <kbd>?</kbd>.</p>
+    <p><b>Více referencí:</b> kombinují se váženě podle přesnosti (tolerance výšky a citlivost na kliknutí) a každá se kontroluje ostatními. Vybočující referenci odškrtněte („použít“).</p>
+    <p><b>Více měření a snímků:</b> měření se stejným označením osoby (A, B…) se sloučí váženým průměrem; váhy vycházejí z kovariance Monte Carlo, takže korelovaná měření ze stejného snímku se nepřeceňují.</p>
+    <p><b>Citlivost</b> ukazuje, který zdroj nejistoty nejvíc rozšiřuje interval – tam se vyplatí zpřesnit vstup. <b>Porovnání s podezřelými</b> rozliší shodu (nelze vyloučit) od vyloučení.</p>
+    <p><b>Zkreslení objektivu:</b> u širokoúhlých kamer zadejte k1 nebo ho odhadněte z čar (potřeba ≥3 úsečky v sadě, rozprostřené po snímku).</p>
+  </div>
+  <footer><button class="btn primary" data-zavri>Zavřít</button></footer>
+</dialog>
+
+<dialog class="okno siroke" id="dlgUkazky">
+  <header>🧪 Galerie ukázek se známou pravdou</header>
+  <div class="telo">
+    <p class="muted" style="margin-top:0">Scény jsou vygenerované programem – skutečná výška osob je známá, takže hned vidíte, jak přesná metoda je a co výsledek kazí. Načtení ukázky nahradí otevřený případ (lze vrátit Ctrl+Z).</p>
+    <div class="galerie" id="galerie"></div>
+  </div>
+  <footer><button class="btn" data-zavri>Zavřít</button></footer>
+</dialog>
+
+<dialog class="okno" id="dlgZkratky">
+  <header>⌨️ Klávesové zkratky</header>
+  <div class="telo">
+    <table class="zkratky"><tbody>
+      <tr><td><kbd>V</kbd></td><td>Upravit – posun obrazu, výběr a tažení bodů</td></tr>
+      <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>Svislé, Směr A, Směr B, Horizont</td></tr>
+      <tr><td><kbd>R</kbd> / <kbd>O</kbd></td><td>Reference / Osoba</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>Posun vybraného bodu o 0,5 px (se Shiftem o 5 px)</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>Smazat vybranou položku</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Zpět / Znovu</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Zrušit rozpracovaný bod, výběr, zavřít protokol</td></tr>
+      <tr><td><kbd>F</kbd></td><td>Celý snímek</td></tr>
+      <tr><td><kbd>L</kbd> / <kbd>M</kbd> / <kbd>H</kbd></td><td>Lupa / Přichytávání / Pomocné čáry</td></tr>
+      <tr><td><kbd>Shift</kbd> při klikání</td><td>Dočasně vypne přichytávání</td></tr>
+      <tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Předchozí / další snímek</td></tr>
+      <tr><td><kbd>G</kbd> / <kbd>P</kbd> / <kbd>?</kbd></td><td>Galerie ukázek / Protokol / Tento přehled</td></tr>
+      <tr><td>kolečko, dva prsty</td><td>Přiblížení; pravé tlačítko myši táhne obraz v každém nástroji</td></tr>
+    </tbody></table>
+  </div>
+  <footer><button class="btn primary" data-zavri>Zavřít</button></footer>
+</dialog>
+
+<script src="vyska_z_fotky/ui.js"></script>
+</body>
+</html>

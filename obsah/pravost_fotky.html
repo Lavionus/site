@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ověření pravosti fotografie</title>
+<meta name="description" content="Forenzní kontrola fotografie v prohlížeči: otisk SHA-256, EXIF a jeho rozpory, náhled EXIF proti obrázku, kvantizační tabulky JPEG a odhad kvality, dvojitá komprese, ELA, šumový reziduál a hledání klonovaných oblastí. Protokol k tisku, soubor se nikam neodesílá.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="pravost_fotky/jadro.js"></script>
+<script src="vysetrovani/metoda.js"></script>
+<script src="pravost_fotky/metoda.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1000px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka label{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted);padding:4px 10px}
+.nabidka label.radek{display:flex;align-items:center;gap:6px;color:var(--text)}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:3px 8px;font-size:.76rem}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.86rem;font-family:inherit;min-width:0}
+
+#plocha{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 420px}
+#prohlizec{position:relative;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border)}
+#panel{display:flex;flex-direction:column;min-height:0;background:var(--bg-panel)}
+@media (max-width:900px){
+  #plocha{display:flex;flex-direction:column;overflow:auto}
+  #prohlizec{border-right:0;flex-shrink:0;min-height:260px}
+  #platnoObal{flex:none;overflow:visible}
+  #panel{flex-shrink:0;border-top:1px solid var(--border)}
+  #panelTelo{overflow:visible}
+}
+.vrstvy{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;background:var(--bg-elevated)}
+.vrstvy .tl{font-size:.78rem;padding:3px 7px}
+.vrstvy .mezera{flex:1}
+.vrstvy label{font-size:.76rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;white-space:nowrap}
+.vrstvy input[type=range]{width:90px}
+#platnoObal{flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px;background:var(--bg)}
+#platnoObal canvas{max-width:100%;height:auto;image-rendering:auto;box-shadow:var(--shadow);background:var(--bg-control)}
+#legenda{font-size:.76rem;color:var(--text-muted);padding:5px 10px;border-top:1px solid var(--border);line-height:1.45;background:var(--bg-elevated)}
+#legenda .stupnice{display:inline-block;width:110px;height:9px;border-radius:3px;vertical-align:middle;margin:0 4px;border:1px solid var(--border)}
+#prubeh{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:14px 18px;box-shadow:var(--shadow);min-width:260px;text-align:center;font-size:.86rem;z-index:5}
+#prubeh progress{width:100%;margin-top:8px;accent-color:var(--accent)}
+#prubeh .btn{display:block;margin:8px auto 0}
+
+.zalozky{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.zalozky::-webkit-scrollbar{display:none}
+.zalozky button{flex:1 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-muted);padding:9px 6px;cursor:pointer;font:inherit;font-size:.8rem;white-space:nowrap}
+.zalozky button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+#panelTelo{flex:1;min-height:0;overflow:auto;padding:10px 12px;font-size:.84rem;line-height:1.5}
+#panelTelo h3{font-size:.92rem;margin:14px 0 6px}
+#panelTelo h3:first-child{margin-top:2px}
+#panelTelo p{margin:0 0 8px}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-left:4px solid var(--pruh,var(--border-strong));border-radius:8px;padding:7px 10px;margin-bottom:7px;font-size:.82rem;display:grid;gap:2px}
+.karta b{font-size:.84rem}
+.karta .vys{color:var(--text-muted);font-size:.76rem}
+.karta.v3{--pruh:var(--danger)} .karta.v2{--pruh:var(--warn)} .karta.v1{--pruh:var(--accent)} .karta.v0{--pruh:var(--border-strong)}
+.stitek{display:inline-block;font-size:.68rem;padding:0 6px;border-radius:999px;border:1px solid var(--border);margin-right:4px;vertical-align:1px;white-space:nowrap}
+.stitek.v3{color:var(--danger);border-color:var(--danger)} .stitek.v2{color:var(--warn);border-color:var(--warn)} .stitek.v1{color:var(--accent);border-color:var(--accent)}
+.varovani{border-left:3px solid var(--warn);background:var(--bg-elevated);padding:7px 10px;border-radius:6px;margin:8px 0;font-size:.8rem}
+.zaver{border:1px solid var(--border-strong);border-radius:8px;padding:9px 11px;background:var(--bg-elevated);margin:6px 0 10px}
+.zaver strong{display:block;font-size:.95rem;margin-bottom:3px}
+.analyza{border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:var(--bg-elevated)}
+.analyza h4{margin:0 0 4px;font-size:.88rem;display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.analyza .verdikt{font-size:.76rem;font-weight:600;white-space:nowrap}
+.verdikt.nalezena{color:var(--danger)} .verdikt.nenalezena{color:var(--ok)} .verdikt.nelze{color:var(--text-muted)}
+.analyza details{margin-top:4px;font-size:.78rem;color:var(--text-muted)}
+.analyza summary{cursor:pointer;color:var(--text)}
+.tab-obal{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:.78rem}
+th,td{text-align:left;padding:3px 5px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.72rem}
+td.hod{word-break:break-word}
+td.mono,.mono{font-family:ui-monospace,Consolas,monospace;font-size:.74rem}
+tr.sk th{background:var(--bg-control);color:var(--text);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em}
+.dqt{border-collapse:collapse;width:auto;margin:4px 0 8px;font:600 .7rem/1 ui-monospace,monospace}
+.dqt td{width:28px;height:22px;text-align:center;padding:0;border:1px solid var(--bg-panel);color:var(--text)}
+.dqt td.jine{outline:2px solid var(--warn);outline-offset:-2px}
+.histy{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin:6px 0}
+.histy figure{margin:0;border:1px solid var(--border);border-radius:6px;padding:4px;background:var(--bg-panel)}
+.histy figcaption{font-size:.68rem;color:var(--text-muted);text-align:center}
+.histy svg{width:100%;height:46px;display:block;color:var(--accent)}
+.histy svg .propad{color:var(--danger)}
+.nahledy{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin:6px 0}
+.nahledy figure{margin:0;font-size:.7rem;color:var(--text-muted);text-align:center}
+.nahledy canvas{display:block;max-width:150px;height:auto;border:1px solid var(--border);border-radius:4px;image-rendering:pixelated}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted);margin-bottom:8px}
+.pole .spolu{display:flex;align-items:center;gap:8px;color:var(--text)}
+.pole input[type=range]{flex:1}
+
+/* úvod */
+#uvod{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);overflow:auto}
+#uvod .box{max-width:560px;background:var(--bg-panel);border:2px dashed var(--border-strong);border-radius:12px;padding:20px;text-align:center;line-height:1.55;font-size:.9rem}
+#uvod .box h2{margin:0 0 8px;font-size:1.15rem}
+#uvod .akce{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+#uvod .male{font-size:.78rem;color:var(--text-muted);margin-top:10px}
+body.tahne #uvod .box,body.tahne #platnoObal{outline:3px dashed var(--accent);outline-offset:-6px}
+.uvod-ukazky{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
+.uvod-ukazky .btn{font-size:.78rem;padding:4px 9px}
+
+/* dialogy */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno.siroke{width:min(96vw,880px)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:90vh;margin:0}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.86rem;line-height:1.55}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.uk{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:.8rem;line-height:1.45}
+.uk h3{margin:0;font-size:.95rem}
+.uk .co{color:var(--text-muted)}
+.uk .najde{border-left:3px solid var(--accent);padding-left:7px}
+.uk .btn{align-self:flex-start;margin-top:auto}
+.ukazka-info{border:1px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:.8rem;line-height:1.45}
+.ukazka-info h4{margin:0 0 4px;font-size:.88rem}
+.napoveda p,.napoveda li{margin:0 0 6px}
+.napoveda h4{margin:10px 0 4px}
+.napoveda ul{margin:0;padding-left:20px}
+kbd{background:var(--bg-control);border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;padding:1px 5px;font:600 .78rem ui-monospace,monospace}
+
+/* protokol */
+#protokolNahled{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;max-height:60vh;overflow:auto}
+.prot{font:10pt/1.45 system-ui,sans-serif;color:var(--text)}
+.prot h2{font-size:14pt;margin:0 0 4px}
+.prot h3{font-size:11pt;margin:14px 0 4px;border-bottom:1px solid var(--border);padding-bottom:2px}
+.prot table{font-size:9pt;margin:4px 0}
+.prot td,.prot th{padding:2px 5px}
+.prot .otisk{font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+.prot .snimky{display:flex;flex-wrap:wrap;gap:8px}
+.prot figure{margin:0;width:calc(50% - 4px);font-size:8pt}
+.prot figure img{width:100%;border:1px solid var(--border)}
+.prot .upozorneni{border:1px solid var(--border-strong);padding:6px 8px;margin:8px 0;font-weight:600}
+.prot ul{margin:2px 0;padding-left:18px}
+#tisk{display:none}
+@media print{
+  body > *:not(#tisk){display:none!important}
+  #tisk{display:block}
+  body{display:block;height:auto;background:#fff}
+  #tisk .prot{color:#000}
+  #tisk .prot h3,#tisk .prot td,#tisk .prot th,#tisk .prot figure img,#tisk .prot .upozorneni{border-color:#999}
+  #tisk figure{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🖼️ Pravost fotografie</h1>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="otevrit" title="Otevřít fotografii (JPEG, PNG, HEIC, WebP) – zůstává jen v prohlížeči (O)">📂<span class="txt"> Otevřít</span></button>
+    <button class="tl" data-prikaz="galerie" title="Galerie ukázek se známou pravdou (G)">🧪<span class="txt"> Ukázky</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Analýza"><span class="skup-nazev" aria-hidden="true">Analýza</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabNastaveni" aria-expanded="false" title="Kvalita přeuložení a zesílení ELA, překryv">⚙️<span class="txt"> Nastavení</span> ▾</button>
+    <button class="tl" data-prikaz="znovu" title="Spustit analýzy znovu" id="tlZnovu" disabled>🔁<span class="txt"> Znovu</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-prikaz="protokol" id="tlProtokol" disabled title="Protokol s otiskem, metadaty, výsledky a snímky (P)">📄<span class="txt"> Protokol</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-metoda title="Princip, postup, meze, ověření na ukázkách a literatura">📐<span class="txt"> Metoda a meze</span></button>
+    <button class="tl" data-nabidka="nabNapoveda" aria-expanded="false" title="Nápověda" aria-label="Nápověda">❓ ▾</button>
+  </span>
+</header>
+
+<div id="nabNastaveni" class="nabidka" hidden>
+  <label>Kvalita přeuložení pro mapu ELA: <b id="kvalitaHod">90</b>
+    <input type="range" id="kvalitaEla" min="50" max="98" step="1" value="90"></label>
+  <label>Zesílení rozdílu: <b id="zesileniHod">15×</b>
+    <input type="range" id="zesileni" min="1" max="50" step="1" value="15"></label>
+  <label class="radek"><input type="checkbox" id="prekryv"> Mapy jako překryv přes fotku</label>
+  <label>Krytí překryvu: <b id="krytiHod">70 %</b>
+    <input type="range" id="kryti" min="10" max="100" step="5" value="70"></label>
+  <hr>
+  <button class="tl" data-prikaz="vychozi">↺ Výchozí nastavení</button>
+</div>
+<div id="nabNapoveda" class="nabidka" hidden>
+  <button class="tl" data-prikaz="napoveda">❓ Nápověda…</button>
+  <button class="tl" data-prikaz="galerie">🧪 Galerie ukázek…</button>
+  <button class="tl" data-metoda>📐 Metoda, literatura, meze…</button>
+  <hr>
+  <a class="tl" href="exif_viewer.html">📷 Jednoduchý EXIF prohlížeč (a odstranění metadat)</a>
+</div>
+<input type="file" id="soubor" hidden accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif">
+
+<div id="plocha">
+  <section id="prohlizec">
+    <div class="vrstvy" id="vrstvy" role="tablist" aria-label="Zobrazení">
+      <button class="tl" data-vrstva="original" aria-pressed="true">Fotka</button>
+      <button class="tl" data-vrstva="indicie">Indicie</button>
+      <button class="tl" data-vrstva="ela">ELA</button>
+      <button class="tl" data-vrstva="rezidual">Šumový reziduál</button>
+      <button class="tl" data-vrstva="mapaSumu">Mapa šumu</button>
+      <button class="tl" data-vrstva="klon">Klonování</button>
+      <button class="tl" data-vrstva="pravda" hidden>Pravda ukázky</button>
+    </div>
+    <div id="platnoObal"><canvas id="platno" width="640" height="480"></canvas></div>
+    <div id="legenda"></div>
+    <div id="prubeh" hidden><div id="prubehText">Analyzuji…</div><progress id="prubehPruh" max="1" value="0"></progress><button class="btn mini" type="button" id="prubehZrusit">Zrušit</button></div>
+    <div id="uvod">
+      <div class="box">
+        <h2>🖼️ Ověření pravosti fotografie</h2>
+        <p>Přetáhněte sem fotografii nebo ji otevřete. Spočítá se otisk SHA-256, přečtou se metadata a struktura JPEG a proběhne
+          error level analysis, šumový reziduál, hledání klonovaných oblastí a test dvojité komprese.</p>
+        <div class="akce">
+          <button class="btn primary" data-prikaz="otevrit">📂 Otevřít fotografii</button>
+          <button class="btn" data-prikaz="galerie">🧪 Galerie ukázek</button>
+        </div>
+        <div class="uvod-ukazky" id="uvodUkazky"></div>
+        <p class="male">🔒 Soubor se nikam neodesílá – vše se počítá v tomto prohlížeči. Výsledky jsou indicie, ne důkaz:
+          nenalezení stop úpravy neznamená, že je fotografie pravá.</p>
+      </div>
+    </div>
+  </section>
+  <aside id="panel">
+    <div class="zalozky" role="tablist">
+      <button data-zal="souhrn" aria-selected="true">Souhrn</button>
+      <button data-zal="metadata" aria-selected="false">Metadata</button>
+      <button data-zal="struktura" aria-selected="false">Struktura JPEG</button>
+      <button data-zal="analyzy" aria-selected="false">Analýzy obrazu</button>
+    </div>
+    <div id="panelTelo"></div>
+  </aside>
+</div>
+
+<dialog class="okno siroke" id="dlgGalerie">
+  <form method="dialog">
+    <header><span>🧪 Galerie ukázek se známou pravdou</span><button class="btn mini" value="zavrit" aria-label="Zavřít">✕</button></header>
+    <div class="telo">
+      <p class="co">Syntetické fotografie vytvořené přímo v prohlížeči (vlastní kodér JPEG, známé úpravy). U každé víte, co se s ní stalo,
+        a můžete si ověřit, které analýzy úpravu odhalí a které ne. Stejné ukázky (a další scény se stejnými úpravami) tvoří tabulku ověření v panelu 📐.</p>
+      <div class="galerie" id="galerie"></div>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="okno siroke" id="dlgProtokol">
+  <form method="dialog">
+    <header><span>📄 Protokol o kontrole fotografie</span><button class="btn mini" value="zavrit" aria-label="Zavřít">✕</button></header>
+    <div class="telo"><div id="protokolNahled"></div></div>
+    <footer>
+      <button class="btn vlevo" type="button" id="protokolUlozit">💾 Uložit HTML</button>
+      <button class="btn primary" type="button" id="protokolTisk">🖨️ Tisk / PDF</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog class="okno siroke" id="dlgNapoveda">
+  <form method="dialog">
+    <header><span>❓ Nápověda</span><button class="btn mini" value="zavrit" aria-label="Zavřít">✕</button></header>
+    <div class="telo napoveda">
+      <h4>Postup</h4>
+      <ul>
+        <li>Otevřete <b>originální soubor</b> (ne snímek obrazovky, ne fotku stáhnutou ze sociální sítě – ty už nesou stopy překomprimace a nemají metadata).</li>
+        <li>Nástroj spočítá <b>otisk SHA-256</b> souboru – uveďte ho v protokolu, aby bylo jasné, který soubor byl zkoumán.</li>
+        <li><b>Souhrn</b> sbírá indicie ze všech analýz: <span class="stitek v3">silná</span> <span class="stitek v2">střední</span> <span class="stitek v1">slabá</span>. Žádná sama nedokazuje úpravu a jejich absence nedokazuje pravost.</li>
+        <li>Vlevo přepínejte vrstvy: <b>ELA</b> (rozdíl po přeuložení), <b>šumový reziduál</b>, <b>mapa šumu</b>, <b>klonování</b> a souhrnné <b>indicie</b> v obrázku.</li>
+        <li><b>📄 Protokol</b> shrne soubor, otisk, metadata, výsledky a snímky; tisk nebo uložení do HTML/PDF.</li>
+      </ul>
+      <h4>Jak číst ELA</h4>
+      <p>Oblast, která prošla kompresí JPEG méněkrát (vložená později) nebo v jiné kvalitě, se po přeuložení mění jinak než okolí. Jasné jsou ale vždy i ostré hrany a jemné textury,
+        tmavé jsou jednolité plochy – porovnávejte podobné povrchy mezi sebou. Zkuste několik kvalit přeuložení (⚙️ Nastavení).</p>
+      <h4>Klávesy</h4>
+      <p><kbd>O</kbd> otevřít · <kbd>G</kbd> galerie · <kbd>P</kbd> protokol · <kbd>1</kbd>–<kbd>6</kbd> vrstvy · <kbd>Esc</kbd> zavřít nabídku</p>
+      <p>Podrobný princip, meze a ověření přesnosti: <button class="btn mini" type="button" data-metoda>📐 Metoda a meze</button></p>
+    </div>
+  </form>
+</dialog>
+
+<div id="tisk"></div>
+<script src="pravost_fotky/ui.js"></script>
+</body>
+</html>

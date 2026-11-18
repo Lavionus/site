@@ -1,0 +1,22 @@
+// vysetrovani/metoda – en (sdílený modul obsah/vysetrovani/metoda.js). Doplňuje _test/i18n_vytahni.py; null = zatím nepřeloženo.
+I18N.pridej('en', {
+  'Tabulka ověření zatím není k dispozici.': 'The validation table is not available yet.',
+  '{n} ukázek': '{n} examples',
+  'správně {spravne}/{n}': 'correct {spravne}/{n}',
+  'průměrná abs. chyba {mae} {jednotka}': 'mean abs. error {mae} {jednotka}',
+  'průměrná šířka intervalu {sirka} {jednotka}': 'mean interval width {sirka} {jednotka}',
+  'Ukázka': 'Example',
+  'Pravda': 'Ground truth',
+  'Výsledek nástroje': 'Tool result',
+  'Odhad': 'Estimate',
+  'Interval': 'Interval',
+  'Chyba': 'Error',
+  'Princip': 'Principle',
+  'Meze a zdroje chyb': 'Limitations and sources of error',
+  'Ověření na ukázkách se známou pravdou': 'Validation on examples with known ground truth',
+  'Ukázky jsou syntetické – vznikly z modelu se známým výsledkem. Ověřují, že nástroj počítá správně a že jeho interval nejistoty odpovídá zadanému šumu, ne jak přesný je samotný model na skutečných datech.{datum}': 'The examples are synthetic – generated from a model with a known result. They verify that the tool calculates correctly and that its uncertainty interval matches the specified noise, not how accurate the model itself is on real data.{datum}',
+  'Nejde o certifikovaný znalecký nástroj. Výsledky slouží k výuce, přípravě a kontrole úvah.': 'This is not a certified forensic expert tool. The results are intended for teaching, preparation and checking one’s reasoning.',
+  'Metoda, literatura, meze': 'Method, literature, limitations',
+  'Zavřít': 'Close',
+  'Ukázky jsou syntetické – vznikly se známým výsledkem, některé záměrně mimo předpoklady modelu. Ověřují výpočet a chování intervalu (co interval vyjadřuje, uvádí popis nad tabulkou), ne přesnost samotného modelu na skutečných datech.{datum}': 'The examples are synthetic – generated with a known result, some deliberately outside the model’s assumptions. They verify the calculation and the behaviour of the interval (what the interval expresses is stated in the description above the table), not the accuracy of the model itself on real data.{datum}',
+});

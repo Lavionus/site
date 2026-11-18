@@ -738,7 +738,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/meraky.html",
         "nazev": "📱 Měřáky z telefonu",
         "stav": "vyvoj",
-        "tagy": ["vodováha", "sklonoměr", "úhloměr", "hlukoměr", "decibely", "luxmetr", "stroboskop", "otáčky", "spektrum", "senzory"]
+        "tagy": ["vodováha", "sklonoměr", "úhloměr", "hlukoměr", "decibely", "luxmetr", "stroboskop", "otáčky", "spektrum", "senzory", "kompas", "buzola", "azimut", "výškoměr", "výška stromu", "pravítko", "posuvka", "vibrace", "seismograf", "akcelerometr", "gyroskop", "gramofon", "krokoměr", "GPS", "rychloměr", "tachometr", "GPX", "ladička", "ladění kytary", "generátor tónu", "růžový šum", "spektrogram", "třetinooktávy", "dávka hluku", "tep", "puls", "deník měření"]
       },
       {
         "soubor": "obsah/pocitadlo.html",
@@ -1348,6 +1348,18 @@ const KATALOG_SEKCE = [
         "nazev": "🧭 Kompas & azimut",
         "stav": "beta",
         "tagy": ["kompas", "azimut", "orientace", "buzola", "sever"]
+      },
+      {
+        "soubor": "obsah/viditelnost.html",
+        "nazev": "👁️ Viditelnost z bodu (výhled)",
+        "stav": "vyvoj",
+        "tagy": ["viditelnost", "viewshed", "výhled", "rozhledna", "panorama", "obzor", "čára pohledu", "zakřivení Země", "refrakce", "DMR 5G", "terén", "vrcholy", "kumulativní viditelnost", "Fresnelova zóna", "rádiový spoj", "východ slunce", "větrná elektrárna", "GeoTIFF", "KML"]
+      },
+      {
+        "soubor": "obsah/dosazitelnost.html",
+        "nazev": "⏱️ Dosažitelnost za čas (izochrony)",
+        "stav": "vyvoj",
+        "tagy": ["izochrony", "dosažitelnost", "dojezdová doba", "kde bydlet", "pěšky", "kolo", "auto", "průnik", "valhalla", "mapa", "trasa", "geojson"]
       }
     ]
   },
@@ -1732,6 +1744,12 @@ const KATALOG_SEKCE = [
         "nazev": "🪢 Keltské uzly",
         "stav": "vyvoj",
         "tagy": ["keltské uzly", "pletenec", "cop", "uzel", "triquetra", "trojlístek", "ornament", "vzory", "mandala", "SVG"]
+      },
+      {
+        "soubor": "obsah/animace_snimky.html",
+        "nazev": "🎞️ Animace snímek po snímku",
+        "stav": "vyvoj",
+        "tagy": ["animace", "kreslená animace", "frame by frame", "cibulová slupka", "onion skin", "rotoskopie", "časová osa", "tlak pera", "stylus", "gif", "mp4", "webm", "sprite sheet", "flipbook"]
       }
     ]
   },
@@ -1922,6 +1940,18 @@ const KATALOG_SEKCE = [
         "nazev": "🗺️ Plakát mapy",
         "stav": "vyvoj",
         "tagy": ["plakát", "mapa", "city map poster", "tisk", "hvězdná obloha", "OpenStreetMap", "PDF", "dárek"]
+      },
+      {
+        "soubor": "obsah/zasedaci_poradek.html",
+        "nazev": "🪑 Zasedací pořádek a jmenovky",
+        "stav": "vyvoj",
+        "tagy": ["zasedací pořádek", "svatba", "oslava", "konference", "hosté", "stoly", "plánek sálu", "rozsazení", "jmenovky", "stanové karty", "čísla stolů", "menu", "tisk"]
+      },
+      {
+        "soubor": "obsah/origami.html",
+        "nazev": "🦢 Origami – návody a papíry",
+        "stav": "vyvoj",
+        "tagy": ["origami", "skládání papíru", "návod", "jeřáb", "žabka", "lodička", "vlaštovka", "krabička masu", "sonobe", "modulární origami", "crease pattern", "papír k tisku", "vzory", "oboustranný tisk"]
       }
     ]
   },
@@ -1985,16 +2015,16 @@ const KATALOG_SEKCE = [
         "tagy": ["dithering", "pixelizace", "rastr", "retro", "obrázek"]
       },
       {
+        "soubor": "obsah/foto_filtry.html",
+        "nazev": "🎨 Fotofiltry – umělecké efekty a úpravy fotek",
+        "stav": "vyvoj",
+        "tagy": ["filtry", "foto filtry", "efekty", "pointilismus", "olejomalba", "akvarel", "kresba tužkou", "uhel", "perokresba", "šrafování", "komiks", "pop-art", "rastr", "halftone", "vitráž", "ASCII art", "glitch", "VHS", "tilt-shift", "miniatura", "sépie", "černobílá", "vintage", "duotón", "termovize", "kaleidoskop", "malá planeta", "jas", "kontrast", "sytost", "teplota", "vinětace"]
+      },
+      {
         "soubor": "obsah/vzory_z_obrazku.html",
         "nazev": "🧵 Vzory z obrázku: křížková výšivka, korálky, mozaika",
         "stav": "vyvoj",
         "tagy": ["výšivka", "křížková výšivka", "DMC", "korálky", "zažehlovací korálky", "Hama", "Perler", "Artkal", "mozaika", "LEGO", "vzor", "pixel art", "paleta", "ruční práce", "tisk", "PDF"]
-      },
-      {
-        "soubor": "obsah/exif_viewer.html",
-        "nazev": "📷 EXIF prohlížeč",
-        "stav": "beta",
-        "tagy": ["exif", "metadata", "foto", "gps", "expozice"]
       },
       {
         "soubor": "obsah/obrazky_davka.html",
@@ -2019,6 +2049,24 @@ const KATALOG_SEKCE = [
         "nazev": "🎞️ GIF, animace a sprite sheety",
         "stav": "vyvoj",
         "tagy": ["gif", "animace", "apng", "webm", "sprite sheet", "pixel art", "video na gif", "texturepacker", "phaser", "časová osa"]
+      },
+      {
+        "soubor": "obsah/anonymizace.html",
+        "nazev": "🕶️ Anonymizace fotek",
+        "stav": "vyvoj",
+        "tagy": ["anonymizace", "rozmazání obličejů", "SPZ", "pixelizace", "EXIF", "GPS", "XMP", "IPTC", "metadata", "soukromí", "GDPR", "dávkově", "video", "protokol"]
+      },
+      {
+        "soubor": "obsah/panorama.html",
+        "nazev": "🌄 Skládání panoramat",
+        "stav": "vyvoj",
+        "tagy": ["panorama", "stitching", "spojení fotek", "360°", "sférické panorama", "malá planeta", "kontrolní body", "bundle adjustment", "GPano", "EXIF", "foto"]
+      },
+      {
+        "soubor": "obsah/pred_po.html",
+        "nazev": "↔️ Porovnání před a po",
+        "stav": "vyvoj",
+        "tagy": ["před a po", "porovnání obrázků", "posuvník", "rozdíl", "PSNR", "SSIM", "heat-mapa", "zarovnání", "rekonstrukce", "staré foto", "blikání", "GIF", "vložitelný posuvník"]
       }
     ]
   },
@@ -2322,6 +2370,13 @@ const KATALOG_SEKCE = [
         "nazev": "🌳 Dřevo – pohyb, průhyb, povrchy",
         "stav": "vyvoj",
         "tagy": ["dřevo", "truhlářství", "vlhkost", "EMC", "sesychání", "průhyb", "police", "povrchová úprava", "lak", "olej", "řezivo", "objem"]
+      },
+      {
+        "soubor": "obsah/kalkulace_zakazky.html",
+        "nazev": "🧮 Kalkulace truhlářské zakázky",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["kalkulace", "nabídka", "cenová nabídka", "truhlář", "zakázka", "ceník", "prořez", "hranování", "kování", "režie", "marže", "DPH", "varianty", "plán vs. skutečnost", "kusovník", "PDF"]
       }
     ]
   },
@@ -2407,6 +2462,20 @@ const KATALOG_SEKCE = [
           "tapeta",
           "místnost"
         ]
+      },
+      {
+        "soubor": "obsah/tepelne_ztraty.html",
+        "nazev": "🌡️ Tepelné ztráty a skladby konstrukcí",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["tepelné ztráty", "součinitel U", "skladba konstrukce", "ČSN 73 0540", "kondenzace", "Glaser", "rosný bod", "plísně", "fRsi", "tepelné čerpadlo", "kotel", "izolace", "zateplení", "lambda"]
+      },
+      {
+        "soubor": "obsah/destova_voda.html",
+        "nazev": "🌧️ Dešťová voda",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["dešťová voda", "srážky", "žlab", "svod", "odvodnění střechy", "akumulační nádrž", "vsakování", "retenční nádrž", "ČSN 75 9010", "ČSN 75 6760", "zalévání", "úspora vody"]
       }
     ]
   },
@@ -2544,6 +2613,13 @@ const KATALOG_SEKCE = [
         "nazev": "🧮 CPU 6502 – emulátor a assembler",
         "stav": "vyvoj",
         "tagy": ["6502", "procesor", "assembler", "emulátor", "výuka", "programování", "retro", "C64", "NES", "8bit"]
+      },
+      {
+        "soubor": "obsah/elektroinstalace.html",
+        "nazev": "⚡ Elektroinstalace domu",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["elektroinstalace", "elektrikář", "projektant", "okruhy", "jistič", "chránič", "RCD", "proudový chránič", "selektivita", "úbytek napětí", "průřez kabelu", "způsob uložení", "impedance smyčky", "soudobost", "hlavní jistič", "fáze", "vyvážení fází", "rozvaděč", "jednopólové schéma", "štítky", "kusovník", "CYKY", "ČSN 33 2000", "ČSN 33 2130", "rodinný dům"]
       }
     ]
   },
@@ -2734,6 +2810,12 @@ const KATALOG_SEKCE = [
         "tagy": ["kleště", "pinzeta", "svorka", "peán", "jehelec", "kocher", "reverzní pinzeta", "samosvorná", "rohatka", "kleště na topinky", "kleště na pečivo", "grilovací kleště", "kleště na salát", "kleště na led", "kleště na sklenice", "kleště na cukr", "kolíček", "klip na sáčky", "svorka na hadičky", "čelisti", "zoubkování", "print-in-place", "kloub", "čep", "3d tisk", "stl", "3mf"]
       },
       {
+        "soubor": "obsah/samosvorna_pinzeta.html",
+        "nazev": "✂️ Samosvorná pinzeta",
+        "stav": "vyvoj",
+        "tagy": ["pinzeta", "samosvorná", "reverzní pinzeta", "křížová pinzeta", "pružné oko", "kloub", "čep", "print-in-place", "pájení", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
         "soubor": "obsah/odizolovac.html",
         "nazev": "✂️ Stahovák izolace pro 3D tisk",
         "stav": "vyvoj",
@@ -2812,6 +2894,12 @@ const KATALOG_SEKCE = [
         "nazev": "🎛️ Knoflíky a hlavice",
         "stav": "vyvoj",
         "tagy": ["3D tisk", "STL", "3MF", "knoflík", "potenciometr", "hlavice", "hvězdice", "matice", "šroub", "knopka", "kolečko", "generátor"]
+      },
+      {
+        "soubor": "obsah/stojany.html",
+        "nazev": "🎧 Stojany a držáky",
+        "stav": "vyvoj",
+        "tagy": ["3D tisk", "STL", "3MF", "stojan", "držák", "ovladač", "gamepad", "sluchátka", "háček", "pod stůl", "telefon", "tablet", "notebook", "konzole", "VR", "hodinky", "nabíječka", "MagSafe", "AirPods", "organizér", "odlehčení", "generátor"]
       },
       {
         "soubor": "obsah/nozicky.html",
@@ -3279,6 +3367,12 @@ const KATALOG_SEKCE = [
           "venge",
           "aréna"
         ]
+      },
+      {
+        "soubor": "obsah/pristani.html",
+        "nazev": "🌙 Přistání na Měsíci",
+        "stav": "vyvoj",
+        "tagy": ["lunar lander", "přistání", "měsíc", "mars", "vesmír", "raketa", "fyzika", "gravitace", "palivo", "kampaň", "gamepad", "ghost"]
       }
     ]
   },
@@ -3411,6 +3505,13 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "pověsti", "jezinky", "vodník", "Krakonoš", "kapradí"]
+      },
+      {
+        "soubor": "obsah/gamebook_stanice.html",
+        "nazev": "🛰️ Opuštěná stanice",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "sci-fi", "vesmír", "stanice", "umělá inteligence", "první kontakt"]
       },
       {
         "soubor": "obsah/gamebook_editor.html",
@@ -3865,24 +3966,30 @@ const KATALOG_SEKCE = [
         "nazev": "🌋 Živly ostrova",
         "stav": "beta",
         "tagy": ["sopka", "vulkán", "erupce", "hurikán", "počasí", "karibik", "simulace", "výuková", "zeměpis", "předpověď", "evakuace", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/potapeni_vrak.html",
+        "nazev": "🤿 Potápění k vraku",
+        "stav": "vyvoj",
+        "tagy": ["potápění", "vrak", "poklad", "dekomprese", "Bühlmann", "vzduch", "narkóza", "nitrox", "proudy", "průzkum", "vylepšení", "deník ponorů", "moře", "tropy"]
       }
     ]
   },
   {
-    "nazev": "🕵️ Organizace případu",
+    "nazev": "📍 Na místě činu",
     "skupina": "vysetrovani",
     "polozky": [
       {
-        "soubor": "obsah/case_timeline.html",
-        "nazev": "🕵️ Časová osa případu",
-        "stav": "beta",
-        "tagy": ["vyšetřování", "timeline", "případ", "chronologie"]
+        "soubor": "obsah/vysetrovani.html",
+        "nazev": "🧪 Vyšetřovací laboratoř – úvod a modelový případ",
+        "stav": "vyvoj",
+        "tagy": ["vyšetřování", "modelový případ", "průvodce", "kriminalistika", "metodika", "přehled nástrojů", "výuka", "nábor", "policie"]
       },
       {
-        "soubor": "obsah/evidence_log.html",
-        "nazev": "📦 Evidenční deník důkazů",
+        "soubor": "obsah/scene_sketch.html",
+        "nazev": "📐 Náčrt místa činu",
         "stav": "beta",
-        "tagy": ["vyšetřování", "chain of custody", "důkazy", "evidence"]
+        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů", "kóty", "půdorys", "fotka jako podklad", "fotopozice", "kriminalistika"]
       },
       {
         "soubor": "obsah/investigation_checklist.html",
@@ -3891,29 +3998,77 @@ const KATALOG_SEKCE = [
         "tagy": ["vyšetřování", "checklist", "ohledání", "výslech", "nehoda"]
       },
       {
+        "soubor": "obsah/evidence_log.html",
+        "nazev": "📦 Evidenční deník důkazů",
+        "stav": "beta",
+        "tagy": ["vyšetřování", "chain of custody", "důkazy", "evidence"]
+      },
+      {
         "soubor": "obsah/protocol_gen.html",
         "nazev": "📝 Generátor protokolů",
         "stav": "beta",
         "tagy": ["vyšetřování", "protokol", "ohledání", "výslech", "zajištění věci"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔬 Analýza stop",
+    "skupina": "vysetrovani",
+    "polozky": [
+      {
+        "soubor": "obsah/vyska_z_fotky.html",
+        "nazev": "📏 Výška osoby z fotky",
+        "stav": "vyvoj",
+        "tagy": ["fotogrammetrie", "výška osoby", "kamerový záznam", "CCTV", "úběžník", "horizont", "dvojpoměr", "Criminisi", "single view metrology", "Monte Carlo", "nejistota", "zkreslení objektivu", "protokol", "kriminalistika", "citlivostní analýza", "porovnání s podezřelým", "více snímků", "ukázky"]
       },
       {
-        "soubor": "obsah/interview_questions.html",
-        "nazev": "🎙️ Generátor otázek k výslechu",
-        "stav": "beta",
-        "tagy": ["vyšetřování", "výslech", "svědek", "poškozený", "podezřelý", "pohovor"]
+        "soubor": "obsah/krevni_stopy.html",
+        "nazev": "🩸 Úhel dopadu krevních stop",
+        "stav": "vyvoj",
+        "tagy": ["BPA", "krvavé stopy", "úhel dopadu", "kriminalistika", "forenzní", "oblast konvergence", "oblast původu", "tangentová metoda", "elipsa", "3D", "protokol", "CSV", "výuka", "perspektiva", "homografie", "RANSAC", "Monte Carlo", "gravitace", "ukázky"]
+      },
+      {
+        "soubor": "obsah/brzdna_draha.html",
+        "nazev": "🚗 Rychlost z brzdné stopy",
+        "stav": "vyvoj",
+        "tagy": ["nehoda", "brzdná dráha", "rychlost", "součinitel tření", "dráha zastavení"]
+      },
+      {
+        "soubor": "obsah/stret_vozidel.html",
+        "nazev": "💥 Rekonstrukce střetu vozidel",
+        "stav": "vyvoj",
+        "tagy": ["střet", "srážka", "dopravní nehoda", "hybnost", "rekonstrukce nehody", "dojezd", "konečná poloha", "rychlost před střetem", "Δv", "PDOF", "brzdná stopa", "Monte Carlo", "plánek nehody", "kriminalistika"]
+      },
+      {
+        "soubor": "obsah/doba_smrti.html",
+        "nazev": "🌡️ Odhad doby smrti",
+        "stav": "vyvoj",
+        "tagy": ["soudní lékařství", "Henssge", "nomogram", "posmrtné skvrny", "ztuhlost"]
+      }
+    ]
+  },
+  {
+    "nazev": "📱 Digitální a datové stopy",
+    "skupina": "vysetrovani",
+    "polozky": [
+      {
+        "soubor": "obsah/casova_analyza.html",
+        "nazev": "🕰️ Časová analýza záznamů GPS a telefonu",
+        "stav": "vyvoj",
+        "tagy": ["vyšetřování", "časová analýza", "GPS", "Google Takeout", "Timeline", "výpis hovorů", "CSV", "EXIF", "GPX", "KML", "GeoJSON", "časové pásmo", "posun hodin", "pobyty", "stay points", "nemožná rychlost", "mezery v datech", "souběh osob", "alibi", "mapa", "protokol", "kriminalistika", "soukromí", "BTS", "zájmová místa", "domov a práce", "vzorce pohybu", "konzistence zdrojů", "spoofing", "SHA-256", "řetězec důkazů"]
       },
       {
         "soubor": "obsah/vazby_analyza.html",
         "nazev": "🕸️ Analýza vazeb",
         "stav": "vyvoj",
         "tagy": ["vyšetřování", "graf vazeb", "link analysis", "centralita", "nejkratší cesta", "CSV"]
-      }
-    ]
-  },
-  {
-    "nazev": "🔍 Digitální forenzní pomůcky",
-    "skupina": "vysetrovani",
-    "polozky": [
+      },
+      {
+        "soubor": "obsah/financni_toky.html",
+        "nazev": "💸 Finanční toky z výpisů",
+        "stav": "vyvoj",
+        "tagy": ["bankovní výpis", "finanční šetření", "praní peněz", "AML", "hospodářská kriminalita", "smurfing", "strukturování", "money mule", "bílý kůň", "okružní platby", "Sankey", "toky peněz", "CSV import", "windows-1250", "párování převodů", "indicie"]
+      },
       {
         "soubor": "obsah/hash_compare.html",
         "nazev": "🔐 Porovnání otisků souborů",
@@ -3925,6 +4080,24 @@ const KATALOG_SEKCE = [
         "nazev": "🔎 Identifikace typu souboru",
         "stav": "beta",
         "tagy": ["forenzní", "magic bytes", "hlavička souboru", "falešná přípona"]
+      },
+      {
+        "soubor": "obsah/pravost_fotky.html",
+        "nazev": "🖼️ Ověření pravosti fotografie",
+        "stav": "vyvoj",
+        "tagy": ["pravost fotky", "úprava fotografie", "padělek", "fotomontáž", "ELA", "error level analysis", "EXIF", "metadata", "náhled", "kvantizační tabulka", "kvalita JPEG", "dvojitá komprese", "klonování", "copy-move", "šum", "forenzní analýza obrazu", "SHA-256", "protokol"]
+      },
+      {
+        "soubor": "obsah/exif_viewer.html",
+        "nazev": "📷 EXIF prohlížeč",
+        "stav": "beta",
+        "tagy": ["exif", "metadata", "foto", "gps", "expozice"]
+      },
+      {
+        "soubor": "obsah/mic.html",
+        "nazev": "🖨️ Stopy tiskárny (MIC)",
+        "stav": "vyvoj",
+        "tagy": ["tiskárna", "žluté tečky", "MIC", "machine identification code", "sledovací tečky", "yellow dots", "steganografie", "sériové číslo", "sken", "forenzní", "Xerox", "DocuColor", "anonymizace", "soukromí", "laserová tiskárna"]
       },
       {
         "soubor": "obsah/vin_decoder.html",
@@ -3944,26 +4117,20 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🔬 Forenzní výpočty & dokumentace",
+    "nazev": "📁 Spis a výslech",
     "skupina": "vysetrovani",
     "polozky": [
       {
-        "soubor": "obsah/scene_sketch.html",
-        "nazev": "📐 Náčrt místa činu",
+        "soubor": "obsah/case_timeline.html",
+        "nazev": "🕵️ Časová osa případu",
         "stav": "beta",
-        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů", "kóty", "půdorys", "fotka jako podklad", "fotopozice", "kriminalistika"]
+        "tagy": ["vyšetřování", "timeline", "případ", "chronologie"]
       },
       {
-        "soubor": "obsah/brzdna_draha.html",
-        "nazev": "🚗 Rychlost z brzdné stopy",
-        "stav": "vyvoj",
-        "tagy": ["nehoda", "brzdná dráha", "rychlost", "součinitel tření", "dráha zastavení"]
-      },
-      {
-        "soubor": "obsah/doba_smrti.html",
-        "nazev": "🌡️ Odhad doby smrti",
-        "stav": "vyvoj",
-        "tagy": ["soudní lékařství", "Henssge", "nomogram", "posmrtné skvrny", "ztuhlost"]
+        "soubor": "obsah/interview_questions.html",
+        "nazev": "🎙️ Příprava výslechu",
+        "stav": "beta",
+        "tagy": ["vyšetřování", "výslech", "svědek", "poškozený", "podezřelý", "pohovor"]
       },
       {
         "soubor": "obsah/trestni_zakonik_ref.html",
@@ -3971,6 +4138,13 @@ const KATALOG_SEKCE = [
         "stav": "beta",
         "jen_cs": true,
         "tagy": ["zákon", "paragraf", "trestní zákoník", "skutková podstata"]
+      },
+      {
+        "soubor": "obsah/treninkovy_pripad.html",
+        "nazev": "🎓 Tréninkový případ – najdi rozpor",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["vyšetřování", "kriminalistika", "cvičení", "trénink", "rozpor", "výpověď", "alibi", "svědek", "důkazy", "stopy", "spis", "nábor", "policie", "hra", "logika", "kritické myšlení"]
       }
     ]
   },
@@ -4250,6 +4424,18 @@ const KATALOG_SEKCE = [
         "nazev": "🪶 Leonardův zápisník",
         "stav": "vyvoj",
         "tagy": ["leonardo", "da vinci", "codex atlanticus", "atlantický kodex", "rukopis", "zápisník", "zrcadlové písmo", "renesance", "bajky", "proroctví", "překlad", "italština", "ambrosiana", "vynálezy", "stroje"]
+      },
+      {
+        "soubor": "obsah/stare_mapy.html",
+        "nazev": "🗺️ Staré mapy – jak to tu vypadalo",
+        "stav": "vyvoj",
+        "tagy": ["staré mapy", "historické mapy", "vojenské mapování", "Müllerova mapa", "stabilní katastr", "katastrální mapa", "ortofoto", "50. léta", "letecké snímky", "plány Prahy", "Vídeň", "Slovensko", "S-JTSK", "porovnání map", "opona", "georeference", "měření", "GeoJSON", "genealogie", "krajina"]
+      },
+      {
+        "soubor": "obsah/kurent.html",
+        "nazev": "✒️ Čtení kurentu (staré písmo)",
+        "stav": "vyvoj",
+        "tagy": ["kurent", "kurrent", "švabach", "staré písmo", "matrika", "genealogie", "paleografie", "čtení rukopisu", "přepis", "transkripce", "sken", "německé písmo", "latina", "slovníček", "zkratky", "jména", "nemoci", "povolání", "staré míry", "převod data", "svátky", "Velikonoce", "juliánský kalendář", "římské číslice", "chronogram", "šablony zápisů", "cvičení", "psaní stylusem", "převodník", "tisk"]
       }
     ]
   },
@@ -4300,6 +4486,12 @@ const KATALOG_SEKCE = [
         "nazev": "🔖 Záložky do knih a ex libris",
         "stav": "vyvoj",
         "tagy": ["záložka", "záložky do knih", "ex libris", "exlibris", "knižní štítek", "citát", "monogram", "iniciály", "střapec", "tisk", "arch A4", "ořezové značky", "spadávka", "PDF", "SVG", "art deco", "keltský vzor", "razítko", "kniha", "knihovna"]
+      },
+      {
+        "soubor": "obsah/ctenarsky_denik.html",
+        "nazev": "📚 Čtenářský deník",
+        "stav": "vyvoj",
+        "tagy": ["čtenářský deník", "knihy", "knihovna", "ISBN", "čárový kód", "sken", "Open Library", "Goodreads", "police", "přečteno", "chci číst", "průběh čtení", "hodnocení", "citáty", "poznámky", "série", "půjčeno", "čtenářská výzva", "statistiky", "škola", "zápis do deníku", "povinná četba", "tisk", "PDF", "CSV", "export", "import"]
       }
     ]
   },
@@ -4421,6 +4613,13 @@ const KATALOG_SEKCE = [
         "stav": "vyvoj",
         "jen_cs": true,
         "tagy": ["přednáška", "správce hesel", "hesla", "Android", "iPhone", "Správce hesel Google", "Hesla Apple", "Klíčenka", "Bitwarden", "passkey", "přístupový klíč", "kontrola hesel", "sdílení hesel", "senioři"]
+      },
+      {
+        "soubor": "obsah/prednaska_sit.html",
+        "nazev": "🛜 Bezpečná domácí síť a router",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["přednáška", "router", "wi-fi", "wpa3", "wps", "síť pro hosty", "chytrá domácnost", "kamery", "dns", "rodičovská kontrola", "vpn", "veřejná wi-fi", "bezpečnost", "senioři", "kontrolní seznam"]
       }
     ]
   },
@@ -4433,6 +4632,13 @@ const KATALOG_SEKCE = [
         "nazev": "🇺🇦 Vývoj války na Ukrajině",
         "stav": "vyvoj",
         "tagy": ["ukrajina", "válka", "rusko", "isw", "fronta", "mapa fronty", "okupace", "deepstate", "oryx", "ztráty", "osn", "uprchlíci", "zprávy"]
+      },
+      {
+        "soubor": "obsah/zpravy.html",
+        "nazev": "📰 Mozaika zpráv",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["zprávy", "novinky", "zpravodajství", "rss", "agregátor", "titulky", "čtečka zpráv", "idnes", "novinky.cz", "seznam zprávy", "čt24", "irozhlas", "aktuálně", "sport", "technika", "věda", "ekonomika", "témata"]
       },
       {
         "soubor": "obsah/about.html",

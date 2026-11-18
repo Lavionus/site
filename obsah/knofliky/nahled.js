@@ -4,8 +4,9 @@
 /* global THREE, G3D */
 (function () {
   'use strict';
-  function vytvorNahled(kontejner) {
-    const s = G3D.scena(kontejner, { odstup: 0.95 });
+  /** volby.drzPohled: pohled se sám nemění (jen při prvním modelu a na výslovné přání – nastav({novyPohled})). */
+  function vytvorNahled(kontejner, vol = {}) {
+    const s = G3D.scena(kontejner, { odstup: 0.95, drzPohled: !!vol.drzPohled });
     const stav = { hrany: true, rez: false, previsy: false, pravitka: false };
     let dily = null, volby = {}, rozmer = 50, prvni = true;
     const rez = () => (stav.rez ? [s.rovinaRezu] : []);
@@ -42,8 +43,8 @@
       s.mrizka(box, !!volby.tisk);
       s.stin(box, !volby.tisk);
       if (stav.pravitka) s.pravitka(box);
-      if (prvni || Math.abs(novy - rozmer) / rozmer > 0.3 || novyPohled) { rozmer = novy; s.pohled(prvni ? 'iso' : 'ponech', box); prvni = false; }
-      else { box.getCenter(s.ovl.cil); s.prekresli(); }
+      if (prvni || (!vol.drzPohled && Math.abs(novy - rozmer) / rozmer > 0.3) || novyPohled) { rozmer = novy; s.pohled(prvni ? 'iso' : 'ponech', box); prvni = false; }
+      else { if (!vol.drzPohled) box.getCenter(s.ovl.cil); s.prekresli(); }
     }
     function nastav(d, v = {}) { dily = d; volby = v; sestav(v.novyPohled); }
     function prepni(co, h) {

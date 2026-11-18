@@ -93,31 +93,67 @@
     { n: 4, nazev: 'vysoké', en: 'high', barva: '#ff0000' },
     { n: 5, nazev: 'velmi vysoké', en: 'very_high', barva: '#a00000' }
   ];
-  /** Potenciál nebezpečí podle Muntera: 2^stupeň (1 → 2, 2 → 4, 3 → 8, 4 → 16). */
-  const potencial = st => Math.pow(2, st);
-  const RF1 = { zadny: 1, pod40: 2, pod35: 4, pod30: 6 };          // nejstrmější část svahu
-  const RF2 = { zadny: 1, sever: 2, severniPulka: 3, projete: 2 };  // jeden z nich
-  const RF3 = { zadny: 1, velkaOdstupy: 2, mala: 2, malaOdstupy: 3 };  // jeden z nich
-  /** Redukční metoda (W. Munter, 3×3 Lawinen, 1997). Vrací zbytkové riziko a porušená povinná pravidla.
-      v = { stupen 1–5, sklon: klíč RF1, orientace: klíč RF2, skupina: klíč RF3, mokry: bool } */
+  /* Redukční metoda podle W. Muntera – hodnoty ověřeny 17. 11. 2026 proti:
+     W. Munter: „3×3 zur Beurteilung der Lawinengefahr“, Berg&Steigen 4/2001, s. 36–37 (tabulka RF od autora);
+     M. Larcher: „Stop or Go“, Berg&Steigen 4/1999 (tabulka RF, elementární metoda, 5 varovných signálů);
+     W. Munter: 3×3 Lawinen, Garmisch-Partenkirchen 1997. */
+  /** Potenciál nebezpečí: 2^stupeň (1 → 2, 2 → 4, 3 → 8). Munter připouští mezihodnoty („klouzavá
+      stupnice s exponenciálním růstem“) – dolní/horní část stupně zde ×0,75 / ×1,5 (2 → 1,5/3, 4 → 3/6, 8 → 6/12). */
+  const CAST_STUPNE = { dolni: 0.75, stred: 1, horni: 1.5 };
+  const potencial = (st, cast) => Math.pow(2, st) * (CAST_STUPNE[cast] || 1);
+  // 1. třída (erstklassig): sklon nejstrmější části svahu – jedna z možností
+  const RF1 = { zadny: 1, pod40: 2, kolem35: 3, pod35: 4, pod30: 4 };   // pod30: Munter samostatný faktor nemá → ×4
+  // 1. třída (erstklassig): orientace – jedna z možností (neplatí, když je nebezpečno ve všech orientacích)
+  const RF_OR = { zadny: 1, sever: 2, severniPulka: 3, kriticke: 4 };
+  // 2. třída (zweitklassig): trvale projížděný svah ×2 – neplatí za mokrého sněhu
+  const RF2_PROJETE = 2;
+  // 3. třída (drittklassig): skupina – jedna z možností; odstupy aspoň 10 m ve výstupu, při sjezdu víc
+  const RF3 = { zadny: 1, velkaOdstupy: 2, mala: 2, malaOdstupy: 3 };
+  /** Redukční metoda. v = { stupen 1–5, cast: dolni|stred|horni, sklon: klíč RF1, orientace: klíč RF_OR,
+      projete: bool, skupina: klíč RF3, mokry: bool, vsude: bool (nebezpečno ve všech orientacích) }.
+      Vrací zbytkové riziko (≤ 1 přijatelné), dílčí faktory a pravidla. */
   function redukce(v) {
     const st = Math.max(1, Math.min(5, Math.round(+v.stupen || 1)));
+    let orientace = v.orientace, projete = !!v.projete;
+    if (orientace === 'projete') { orientace = 'zadny'; projete = true; }   // starší uložený formát
     const pravidla = [];
-    if (st === 5) return { stupen: st, gp: potencial(5), rf: 1, rf1: 1, rf2: 1, rf3: 1, riziko: Infinity, prijatelne: false,
-      pravidla: ['Při stupni 5 se túry mimo zajištěné terény nepodnikají.'] };
-    const rf1 = RF1[v.sklon] || 1;
-    let rf2 = RF2[v.orientace] || 1;
-    if (v.mokry && (v.orientace === 'sever' || v.orientace === 'severniPulka')) {
-      rf2 = 1; pravidla.push('Při mokrém sněhu (jaro, oteplení) neplatí redukční faktory za vynechání severních orientací.');
+    const vysledek = o => Object.assign({ stupen: st, gp: potencial(st, v.cast), rf1: 1, rfOr: 1, rf2: 1, rf3: 1, rf: 1, pravidla }, o);
+    if (st === 5) return vysledek({ gp: potencial(5), riziko: Infinity, prijatelne: false,
+      pravidla: ['Při stupni 5 se túry mimo zajištěné terény nepodnikají.'] });
+    if (st === 4) {
+      const ok = v.sklon === 'pod30';
+      pravidla.push(ok ? 'Při stupni 4 (vysoké) metoda nepočítá – platí jen omezení na terén pod 30° (včetně svahů nad trasou a odjezdů lavin).'
+        : 'Při stupni 4 (vysoké) je povinné zůstat v terénu pod 30°.');
+      return vysledek({ gp: potencial(4), riziko: ok ? null : Infinity, prijatelne: ok, pravidla });
     }
-    const rf3 = RF3[v.skupina] || 1, rf = rf1 * rf2 * rf3, gp = potencial(st);
-    if (st === 3 && rf1 < 2) pravidla.push('Při stupni 3 (značné) je povinné vynechat svahy 40° a strmější.');
-    if (st === 4 && rf1 < 6) pravidla.push('Při stupni 4 (vysoké) je povinné zůstat v terénu pod 30°.');
+    const rf1 = RF1[v.sklon] || 1;
+    let rfOr = RF_OR[orientace] || 1, rf2 = projete ? RF2_PROJETE : 1;
+    if (v.vsude && rfOr > 1) { rfOr = 1; pravidla.push('Je-li nebezpečno ve všech orientacích (např. při překročení kritického množství nového sněhu), faktory za orientaci neplatí.'); }
+    if (v.mokry && rf2 > 1) { rf2 = 1; pravidla.push('Za mokrého sněhu neplatí faktor 2. třídy (trvale projížděný svah).'); }
+    if (v.mokry) pravidla.push('Metoda je stavěná na suché deskové laviny. Za mokrého sněhu rozhoduje hlavně denní doba a oteplení – nebezpečné bývají osluněné svahy, vynechání severu tu riziko nesnižuje.');
+    if (st === 3 && rf1 === 1 && rfOr === 1) pravidla.push('Při stupni 3 (značné) je povinné použít faktor 1. třídy (sklon nebo orientace).');
+    const rf3 = RF3[v.skupina] || 1, rf = rf1 * rfOr * rf2 * rf3, gp = potencial(st, v.cast);
     const riziko = gp / rf;
-    return { stupen: st, gp, rf1, rf2, rf3, rf, riziko, prijatelne: riziko <= 1 && pravidla.filter(p => p.includes('povinné')).length === 0, pravidla };
+    return vysledek({ gp, rf1, rfOr, rf2, rf3, rf, riziko, prijatelne: riziko <= 1 + 1e-9 && !pravidla.some(p => p.includes('povinné')) });
   }
-  /** Elementární redukční metoda: nejvyšší přípustný sklon (°) pro stupeň; 0 = mimo terén. */
+  /** Elementární redukční metoda: nejmenší sklon (°), od kterého se svahy vynechávají; 90 = bez omezení, 0 = žádné túry. */
   const elementarni = st => ({ 1: 90, 2: 40, 3: 35, 4: 30 })[st] || 0;
+  /** Stop or Go (M. Larcher, ÖAV): kontrola 1 = elementární metoda, kontrola 2 = varovné signály. */
+  const STOP_OR_GO_ZNAKY = [
+    ['triebschnee', 'Čerstvý navátý sníh (poslední 2–3 dny)?'],
+    ['novy30', 'Více než 30 cm nového sněhu?'],
+    ['laviny', 'Čerstvé laviny (samovolné)?'],
+    ['provlhceni', 'Provlhčení sněhové pokrývky (jaro, oteplení, měkká krusta)?'],
+    ['wumm', 'Zvuky sesedání („wumm“), trhliny?']
+  ];
+  /** sklonMax = nejstrmější část svahu (°), znaky = { klíč: true } pro zjištěné signály, ktere se týkají vašeho terénu. */
+  function stopOrGo(st, sklonMax, znaky) {
+    const lim = elementarni(st), duvody = [];
+    if (st >= 5) duvody.push('Stupeň 5: túry se nepodnikají.');
+    else if (sklonMax >= lim) duvody.push(`Kontrola 1: při stupni ${st} vynechat svahy ${lim}° a strmější` + (st === 4 ? ' (terén na obrátky)' : '') + '.');
+    for (const [k, t] of STOP_OR_GO_ZNAKY) if (znaky && znaky[k]) duvody.push('Kontrola 2: ' + t.replace('?', ''));
+    return { go: duvody.length === 0, duvody };
+  }
 
   // ---------- Bulletin CAAML v6 ----------
   const STUPEN_Z_TEXTU = { low: 1, moderate: 2, considerable: 3, high: 4, very_high: 5 };
@@ -268,7 +304,7 @@
   const API = {
     KLIC, OBVOD, terrariumVyska, vyskyZRgba, latRadku, pixelDlazdice, sklonOrientace, SEKTORY, SEKTORY_EN, sektor,
     TRIDY_SKLONU, tridaSklonu, BARVY_SEKTORU, obarvi, dlazdiceBodu, zavetrneSektory,
-    STUPNE, potencial, RF1, RF2, RF3, redukce, elementarni,
+    STUPNE, CAST_STUPNE, potencial, RF1, RF_OR, RF2_PROJETE, RF3, redukce, elementarni, STOP_OR_GO_ZNAKY, stopOrGo,
     PROBLEMY, prostyText, zpracujBulletiny, platny,
     urlPredpoved, sezona, aktualniSezona, urlArchiv, denniZHodin, souhrnSezony, prumernySmer, indexTed, vyhodnotPocasi, SEZNAM
   };

@@ -3,13 +3,14 @@
    Zdroje rovnic (koeficienty přepsány přesně, ověřeno na publikovaných příkladech a kartách ESC):
    - SCORE2 working group and ESC Cardiovascular Risk Collaboration. SCORE2 risk prediction algorithms:
      new models to estimate 10-year risk of cardiovascular disease in Europe. Eur Heart J 2021;42:2439–2454,
-     doi:10.1093/eurheartj/ehab309 (Supplementary Methods Table 2/4; oprava koeficientů Eur Heart J 2022;43:241).
+     doi:10.1093/eurheartj/ehab309 (Supplementary Methods Table 2/4); koeficienty pro ženy a rekalibrace zveřejněny v Hageman SHJ et al.,
+     Eur Heart J 2022;43:241–242, doi:10.1093/eurheartj/ehab761. Ověřeno 17. 11. 2026.
    - SCORE2-OP working group. SCORE2-OP risk prediction algorithms: estimating incident cardiovascular event
      risk in older persons in four geographical risk regions. Eur Heart J 2021;42:2455–2467, doi:10.1093/eurheartj/ehab312.
    - SCORE2-Diabetes Working Group. SCORE2-Diabetes: 10-year cardiovascular risk estimation in type 2 diabetes
      in Europe. Eur Heart J 2023;44:2544–2556, doi:10.1093/eurheartj/ehad260.
    - 2021 ESC Guidelines on cardiovascular disease prevention in clinical practice. Eur Heart J 2021;42:3227–3337
-     (regiony rizika, prahy kategorií, karty Figure 3).
+     (regiony rizika, prahy kategorií, karty Figure 3; rekalibrace SCORE2-OP [k1, k2] podle karet ESC/HeartScore).
 
    Výpočet: lineární prediktor → nekalibrované riziko 1 − S0^exp(LP) → rekalibrace na region
    riziko = 1 − exp(−exp(k1 + k2 · ln(−ln(1 − nekalibrované)))). */

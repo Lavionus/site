@@ -76,4 +76,31 @@
     }
   });
   L.gridLayer.jtsk = o => new L.GridLayer.Jtsk(o);
+
+  /* ArcGIS MapServer/ImageServer export – každá dlaždice je obrázek výřezu v EPSG:3857 */
+  L.TileLayer.Arcgis = L.TileLayer.extend({
+    getTileUrl(k) {
+      return window.STMAPY.urlArcgis(this.options.def, window.STMAPY.bboxDlazdice(k.z, k.x, k.y), 256);
+    }
+  });
+  L.tileLayer.arcgis = (def, o) => new L.TileLayer.Arcgis('', Object.assign({ def }, o));
+
+  /* Vlastní georeferencovaný sken: obrázek (ImageBitmap) + afinní koeficienty do EPSG:3857 */
+  L.GridLayer.Sken = L.GridLayer.extend({
+    options: { tileSize: 256, keepBuffer: 2 },
+    createTile(k) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 256;
+      const o = this.options;
+      if (o.obraz && o.par) {
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingQuality = 'high';
+        ctx.setTransform(...window.STMAPY.transformDlazdice(o.par, k.z, k.x, k.y));
+        ctx.drawImage(o.obraz, 0, 0);
+      }
+      return c;
+    },
+    nastav(par) { this.options.par = par; this.redraw(); }
+  });
+  L.gridLayer.sken = o => new L.GridLayer.Sken(o);
 })();

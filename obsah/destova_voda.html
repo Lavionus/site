@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dešťová voda – odvodnění, nádrž, vsakování</title>
+<meta name="description" content="Odvodnění střech (žlaby a svody podle ČSN 75 6760 a ČSN EN 12056-3), návrh akumulační nádrže s denní simulací srážek, vsakovací zařízení podle ČSN 75 9010, retenční nádrž s regulovaným odtokem a úspora vody v Kč. Orientační výpočty se zdroji.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/chart.min.js"></script>
+<script src="destova_voda/hd_data.js"></script>
+<script src="destova_voda/jadro.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+select.tl{padding:4px 6px;max-width:190px}
+@media (max-width:1150px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+[hidden]{display:none !important}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:.84rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn.danger{color:var(--danger)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;font-family:inherit;min-width:0;width:100%}
+input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto;display:grid;gap:12px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;min-width:0}
+.karta h2{font-size:1rem;margin:0 0 8px}
+.karta h3{font-size:.9rem;margin:12px 0 6px}
+.pole-mriz{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px 12px}
+.pole{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted);align-content:start}
+.pole .vstup{color:var(--text)}
+.pole.zaskrt{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--text)}
+.napoveda{font-size:.76rem;color:var(--text-faint);line-height:1.4}
+.info{font-size:.82rem;line-height:1.5;background:var(--bg-elevated);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;color:var(--text-muted);margin:8px 0}
+.info.varovani{border-left-color:var(--warn)}
+.info.chyba{border-left-color:var(--danger)}
+.info.ok{border-left-color:var(--ok)}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.dlazdice{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.dlazdice b{display:block;font-size:1.3rem;line-height:1.15}
+.dlazdice span{font-size:.75rem;color:var(--text-muted)}
+.dlazdice.ok b{color:var(--ok)} .dlazdice.spatne b{color:var(--danger)} .dlazdice.pozor b{color:var(--warn)}
+.tab-obal{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:.82rem}
+th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;background:var(--bg-elevated)}
+td.c,th.c{text-align:right;white-space:nowrap}
+tr.max td{font-weight:700;background:var(--accent-soft)}
+td .vstup{padding:4px 6px;font-size:.82rem}
+.plochy td:nth-child(1){min-width:120px} .plochy td:nth-child(3){min-width:200px} .plochy td:nth-child(4){min-width:96px}
+.plochy td input[type=number]{width:80px}
+.graf{position:relative;height:260px;margin:8px 0}
+.vysledky-geo{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.dva{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px}
+details summary{cursor:pointer;color:var(--accent);font-size:.84rem;margin:6px 0}
+a{color:var(--accent)}
+.zdroje li{margin:4px 0;line-height:1.45;font-size:.86rem}
+.tisk-jen{display:none}
+@media print{
+  .lista,.nepis,#podpis-pruh,.graf{display:none!important}
+  .tisk-jen{display:block}
+  body{display:block;height:auto;background:#fff;color:#000}
+  main{overflow:visible;padding:0}
+  .karta,.info,.dlazdice{background:#fff;border-color:#999;break-inside:avoid}
+  a{color:#000}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>🌧️ Dešťová voda</h1>
+  <div class="skup" role="group" aria-label="Projekt"><span class="skup-nazev" aria-hidden="true">Projekt</span><div class="skup-tl">
+    <select class="tl" id="vyberProjektu" aria-label="Projekt"></select>
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Projekty, záloha, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výpočet"><span class="skup-nazev" aria-hidden="true">Výpočet</span><div class="skup-tl">
+    <button class="tl" data-pohled="plochy" aria-pressed="true">🏠<span class="txt"> Plochy &amp; žlaby</span></button>
+    <button class="tl" data-pohled="nadrz" aria-pressed="false">🛢️<span class="txt"> Akumulace</span></button>
+    <button class="tl" data-pohled="vsak" aria-pressed="false">🕳️<span class="txt"> Vsakování</span></button>
+    <button class="tl" data-pohled="retence" aria-pressed="false">⏳<span class="txt"> Retence</span></button>
+    <button class="tl" data-pohled="uspora" aria-pressed="false">💰<span class="txt"> Úspora</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-pohled="protokol" aria-pressed="false">📋<span class="txt"> Protokol</span></button>
+    <button class="tl" data-pohled="zdroje" aria-pressed="false">📚<span class="txt"> Zdroje</span></button>
+  </div></div>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">✚ Nový projekt</button>
+  <button class="tl" data-prikaz="duplikovat">⧉ Duplikovat projekt</button>
+  <button class="tl" data-prikaz="prejmenovat">✏️ Přejmenovat…</button>
+  <button class="tl" data-prikaz="smazat">🗑️ Smazat projekt…</button>
+  <hr>
+  <button class="tl" data-prikaz="tisk">🖨️ Tisk protokolu</button>
+  <button class="tl" data-prikaz="export">💾 Záloha všech projektů (JSON)</button>
+  <button class="tl" data-prikaz="import">📂 Obnovit ze zálohy…</button>
+</div>
+<input type="file" id="souborImport" accept=".json,application/json" hidden>
+<input type="file" id="souborCsv" accept=".csv,.txt,text/csv,text/plain" hidden>
+
+<main><div class="obal" id="obsah"></div></main>
+
+<script>
+(function () {
+'use strict';
+const J = window.DestJadro;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const f = J.fmt;
+const cz = x => String(x).replace('.', ',');
+if (window.self === window.top) document.body.classList.add('samostatne');
+
+let data;
+try { data = J.migruj(JSON.parse(localStorage.getItem(J.KLIC))); } catch (e) { data = J.prazdna(); }
+let pohled = 'plochy';
+try { pohled = localStorage.getItem(J.KLIC + '_pohled') || 'plochy'; } catch (e) {}
+const pr = () => data.projekty.find(p => p.id === data.aktivni);
+
+function uloz() {
+  pr().zmeneno = new Date().toISOString().slice(0, 10);
+  try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
+  catch (e) { Dialog.chyba('Data se nepodařilo uložit (plné úložiště?)'); }
+}
+
+/* ---------- vazba polí na projekt: data-k="sekce.klic" ---------- */
+const NULOVATELNE = new Set(['vsak.Avsak', 'nadrz.uhrn']);
+const TEXTOVE = new Set(['lokalita.nazev', 'poznamka', 'odvodneni.rezim', 'odvodneni.p', 'vsak.p', 'vsak.typ', 'retence.umisteni', 'retence.rezim', 'uspora.cena', 'vsak.test.tvar']);
+function ziskej(cesta) { return cesta.split('.').reduce((o, k) => o == null ? o : o[k], pr()); }
+function nastav(cesta, v) {
+  const c = cesta.split('.'), posl = c.pop();
+  const o = c.reduce((x, k) => x[k], pr());
+  o[posl] = v;
+}
+function hodnotaPole(el) {
+  const k = el.dataset.k;
+  if (el.type === 'checkbox') return el.checked;
+  if (TEXTOVE.has(k)) return el.value;
+  if (el.value.trim() === '' && NULOVATELNE.has(k)) return null;
+  const n = J.cislo(el.value, NaN);
+  return Number.isFinite(n) ? n : undefined;
+}
+const pole = (k, popis, o) => {
+  o = o || {};
+  const v = ziskej(k);
+  const typ = o.text ? 'text' : 'text" inputmode="decimal';
+  return `<label class="pole">${popis}<input class="vstup" data-k="${k}" type="${typ}" value="${esc(v == null ? '' : (k === 'vsak.kv' ? Number(v).toExponential() : String(v)).replace('.', ','))}"${o.ph ? ` placeholder="${esc(o.ph)}"` : ''}>${o.pozn ? `<span class="napoveda">${o.pozn}</span>` : ''}</label>`;
+};
+const vyber = (k, popis, moznosti, pozn) => `<label class="pole">${popis}<select class="vstup" data-k="${k}">${moznosti.map(([h, t]) => `<option value="${esc(h)}"${String(ziskej(k)) === String(h) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>${pozn ? `<span class="napoveda">${pozn}</span>` : ''}</label>`;
+const zaskrt = (k, popis) => `<label class="pole zaskrt"><input type="checkbox" data-k="${k}"${ziskej(k) ? ' checked' : ''}> ${popis}</label>`;
+const dl = (hodnota, popis, tr) => `<div class="dlazdice ${tr || ''}"><b>${hodnota}</b><span>${popis}</span></div>`;
+const stanice = (i) => { const s = J.HD.stanice[i]; return `${s.misto} (${s.vyska} m n. m.)`; };
+const stanMoznosti = () => J.HD.stanice.map((s, i) => [i, stanice(i)]);
+
+/* ---------- grafy ---------- */
+const grafy = {};
+function barvy() {
+  const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+  return { text: v('--text-muted'), mrizka: v('--border'), accent: v('--accent'), ok: v('--ok'), warn: v('--warn'), danger: v('--danger') };
+}
+function graf(id, cfg) {
+  if (grafy[id]) { grafy[id].destroy(); delete grafy[id]; }
+  const c = $(id); if (!c || !window.Chart) return;
+  const b = barvy();
+  Chart.defaults.color = b.text; Chart.defaults.borderColor = b.mrizka; Chart.defaults.font.family = 'system-ui,sans-serif';
+  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { labels: { boxWidth: 12 } } } }, cfg.options || {});
+  grafy[id] = new Chart(c, typeof cfg.data === 'function' ? Object.assign(cfg, { data: cfg.data(b) }) : cfg);
+}
+
+/* ---------- 🏠 Plochy & žlaby ---------- */
+function htmlLokalita() {
+  const l = pr().lokalita;
+  return `<section class="karta"><h2>📍 Lokalita</h2>
+    <div class="pole-mriz">
+      <label class="pole">Obec / místo<span style="display:flex;gap:4px"><input class="vstup" data-k="lokalita.nazev" value="${esc(l.nazev)}" placeholder="např. Tábor"><button class="btn nepis" data-prikaz="hledatMisto" title="Najít souřadnice a nadmořskou výšku (Open-Meteo)">🔍</button></span>
+        <span class="napoveda">${l.lat != null ? `${l.lat.toFixed(3)}° s. š., ${l.lon.toFixed(3)}° v. d.` : 'Souřadnice nejsou zadané (potřebné jen pro stažení srážek).'}</span></label>
+      ${pole('lokalita.vyska', 'Nadmořská výška [m n. m.]', { pozn: 'Pro roční úhrn srážek podle TP 1.20 tab. 6.' })}
+      ${vyber('lokalita.stanice', 'Stanice návrhových úhrnů srážek', stanMoznosti(), 'Zvolte nejbližší stanici s podobnou nadmořskou výškou (ČKAIT TP 1.20 tab. 2 a 3). Nad 700 m n. m. zjišťovat individuálně.')}
+    </div>
+    <div class="vysledky-geo nepis" id="geoVysledky"></div></section>`;
+}
+function htmlPlochy() {
+  const p = pr();
+  const radky = p.plochy.map(pl => {
+    const d = J.DRUH[pl.druh];
+    return `<tr data-pl="${pl.id}"><td><input class="vstup" data-f="nazev" value="${esc(pl.nazev)}" aria-label="Název plochy"></td>
+      <td><input class="vstup" data-f="A" type="number" min="0" step="any" value="${pl.A}" aria-label="Půdorys m²"></td>
+      <td><select class="vstup" data-f="druh" aria-label="Druh plochy">${J.DRUHY.map(x => `<option value="${x.id}"${x.id === pl.druh ? ' selected' : ''}>${esc(x.nazev)}</option>`).join('')}</select></td>
+      <td><select class="vstup" data-f="sklon" aria-label="Sklon">${J.SKLONY.map(x => `<option value="${x.id}"${x.id === pl.sklon ? ' selected' : ''}>${x.nazev}</option>`).join('')}</select></td>
+      <td class="c">${J.souC(pl).toLocaleString('cs-CZ')} / ${J.souPsi(pl).toLocaleString('cs-CZ')} / ${d.psiD ? J.souPsiD(pl).toLocaleString('cs-CZ') : '–'}</td>
+      <td><input type="checkbox" data-f="nadrz"${pl.nadrz && d.psiD ? ' checked' : ''}${d.psiD ? '' : ' disabled'} aria-label="Do nádrže"></td>
+      <td><input type="checkbox" data-f="vsak"${pl.vsak ? ' checked' : ''} aria-label="Do vsaku a retence"></td>
+      <td>${d.strecha ? `<input class="vstup" data-f="svody" type="number" min="1" step="1" value="${pl.svody}" aria-label="Počet svodů">` : ''}</td>
+      <td>${d.strecha ? `<input class="vstup" data-f="delka" type="number" min="0" step="any" value="${pl.delka || ''}" aria-label="Délka žlabu m">` : ''}</td>
+      <td class="nepis"><button class="btn mini danger" data-prikaz="smazPlochu" data-id="${pl.id}" title="Odebrat plochu" aria-label="Odebrat plochu">✕</button></td></tr>`;
+  }).join('');
+  return `<section class="karta"><h2>🏠 Odvodňované plochy</h2>
+    <div class="tab-obal"><table class="plochy"><thead><tr><th>Název</th><th>Půdorys [m²]</th><th>Druh povrchu</th><th>Sklon</th><th class="c" title="C pro odvodnění (ČSN 75 6760) / ψ pro vsak a retenci (TP 1.20 tab. 4) / ψd pro nádrž (TP 1.20 tab. 8)">C / ψ / ψ<sub>d</sub></th><th title="Svádí se do akumulační nádrže">Nádrž</th><th title="Počítá se do vsakování a retence">Vsak</th><th title="Počet svodů (střechy)">Svodů</th><th title="Délka žlabu [m] (volitelné)">Žlab [m]</th><th class="nepis"></th></tr></thead><tbody>${radky}</tbody></table></div>
+    <button class="btn nepis" data-prikaz="pridejPlochu">✚ Přidat plochu</button>
+    <p class="napoveda">Plocha = půdorysný průmět (ne plocha šikmé střechy); vliv větru se v ČR nezohledňuje (ČSN 75 6760). C – součinitel odtoku ČSN 75 6760:2014 tab. 8; ψ – TP 1.20 tab. 4 (ČSN 75 9010); ψ<sub>d</sub> – součinitel využití srážkové vody, TP 1.20 tab. 8 (DIN 1989-1).</p>
+  </section>
+  <section class="karta"><h2>🌀 Žlaby a svody</h2>
+    <div class="pole-mriz">
+      ${vyber('odvodneni.rezim', 'Návrhová intenzita deště', [['csn', 'ČSN 75 6760: 0,03 l/(s·m²) pro celou ČR'], ['stanice', 'z 5min úhrnu zvolené stanice'], ['vlastni', 'vlastní hodnota']])}
+      ${pr().odvodneni.rezim === 'stanice' ? vyber('odvodneni.p', 'Periodicita', [['0.2', 'p = 0,2 (1× za 5 let)'], ['0.1', 'p = 0,1 (1× za 10 let)']]) : ''}
+      ${pr().odvodneni.rezim === 'vlastni' ? pole('odvodneni.i', 'Intenzita i [l/(s·m²)]', { pozn: 'Statistické údaje lokality (ČSN EN 12056-3 čl. 4.2).' }) : ''}
+      ${vyber('odvodneni.k', 'Součinitel bezpečnosti (ČSN EN 12056-3)', J.BEZPECNOST.map(b => [b.k, b.nazev]))}
+    </div>
+    <div id="vysOdv"></div>
+  </section>`;
+}
+function vysOdvodneni() {
+  const p = pr(), i = J.intenzita(p), k = p.odvodneni.k;
+  const strechy = p.plochy.filter(pl => J.DRUH[pl.druh].strecha);
+  let h = `<p class="info">Odtok Q = i · A · C · k = <b>${f(i, 4)} l/(s·m²)</b>${k !== 1 ? ` × ${String(k).replace('.', ',')}` : ''} · A · C. Půlkruhový žlab: Q<sub>L</sub> = 0,9 · 2,78·10⁻⁵ · A<sub>E</sub><sup>1,25</sup> (ČSN EN 12056-3, krátký žlab, bez příznivého vlivu sklonu). Svod: Q<sub>RWP</sub> = 2,5·10⁻⁴ · k<sub>b</sub><sup>−0,167</sup> · d<sub>i</sub><sup>2,667</sup> · f<sup>1,667</sup>, k<sub>b</sub> = 0,25 mm, f = 0,33.</p>`;
+  if (!strechy.length) return h + '<p class="info varovani">Žádná střecha – přidejte plochu druhu „Střecha…“.</p>';
+  h += `<div class="tab-obal"><table><thead><tr><th>Střecha</th><th class="c">A [m²]</th><th class="c">Q [l/s]</th><th class="c">Svodů</th><th class="c">Q na svod</th><th class="c">Žlab ø [mm]</th><th class="c">kapacita</th><th class="c">Svod d<sub>i</sub> [mm]</th><th class="c">kapacita</th></tr></thead><tbody>`;
+  const pozn = [];
+  for (const pl of strechy) {
+    const o = J.navrhOdvodneni(pl, i, k);
+    h += `<tr><td>${esc(pl.nazev)}</td><td class="c">${f(pl.A, 1)}</td><td class="c">${f(o.Q, 2)}</td><td class="c">${pl.svody}</td><td class="c">${f(o.Qs, 2)}</td>
+      <td class="c">${o.zlab ? '≥ ' + o.zlab : '<b style="color:var(--danger)">> ' + J.ZLABY[J.ZLABY.length - 1] + '</b>'}</td><td class="c">${o.zlab ? f(o.kapZlab, 2) + ' l/s' : '–'}</td>
+      <td class="c">${o.svod ? '≥ ' + o.svod : '<b style="color:var(--danger)">> ' + J.SVODY[J.SVODY.length - 1] + '</b>'}</td><td class="c">${o.svod ? f(o.kapSvod, 2) + ' l/s' : '–'}</td></tr>`;
+    if (!o.zlab || !o.svod) pozn.push(`<b>${esc(pl.nazev)}</b>: průtok na jeden svod je příliš velký – přidejte svody.`);
+    if (o.dlouhy) pozn.push(`<b>${esc(pl.nazev)}</b>: úsek žlabu ${f(o.Lusek, 1)} m na svod je „dlouhý žlab“ (L/W > 50). U vodorovného žlabu kapacita klesá – posuďte podle ČSN EN 12056-3 (součinitel F<sub>L</sub>), nebo žlab ukládejte ve sklonu ≥ 0,5 %.`);
+  }
+  h += '</tbody></table></div>';
+  if (pozn.length) h += `<div class="info varovani">${pozn.join('<br>')}</div>`;
+  h += `<details><summary>Orientační tabulka žlabů (Ing. Žabička) a průtok vtoků</summary>
+    <div class="tab-obal"><table><thead><tr><th class="c">Odvodňovaná plocha [m²]</th><th class="c">Q<sub>N</sub> [l/s]</th><th class="c">RŠ žlabu [mm]</th><th class="c">ø žlabu [mm]</th></tr></thead><tbody>
+    <tr><td class="c">29</td><td class="c">0,9</td><td class="c">250</td><td class="c">110</td></tr><tr><td class="c">75</td><td class="c">2,2</td><td class="c">333</td><td class="c">160</td></tr>
+    <tr><td class="c">130</td><td class="c">3,9</td><td class="c">400</td><td class="c">200</td></tr><tr><td class="c">206</td><td class="c">6,2</td><td class="c">500</td><td class="c">240</td></tr></tbody></table></div>
+    <p class="napoveda">Podmínky tabulky: sklon žlabu 0,5 %, přímý žlab bez rohů, jeden svod na konci, čištěný žlab. Zdroj: HIPOS, „Zásady odvodnění střech“ (podle Ing. Z. Žabičky, autora ČSN 75 6760). Ploché střechy: každá by měla mít min. 2 vtoky nebo bezpečnostní přepad; nouzový odtok Q<sub>not</sub> = 0,07·A (1 vtok) nebo (0,07 − 0,03·C)·A (ČSN 75 6760:2014 čl. 4.3.1). Průtok vtokem udává výrobce.</p></details>`;
+  return h;
+}
+
+/* ---------- 🛢️ Akumulace ---------- */
+function htmlNadrz() {
+  const p = pr(), sr = p.srazky;
+  return `<section class="karta"><h2>🛢️ Spotřeba nepitné vody</h2>
+    <div class="pole-mriz">
+      ${pole('nadrz.osob', 'Počet osob')}
+      ${pole('nadrz.wc', 'WC [l/(osoba·den)]', { pozn: 'TP 1.20 tab. 5: úsporné 24, neúsporné 45 (0 = nepoužívat)' })}
+      ${pole('nadrz.pracka', 'Pračka [l/(osoba·den)]', { pozn: 'TP 1.20 tab. 5: úsporná 12, neúsporná 20 (0 = nepoužívat)' })}
+      ${pole('nadrz.jine', 'Jiná spotřeba [m³/rok]', { pozn: 'úklid, údržba… (TP 1.20: úklid ~1 m³/os·rok)' })}
+      ${pole('nadrz.zahrada', 'Plocha zahrady [m²]')}
+      ${pole('nadrz.zalivka', 'Zálivka [l/(m²·rok)]', { pozn: 'TP 1.20 tab. 5: 60 l/m²·rok, duben–září; kropení zeleně 80–200' })}
+      ${pole('nadrz.eta', 'Účinnost filtru η [-]', { pozn: 'podle výrobce, TP 1.20: 0,9–0,95' })}
+      ${pole('nadrz.objem', 'Objem nádrže V [m³]', { pozn: 'pro simulaci a úsporu' })}
+    </div></section>
+  <section class="karta"><h2>☔ Srážky</h2>
+    <div class="pole-mriz">${pole('nadrz.uhrn', 'Roční úhrn [mm] (prázdné = podle výšky)', { ph: f(J.uhrnZVysky(p.lokalita.vyska)) + ' mm (TP 1.20 tab. 6)' })}</div>
+    <p class="info">${sr ? `Denní řada: <b>${esc(sr.zdroj)}</b>, od ${sr.od}, ${f(sr.mm.length)} dní (≈ ${f(sr.mm.length / 365.25, 1)} roku)${sr.lat != null ? `, bod ${sr.lat.toFixed(2)}°, ${sr.lon.toFixed(2)}°` : ''}, staženo ${esc(sr.stazeno)}. Reanalýza ERA5 má rozlišení ~25 km a vyhlazuje krátké lokální bouřky – na bilanci nádrže stačí, na dimenzování ne.`
+      : 'Bez denní řady se počítá jen měsíční bilance z průměrného úhrnu (TP 1.20 tab. 6 a 7). Pro <b>denní simulaci</b> nádrže stáhněte skutečné denní srážky pro zadanou lokalitu, nebo načtěte vlastní CSV (datum;mm).'}</p>
+    <div class="nepis" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn primary" data-prikaz="stahniSrazky">☁️ Stáhnout denní srážky (10 let)</button>
+      <button class="btn" data-prikaz="nactiCsv">📄 Načíst CSV…</button>
+      ${sr ? '<button class="btn danger" data-prikaz="odeberSrazky">✕ Odebrat řadu</button>' : ''}
+    </div></section>
+  <div id="vysNadrz" class="obal" style="padding:0"></div>
+  <section class="karta"><h2>🏜️ Objem na suché období (TP 1.20 vztah 17)</h2>
+    <div class="pole-mriz">${pole('nadrz.d1', 'Dnů sucha s odběrem v budově d₁', { pozn: '14–21 dní (2–3 týdny)' })}${pole('nadrz.d2', 'Počet zálivek v tom období d₂', { pozn: 'TP 1.20 tab. 10: interval 6–8 dní při 25–30 °C, 2–3 dny nad 35 °C' })}${pole('nadrz.qz', 'Zálivka q_z [l/m²] na jedno zalití', { pozn: 'TP 1.20 tab. 5: cca 1,0 l/m²' })}</div>
+    <div id="vysSucho"></div></section>`;
+}
+function vysNadrz() {
+  const p = pr(), n = p.nadrz, s = J.souhrnPloch(p.plochy), sr = p.srazky;
+  const mp = sr ? J.mesicniPrumery(sr) : null;
+  const b = J.mesicniBilance(p, mp ? mp.mm : null);
+  const rp = J.rocniPotreba(n);
+  let h = `<section class="karta"><h2>📊 Roční a měsíční bilance</h2>
+    <div class="souhrn">${dl(f(s.AnadrzPudorys, 0) + ' m²', 'střech do nádrže')}${dl(f(b.hr, 0) + ' mm', mp ? `průměr ${mp.roky} let z denní řady` : 'roční úhrn (TP 1.20)')}
+    ${dl(f(b.pritokRok, 1) + ' m³', 'zachytitelná voda / rok (A·ψd·h·η)')}${dl(f(rp.celkem, 1) + ' m³', `potřeba / rok (budova ${f(rp.budova, 1)}, zálivka ${f(rp.zalivka, 1)})`)}
+    ${dl(f(b.pritokRok / Math.max(rp.celkem, 1e-9) * 100, 0) + ' %', 'přítok / potřeba', b.pritokRok >= rp.celkem ? 'ok' : 'pozor')}</div>
+    ${s.Anadrz <= 0 ? '<p class="info chyba">Žádná střecha není svedena do nádrže (sloupec „Nádrž“ na záložce Plochy).</p>' : ''}
+    <div class="graf"><canvas id="grafMesice" aria-label="Měsíční přítok a potřeba"></canvas></div>
+    <details><summary>Tabulka měsíční bilance</summary><div class="tab-obal"><table><thead><tr><th>Měsíc</th><th class="c">Srážky [mm]</th><th class="c">Přítok [m³]</th><th class="c">Potřeba [m³]</th><th class="c">Rozdíl</th><th class="c">Bilanční součet</th></tr></thead><tbody>
+    ${b.rady.map(r => `<tr><td>${J.MESICE[r.mesic]}</td><td class="c">${f(r.mm, 1)}</td><td class="c">${f(r.pritok, 2)}</td><td class="c">${f(r.potreba, 2)}</td><td class="c">${f(r.rozdil, 2)}</td><td class="c">${f(r.soucet, 2)}</td></tr>`).join('')}
+    </tbody></table></div><p class="napoveda">Postup podle TP 1.20 tab. 9: doporučený objem = největší kladný bilanční součet (zde <b>${f(b.doporuceno, 1)} m³</b>). Je to hrubý odhad – denní simulace níže je přesnější.</p></details></section>`;
+  if (sr) {
+    const kr = J.krivkaObjemu(p, sr), zlom = J.bodZlomu(kr), sim = J.simuluj(p, n.objem, sr, true);
+    h += `<section class="karta"><h2>🔁 Denní simulace nádrže V = ${f(n.objem, 1)} m³</h2>
+      <div class="souhrn">${dl(f(sim.kryti * 100, 0) + ' %', 'krytí potřeby dešťovou vodou', sim.kryti > 0.8 ? 'ok' : sim.kryti > 0.5 ? 'pozor' : 'spatne')}
+      ${dl(f(sim.vyuzito, 1) + ' m³/rok', `využito (budova ${f(sim.vyuzBudova, 1)}, zálivka ${f(sim.vyuzZalivka, 1)})`)}
+      ${dl(f(sim.miraVyuziti * 100, 0) + ' %', 'míra využití přítoku')}${dl(f(sim.miraPretoku * 100, 0) + ' %', `přetok (${f(sim.pretok, 1)} m³/rok)`)}
+      ${dl(f(sim.dnyNedostatek, 0), 'dní v roce s nedostatkem')}${dl(f(zlom, 1) + ' m³', 'bod zlomu (další 1 m³ < +1 % krytí)')}</div>
+      <div class="graf"><canvas id="grafKrivka" aria-label="Krytí potřeby a přetok podle objemu nádrže"></canvas></div>
+      <div class="graf"><canvas id="grafHladina" aria-label="Zásoba v nádrži za poslední 2 roky"></canvas></div>
+      <p class="napoveda">Model „odběr po přetoku“ (YAS): denní přítok = srážka · Σ(A·ψ<sub>d</sub>) · η, nádrž začíná prázdná, potřeba budovy každý den, zálivka rovnoměrně duben–září. Skutečné krytí ovlivní hlavně potřeba zálivky v suchých týdnech.</p></section>`;
+    setTimeout(() => {
+      graf('grafKrivka', { type: 'line', data: c => ({ datasets: [
+        { label: 'krytí potřeby [%]', data: kr.map(x => ({ x: x.V, y: x.kryti * 100 })), borderColor: c.ok, backgroundColor: c.ok, tension: .2 },
+        { label: 'přetok z přítoku [%]', data: kr.map(x => ({ x: x.V, y: x.miraPretoku * 100 })), borderColor: c.warn, backgroundColor: c.warn, tension: .2 }] }),
+        options: { scales: { x: { type: 'linear', min: 0, title: { display: true, text: 'objem nádrže [m³]' } }, y: { min: 0, max: 100 } } } });
+      const od = Math.max(0, sim.hladina.length - 731), dat = sim.hladina.slice(od);
+      const d0 = new Date(sr.od + 'T00:00:00Z').getTime() / 86400000 + od;
+      graf('grafHladina', { type: 'line', data: c => ({ labels: dat.map((_, k) => new Date((d0 + k) * 86400000).toISOString().slice(0, 10)), datasets: [
+        { label: 'zásoba v nádrži [m³]', data: dat, borderColor: c.accent, backgroundColor: c.accent, pointRadius: 0, borderWidth: 1.2, fill: false }] }),
+        options: { scales: { x: { ticks: { maxTicksLimit: 8 } }, y: { min: 0, max: n.objem || 1 } } } });
+    });
+  }
+  setTimeout(() => graf('grafMesice', { type: 'bar', data: c => ({ labels: J.MESICE.map(m => m.slice(0, 3)), datasets: [
+    { label: 'přítok [m³]', data: b.rady.map(r => r.pritok), backgroundColor: c.accent },
+    { label: 'potřeba [m³]', data: b.rady.map(r => r.potreba), backgroundColor: c.warn }] }) }));
+  return h;
+}
+
+/* ---------- 🕳️ Vsakování ---------- */
+function htmlVsak() {
+  const t = pr().vsak.test;
+  return `<section class="karta"><h2>🕳️ Vsakovací zařízení (ČSN 75 9010)</h2>
+    <div class="pole-mriz">
+      ${vyber('vsak.p', 'Periodicita srážky', [['0.2', 'p = 0,2 – přetečení odteče po terénu bez škod'], ['0.1', 'p = 0,1 – hrozí zaplavení budov / škody']])}
+      ${pole('vsak.kv', 'Koeficient vsaku k_v [m/s]', { text: true, pozn: 'z hydrogeologického posudku, např. 1e-5 nebo 3,5e-6' })}
+      ${pole('vsak.f', 'Součinitel bezpečnosti vsaku f', { pozn: 'ČSN 75 9010: f ≥ 2' })}
+      ${vyber('vsak.typ', 'Typ zařízení', [['podzem', 'podzemní (rýha, blok, šachta)'], ['povrch', 'povrchové (průleh, mulda) – A_vz = A_vsak']])}
+      ${pole('vsak.Avsak', 'Vsakovací plocha A_vsak [m²]', { ph: 'auto: 0,1–0,2·A_red', pozn: 'zjednodušeně plocha propustného dna' })}
+      ${pole('vsak.m', 'Pórovitost / akumulace m [-]', { pozn: 'štěrk 2–20 mm: 0,3–0,4; bloky podle výrobce' })}
+      ${pole('vsak.Qo', 'Regulovaný odtok Q_o [l/s]', { pozn: 'kombinace s odtokem (jinak 0)' })}
+    </div></section>
+  <div id="vysVsak"></div>
+  <section class="karta"><h2>🧪 Vsakovací zkouška – orientační k<sub>v</sub></h2>
+    <div class="pole-mriz">
+      ${vyber('vsak.test.tvar', 'Tvar jámy', [['obdelnik', 'obdélník'], ['kruh', 'kruh (vrt)']])}
+      ${pole('vsak.test.a', t.tvar === 'kruh' ? 'Průměr [m]' : 'Délka dna a [m]')}
+      ${t.tvar === 'kruh' ? '' : pole('vsak.test.b', 'Šířka dna b [m]')}
+      ${pole('vsak.test.h1', 'Hladina nade dnem na začátku h₁ [m]')}
+      ${pole('vsak.test.h2', 'Hladina na konci h₂ [m]')}
+      ${pole('vsak.test.t', 'Doba poklesu [min]')}
+      ${zaskrt('vsak.test.steny', 'započítat smočené stěny (bezpečnější)')}
+    </div><div id="vysTest"></div></section>`;
+}
+function vysVsak() {
+  const p = pr(), v = J.navrhVsaku(p);
+  const krit = v.rady.find(r => r.t === v.tKrit);
+  let h = `<section class="karta"><h2>📐 Výsledek</h2>
+    <div class="souhrn">${dl(f(v.Ared, 1) + ' m²', 'A_red = Σ A·ψ (sloupec „Vsak“)')}${dl(f(v.Avsak, 1) + ' m²', 'vsakovací plocha A_vsak')}
+    ${dl(f(v.V, 2) + ' m³', `retenční objem V_vz (t = ${v.tKrit} min)`)}${dl(f(v.W, 2) + ' m³', `celkový objem W = V/m`)}
+    ${dl(f(v.hloubka, 2) + ' m', 'účinná výška W / A_vsak')}${dl(Number.isFinite(v.Tpr) ? f(v.Tpr, 1) + ' h' : '∞', 'doba prázdnění (max 72 h)', v.vyhovuje ? 'ok' : 'spatne')}</div>
+    <p class="info ${v.hodnoceni.tr === 'vhodna' ? 'ok' : v.hodnoceni.tr === 'filtr' ? 'varovani' : 'chyba'}">k<sub>v</sub> = ${J.fmtKv(p.vsak.kv)}: ${v.hodnoceni.text} (TP 1.20 tab. 1, informativní – návrh jen podle posudku geologa).</p>
+    ${v.malaPlocha ? '<p class="info varovani">Při k<sub>v</sub> ≤ 10⁻⁶ m/s má být A<sub>vsak</sub> ≥ 0,2 · A<sub>red</sub>.</p>' : ''}
+    ${!v.vyhovuje ? '<p class="info chyba">Doba prázdnění přesahuje 72 h – zvětšete vsakovací plochu, nebo doplňte regulovaný odtok.</p>' : ''}
+    <p class="napoveda">V<sub>vz</sub> = h<sub>d</sub>/1000 · (A<sub>red</sub> + A<sub>vz</sub>) − (k<sub>v</sub>/f · A<sub>vsak</sub> + Q<sub>o</sub>) · t<sub>c</sub> · 60 pro t<sub>c</sub> = 5…4320 min, návrh = největší V. Úhrny h<sub>d</sub>: ${esc(stanice(p.lokalita.stanice))}, p = ${p.vsak.p.replace('.', ',')}. Doporučený odhad A<sub>vsak</sub> = (0,1–0,2)·A<sub>red</sub> = ${f(v.doporAvsak[0], 1)}–${f(v.doporAvsak[1], 1)} m² (TP 1.20 vztah 8).</p>
+    <details><summary>Výpočet pro všechny doby trvání</summary>${tabulkaRad(v.rady, krit)}</details></section>`;
+  return h;
+}
+function tabulkaRad(rady, krit) {
+  return `<div class="tab-obal"><table><thead><tr><th class="c">t<sub>c</sub> [min]</th><th class="c">h<sub>d</sub> [mm]</th><th class="c">přítok [m³]</th><th class="c">odtok [m³]</th><th class="c">V [m³]</th></tr></thead><tbody>${rady.map(r => `<tr${r === krit ? ' class="max"' : ''}><td class="c">${r.t}</td><td class="c">${f(r.hd, 1)}</td><td class="c">${f(r.prit, 2)}</td><td class="c">${f(r.odt, 2)}</td><td class="c">${f(r.V, 2)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function vysTest() {
+  const r = J.kvZeZkousky(pr().vsak.test);
+  if (!r) return '<p class="info varovani">Zadejte rozměry a pokles hladiny (h₁ > h₂).</p>';
+  return `<p class="info">k<sub>v</sub> ≈ ΔV / (A · Δt) = ${f(r.dV, 3)} m³ / (${f(r.A, 2)} m² · ${f(pr().vsak.test.t * 60)} s) = <b>${J.fmtKv(r.kv)}</b> — ${J.hodnoceniKv(r.kv).text}.
+    <button class="btn mini nepis" data-prikaz="pouzijKv" data-kv="${r.kv}">Použít pro výpočet</button></p>
+    <p class="napoveda">Jednoduchá bilance při hydraulickém gradientu 1 (jáma se svislými stěnami, zkouška po nasycení zeminy, opakovat 2–3×). Nenahrazuje vyhodnocení geologem podle ČSN 75 9010 – to je pro návrh vsakování povinné.</p>`;
+}
+
+/* ---------- ⏳ Retence ---------- */
+function htmlRetence() {
+  const r = pr().retence;
+  return `<section class="karta"><h2>⏳ Retenční nádrž s regulovaným odtokem</h2>
+    <div class="pole-mriz">
+      ${vyber('retence.umisteni', 'Umístění (ČSN 75 6760 tab. 9)', Object.entries(J.UMISTENI_RET).map(([k, u]) => [k, u.nazev]))}
+      ${zaskrt('retence.zPloch', 'A_red z ploch (sloupec „Vsak“)')}
+      ${r.zPloch ? '' : pole('retence.Ared', 'A_red [m²]')}
+      ${vyber('retence.rezim', 'Povolený odtok zadán jako', [['ls', 'Q_o [l/s]'], ['ha', 'specifický odtok [l/(s·ha)] × plocha pozemku']])}
+      ${r.rezim === 'ls' ? pole('retence.Qo', 'Regulovaný odtok Q_o [l/s]', { pozn: 'stanoví provozovatel kanalizace / správce toku' }) : pole('retence.Qha', 'Specifický odtok [l/(s·ha)]', { pozn: 'stanoví provozovatel kanalizace' }) + pole('retence.Apozemek', 'Plocha celé nemovitosti [m²]')}
+    </div></section><div id="vysRetence"></div>`;
+}
+function vysRetence() {
+  const p = pr(), v = J.navrhRetence(p), krit = v.rady.find(r => r.t === v.tKrit);
+  return `<section class="karta"><h2>📐 Výsledek</h2>
+    <div class="souhrn">${dl(f(v.Ared, 1) + ' m²', 'A_red')}${dl(f(v.Qo, 2) + ' l/s', 'regulovaný odtok Q_o')}${dl(f(v.V, 2) + ' m³', `retenční objem (t = ${v.tKrit} min)`)}
+    ${dl(Number.isFinite(v.Tpr) ? f(v.Tpr, 1) + ' h' : '∞', 'doba prázdnění V/Q_o', v.Tpr <= 72 ? 'ok' : 'pozor')}</div>
+    ${v.Qo <= 0 ? '<p class="info varovani">Bez odtoku je objem roven 72hodinovému úhrnu – zadejte povolený odtok.</p>' : ''}
+    <p class="napoveda">V<sub>ret</sub> = max(w · h<sub>d</sub>/1000 · A<sub>red</sub> − Q<sub>o</sub>/1000 · t · 60) přes t = 5…4320 min (TP 1.20 vztahy 2 a 5; periodicita a w podle ČSN 75 6760:2014 tab. 9). Úhrny: ${esc(stanice(p.lokalita.stanice))}, p = ${v.p.replace('.', ',')}${v.w !== 1 ? ', w = ' + String(v.w).replace('.', ',') : ''}. Akumulační nádrž pro využití vody má být předřazena retenci a do jejího objemu se nezapočítává.</p>
+    <details><summary>Výpočet pro všechny doby trvání</summary>${tabulkaRad(v.rady, krit)}</details></section>`;
+}
+
+/* ---------- 💰 Úspora ---------- */
+function vyuzitiVody(p) {
+  if (p.srazky) { const s = J.simuluj(p, p.nadrz.objem, p.srazky); return { budova: s.vyuzBudova, zalivka: s.vyuzZalivka, zdroj: `denní simulace, nádrž ${f(p.nadrz.objem, 1)} m³` }; }
+  const b = J.mesicniBilance(p), n = p.nadrz; let bu = 0, za = 0;
+  b.rady.forEach(r => { const vyuz = Math.min(r.pritok, r.potreba), pd = J.potrebaDen(n, r.mesic); if (pd.celkem > 0) { bu += vyuz * pd.budova / pd.celkem; za += vyuz * pd.zalivka / pd.celkem; } });
+  return { budova: bu, zalivka: za, zdroj: 'měsíční bilance bez simulace (horní odhad – předpokládá dost velkou nádrž)' };
+}
+function htmlUspora() {
+  const u = pr().uspora;
+  return `<section class="karta"><h2>💰 Cena vody</h2>
+    <div class="pole-mriz">
+      ${vyber('uspora.cena', 'Vodné a stočné (s DPH)', J.CENY.map(c => [c.id, `${c.nazev}: ${f(c.vodne + c.stocne, 2)} Kč/m³`]).concat([['vlastni', 'vlastní ceny']]), `Ceny 2026, stav k ${J.CENY_DATUM} (skrblik.cz, ceníky PVK a OVAK). Aktuální cenu najdete na faktuře.`)}
+      ${u.cena === 'vlastni' ? pole('uspora.vodne', 'Vodné [Kč/m³]') + pole('uspora.stocne', 'Stočné [Kč/m³]') : ''}
+      ${zaskrt('uspora.stocneBudova', 'za vodu z WC a pračky se dál platí stočné')}
+      ${pole('uspora.investice', 'Investice [Kč]', { pozn: 'nádrž, filtr, čerpadlo, rozvody, práce' })}
+      ${pole('uspora.provoz', 'Provozní náklady [Kč/rok]', { pozn: 'elektřina čerpadla, údržba' })}
+    </div></section><div id="vysUspora"></div>`;
+}
+function vysUspora() {
+  const p = pr(), vy = vyuzitiVody(p), u = J.uspora(p, vy.budova, vy.zalivka);
+  return `<section class="karta"><h2>📈 Úspora</h2>
+    <div class="souhrn">${dl(f(vy.budova + vy.zalivka, 1) + ' m³', `dešťové vody za rok (${vy.zdroj})`)}${dl(f(u.kc) + ' Kč', 'úspora za rok')}
+    ${dl(f(u.cista) + ' Kč', 'po odečtení provozu', u.cista > 0 ? 'ok' : 'spatne')}${dl(u.navratnost ? f(u.navratnost, 1) + ' let' : '–', 'prostá návratnost')}</div>
+    <p class="napoveda">Ceny: ${esc(u.ceny.nazev)} – vodné ${f(u.ceny.vodne, 2)} Kč/m³, stočné ${f(u.ceny.stocne, 2)} Kč/m³. Zalévání ušetří vodné i stočné (voda nejde do kanalizace). Voda z WC a pračky odtéká do kanalizace – stočné se za ni podle § 19 odst. 5 zákona č. 274/2001 Sb. platí dál (měřením nebo podle směrných čísel; postup dohodněte s provozovatelem kanalizace). Platba za odvádění srážkových vod se na domácnosti a plochy nemovitostí k bydlení nevztahuje (§ 20 odst. 6). Prostá návratnost bez úroků a růstu cen.</p>
+    <p class="info">💧 <b>Dotace:</b> samostatný program Dešťovka skončil; podpora systémů na dešťovou vodu je od roku 2026 součástí programu <a href="https://novazelenausporam.cz/" target="_blank" rel="noopener">Nová zelená úsporám</a> (podle dostupných informací jen v kombinaci s dalšími opatřeními). Stav ověřen 17. 11. 2026 – aktuální podmínky vždy na webu SFŽP.</p></section>`;
+}
+
+/* ---------- 📋 Protokol ---------- */
+function htmlProtokol() {
+  const p = pr(), s = J.souhrnPloch(p.plochy), i = J.intenzita(p), v = J.navrhVsaku(p), r = J.navrhRetence(p);
+  const b = J.mesicniBilance(p, p.srazky ? J.mesicniPrumery(p.srazky).mm : null), rp = J.rocniPotreba(p.nadrz);
+  const sim = p.srazky ? J.simuluj(p, p.nadrz.objem, p.srazky) : null, vy = vyuzitiVody(p), u = J.uspora(p, vy.budova, vy.zalivka);
+  const radek = (a, b2) => `<tr><td>${a}</td><td>${b2}</td></tr>`;
+  return `<section class="karta"><h2>📋 Protokol – ${esc(p.nazev)}</h2>
+    <p class="napoveda">Vytvořeno ${new Date().toLocaleDateString('cs-CZ')} nástrojem „Dešťová voda“. Orientační výpočet podle ČSN 75 6760, ČSN EN 12056-3, ČSN 75 9010 a ČKAIT TP 1.20 – nenahrazuje projektovou dokumentaci ani hydrogeologický posudek.</p>
+    <label class="pole nepis">Poznámka do protokolu<textarea class="vstup" data-k="poznamka" rows="2" maxlength="2000">${esc(p.poznamka)}</textarea></label>
+    ${p.poznamka ? `<p class="tisk-jen">${esc(p.poznamka)}</p>` : ''}
+    <h3>Lokalita a plochy</h3><div class="tab-obal"><table><tbody>
+      ${radek('Místo', esc(p.lokalita.nazev || '–') + (p.lokalita.lat != null ? ` (${p.lokalita.lat.toFixed(3)}°, ${p.lokalita.lon.toFixed(3)}°)` : '') + `, ${f(p.lokalita.vyska)} m n. m.`)}
+      ${radek('Stanice h<sub>d</sub>', esc(stanice(p.lokalita.stanice)))}
+      ${p.plochy.map(pl => radek(esc(pl.nazev), `${f(pl.A, 1)} m² · ${esc(J.DRUH[pl.druh].nazev)} · sklon ${J.SKLONY.find(x => x.id === pl.sklon).nazev} · C ${cz(J.souC(pl))} / ψ ${cz(J.souPsi(pl))} / ψd ${cz(J.souPsiD(pl) || '–')}${pl.nadrz && J.DRUH[pl.druh].psiD ? ' · do nádrže' : ''}${pl.vsak ? ' · do vsaku' : ''}`)).join('')}
+    </tbody></table></div>
+    <h3>Žlaby a svody</h3>${vysOdvodneni().replace(/<details>[\s\S]*<\/details>/, '')}
+    <h3>Akumulační nádrž</h3><div class="tab-obal"><table><tbody>
+      ${radek('Zachytitelná voda', `${f(b.pritokRok, 1)} m³/rok (úhrn ${f(b.hr)} mm, η ${cz(p.nadrz.eta)})`)}
+      ${radek('Potřeba', `${f(rp.celkem, 1)} m³/rok (budova ${f(rp.budova, 1)}, zálivka ${f(rp.zalivka, 1)}); ${p.nadrz.osob} osob, WC ${p.nadrz.wc}, pračka ${p.nadrz.pracka} l/os·den, zahrada ${f(p.nadrz.zahrada)} m²`)}
+      ${radek('Doporučení TP 1.20', `bilanční součet ${f(b.doporuceno, 1)} m³; suché období ${f(J.objemNaSucho(p.nadrz) / 1000, 1)} m³`)}
+      ${sim ? radek(`Simulace ${f(p.nadrz.objem, 1)} m³`, `krytí ${f(sim.kryti * 100)} %, využito ${f(sim.vyuzito, 1)} m³/rok, přetok ${f(sim.miraPretoku * 100)} % přítoku; ${esc(p.srazky.zdroj)}, ${p.srazky.od}, ${f(p.srazky.mm.length / 365.25, 1)} roku`) : radek('Simulace', 'bez denní řady srážek')}
+    </tbody></table></div>
+    <h3>Vsakování (ČSN 75 9010)</h3><div class="tab-obal"><table><tbody>
+      ${radek('Vstupy', `A<sub>red</sub> ${f(v.Ared, 1)} m², k<sub>v</sub> ${J.fmtKv(p.vsak.kv)}, f ${cz(p.vsak.f)}, p ${p.vsak.p.replace('.', ',')}, ${p.vsak.typ === 'povrch' ? 'povrchové' : 'podzemní'}, A<sub>vsak</sub> ${f(v.Avsak, 1)} m², m ${cz(p.vsak.m)}${p.vsak.Qo ? `, Q<sub>o</sub> ${cz(p.vsak.Qo)} l/s` : ''}`)}
+      ${radek('Výsledek', `V<sub>vz</sub> ${f(v.V, 2)} m³ (t<sub>c</sub> ${v.tKrit} min), W ${f(v.W, 2)} m³, T<sub>pr</sub> ${Number.isFinite(v.Tpr) ? f(v.Tpr, 1) + ' h' : '∞'} – ${v.vyhovuje ? 'vyhovuje' : 'NEVYHOVUJE'} (≤ 72 h)`)}
+    </tbody></table></div>
+    <h3>Retenční nádrž</h3><div class="tab-obal"><table><tbody>
+      ${radek('Výsledek', `A<sub>red</sub> ${f(r.Ared, 1)} m², Q<sub>o</sub> ${f(r.Qo, 2)} l/s, p ${r.p.replace('.', ',')} → V<sub>ret</sub> ${f(r.V, 2)} m³ (t ${r.tKrit} min), prázdnění ${Number.isFinite(r.Tpr) ? f(r.Tpr, 1) + ' h' : '∞'}`)}
+    </tbody></table></div>
+    <h3>Úspora</h3><div class="tab-obal"><table><tbody>
+      ${radek('Dešťová voda', `${f(vy.budova + vy.zalivka, 1)} m³/rok (${vy.zdroj})`)}
+      ${radek('Úspora', `${f(u.kc)} Kč/rok, po provozu ${f(u.cista)} Kč/rok${u.navratnost ? `, návratnost ${f(u.navratnost, 1)} let` : ''}; ${esc(u.ceny.nazev)}`)}
+    </tbody></table></div>
+    <p class="nepis" style="margin-top:10px"><button class="btn primary" data-prikaz="tisk">🖨️ Tisknout</button></p></section>`;
+}
+function htmlZdroje() {
+  return `<section class="karta zdroje"><h2>📚 Zdroje a předpoklady</h2><ul>
+    <li><b>ČKAIT TP 1.20</b> Hospodaření se srážkovou vodou v nemovitostech (Žabička, Vrána; vydání 2011, aktualizace 2020, kontrola 2022) – návrhové úhrny h<sub>d</sub> (tab. 2, 3; podle přílohy ČSN 75 9010), součinitele ψ (tab. 4), potřeba vody (tab. 5), roční úhrn podle výšky (tab. 6), rozdělení do měsíců (tab. 7), ψ<sub>d</sub> (tab. 8), vztahy pro vsak, retenci a nádrž. <a href="https://profesis.ckait.cz/dokumenty-ckait/tp-1-20/" target="_blank" rel="noopener">profesis.ckait.cz</a></li>
+    <li><b>ČSN 75 6760:2014</b> Vnitřní kanalizace – intenzita 0,03 l/(s·m²) (tab. 7), součinitele odtoku C (tab. 8), periodicita retenčních nádrží (tab. 9), nouzové odvodnění. Podle článku <a href="https://voda.tzb-info.cz/normy-a-pravni-predpisy-voda-kanalizace/11136-revize-csn-75-6760-vnitrni-kanalizace-ii" target="_blank" rel="noopener">TZB-info: Revize ČSN 75 6760</a>.</li>
+    <li><b>ČSN EN 12056-3</b> – kapacita půlkruhového žlabu a svodu; součinitele bezpečnosti. Podle HIPOS „Zásady odvodnění střech“ (příklady Ing. Žabičky) a podkladů ČVUT FSv (TZB 1, výpočet kanalizace: DN 100 = 13,8 l/s při f = 0,33).</li>
+    <li><b>ČSN 75 9010</b> Vsakovací zařízení srážkových vod (2012 + Z1:2017) – postup, f ≥ 2, doba prázdnění ≤ 72 h; ověřeno na vzorovém výpočtu (Seč, p = 0,1: V = 17 m³, T<sub>pr</sub> = 35,4 h).</li>
+    <li><b>Srážky</b>: <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo Historical Weather API</a> (reanalýza ERA5, Copernicus), licence CC BY 4.0; vyhledání místa: Open-Meteo Geocoding (GeoNames). Volá se jen po stisku tlačítka.</li>
+    <li><b>Ceny vody 2026</b> (s DPH, k ${J.CENY_DATUM}): <a href="https://www.skrblik.cz/energie/voda/cena-vody/" target="_blank" rel="noopener">skrblik.cz</a>, <a href="https://www.pvk.cz/zakaznici/cena/" target="_blank" rel="noopener">PVK</a>, <a href="https://www.ovak.cz/cena-vody-pro-rok-2026-v-ostrave/" target="_blank" rel="noopener">OVAK</a>.</li>
+    <li><b>Zákon č. 274/2001 Sb.</b> o vodovodech a kanalizacích – § 19 odst. 5 (stočné za vodu z jiného zdroje), § 20 odst. 6 (srážkové vody domácností).</li>
+    <li><b>Dotace</b>: <a href="https://novazelenausporam.cz/" target="_blank" rel="noopener">Nová zelená úsporám</a> – stav ověřen 17. 11. 2026.</li>
+  </ul><p class="info varovani">Všechny výpočty jsou orientační. Vsakování se smí navrhnout jen na základě hydrogeologického posudku; dimenze odvodnění a nádrží potvrzuje projektant. Normy jsou citovány podle veřejně dostupných odborných textů – v případě rozporu platí aktuální znění normy.</p></section>`;
+}
+
+/* ---------- vykreslení ---------- */
+const POHLEDY = {
+  plochy: [() => htmlLokalita() + htmlPlochy(), { vysOdv: vysOdvodneni }],
+  nadrz: [htmlNadrz, { vysNadrz, vysSucho: () => { const v = J.objemNaSucho(pr().nadrz); return `<p class="info">V<sub>a</sub> = Q<sub>d</sub>·d₁ + q<sub>z</sub>·A<sub>z</sub>·d₂ = <b>${f(v / 1000, 2)} m³</b> (${f(v)} l).</p>`; } }],
+  vsak: [htmlVsak, { vysVsak, vysTest }],
+  retence: [htmlRetence, { vysRetence }],
+  uspora: [htmlUspora, { vysUspora }],
+  protokol: [htmlProtokol, {}],
+  zdroje: [htmlZdroje, {}]
+};
+function obnovVyber() {
+  $('vyberProjektu').innerHTML = data.projekty.map(p => `<option value="${p.id}"${p.id === data.aktivni ? ' selected' : ''}>${esc(p.nazev)}</option>`).join('');
+}
+function vykresli() {
+  if (!POHLEDY[pohled]) pohled = 'plochy';
+  document.querySelectorAll('[data-pohled]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pohled === pohled)));
+  $('obsah').innerHTML = POHLEDY[pohled][0]();
+  prepocti();
+}
+function prepocti() {
+  for (const [id, fn] of Object.entries(POHLEDY[pohled][1])) { const el = $(id); if (el) el.innerHTML = fn(); }
+}
+
+/* ---------- příkazy ---------- */
+function stahni(jmeno, obsah, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function nactiJson(url) {
+  let odp;
+  try { odp = await fetch(url); } catch (e) { throw new Error('Služba není dostupná (offline nebo blokovaná síť).'); }
+  if (!odp.ok) throw new Error('Služba vrátila chybu ' + odp.status + '.');
+  return odp.json();
+}
+const PRIKAZY = {
+  novy: async () => { const n = await Dialog.zeptej('Název projektu', 'Nový projekt'); if (n == null) return; const p = J.novyProjekt(n.trim() || 'Nový projekt'); data.projekty.push(p); data.aktivni = p.id; uloz(); obnovVyber(); vykresli(); },
+  duplikovat: () => { const p = J.normProjekt(JSON.parse(JSON.stringify(pr()))); p.id = J.novyId(); p.nazev += ' (kopie)'; data.projekty.push(p); data.aktivni = p.id; uloz(); obnovVyber(); vykresli(); },
+  prejmenovat: async () => { const n = await Dialog.zeptej('Nový název projektu', pr().nazev); if (!n || !n.trim()) return; pr().nazev = n.trim().slice(0, 100); uloz(); obnovVyber(); if (pohled === 'protokol') vykresli(); },
+  smazat: async () => {
+    if (!await Dialog.potvrd(`Smazat projekt „${pr().nazev}“?`)) return;
+    data.projekty = data.projekty.filter(p => p.id !== data.aktivni);
+    if (!data.projekty.length) data.projekty.push(J.novyProjekt('Můj dům'));
+    data.aktivni = data.projekty[0].id; uloz(); obnovVyber(); vykresli();
+  },
+  tisk: () => { pohled = 'protokol'; vykresli(); setTimeout(() => print(), 50); },
+  export: () => stahni('destova-voda-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(data), 'application/json'),
+  import: () => $('souborImport').click(),
+  pridejPlochu: () => { pr().plochy.push(J.novaPlocha({ nazev: 'Plocha ' + (pr().plochy.length + 1), A: 20 })); uloz(); vykresli(); },
+  smazPlochu: (b) => { pr().plochy = pr().plochy.filter(x => x.id !== b.dataset.id); uloz(); vykresli(); },
+  hledatMisto: async () => {
+    const q = pr().lokalita.nazev.trim();
+    if (q.length < 2) return Dialog.info('Napište název obce.');
+    const box = $('geoVysledky'); box.textContent = 'Hledám…';
+    try {
+      const js = await nactiJson('https://geocoding-api.open-meteo.com/v1/search?count=8&language=cs&countryCode=CZ&name=' + encodeURIComponent(q));
+      const r = js.results || [];
+      box.innerHTML = r.length ? r.map((x, k) => `<button class="btn mini" data-prikaz="vyberMisto" data-k2="${k}">${esc(x.name)}${x.admin2 ? ', ' + esc(x.admin2) : ''} (${Math.round(x.elevation || 0)} m)</button>`).join('') + '<span class="napoveda">Open-Meteo Geocoding, data GeoNames (CC BY 4.0)</span>' : 'Nic nenalezeno.';
+      box._vysledky = r;
+    } catch (e) { box.textContent = ''; Dialog.chyba('Hledání místa selhalo: ' + e.message); }
+  },
+  vyberMisto: (b) => {
+    const x = $('geoVysledky')._vysledky[+b.dataset.k2], l = pr().lokalita;
+    l.nazev = x.name + (x.admin2 ? ', ' + x.admin2 : ''); l.lat = x.latitude; l.lon = x.longitude; if (x.elevation != null) l.vyska = Math.round(x.elevation);
+    uloz(); vykresli();
+  },
+  stahniSrazky: async (b) => {
+    const l = pr().lokalita;
+    if (l.lat == null) { pohled = 'plochy'; vykresli(); return Dialog.info('Nejdřív najděte lokalitu (🔍 u názvu obce).'); }
+    const o = J.obdobiOpenMeteo();
+    b.disabled = true; b.textContent = '⏳ Stahuji…';
+    try {
+      const js = await nactiJson(`https://archive-api.open-meteo.com/v1/archive?latitude=${l.lat}&longitude=${l.lon}&start_date=${o.od}&end_date=${o.do}&daily=precipitation_sum&timezone=Europe%2FPrague`);
+      pr().srazky = J.zOpenMeteo(js, l.lat, l.lon); uloz(); vykresli();
+      Dialog.info('Staženo ' + pr().srazky.mm.length + ' dní srážek.');
+    } catch (e) { Dialog.chyba('Stažení srážek selhalo: ' + e.message); vykresli(); }
+  },
+  nactiCsv: () => $('souborCsv').click(),
+  odeberSrazky: async () => { if (await Dialog.potvrd('Odebrat denní řadu srážek z projektu?')) { pr().srazky = null; uloz(); vykresli(); } },
+  pouzijKv: (b) => { pr().vsak.kv = +(+b.dataset.kv).toPrecision(3); uloz(); vykresli(); }
+};
+$('souborCsv').onchange = async e => {
+  const soubor = e.target.files[0]; e.target.value = '';
+  if (!soubor) return;
+  try { pr().srazky = J.zCsv(await soubor.text()); pr().srazky.zdroj = 'CSV: ' + soubor.name; uloz(); vykresli(); }
+  catch (er) { Dialog.chyba('CSV se nepodařilo načíst: ' + er.message); }
+};
+$('souborImport').onchange = async e => {
+  const soubor = e.target.files[0]; e.target.value = '';
+  if (!soubor) return;
+  let d; try { d = JSON.parse(await soubor.text()); } catch (er) { return Dialog.chyba('Soubor není platný JSON.'); }
+  if (!d || !Array.isArray(d.projekty)) return Dialog.chyba('Tohle není záloha Dešťové vody.');
+  if (!await Dialog.potvrd(`Záloha obsahuje ${d.projekty.length} projektů. Přidat je k současným?`)) return;
+  const m = J.migruj(d);
+  for (const p of m.projekty) { if (data.projekty.some(x => x.id === p.id)) p.id = J.novyId(); data.projekty.push(p); }
+  data.aktivni = m.projekty[0].id; uloz(); obnovVyber(); vykresli(); Dialog.info('Načteno.');
+};
+
+/* ---------- události ---------- */
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky(); if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-prikaz]');
+  if (p) { e.preventDefault(); zavriNabidky(); return PRIKAZY[p.dataset.prikaz](p); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+  const pv = e.target.closest('[data-pohled]');
+  if (pv) { pohled = pv.dataset.pohled; try { localStorage.setItem(J.KLIC + '_pohled', pohled); } catch (er) {} vykresli(); }
+});
+// změny polí: hodnoty uložit a přepočítat výsledky; u voleb, které mění formulář, překreslit celé
+const PREKRESLI = new Set(['odvodneni.rezim', 'retence.zPloch', 'retence.rezim', 'uspora.cena', 'vsak.test.tvar', 'lokalita.vyska']);
+function zmena(e, konec) {
+  const el = e.target;
+  if (el.dataset.k) {
+    const v = hodnotaPole(el);
+    if (v === undefined) return;
+    nastav(el.dataset.k, v);
+    // normalizace (meze) přes jádro, aby uložené hodnoty byly platné
+    const n = J.normProjekt(pr()); Object.assign(pr(), n);
+    uloz();
+    if (PREKRESLI.has(el.dataset.k) && konec) return vykresli();
+    if (el.dataset.k === 'nadrz.uhrn' && konec) return vykresli();
+    return prepocti();
+  }
+  const tr = el.closest('[data-pl]');
+  if (tr && el.dataset.f) {
+    const pl = pr().plochy.find(x => x.id === tr.dataset.pl); if (!pl) return;
+    const k = el.dataset.f;
+    pl[k] = el.type === 'checkbox' ? el.checked : (k === 'nazev' || k === 'druh' || k === 'sklon') ? el.value : J.cislo(el.value, pl[k]);
+    Object.assign(pl, J.novaPlocha(pl));
+    uloz();
+    if (konec && (k === 'druh' || k === 'sklon' || k === 'A')) return vykresli();
+    prepocti();
+  }
+}
+$('obsah').addEventListener('input', e => { if (e.target.type !== 'checkbox' && e.target.tagName !== 'SELECT') zmena(e, false); });
+$('obsah').addEventListener('change', e => zmena(e, true));
+$('vyberProjektu').addEventListener('change', e => { data.aktivni = e.target.value; uloz(); vykresli(); });
+addEventListener('resize', zavriNabidky);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
+new MutationObserver(() => { if (Object.keys(grafy).length) prepocti(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+addEventListener('storage', e => { if (e.key === J.KLIC && e.newValue) { data = J.migruj(JSON.parse(e.newValue)); obnovVyber(); vykresli(); } });
+
+obnovVyber();
+vykresli();
+window.DEST_APP = { data: () => data, vykresli, prepocti, pohled: p => { pohled = p; vykresli(); } };
+})();
+</script>
+</body>
+</html>

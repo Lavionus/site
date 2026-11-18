@@ -1,17 +1,19 @@
 /* ============================================================
    anonymizace/jadro.js – výpočty pro Anonymizaci fotek (bez DOM).
    Obraz = RGBA pole (Uint8ClampedArray z ImageData) W*H*4.
-   Oblast = { id, tvar: 'obdelnik'|'elipsa'|'stetec', x, y, w, h,
-              efekt: 'rozmazat'|'pixely'|'cerna'|'emoji', sila 0–100, emoji,
+   Oblast = { id, tvar: 'obdelnik'|'elipsa'|'stetec'|'polygon', x, y, w, h,
+              efekt: 'rozmazat'|'pixely'|'cerna'|'emoji'|'zrneni', sila 0–100, emoji,
+              barva '#rrggbb' (efekt 'cerna' = plná barva),
               zdroj: 'rucni'|'oblicej'|'spz', skore, navrh, vypnuta,
-              body: [[x,y],…] a r (jen štětec, v pixelech obrazu) }
+              body: [[x,y],…] (štětec a polygon) a r (jen štětec, v pixelech obrazu) }
    V prohlížeči window.ANON, v node module.exports.
    ============================================================ */
 (function (koren) {
 'use strict';
 
-const EFEKTY = ['rozmazat', 'pixely', 'cerna', 'emoji'];
-const TVARY = ['obdelnik', 'elipsa', 'stetec'];
+const EFEKTY = ['rozmazat', 'pixely', 'cerna', 'emoji', 'zrneni'];
+const TVARY = ['obdelnik', 'elipsa', 'stetec', 'polygon'];
+const jeBarva = b => /^#[0-9a-f]{6}$/i.test(b || '');
 const omez = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* ---------- oblasti ---------- */
@@ -23,14 +25,15 @@ function novaOblast(o = {}) {
     x: +o.x || 0, y: +o.y || 0, w: Math.max(1, +o.w || 1), h: Math.max(1, +o.h || 1),
     efekt: EFEKTY.includes(o.efekt) ? o.efekt : 'rozmazat',
     sila: omez(o.sila === undefined ? 60 : +o.sila, 0, 100),
-    emoji: o.emoji || '😎',
+    emoji: o.emoji || '😎', barva: jeBarva(o.barva) ? o.barva.toLowerCase() : '#000000',
     zdroj: o.zdroj || 'rucni', skore: o.skore === undefined ? null : o.skore,
     navrh: !!o.navrh, vypnuta: !!o.vypnuta,
   };
   if (r.tvar === 'stetec') { r.body = (o.body || []).map(p => [p[0], p[1]]); r.r = Math.max(1, +o.r || 10); prepocitejStetec(r); }
+  if (r.tvar === 'polygon') { r.body = (o.body || []).map(p => [p[0], p[1]]); r.r = 0; prepocitejStetec(r); }
   return r;
 }
-/** Ohraničení tahu štětce = body ± poloměr. */
+/** Ohraničení tahu štětce = body ± poloměr (polygon má r = 0). */
 function prepocitejStetec(o) {
   if (!o.body || !o.body.length) return o;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -43,7 +46,11 @@ function normObdelnik(x0, y0, x1, y1) {
 }
 /** Nastaví oblasti nový obdélník; body štětce se přepočtou (posun i změna měřítka). */
 function nastavObdelnik(o, r) {
-  if (o.tvar === 'stetec' && o.body) {
+  if (o.tvar === 'polygon' && o.body) {
+    const sx = r.w / (o.w || 1), sy = r.h / (o.h || 1);
+    o.body = o.body.map(([x, y]) => [r.x + (x - o.x) * sx, r.y + (y - o.y) * sy]);
+    o.x = r.x; o.y = r.y; o.w = Math.max(1, r.w); o.h = Math.max(1, r.h);
+  } else if (o.tvar === 'stetec' && o.body) {
     const sx = r.w / o.w, sy = r.h / o.h;
     const ix = o.x + o.r, iy = o.y + o.r, nr = Math.max(1, o.r * Math.min(sx, sy));
     o.body = o.body.map(([x, y]) => [r.x + nr + (x - ix) * sx, r.y + nr + (y - iy) * sy]);
@@ -68,6 +75,7 @@ function obsahuje(o, x, y) {
     const rx = o.w / 2, ry = o.h / 2, dx = (x - o.x - rx) / rx, dy = (y - o.y - ry) / ry;
     return dx * dx + dy * dy <= 1;
   }
+  if (o.tvar === 'polygon') return vPolygonu(o.body, x, y);
   if (o.tvar === 'stetec') {
     const b = o.body;
     if (b.length === 1) return Math.hypot(x - b[0][0], y - b[0][1]) <= o.r;
@@ -75,6 +83,15 @@ function obsahuje(o, x, y) {
     return false;
   }
   return true;
+}
+/** Bod v mnohoúhelníku (pravidlo sudé–liché). */
+function vPolygonu(b, x, y) {
+  let uvnitr = false;
+  for (let i = 0, j = b.length - 1; i < b.length; j = i++) {
+    const [xi, yi] = b[i], [xj, yj] = b[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) uvnitr = !uvnitr;
+  }
+  return uvnitr;
 }
 /** Nejvyšší oblast pod bodem (poslední v seznamu je nahoře). */
 function najdiOblast(oblasti, x, y) {
@@ -110,7 +127,22 @@ function maska(o, W, H) {
   if (w <= 0 || h <= 0) return null;
   const a = new Uint8Array(w * h);
   if (o.tvar === 'obdelnik') a.fill(1);
-  else if (o.tvar === 'elipsa') {
+  else if (o.tvar === 'polygon') {
+    // řádkové vyplnění: průsečíky hran se středem řádku, mezi dvojicemi plno
+    const b = o.body;
+    for (let y = 0; y < h; y++) {
+      const py = y0 + y + 0.5, xs = [];
+      for (let i = 0, j = b.length - 1; i < b.length; j = i++) {
+        const [xi, yi] = b[i], [xj, yj] = b[j];
+        if ((yi > py) !== (yj > py)) xs.push((xj - xi) * (py - yi) / (yj - yi) + xi);
+      }
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) {
+        const a0 = omez(Math.ceil(xs[k] - 0.5 - x0), 0, w), a1 = omez(Math.floor(xs[k + 1] - 0.5 - x0) + 1, 0, w);
+        for (let x = a0; x < a1; x++) a[y * w + x] = 1;
+      }
+    }
+  } else if (o.tvar === 'elipsa') {
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (obsahuje(o, x0 + x + 0.5, y0 + y + 0.5)) a[y * w + x] = 1;
   } else {
     // štětec: každý úsek jako „kapsle“ – projdi jen jeho okolí
@@ -127,8 +159,12 @@ function maska(o, W, H) {
   return { x0, y0, w, h, a };
 }
 
-/* ---------- rozmazání (3× box blur ≈ Gauss) ---------- */
-function boxyProGauss(sigma, n = 3) {
+/* ---------- rozmazání (5× box blur ≈ Gauss) ----------
+   Proč 5 a ne obvyklé 3: přenos n boxů je sinc^n. Při 3 průchodech mají postranní laloky ~1 % amplitudy,
+   takže jemný vzor (písmena) určité periody projde se ~1,3 úrovně jasu a jde zesílit (dekonvoluce).
+   Při 5 průchodech je to ~0,05 % (< 0,1 úrovně) a zaokrouhlení na 8 bitů ho smaže. */
+const PRUCHODY = 5;
+function boxyProGauss(sigma, n = PRUCHODY) {
   const wIdeal = Math.sqrt(12 * sigma * sigma / n + 1);
   let wl = Math.floor(wIdeal); if (wl % 2 === 0) wl--;
   const wu = wl + 2;
@@ -141,27 +177,22 @@ function boxH(src, dst, w, h, r) {
   const d = 2 * r + 1;
   for (let y = 0; y < h; y++) {
     const row = y * w * 3;
-    for (let c = 0; c < 3; c++) {
-      let acc = 0;
-      for (let k = -r; k <= r; k++) acc += src[row + omez(k, 0, w - 1) * 3 + c];
-      for (let x = 0; x < w; x++) {
-        dst[row + x * 3 + c] = acc / d;
-        acc += src[row + Math.min(w - 1, x + r + 1) * 3 + c] - src[row + Math.max(0, x - r) * 3 + c];
-      }
+    let a0 = 0, a1 = 0, a2 = 0;
+    for (let k = -r; k <= r; k++) { const i = row + omez(k, 0, w - 1) * 3; a0 += src[i]; a1 += src[i + 1]; a2 += src[i + 2]; }
+    for (let x = 0; x < w; x++) {
+      const o = row + x * 3, p = row + Math.min(w - 1, x + r + 1) * 3, m = row + Math.max(0, x - r) * 3;
+      dst[o] = a0 / d; dst[o + 1] = a1 / d; dst[o + 2] = a2 / d;
+      a0 += src[p] - src[m]; a1 += src[p + 1] - src[m + 1]; a2 += src[p + 2] - src[m + 2];
     }
   }
 }
 function boxV(src, dst, w, h, r) {
-  const d = 2 * r + 1;
-  for (let x = 0; x < w; x++) {
-    for (let c = 0; c < 3; c++) {
-      let acc = 0;
-      for (let k = -r; k <= r; k++) acc += src[omez(k, 0, h - 1) * w * 3 + x * 3 + c];
-      for (let y = 0; y < h; y++) {
-        dst[y * w * 3 + x * 3 + c] = acc / d;
-        acc += src[Math.min(h - 1, y + r + 1) * w * 3 + x * 3 + c] - src[Math.max(0, y - r) * w * 3 + x * 3 + c];
-      }
-    }
+  // po řádcích se součtem pro každý sloupec zvlášť – průchod po sloupcích je kvůli cache několikrát pomalejší
+  const d = 2 * r + 1, n = w * 3, acc = new Float64Array(n);
+  for (let k = -r; k <= r; k++) { const row = omez(k, 0, h - 1) * n; for (let i = 0; i < n; i++) acc[i] += src[row + i]; }
+  for (let y = 0; y < h; y++) {
+    const o = y * n, plus = Math.min(h - 1, y + r + 1) * n, minus = Math.max(0, y - r) * n;
+    for (let i = 0; i < n; i++) { dst[o + i] = acc[i] / d; acc[i] += src[plus + i] - src[minus + i]; }
   }
 }
 /** Gaussovské rozmazání výřezu RGBA (W×H) – vrátí Float32Array w*h*3 (RGB) výřezu. */
@@ -179,15 +210,40 @@ function rozmazVyrez(rgba, W, H, vx, vy, w, h, sigma) {
   return a;
 }
 /** Síla 0–100 → sigma rozmazání / velikost bloku pixelizace podle velikosti oblasti. */
-function sigmaZeSily(o) { return Math.max(2, (0.03 + o.sila / 100 * 0.22) * Math.max(o.w, o.h)); }
-function blokZeSily(o) { return Math.max(3, Math.round((0.05 + o.sila / 100 * 0.25) * Math.max(o.w, o.h))); }
+// u štětce rozhoduje šířka stopy, ne obdélník kolem celého tahu (dlouhý tah by rozmazával skoro celou fotku a trval sekundy)
+const delsiStrana = o => o.tvar === 'stetec' ? 2 * o.r : Math.max(o.w, o.h);
+const kratsiStrana = o => o.tvar === 'stetec' ? 2 * o.r : Math.min(o.w, o.h);
+function sigmaZeSily(o) { return Math.max(2, (0.03 + o.sila / 100 * 0.22) * delsiStrana(o)); }
+function blokZeSily(o) { return Math.max(3, Math.round((0.05 + o.sila / 100 * 0.25) * delsiStrana(o))); }
+
+/**
+ * Nevratnost efektu. Gauss se σ zeslabí detail o periodě p na exp(−2π²σ²/p²). Plný kontrast má amplitudu 127,5,
+ * po zeslabení pod 0,5 (polovina kroku 8bit) ho zaokrouhlení smaže → zničí se detaily s periodou p < σ·1,887.
+ * Pixelizace blokem B zachová jen průměry bloků → detaily menší než B. Barva/emoji zničí vše.
+ * Vrátí { detail: px, podil: detail / kratší strana oblasti, uroven: 'bezpecne'|'stredni'|'slabe' }.
+ * Prahy: podíl ≥ 0,25 = rysy obličeje (oči, ústa ≈ 1/4–1/5 šířky) i znaky SPZ (≈ 2/3 výšky) zaniknou.
+ */
+const MEZ_DETAILU = Math.sqrt(2 * Math.PI * Math.PI / Math.log(127.5 / 0.5));
+function hodnoceni(o) {
+  if (o.efekt === 'cerna' || o.efekt === 'emoji') return { detail: Infinity, podil: Infinity, uroven: 'bezpecne' };
+  const detail = o.efekt === 'pixely' ? blokZeSily(o) : sigmaZeSily(o) * MEZ_DETAILU;
+  const podil = detail / Math.max(1, kratsiStrana(o));
+  return { detail, podil, uroven: podil >= 0.25 ? 'bezpecne' : podil >= 0.12 ? 'stredni' : 'slabe' };
+}
+/** Deterministický generátor (mulberry32) – šum stejný při každém překreslení. */
+function nahoda(semeno) {
+  let a = semeno >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function hashTextu(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; }
+const hexNaRgb = b => [parseInt(b.slice(1, 3), 16), parseInt(b.slice(3, 5), 16), parseInt(b.slice(5, 7), 16)];
 
 /** Přímo do obrazu (in place) použije efekt oblasti. Emoji = silná pixelizace (emoji kreslí stránka navrch). */
 function aplikujOblast(rgba, W, H, o) {
   const m = maska(o, W, H);
   if (!m) return;
   const { x0, y0, w, h, a } = m;
-  if (o.efekt === 'rozmazat') {
+  if (o.efekt === 'rozmazat' || o.efekt === 'zrneni') {
     const sigma = sigmaZeSily(o), pr = Math.ceil(sigma * 3);
     const vx = Math.max(0, x0 - pr), vy = Math.max(0, y0 - pr);
     const vw = Math.min(W, x0 + w + pr) - vx, vh = Math.min(H, y0 + h + pr) - vy;
@@ -196,6 +252,14 @@ function aplikujOblast(rgba, W, H, o) {
       if (!a[y * w + x]) continue;
       const s = ((y0 + y - vy) * vw + x0 + x - vx) * 3, d = ((y0 + y) * W + x0 + x) * 4;
       rgba[d] = r[s]; rgba[d + 1] = r[s + 1]; rgba[d + 2] = r[s + 2];
+    }
+    if (o.efekt === 'zrneni') { // hrubé zrno navrch rozmazání: amplituda podle síly (±20 až ±80)
+      const rnd = nahoda(hashTextu(String(o.id))), amp = 20 + o.sila * 0.6;
+      for (let i = 0; i < w * h; i++) {
+        if (!a[i]) continue;
+        const d = ((y0 + Math.floor(i / w)) * W + x0 + i % w) * 4, n = (rnd() * 2 - 1) * amp;
+        rgba[d] += n; rgba[d + 1] += n; rgba[d + 2] += n;
+      }
     }
   } else if (o.efekt === 'pixely' || o.efekt === 'emoji') {
     const B = o.efekt === 'emoji' ? Math.max(3, Math.round(Math.max(o.w, o.h) / 6)) : blokZeSily(o);
@@ -212,10 +276,11 @@ function aplikujOblast(rgba, W, H, o) {
         const i = (y * W + x) * 4; rgba[i] = r; rgba[i + 1] = g; rgba[i + 2] = bb;
       }
     }
-  } else { // cerna
+  } else { // cerna = plná barva
+    const [cr, cg, cb] = hexNaRgb(o.barva || '#000000');
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       if (!a[y * w + x]) continue;
-      const i = ((y0 + y) * W + x0 + x) * 4; rgba[i] = rgba[i + 1] = rgba[i + 2] = 0;
+      const i = ((y0 + y) * W + x0 + x) * 4; rgba[i] = cr; rgba[i + 1] = cg; rgba[i + 2] = cb;
     }
   }
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (a[y * w + x]) rgba[((y0 + y) * W + x0 + x) * 4 + 3] = 255;
@@ -417,16 +482,18 @@ const TAGY = {
   0x9010: 'Časové pásmo', 0x9011: 'Časové pásmo pořízení', 0x829A: 'Expoziční čas', 0x829D: 'Clona (F)', 0x8827: 'ISO',
   0x920A: 'Ohnisková vzdálenost', 0xA420: 'Jedinečné ID snímku', 0xA430: 'Majitel fotoaparátu', 0xA431: 'Sériové číslo těla',
   0xA433: 'Výrobce objektivu', 0xA434: 'Objektiv', 0xA435: 'Sériové číslo objektivu', 0x9C9B: 'Název (Windows)',
-  0x9C9C: 'Komentář (Windows)', 0x9C9D: 'Autor (Windows)', 0x9286: 'Uživatelský komentář',
+  0x9C9C: 'Komentář (Windows)', 0x9C9D: 'Autor (Windows)', 0x9286: 'Uživatelský komentář', 0x9C9E: 'Klíčová slova (Windows)',
+  0x9C9F: 'Předmět (Windows)', 0x010D: 'Název dokumentu', 0x013C: 'Počítač', 0xA436: 'Název snímku', 0xA437: 'Fotograf', 0xA438: 'Editor',
 };
-const GPS_TAGY = { 1: 'LatRef', 2: 'Lat', 3: 'LonRef', 4: 'Lon', 5: 'AltRef', 6: 'Alt', 29: 'Datum' };
+const GPS_TAGY = { 1: 'LatRef', 2: 'Lat', 3: 'LonRef', 4: 'Lon', 5: 'AltRef', 6: 'Alt', 29: 'Datum', 17: 'Směr' };
 const CITLIVE = new Set(['Autor', 'Copyright', 'Sériové číslo těla', 'Sériové číslo objektivu', 'Majitel fotoaparátu', 'Jedinečné ID snímku',
-  'Popis obrázku', 'Autor (Windows)', 'Komentář (Windows)', 'Uživatelský komentář', 'Datum pořízení']);
+  'Popis obrázku', 'Autor (Windows)', 'Komentář (Windows)', 'Uživatelský komentář', 'Datum pořízení', 'Klíčová slova (Windows)',
+  'Předmět (Windows)', 'Název dokumentu', 'Počítač', 'Fotograf', 'Editor', 'Název snímku']);
 
 function parsujTiff(v, start, konec) {
   const little = v.getUint16(start) === 0x4949;
   const u16 = o => v.getUint16(o, little), u32 = o => v.getUint32(o, little);
-  const polozky = {}, gps = {};
+  const polozky = {}, gps = {}, ifd1 = {};
   const VEL = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
   const ctiIfd = (off, cil, mapa, hloubka) => {
     if (hloubka > 3 || off < start || off + 2 > konec) return;
@@ -437,6 +504,8 @@ function parsujTiff(v, start, konec) {
       const ho = bajtu > 4 ? start + u32(e + 8) : e + 8;
       if (ho + bajtu > konec || cnt > 1e5) continue;
       if (tag === 0x8769 || tag === 0x8825) { ctiIfd(start + u32(e + 8), tag === 0x8825 ? gps : polozky, tag === 0x8825 ? GPS_TAGY : TAGY, hloubka + 1); continue; }
+      if (mapa === TAGY && tag === 0x927C) { polozky.MakerNote = bajtu; continue; }
+      if (cil === ifd1) { if (tag === 0x0201 || tag === 0x0202) ifd1[tag] = typ === 3 ? u16(ho) : u32(ho); continue; }
       const nazev = mapa[tag];
       if (!nazev) continue;
       let h;
@@ -462,7 +531,18 @@ function parsujTiff(v, start, konec) {
     }
   };
   if (start + 8 > konec) return { polozky, gps: null };
-  ctiIfd(start + u32(start + 4), polozky, TAGY, 0);
+  const off0 = start + u32(start + 4);
+  ctiIfd(off0, polozky, TAGY, 0);
+  // IFD1 = miniatura (náhled JPEG uvnitř EXIF) – často zůstane NEUPRAVENÁ i po oříznutí/zakrytí v editoru
+  let miniatura = null;
+  if (off0 + 2 <= konec) {
+    const dalsi = off0 + 2 + u16(off0) * 12;
+    if (dalsi + 4 <= konec && u32(dalsi)) {
+      ctiIfd(start + u32(dalsi), ifd1, {}, 0);
+      const mo = start + (ifd1[0x0201] || 0), ml = ifd1[0x0202] || 0;
+      if (ifd1[0x0201] && ml > 0 && mo + ml <= konec) miniatura = { od: mo, delka: ml };
+    }
+  }
   let poloha = null;
   if (Array.isArray(gps.Lat) && Array.isArray(gps.Lon)) {
     const dms = a => a[0] + (a[1] || 0) / 60 + (a[2] || 0) / 3600;
@@ -472,7 +552,8 @@ function parsujTiff(v, start, konec) {
       if (typeof gps.Alt === 'number') poloha.alt = Math.round(gps.Alt * (gps.AltRef === 1 ? -1 : 1));
     }
   }
-  return { polozky, gps: poloha };
+  if (typeof gps.Směr === 'number' && poloha) poloha.smer = Math.round(gps.Směr);
+  return { polozky, gps: poloha, miniatura };
 }
 const ascii = (v, o, n) => { let s = ''; for (let i = 0; i < n && o + i < v.byteLength; i++) s += String.fromCharCode(v.getUint8(o + i)); return s; };
 
@@ -481,9 +562,13 @@ const ascii = (v, o, n) => { let s = ''; for (let i = 0; i < n && o + i < v.byte
  * Při exportu přes plátno se zahodí všechny – tohle slouží jen k ukázání, co soubor obsahoval.
  */
 function ctiMetadata(buf) {
-  const v = new DataView(buf), L = v.byteLength, bloky = [], vys = { format: '?', bloky, polozky: [], gps: null };
+  const v = new DataView(buf), L = v.byteLength, bloky = [], vys = { format: '?', bloky, polozky: [], gps: null, miniatura: null, orientace: 1, konecDat: L };
+  const xmp = [], iptc = [];
   const pridejTiff = (start, konec) => {
-    try { const t = parsujTiff(v, start, konec); Object.assign(vys._p || (vys._p = {}), t.polozky); if (t.gps) vys.gps = t.gps; }
+    try {
+      const t = parsujTiff(v, start, konec); Object.assign(vys._p || (vys._p = {}), t.polozky); if (t.gps) vys.gps = t.gps;
+      if (t.miniatura && !vys.miniatura) vys.miniatura = new Uint8Array(buf.slice(t.miniatura.od, t.miniatura.od + t.miniatura.delka));
+    }
     catch (e) { /* poškozený blok – stačí vědět, že tam byl */ }
   };
   try {
@@ -493,11 +578,18 @@ function ctiMetadata(buf) {
       while (o + 4 <= L && v.getUint8(o) === 0xFF) {
         const m = v.getUint8(o + 1);
         if (m === 0xD8 || (m >= 0xD0 && m <= 0xD7) || m === 0x01) { o += 2; continue; }
-        if (m === 0xDA || m === 0xD9) break;
+        if (m === 0xD9) break;
+        if (m === 0xDA) { // obrazová data: najdi konec (FFD9) – za ním bývá skrytý obsah (pohyblivá fotka, další snímky)
+          const k = konecJpeg(v, o);
+          if (k > 0) { vys.konecDat = k; if (L - k > 16) bloky.push('Data za koncem obrázku (' + Math.round((L - k) / 1024) + ' kB)'); }
+          break;
+        }
         const len = v.getUint16(o + 2), d = o + 4;
         if (m === 0xE1 && ascii(v, d, 4) === 'Exif') { bloky.push('EXIF'); pridejTiff(d + 6, Math.min(L, o + 2 + len)); }
-        else if (m === 0xE1 && ascii(v, d, 28).startsWith('http://ns.adobe.com/xap')) bloky.push('XMP');
-        else if (m === 0xED) bloky.push('IPTC / Photoshop');
+        else if (m === 0xE1 && ascii(v, d, 29) === 'http://ns.adobe.com/xap/1.0/\0') { bloky.push('XMP'); xmp.push(utf8(new Uint8Array(buf, d + 29, Math.max(0, Math.min(L, o + 2 + len) - d - 29)))); }
+        else if (m === 0xE1 && ascii(v, d, 28).startsWith('http://ns.adobe.com/xmp/exte')) { if (!bloky.includes('XMP (rozšířené)')) bloky.push('XMP (rozšířené)'); }
+        else if (m === 0xED) { bloky.push('IPTC / Photoshop'); iptc.push(...ctiPhotoshop(v, d, Math.min(L, o + 2 + len))); }
+        else if (m === 0xE2 && ascii(v, d, 4) === 'MPF\0') bloky.push('MPF (více snímků v souboru)');
         else if (m === 0xE2 && ascii(v, d, 11) === 'ICC_PROFILE') { if (!bloky.includes('Barevný profil ICC')) bloky.push('Barevný profil ICC'); }
         else if (m === 0xFE) bloky.push('Komentář');
         else if (m >= 0xE3 && m <= 0xEF) bloky.push('APP' + (m - 0xE0) + ' (' + ascii(v, d, 8).replace(/[^\x20-\x7e]/g, '').trim() + ')');
@@ -512,6 +604,10 @@ function ctiMetadata(buf) {
         else if (typ === 'tEXt' || typ === 'iTXt' || typ === 'zTXt') {
           const kl = ascii(v, d, Math.min(len, 79)).split('\0')[0];
           bloky.push(kl === 'XML:com.adobe.xmp' ? 'XMP' : 'Text: ' + kl);
+          if (kl === 'XML:com.adobe.xmp' && typ === 'iTXt' && v.getUint8(d + kl.length + 1) === 0) { // nekomprimovaný iTXt
+            let t = d + kl.length + 3; for (let z = 0; z < 2; z++) { while (t < d + len && v.getUint8(t)) t++; t++; }
+            if (t < d + len) xmp.push(utf8(new Uint8Array(buf, t, d + len - t)));
+          }
         } else if (typ === 'iCCP') bloky.push('Barevný profil ICC');
         else if (typ === 'tIME') bloky.push('Čas změny');
         if (typ === 'IEND') break;
@@ -523,16 +619,104 @@ function ctiMetadata(buf) {
       while (o + 8 <= L) {
         const typ = ascii(v, o, 4), len = v.getUint32(o + 4, true), d = o + 8;
         if (typ === 'EXIF') { bloky.push('EXIF'); const s = ascii(v, d, 6) === 'Exif\0\0' ? d + 6 : d; pridejTiff(s, Math.min(L, d + len)); }
-        else if (typ === 'XMP ') bloky.push('XMP');
+        else if (typ === 'XMP ') { bloky.push('XMP'); xmp.push(utf8(new Uint8Array(buf, d, Math.min(len, L - d)))); }
         else if (typ === 'ICCP') bloky.push('Barevný profil ICC');
         o += 8 + len + (len & 1);
       }
     }
   } catch (e) { /* zkrácený soubor */ }
   const p = vys._p || {}; delete vys._p;
+  if (typeof p.Orientace === 'number') vys.orientace = p.Orientace;
+  if (p.MakerNote) { bloky.push('MakerNote (data výrobce, ' + Math.round(p.MakerNote / 1024) + ' kB)'); delete p.MakerNote; }
+  if (vys.miniatura) bloky.push('Miniatura v EXIF (' + Math.max(1, Math.round(vys.miniatura.length / 1024)) + ' kB)');
   for (const k of Object.keys(p)) vys.polozky.push([k, formatHodnoty(k, p[k]), CITLIVE.has(k)]);
+  for (const t of xmp) for (const [k, h] of ctiXmp(t)) { vys.polozky.push(['XMP: ' + k, h, true]); if (!vys.gps && /GPS/.test(k)) vys._xg = 1; }
+  for (const [k, h] of iptc) vys.polozky.push(['IPTC: ' + k, h, true]);
+  if (!vys.gps) { // poloha jen v XMP
+    const g = n => (vys.polozky.find(q => q[0] === 'XMP: ' + n) || [])[1];
+    const lat = xmpSouradnice(g('GPS šířka')), lon = xmpSouradnice(g('GPS délka'));
+    if (lat !== null && lon !== null) vys.gps = { lat: +lat.toFixed(6), lon: +lon.toFixed(6) };
+  }
+  delete vys._xg;
   if (vys.gps) vys.polozky.unshift(['GPS poloha', vys.gps.lat + ', ' + vys.gps.lon + (vys.gps.alt !== undefined ? ' (' + vys.gps.alt + ' m n. m.)' : ''), true]);
   return vys;
+}
+function utf8(b) { try { return new TextDecoder('utf-8').decode(b); } catch (e) { return ''; } }
+/** Najde konec entropických dat JPEG (marker FFD9) od segmentu SOS na pozici o. Vrátí index za FFD9 nebo −1. */
+function konecJpeg(v, o) {
+  const L = v.byteLength;
+  for (let i = o + 2 + v.getUint16(o + 2); i + 1 < L; i++) {
+    if (v.getUint8(i) !== 0xFF) continue;
+    const m = v.getUint8(i + 1);
+    if (m === 0xD9) return i + 2;
+    if (m === 0x00 || m === 0xFF || (m >= 0xD0 && m <= 0xD7)) { if (m !== 0xFF) i++; continue; }
+    // další segment (progresivní JPEG má víc SOS / DHT) – přeskoč jeho délku
+    if (i + 3 < L) i += 1 + v.getUint16(i + 2);
+  }
+  return -1;
+}
+const XMP_POLE = [
+  ['dc:creator', 'Autor'], ['dc:rights', 'Práva'], ['dc:description', 'Popis'], ['dc:title', 'Název'], ['dc:subject', 'Klíčová slova'],
+  ['photoshop:City', 'Město'], ['photoshop:State', 'Kraj'], ['photoshop:Country', 'Země'], ['Iptc4xmpCore:Location', 'Místo'],
+  ['photoshop:Credit', 'Kredit'], ['photoshop:AuthorsPosition', 'Pozice autora'], ['xmp:CreatorTool', 'Program'], ['xmp:CreateDate', 'Datum vytvoření'],
+  ['exif:GPSLatitude', 'GPS šířka'], ['exif:GPSLongitude', 'GPS délka'], ['xmpMM:DocumentID', 'ID dokumentu'],
+  ['xmpMM:OriginalDocumentID', 'ID původního dokumentu'], ['Iptc4xmpCore:CreatorContactInfo', 'Kontakt autora'], ['aux:SerialNumber', 'Sériové číslo těla'],
+  ['exifEX:BodySerialNumber', 'Sériové číslo těla'], ['photoshop:Instructions', 'Pokyny'],
+];
+/** Vybraná pole z XMP (atributy i prvky, včetně rdf:Seq/Alt/Bag). Vrátí [[název, hodnota]]. Historie úprav → počet kroků. */
+function ctiXmp(t) {
+  const ven = [], vid = new Set();
+  const cist = s => s.replace(/<[^>]+>/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  for (const [tag, nazev] of XMP_POLE) {
+    const e = tag.replace(':', '\\:');
+    let m = t.match(new RegExp('[\\s<]' + e + '="([^"]*)"')) || t.match(new RegExp('<' + e + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + e + '>'));
+    if (!m) continue;
+    let h = cist(m[1]);
+    if (tag === 'Iptc4xmpCore:CreatorContactInfo' && !h) { // kontakt bývá v atributech
+      const a = (t.match(/<Iptc4xmpCore:CreatorContactInfo([^>]*)>/) || [])[1] || '';
+      h = [...a.matchAll(/Iptc4xmpCore:Ci\w+="([^"]*)"/g)].map(x => x[1]).join(', ');
+    }
+    if (!h || vid.has(nazev + h)) continue;
+    vid.add(nazev + h); ven.push([nazev, h.length > 200 ? h.slice(0, 200) + '…' : h]);
+  }
+  const hist = (t.match(/stEvt:action/g) || []).length;
+  if (hist) ven.push(['Historie úprav', hist + ' kroků' + ((t.match(/stEvt:softwareAgent="([^"]*)"/) || [])[1] ? ' (' + t.match(/stEvt:softwareAgent="([^"]*)"/)[1] + ')' : '')]);
+  return ven;
+}
+/** XMP souřadnice „50,5.25N“ nebo „50,5,15N“ → stupně. */
+function xmpSouradnice(s) {
+  const m = /^(\d+),(\d+(?:\.\d+)?)(?:,(\d+(?:\.\d+)?))?([NSEW])$/.exec(String(s || '').trim());
+  if (!m) return null;
+  const st = +m[1] + m[2] / 60 + (m[3] ? m[3] / 3600 : 0);
+  return m[4] === 'S' || m[4] === 'W' ? -st : st;
+}
+const IPTC_POLE = { 5: 'Název', 25: 'Klíčové slovo', 40: 'Pokyny', 55: 'Datum vytvoření', 80: 'Autor', 85: 'Pozice autora', 90: 'Město',
+  92: 'Část obce', 95: 'Kraj', 101: 'Země', 103: 'Číslo zakázky', 105: 'Titulek', 110: 'Kredit', 115: 'Zdroj', 116: 'Copyright',
+  118: 'Kontakt', 120: 'Popis', 122: 'Autor popisu' };
+/** Photoshop APP13: bloky 8BIM, z nich 0x0404 = IPTC IIM. Vrátí [[název, hodnota]]. */
+function ctiPhotoshop(v, d, konec) {
+  const ven = [];
+  if (ascii(v, d, 14) !== 'Photoshop 3.0\0') return ven;
+  let o = d + 14;
+  while (o + 12 <= konec && ascii(v, o, 4) === '8BIM') {
+    const id = v.getUint16(o + 4), nl = v.getUint8(o + 6);
+    let p = o + 6 + 1 + nl; if ((1 + nl) & 1) p++;
+    const vel = v.getUint32(p); p += 4;
+    if (id === 0x0404) {
+      for (let i = p; i + 5 <= Math.min(p + vel, konec);) {
+        if (v.getUint8(i) !== 0x1C) break;
+        const rec = v.getUint8(i + 1), ds = v.getUint8(i + 2), n = v.getUint16(i + 3);
+        if (rec === 2 && IPTC_POLE[ds] && i + 5 + n <= konec) {
+          const b = new Uint8Array(v.buffer, v.byteOffset + i + 5, n);
+          let h; try { h = new TextDecoder('utf-8', { fatal: true }).decode(b); } catch (e) { h = String.fromCharCode(...b); }
+          if (h.trim()) ven.push([IPTC_POLE[ds], h.trim()]);
+        }
+        i += 5 + n;
+      }
+    }
+    o = p + vel + (vel & 1);
+  }
+  return ven;
 }
 function formatHodnoty(k, h) {
   if (k === 'Expoziční čas' && h > 0 && h < 1) return '1/' + Math.round(1 / h) + ' s';
@@ -598,10 +782,217 @@ function zip(soubory, datum = new Date()) {
   return ven;
 }
 
+/* ---------- bezeztrátové odstranění metadat (bez překódování) ---------- */
+/**
+ * JPEG: ponechá jen to, co je potřeba k dekódování (DQT, SOF, DHT, DRI, SOS + data), APP0 JFIF, APP14 Adobe
+ * (barevná transformace) a volitelně APP2 ICC. Zahodí EXIF, XMP, IPTC, MPF, komentáře a vše za koncem obrázku.
+ * Vrátí Uint8Array nebo null (není JPEG / poškozený).
+ */
+function ocistiJpeg(buf, { icc = false } = {}) {
+  const v = new DataView(buf), L = v.byteLength, kusy = [new Uint8Array([0xFF, 0xD8])];
+  if (L < 4 || v.getUint16(0) !== 0xFFD8) return null;
+  let o = 2;
+  while (o + 4 <= L) {
+    if (v.getUint8(o) !== 0xFF) return null;
+    const m = v.getUint8(o + 1);
+    if (m === 0xFF) { o++; continue; }
+    if (m === 0xDA) {
+      const k = konecJpeg(v, o);
+      if (k < 0) return null;
+      kusy.push(new Uint8Array(buf, o, k - o)); break;
+    }
+    const len = v.getUint16(o + 2), d = o + 4;
+    if (o + 2 + len > L) return null;
+    const app = m >= 0xE0 && m <= 0xEF;
+    const nechat = !app && m !== 0xFE ||
+      (m === 0xE0 && ascii(v, d, 5) === 'JFIF\0') || (m === 0xEE && ascii(v, d, 5) === 'Adobe') ||
+      (icc && m === 0xE2 && ascii(v, d, 12) === 'ICC_PROFILE\0');
+    if (nechat) kusy.push(new Uint8Array(buf, o, 2 + len));
+    o += 2 + len;
+  }
+  const ven = new Uint8Array(kusy.reduce((a, b) => a + b.length, 0));
+  let i = 0; for (const k of kusy) { ven.set(k, i); i += k.length; }
+  return ven;
+}
+const PNG_NECHAT = new Set(['IHDR', 'PLTE', 'IDAT', 'IEND', 'tRNS', 'gAMA', 'cHRM', 'sRGB', 'sBIT', 'acTL', 'fcTL', 'fdAT', 'cICP']);
+/** PNG: ponechá bloky potřebné k zobrazení (+ volitelně iCCP), zahodí text, EXIF, čas a neznámé. */
+function ocistiPng(buf, { icc = false } = {}) {
+  const v = new DataView(buf), L = v.byteLength;
+  if (L < 8 || v.getUint32(0) !== 0x89504E47) return null;
+  const kusy = [new Uint8Array(buf, 0, 8)];
+  let o = 8, konec = false;
+  while (o + 12 <= L) {
+    const len = v.getUint32(o), typ = ascii(v, o + 4, 4);
+    if (o + 12 + len > L) return null;
+    if (PNG_NECHAT.has(typ) || (icc && typ === 'iCCP')) kusy.push(new Uint8Array(buf, o, 12 + len));
+    o += 12 + len;
+    if (typ === 'IEND') { konec = true; break; }
+  }
+  if (!konec) return null;
+  const ven = new Uint8Array(kusy.reduce((a, b) => a + b.length, 0));
+  let i = 0; for (const k of kusy) { ven.set(k, i); i += k.length; }
+  return ven;
+}
+
+/* ---------- historie Zpět / Znovu ---------- */
+function novaHistorie() { return { zpet: [], znovu: [] }; }
+function hZapamatuj(h, stav, max = 100) { h.zpet.push(stav); if (h.zpet.length > max) h.zpet.shift(); h.znovu.length = 0; }
+function hZpet(h, akt) { if (!h.zpet.length) return null; h.znovu.push(akt); return h.zpet.pop(); }
+function hZnovu(h, akt) { if (!h.znovu.length) return null; h.zpet.push(akt); return h.znovu.pop(); }
+
+/* ---------- šablony nastavení ---------- */
+const NAST_POVOLENE = {
+  efekt: v => EFEKTY.includes(v), sila: v => Number.isFinite(+v) && +v >= 0 && +v <= 100, emoji: v => typeof v === 'string' && v.length <= 8,
+  barva: jeBarva, tvar: v => ['elipsa', 'obdelnik'].includes(v), format: v => ['orig', 'image/jpeg', 'image/webp', 'image/png'].includes(v),
+  kvalita: v => ['1', '0.95', '0.9', '0.85', '0.75'].includes(String(v)), maxStrana: v => ['0', '4096', '2560', '2048', '1600', '1080'].includes(String(v)),
+  pripona: v => typeof v === 'string' && v.length <= 30 && !/[\\/:*?"<>|]/.test(v), citlivost: v => +v >= 0.3 && +v <= 0.95,
+  navrhyObliceju: v => typeof v === 'boolean', bezeztrat: v => typeof v === 'boolean', protokol: v => typeof v === 'boolean',
+  icc: v => typeof v === 'boolean', spzEfekt: v => EFEKTY.includes(v),
+};
+/** Ze šablony/importu vezme jen známé klíče s platnou hodnotou. */
+function cistaNastaveni(p) {
+  const ven = {};
+  for (const k of Object.keys(NAST_POVOLENE)) if (p && p[k] !== undefined && NAST_POVOLENE[k](p[k])) ven[k] = k === 'sila' ? +p[k] : k === 'citlivost' ? String(+p[k]) : p[k];
+  return ven;
+}
+const SABLONY = [
+  { id: 'novinar', nazev: '📰 Novinář – zpravodajská fotka', popis: 'Obličeje i SPZ pixelizací (velké bloky), JPG 90 %, max. 2560 px, protokol.',
+    nast: { efekt: 'pixely', sila: 70, tvar: 'elipsa', format: 'image/jpeg', kvalita: '0.9', maxStrana: '2560', pripona: '_anonym', citlivost: '0.6', navrhyObliceju: true, spzEfekt: 'pixely', protokol: true } },
+  { id: 'gdpr', nazev: '🏛️ GDPR / úřad – nevratné začernění', popis: 'Plná černá, obdélníky, PNG bez ztrát, protokol pro spis, nálezy k potvrzení.',
+    nast: { efekt: 'cerna', barva: '#000000', tvar: 'obdelnik', format: 'image/png', maxStrana: '0', pripona: '_anonym', citlivost: '0.5', navrhyObliceju: true, spzEfekt: 'cerna', protokol: true } },
+  { id: 'realitka', nazev: '🏠 Realitní inzerát', popis: 'Silné rozmazání (vzhledné), SPZ pixely, JPG 85 % max. 2048 px, stejné názvy souborů.',
+    nast: { efekt: 'rozmazat', sila: 80, tvar: 'elipsa', format: 'image/jpeg', kvalita: '0.85', maxStrana: '2048', pripona: '', citlivost: '0.65', navrhyObliceju: false, spzEfekt: 'pixely', protokol: false } },
+  { id: 'site', nazev: '📱 Sociální sítě', popis: 'Emoji přes obličeje, JPG 90 %, max. 1080 px.',
+    nast: { efekt: 'emoji', emoji: '😎', tvar: 'elipsa', format: 'image/jpeg', kvalita: '0.9', maxStrana: '1080', pripona: '_anonym', citlivost: '0.65', navrhyObliceju: false, spzEfekt: 'pixely' } },
+  { id: 'metadata', nazev: '🧾 Jen metadata, bez překódování', popis: 'Formát jako originál, JPG/PNG bez úprav se jen bezeztrátově očistí.',
+    nast: { format: 'orig', kvalita: '0.95', maxStrana: '0', pripona: '', bezeztrat: true, protokol: true } },
+];
+
+/* ---------- export / import oblastí ---------- */
+const POLE_OBLASTI = ['tvar', 'x', 'y', 'w', 'h', 'efekt', 'sila', 'emoji', 'barva', 'zdroj', 'skore', 'navrh', 'vypnuta', 'body', 'r'];
+function exportOblasti(fotky) {
+  return { typ: 'anonymizace-oblasti', verze: 1, vytvoreno: new Date().toISOString(),
+    fotky: fotky.map(f => ({ nazev: f.nazev, W: f.W, H: f.H, zkontrolovano: !!f.zkontrolovano,
+      oblasti: f.oblasti.map(o => Object.fromEntries(POLE_OBLASTI.filter(k => o[k] !== undefined).map(k => [k, o[k]]))) })) };
+}
+/** Přiřadí oblasti podle názvu souboru; při jiném rozlišení přepočte měřítko. Vrátí { fotek, oblasti, nenalezene: [názvy] }. */
+function importOblasti(data, fotky, pridat = false) {
+  if (!data || data.typ !== 'anonymizace-oblasti' || !Array.isArray(data.fotky)) throw new Error('Soubor není export oblastí z Anonymizace.');
+  const vys = { fotek: 0, oblasti: 0, nenalezene: [] };
+  for (const z of data.fotky) {
+    const f = fotky.find(q => q.nazev === z.nazev);
+    if (!f) { vys.nenalezene.push(z.nazev); continue; }
+    const kx = z.W ? f.W / z.W : 1, ky = z.H ? f.H / z.H : 1;
+    const nove = (z.oblasti || []).map(o => {
+      const n = novaOblast({ ...o, id: undefined });
+      if (kx !== 1 || ky !== 1) {
+        nastavObdelnik(n, { x: n.x * kx, y: n.y * ky, w: n.w * kx, h: n.h * ky });
+      }
+      return n;
+    });
+    f.oblasti = pridat ? f.oblasti.concat(nove) : nove;
+    if (z.zkontrolovano) f.zkontrolovano = true;
+    vys.fotek++; vys.oblasti += nove.length;
+  }
+  return vys;
+}
+
+/* ---------- protokol anonymizace ---------- */
+const POPIS_EFEKTU = { rozmazat: 'rozmazání', pixely: 'pixelizace', cerna: 'plná barva', emoji: 'emoji', zrneni: 'zrnění' };
+/**
+ * zaznamy = [{ nazev, vystup, meta, W, H, oblasti, overeni, bezeztrat, zkontrolovano }] → text protokolu (pro spis / redakci).
+ */
+function protokolText(zaznamy, datum = new Date()) {
+  const r = ['PROTOKOL ANONYMIZACE', 'Vytvořeno: ' + datum.toLocaleString('cs-CZ'), 'Nástroj: Anonymizace fotek (zpracování lokálně v prohlížeči)', 'Souborů: ' + zaznamy.length, ''];
+  zaznamy.forEach((z, i) => {
+    const akt = z.oblasti.filter(aktivni), poc = {};
+    for (const o of akt) { const k = (o.zdroj === 'oblicej' ? 'obličej' : o.zdroj === 'spz' ? 'SPZ' : 'ruční') + ' – ' + POPIS_EFEKTU[o.efekt]; poc[k] = (poc[k] || 0) + 1; }
+    const slabe = akt.filter(o => hodnoceni(o).uroven === 'slabe').length;
+    r.push(`${i + 1}. ${z.nazev}  →  ${z.vystup}`);
+    r.push(`   Původní formát: ${z.meta.format}, ${z.W}×${z.H} px${z.zkontrolovano ? ', zkontrolováno člověkem' : ', NEOZNAČENO jako zkontrolované'}`);
+    r.push('   Upravené oblasti: ' + (akt.length ? akt.length + ' (' + Object.entries(poc).map(([k, n]) => n + '× ' + k).join(', ') + ')' : 'žádné'));
+    if (slabe) r.push(`   POZOR: ${slabe} oblast(í) se slabým efektem – detail může zůstat rozpoznatelný.`);
+    const nep = z.oblasti.filter(o => o.navrh).length, vyp = z.oblasti.filter(o => o.vypnuta).length;
+    if (nep || vyp) r.push(`   Neuplatněno: ${nep} nepotvrzených návrhů, ${vyp} vypnutých oblastí.`);
+    r.push('   Odstraněné bloky metadat: ' + (z.meta.bloky.length ? z.meta.bloky.join(', ') : 'žádné nebyly'));
+    if (z.meta.gps) r.push(`   Odstraněná GPS poloha: ${z.meta.gps.lat}, ${z.meta.gps.lon}`);
+    const cit = z.meta.polozky.filter(p => p[2] && p[0] !== 'GPS poloha');
+    if (cit.length) r.push('   Odstraněné citlivé údaje: ' + cit.map(p => p[0] + ' = ' + p[1]).join('; '));
+    r.push('   Způsob uložení: ' + (z.bezeztrat ? 'bezeztrátové odstranění metadat (obraz nepřekódován)' : 'překresleno přes plátno a znovu zakódováno'));
+    if (z.overeni) r.push('   Kontrola výsledku: ' + z.overeni);
+    r.push('');
+  });
+  return r.join('\n');
+}
+const csvBunka = v => { const t = String(v === undefined || v === null ? '' : v); return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+function protokolCsv(zaznamy) {
+  const r = [['soubor', 'vystup', 'format', 'sirka', 'vyska', 'oblasti', 'obliceje', 'spz', 'rucni', 'slabe', 'navrhy_neuplatnene', 'gps', 'bloky_metadat', 'zkontrolovano', 'bezeztratove', 'overeni']];
+  for (const z of zaznamy) {
+    const akt = z.oblasti.filter(aktivni), n = zd => akt.filter(o => o.zdroj === zd).length;
+    r.push([z.nazev, z.vystup, z.meta.format, z.W, z.H, akt.length, n('oblicej'), n('spz'), n('rucni'), akt.filter(o => hodnoceni(o).uroven === 'slabe').length,
+      z.oblasti.filter(o => o.navrh).length, z.meta.gps ? z.meta.gps.lat + ' ' + z.meta.gps.lon : '', z.meta.bloky.join(' | '), z.zkontrolovano ? 'ano' : 'ne', z.bezeztrat ? 'ano' : 'ne', z.overeni || '']);
+  }
+  return '\ufeff' + r.map(x => x.map(csvBunka).join(';')).join('\r\n');
+}
+
+/* ---------- video: klíčové snímky, interpolace, sledování ---------- */
+/**
+ * Stopa = { id, tvar, efekt, sila, emoji, barva, zdroj, od, do, klice: [{ t, x, y, w, h }] } (čas v sekundách).
+ * Mezi klíči lineárně, před prvním / za posledním drží polohu; mimo [od, do] neplatí.
+ */
+function oblastVCase(st, t) {
+  const k = st.klice;
+  if (!k || !k.length || t < st.od - 1e-6 || t > st.do + 1e-6) return null;
+  let r;
+  if (t <= k[0].t) r = k[0];
+  else if (t >= k[k.length - 1].t) r = k[k.length - 1];
+  else {
+    let i = 1; while (k[i].t < t) i++;
+    const a = k[i - 1], b = k[i], u = (t - a.t) / (b.t - a.t || 1);
+    r = { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, w: a.w + (b.w - a.w) * u, h: a.h + (b.h - a.h) * u };
+  }
+  return novaOblast({ id: st.id, tvar: st.tvar, efekt: st.efekt, sila: st.sila, emoji: st.emoji, barva: st.barva, zdroj: st.zdroj, x: r.x, y: r.y, w: r.w, h: r.h });
+}
+/** Vloží / přepíše klíč v čase t (seřazeně) a rozšíří rozsah stopy. */
+function nastavKlic(st, t, r) {
+  const k = { t, x: r.x, y: r.y, w: r.w, h: r.h }, i = st.klice.findIndex(q => Math.abs(q.t - t) < 1e-3);
+  if (i >= 0) st.klice[i] = k; else { st.klice.push(k); st.klice.sort((a, b) => a.t - b.t); }
+  st.od = Math.min(st.od, t); st.do = Math.max(st.do, t);
+  return st;
+}
+/**
+ * Spojí detekce z jednotlivých časů do stop (chamtivé párování podle IoU s posledním boxem stopy).
+ * snimky = [{ t, boxy: [{x0,y0,x1,y1,skore}] }] seřazené podle t. Stopa, která chybí déle než maxMezera s, končí.
+ * Krátké stopy (méně než minDetekci) se zahodí jako šum. Konec stopy se prodlouží o půl kroku (obličej mezi vzorky).
+ */
+function sledujDetekce(snimky, { prahIou = 0.25, maxMezera = 1, minDetekci = 2, krok = 0 } = {}) {
+  const aktivni = [], hotove = [];
+  for (const s of snimky) {
+    for (let i = aktivni.length - 1; i >= 0; i--) if (s.t - aktivni[i].posl.t > maxMezera) hotove.push(aktivni.splice(i, 1)[0]);
+    const pary = [];
+    s.boxy.forEach((b, bi) => aktivni.forEach((st, si) => { const q = iou(st.posl.b, b); if (q >= prahIou) pary.push([q, bi, si]); }));
+    pary.sort((a, b) => b[0] - a[0]);
+    const pouzB = new Set(), pouzS = new Set();
+    for (const [, bi, si] of pary) {
+      if (pouzB.has(bi) || pouzS.has(si)) continue;
+      pouzB.add(bi); pouzS.add(si);
+      aktivni[si].body.push({ t: s.t, b: s.boxy[bi] }); aktivni[si].posl = { t: s.t, b: s.boxy[bi] };
+    }
+    s.boxy.forEach((b, bi) => { if (!pouzB.has(bi)) aktivni.push({ body: [{ t: s.t, b }], posl: { t: s.t, b } }); });
+  }
+  return hotove.concat(aktivni).filter(st => st.body.length >= minDetekci).map(st => ({
+    od: Math.max(0, st.body[0].t - krok / 2), do: st.body[st.body.length - 1].t + krok / 2,
+    klice: st.body.map(({ t, b }) => ({ t, x: b.x0, y: b.y0, w: b.x1 - b.x0, h: b.y1 - b.y0 })),
+    skore: Math.max(...st.body.map(q => q.b.skore || 0)),
+  })).sort((a, b) => a.od - b.od);
+}
+
 const API = {
-  EFEKTY, TVARY, UCHYTY, UF_W, UF_H,
-  novaOblast, prepocitejStetec, normObdelnik, nastavObdelnik, posun, obsahuje, najdiOblast, uchyty, najdiUchyt, tahUchytem,
-  maska, boxyProGauss, rozmazVyrez, sigmaZeSily, blokZeSily, aplikujOblast, vykresli, aktivni,
+  EFEKTY, TVARY, UCHYTY, UF_W, UF_H, PRUCHODY, MEZ_DETAILU, SABLONY,
+  novaOblast, prepocitejStetec, normObdelnik, nastavObdelnik, posun, obsahuje, vPolygonu, najdiOblast, uchyty, najdiUchyt, tahUchytem,
+  maska, boxyProGauss, rozmazVyrez, sigmaZeSily, blokZeSily, hodnoceni, nahoda, aplikujOblast, vykresli, aktivni,
+  ocistiJpeg, ocistiPng, ctiXmp, ctiPhotoshop, xmpSouradnice, novaHistorie, hZapamatuj, hZpet, hZnovu, cistaNastaveni,
+  exportOblasti, importOblasti, protokolText, protokolCsv, oblastVCase, nastavKlic, sledujDetekce,
   vyrezNa, tenzorUltraFace, dekodujUltraFace, iou, nms, planDlazdic, naObraz, slucDetekce, oblastZObliceje,
   sedotisk, hledejSpz, ctiMetadata, nazevVystupu, unikatniNazvy, crc32, zip,
 };

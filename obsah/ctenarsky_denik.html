@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Čtenářský deník</title>
+<meta name="description" content="Čtenářský deník a domácí knihovna: přidání knihy skenem ISBN, z Open Library nebo ručně, police, průběh čtení po stránkách, hodnocení, citáty, výzva, statistiky, školní zápis k tisku, import Goodreads CSV.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="ctenarsky_denik/jadro.js"></script>
+<script src="ctenarsky_denik/ctecka.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+a{color:var(--accent)}
+/* horní lišta (stavba jako Zásoby / Hlídač termínů) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .skup-hledat{flex:1 1 170px;flex-shrink:1;min-width:140px;background:none;border-color:transparent;padding:0}
+.lista .skup-hledat .vstup{width:100%}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3;text-decoration:none}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.btn:focus-visible,.vstup:focus,.hvezda:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+@media (max-width:1500px){.skup-police .txt{display:none}}
+@media (max-width:1000px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;text-decoration:none;display:inline-block}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:3px 8px;font-size:.78rem}
+.btn:disabled{opacity:.5;cursor:default}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:.86rem;font-family:inherit;min-width:0}
+textarea.vstup{resize:vertical;line-height:1.45}
+
+main{flex:1;min-height:0;overflow:auto;padding:12px clamp(10px,2.5vw,24px) 40px}
+.obal{max-width:1200px;margin:0 auto}
+.souhrn{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.dlazdice{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:10px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.dlazdice:hover{border-color:var(--border-strong)}
+.dlazdice[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.dlazdice b{display:block;font-size:1.45rem;line-height:1.1}
+.dlazdice span{font-size:.78rem;color:var(--text-muted)}
+.filtry{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.filtry .vstup{padding:5px 8px}
+.filtry .pocet{color:var(--text-muted);font-size:.82rem;margin-left:auto}
+.prazdno{color:var(--text-muted);background:var(--bg-panel);border:1px dashed var(--border-strong);border-radius:8px;padding:22px;text-align:center;line-height:1.7}
+.prazdno .btn{margin:2px}
+h2.skupina{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin:16px 0 6px}
+
+/* karty knih */
+.seznam{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px}
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:8px;display:flex;gap:10px;min-width:0;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.karta:hover{border-color:var(--border-strong)}
+.karta .info{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.karta h3{margin:0;font-size:.95rem;line-height:1.25;word-break:break-word}
+.karta .autor{font-size:.82rem;color:var(--text-muted)}
+.karta .meta{display:flex;flex-wrap:wrap;gap:3px 8px;font-size:.74rem;color:var(--text-muted);align-items:center}
+.karta .akce{margin-top:auto;display:flex;gap:4px;flex-wrap:wrap;padding-top:3px}
+.obalka{flex-shrink:0;width:62px;height:92px;border-radius:4px;overflow:hidden;background:var(--accent-soft);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--text-muted)}
+.obalka img{width:100%;height:100%;object-fit:cover;display:block}
+.obalka.velka{width:140px;height:210px;font-size:3rem}
+.znacka{display:inline-block;font-size:.7rem;border-radius:8px;padding:0 7px;background:var(--bg-control);border:1px solid var(--border);color:var(--text)}
+.znacka.serie{border-color:var(--accent)}
+.pruh{height:6px;border-radius:3px;background:var(--bg-control);overflow:hidden;border:1px solid var(--border)}
+.pruh i{display:block;height:100%;background:var(--accent)}
+.pruh.ok i{background:var(--ok)}
+.hvezdy{color:var(--warn);letter-spacing:1px;white-space:nowrap}
+.hvezda{background:none;border:0;padding:0 1px;font-size:1.45rem;cursor:pointer;color:var(--text-faint,var(--text-muted));line-height:1}
+.hvezda.zap{color:var(--warn)}
+
+/* detail knihy */
+.det-hlava{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.det-hlava .info{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.det-hlava h2{margin:0;font-size:1.35rem;line-height:1.2;word-break:break-word}
+.det-hlava .podtitul{color:var(--text-muted);font-size:.95rem}
+.det-hlava .meta{font-size:.82rem;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.det-hlava .radek-akci{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sekce{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius,8px);padding:12px 14px;margin-bottom:12px}
+.sekce h3{margin:0 0 8px;font-size:1rem}
+.sekce .pozn{font-size:.8rem;color:var(--text-muted);margin:4px 0}
+.mrizka2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}
+.pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.radek{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.spolu{display:flex;gap:4px;flex-wrap:wrap}
+.spolu .vstup{flex:1 1 120px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--text-muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em}
+td.cislo,th.cislo{text-align:right;white-space:nowrap}
+.tab-obal{overflow-x:auto}
+.citat{border-left:3px solid var(--accent);padding:6px 10px;margin:6px 0;background:var(--bg-control);border-radius:0 6px 6px 0}
+.citat blockquote{margin:0;white-space:pre-wrap;font-style:italic;line-height:1.5}
+.citat .kde{font-size:.76rem;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+/* statistiky */
+.graf{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:150px;padding:4px 0;border-bottom:1px solid var(--border-strong)}
+.graf .sl{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0}
+.graf .sl i{display:block;width:100%;max-width:34px;background:var(--accent);border-radius:3px 3px 0 0;min-height:1px}
+.graf .sl b{font-size:.68rem;font-weight:600;color:var(--text)}
+.graf-osa{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;font-size:.7rem;color:var(--text-muted);text-align:center;margin-top:3px}
+.vodor{display:grid;grid-template-columns:minmax(80px,40%) 1fr auto;gap:4px 8px;align-items:center;font-size:.82rem}
+.vodor .jm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vodor .pruh{height:10px}
+.vyzva-blok{display:grid;gap:6px}
+.vyzva-blok .pruh{height:14px;border-radius:7px}
+.ok-txt{color:var(--ok)} .pozde-txt{color:var(--warn)}
+
+/* výsledky hledání */
+.vysledky{display:grid;gap:6px}
+.vysledek{display:flex;gap:10px;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.vysledek:hover{border-color:var(--accent)}
+.vysledek .obalka{width:42px;height:62px;font-size:1.1rem}
+.vysledek small{color:var(--text-muted);display:block}
+
+/* dialogy (margin:auto – common.css nuluje okraje) */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,620px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno form{display:flex;flex-direction:column;max-height:92vh}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px}
+.okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.okno footer .vlevo{margin-right:auto}
+.info-box{font-size:.8rem;line-height:1.45;background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;color:var(--text-muted)}
+.info-box.varovani{border-left-color:var(--warn)}
+.obalka-edit{display:flex;gap:10px;align-items:flex-start}
+.prepinac{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.prepinac label{padding:4px 10px;cursor:pointer;font-size:.82rem;color:var(--text)}
+.prepinac input{position:absolute;opacity:0;pointer-events:none}
+.prepinac label:has(input:checked){background:var(--accent);color:var(--on-accent,#fff)}
+.pata-zdroje{max-width:1200px;margin:24px auto 0;font-size:.74rem;color:var(--text-muted);line-height:1.5}
+
+/* čtečka ISBN (jako Deník jídla / Zásoby) */
+.ctecka{position:fixed;inset:0;z-index:200;background:#000;color:#fff;display:flex;flex-direction:column}
+.ctecka-hlava{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.ctecka-hlava strong{margin-right:auto}
+.ctecka .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-obraz{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ctecka video{width:100%;height:100%;object-fit:cover}
+.ctecka-ramecek{position:absolute;left:7%;right:7%;top:25%;bottom:25%;border:2px solid rgba(255,255,255,.85);border-radius:12px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+.ctecka-stav{padding:10px 14px;text-align:center;font-size:.92rem;min-height:2.6em}
+.ctecka-stav.chyba{color:#ffb3b3}
+.ctecka-ovladani{display:flex;justify-content:center;padding:0 12px 6px}
+.ctecka-rucne{display:flex;gap:8px;padding:6px 12px 16px;max-width:520px;margin:0 auto;width:100%}
+.ctecka-rucne .vstup{flex:1;background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-rucne .vstup::placeholder{color:rgba(255,255,255,.6)}
+
+/* tisk: zápis do školního čtenářského deníku */
+#tisk{display:none}
+.zapis{font-family:Georgia,"Times New Roman",serif;color:#000;page-break-after:always;break-after:page}
+.zapis:last-child{page-break-after:auto;break-after:auto}
+.zapis h1{font-size:18pt;margin:0 0 4pt;border-bottom:2pt solid #000;padding-bottom:3pt}
+.zapis .zak{font-size:10pt;margin-bottom:8pt;display:flex;justify-content:space-between;gap:10pt}
+.zapis table{font-size:10.5pt;margin-bottom:8pt}
+.zapis th,.zapis td{border:1px solid #888;padding:3pt 6pt;color:#000;text-transform:none;letter-spacing:0;font-size:10.5pt}
+.zapis th{width:30%;background:#f0f0f0}
+.zapis h2{font-size:12pt;margin:9pt 0 3pt}
+.zapis .text{white-space:pre-wrap;font-size:11pt;line-height:1.45}
+.zapis .linky{height:60pt;background:repeating-linear-gradient(transparent 0 19pt,#aaa 19pt 20pt)}
+.zapis .hlava-zapisu{display:flex;gap:12pt;align-items:flex-start}
+.zapis .hlava-zapisu img{width:70pt;border:1px solid #888}
+@media print{
+  @page{margin:15mm}
+  html.tiskne-zapis body > *:not(#tisk){display:none !important}
+  html.tiskne-zapis #tisk{display:block}
+  html.tiskne-zapis body{display:block;height:auto;background:#fff}
+  html:not(.tiskne-zapis) .lista,html:not(.tiskne-zapis) .akce,html:not(.tiskne-zapis) .radek-akci,#podpis-pruh,.ctecka,dialog{display:none !important}
+  body{display:block;height:auto}
+  main{overflow:visible}
+}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <h1>📚 Čtenářský deník</h1>
+  <div class="skup" role="group" aria-label="Přidat knihu"><span class="skup-nazev" aria-hidden="true">Přidat</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="sken" title="Naskenovat čárový kód ISBN kamerou">📷<span class="txt"> Sken ISBN</span></button>
+    <button class="tl" data-prikaz="hledatOnline" title="Hledat knihu podle názvu, autora nebo ISBN v Open Library">🔍<span class="txt"> Hledat</span></button>
+    <button class="tl" data-prikaz="rucne" title="Zadat knihu ručně">✚<span class="txt"> Ručně</span></button>
+  </div></div>
+  <div class="skup skup-police" role="group" aria-label="Police"><span class="skup-nazev" aria-hidden="true">Police</span><div class="skup-tl">
+    <button class="tl" data-police="" aria-pressed="true" title="Všechny knihy">📚<span class="txt"> Vše</span></button>
+    <button class="tl" data-police="ctu" aria-pressed="false" title="Čtu">📖<span class="txt"> Čtu</span></button>
+    <button class="tl" data-police="chci" aria-pressed="false" title="Chci číst">📋<span class="txt"> Chci číst</span></button>
+    <button class="tl" data-police="precteno" aria-pressed="false" title="Přečteno">✅<span class="txt"> Přečteno</span></button>
+    <button class="tl" data-police="odlozeno" aria-pressed="false" title="Odloženo">⏸️<span class="txt"> Odloženo</span></button>
+    <button class="tl" data-police="pujceno" aria-pressed="false" title="Půjčené knihy">🤝<span class="txt"> Půjčeno</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Přehledy"><span class="skup-nazev" aria-hidden="true">Přehled</span><div class="skup-tl">
+    <button class="tl" data-pohled="statistiky" aria-pressed="false" title="Statistiky a čtenářská výzva">📊<span class="txt"> Statistiky</span></button>
+    <button class="tl" data-pohled="citaty" aria-pressed="false" title="Všechny citáty">💬<span class="txt"> Citáty</span></button>
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Import, export, záloha, tisk">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup skup-hledat">
+    <input type="search" id="hledat" class="vstup" placeholder="🔍 Hledat v deníku…" aria-label="Hledat v deníku">
+  </div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="napoveda" title="Nápověda" aria-label="Nápověda">❓</button>
+  </span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="importGr">📥 Import z Goodreads (CSV)…</button>
+  <button class="tl" data-prikaz="exportCsv">📊 Export CSV (formát Goodreads)</button>
+  <hr>
+  <button class="tl" data-prikaz="zaloha">💾 Záloha JSON (i s obálkami)</button>
+  <button class="tl" data-prikaz="obnov">📂 Obnovit ze zálohy…</button>
+  <hr>
+  <button class="tl" data-prikaz="doplnObalky">🖼️ Doplnit chybějící obálky z Open Library</button>
+  <button class="tl" data-prikaz="tiskSkola">🖨️ Tisk školních zápisů (všechny)</button>
+  <hr>
+  <button class="tl" data-prikaz="smazVse">🗑️ Smazat celý deník…</button>
+</div>
+<input type="file" id="souborCsv" accept=".csv,text/csv" hidden>
+<input type="file" id="souborJson" accept=".json,application/json" hidden>
+
+<main id="hlavni"><div class="obal" id="obsah"></div>
+  <p class="pata-zdroje">Údaje o knihách a obálky: <a href="https://openlibrary.org" target="_blank" rel="noopener">Open Library</a> (Internet Archive; data CC0, obálky poskytují autoři a vydavatelé přes Open Library) a záložně <a href="https://books.google.com" target="_blank" rel="noopener">Google Books</a> (Powered by Google; bez klíče má malý denní limit). České knihy tam často nejsou – vyplňte je ručně, pomůže <a href="https://www.databazeknih.cz" target="_blank" rel="noopener">Databáze knih</a>. Vlastní e-knihy čtěte ve <a href="ctecka_knih.html">📖 Čtečce knih</a>, citáty z ní sbírejte ve <a href="vypisky.html">📌 Výpiscích</a>. Data jsou jen v tomto prohlížeči (IndexedDB) – zálohujte.</p>
+</main>
+<div id="tisk"></div>
+
+<datalist id="dlStitky"></datalist>
+<datalist id="dlSerie"></datalist>
+
+<!-- kniha: nová / úprava -->
+<dialog class="okno" id="dlgKniha"><form method="dialog">
+  <header id="dlgKnihaTitul">Kniha</header>
+  <div class="telo">
+    <div class="info-box" id="dlgKnihaZprava" hidden></div>
+    <label class="pole">ISBN<span class="spolu"><input class="vstup" name="isbn" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="978…"><button type="button" class="btn" id="dlgNacist" title="Načíst údaje z Open Library">🔎 Načíst</button><button type="button" class="btn" id="dlgSken" title="Naskenovat kamerou" aria-label="Naskenovat ISBN kamerou">📷</button></span><small id="dlgIsbnInfo"></small></label>
+    <label class="pole">Název<input class="vstup" name="titul" required maxlength="300"></label>
+    <label class="pole">Podtitul<input class="vstup" name="podtitul" maxlength="300"></label>
+    <label class="pole">Autoři (oddělte čárkou)<input class="vstup" name="autori" maxlength="400" placeholder="Karel Čapek, Josef Čapek"></label>
+    <div class="radek">
+      <label class="pole">Série<input class="vstup" name="serie" maxlength="120" list="dlSerie"></label>
+      <label class="pole">Díl série<input class="vstup" name="serieCislo" maxlength="10" inputmode="decimal"></label>
+      <label class="pole">Počet stran<input class="vstup" name="stran" inputmode="numeric" maxlength="6"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Rok vydání<input class="vstup" name="rok" inputmode="numeric" maxlength="4"></label>
+      <label class="pole">Nakladatel<input class="vstup" name="nakladatel" maxlength="120"></label>
+      <label class="pole">Jazyk<input class="vstup" name="jazyk" maxlength="20" placeholder="čeština"></label>
+    </div>
+    <div class="radek">
+      <label class="pole">Formát<select class="vstup" name="format"></select></label>
+      <label class="pole">Police<select class="vstup" name="police"></select></label>
+    </div>
+    <label class="pole">Žánry (oddělte čárkou)<input class="vstup" name="zanry" maxlength="400" placeholder="sci-fi, román"></label>
+    <label class="pole">Štítky (oddělte čárkou)<input class="vstup" name="stitky" maxlength="400" placeholder="povinná četba, vlastním, od babičky" list="dlStitky"></label>
+    <div class="obalka-edit">
+      <div class="obalka" id="dlgObalka">📕</div>
+      <div class="spolu" style="flex-direction:column;align-items:flex-start">
+        <button type="button" class="btn" id="dlgObalkaNahrat">🖼️ Nahrát / vyfotit obálku</button>
+        <button type="button" class="btn danger" id="dlgObalkaSmaz">✕ Bez obálky</button>
+        <input type="file" id="dlgObalkaSoubor" accept="image/*" hidden>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <button value="zrusit" class="btn vlevo" formnovalidate>Zrušit</button>
+    <button value="dalsi" class="btn" id="dlgUlozDalsi" hidden>Uložit a skenovat další</button>
+    <button value="ok" class="btn primary">Uložit</button>
+  </footer>
+</form></dialog>
+
+<!-- hledání online -->
+<dialog class="okno" id="dlgHledat"><form method="dialog">
+  <header>🔍 Hledat knihu v Open Library</header>
+  <div class="telo">
+    <div class="spolu"><input class="vstup" id="hledatOnline" type="search" placeholder="název, autor nebo ISBN" aria-label="Hledaný text"><button type="button" class="btn primary" id="hledatOnlineTl">Hledat</button></div>
+    <div id="vysledky" class="vysledky" aria-live="polite"></div>
+    <p class="pozn" style="font-size:.76rem;color:var(--text-muted);margin:0">Data z <a href="https://openlibrary.org" target="_blank" rel="noopener">Open Library</a> (CC0). Nenašli jste? <button type="button" class="btn mini" data-prikaz="rucne">✚ Zadat ručně</button></p>
+  </div>
+  <footer><button value="zrusit" class="btn">Zavřít</button></footer>
+</form></dialog>
+
+<!-- zápis čtení -->
+<dialog class="okno" id="dlgSezeni"><form method="dialog">
+  <header id="dlgSezeniTitul">➕ Zapsat čtení</header>
+  <div class="telo">
+    <div class="spolu" style="align-items:center"><span class="prepinac" role="radiogroup" aria-label="Zadání průběhu">
+      <label><input type="radio" name="jednotka" value="strana" checked>strana</label><label><input type="radio" name="jednotka" value="procenta">%</label></span>
+      <small id="dlgSezeniInfo" style="color:var(--text-muted)"></small></div>
+    <div class="radek">
+      <label class="pole" id="dlgSezeniPopis">Dočetl/a jsem na stranu<input class="vstup" name="hodnota" inputmode="numeric" required maxlength="6"></label>
+      <label class="pole">Minut čtení (nepovinné)<input class="vstup" name="minut" inputmode="numeric" maxlength="4"></label>
+      <label class="pole">Datum<input class="vstup" name="datum" type="date" required></label>
+    </div>
+    <label class="pole" id="dlgSezeniStran" hidden>Počet stran knihy (pro procenta a odhad)<input class="vstup" name="stran" inputmode="numeric" maxlength="6"></label>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Zapsat</button></footer>
+</form></dialog>
+
+<!-- výzva -->
+<dialog class="okno" id="dlgVyzva"><form method="dialog">
+  <header id="dlgVyzvaTitul">🎯 Čtenářská výzva</header>
+  <div class="telo">
+    <div class="radek">
+      <label class="pole">Cíl – přečtených knih<input class="vstup" name="knih" inputmode="numeric" maxlength="5" placeholder="např. 24"></label>
+      <label class="pole">Cíl – stran (nepovinné)<input class="vstup" name="stran" inputmode="numeric" maxlength="7" placeholder="např. 8000"></label>
+    </div>
+    <p class="info-box" style="margin:0">Počítají se knihy na polici <b>Přečteno</b> s datem dočtení v daném roce (strany = počet stran knih). Prázdný cíl = výzvu nesledovat.</p>
+  </div>
+  <footer><button value="zrusit" class="btn" formnovalidate>Zrušit</button><button value="ok" class="btn primary">Uložit</button></footer>
+</form></dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda"><form method="dialog">
+  <header>❓ Jak na Čtenářský deník</header>
+  <div class="telo" style="font-size:.88rem;line-height:1.55">
+    <p style="margin:0"><b>📷 Sken ISBN</b> – namiřte kameru na čárový kód na zadní straně obálky (EAN-13 začínající 978/979). Kód jde i vyfotit nebo opsat; ISBN-10 se převede na ISBN-13 a zkontroluje se kontrolní číslice. Údaje a obálka se načtou z Open Library, záložně z Google Books. České knihy tam často chybí – formulář pak vyplňte ručně (obálku vyfoťte).</p>
+    <p style="margin:0"><b>Police:</b> Chci číst → Čtu → Přečteno (nebo Odloženo). <b>➕ Zapsat čtení</b> uloží sezení (kam jste dočetli, volitelně minuty) – z nich je průběh, tempo a odhad dočtení. Dočtením poslední strany se kniha sama přesune do Přečteno.</p>
+    <p style="margin:0"><b>U knihy:</b> hodnocení hvězdičkami, poznámky, citáty se stranou, štítky, série, komu je půjčená. <b>🎒 Školní čtenářský deník</b> – postavy, děj, hlavní myšlenka a názor; <b>🖨️ Tisk zápisu</b> vytiskne stránku do deníku (v tiskovém okně lze zvolit „Uložit jako PDF“). Jméno a třídu vyplníte jednou.</p>
+    <p style="margin:0"><b>📊 Statistiky</b> – knihy a stránky po měsících, žánry, autoři, hodnocení, tempo a čtenářská výzva (cíl knih/stran za rok).</p>
+    <p style="margin:0"><b>📁 Soubor</b> – import z Goodreads (My Books → Import and export → Export Library), export CSV ve stejném formátu, záloha JSON i s obálkami. Data zůstávají jen v tomto prohlížeči.</p>
+  </div>
+  <footer><button value="zrusit" class="btn primary">Rozumím</button></footer>
+</form></dialog>
+
+<script src="ctenarsky_denik/ui.js"></script>
+</body>
+</html>

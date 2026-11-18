@@ -52,7 +52,7 @@
   function zakladnaCtverec(petalPred, petalZad, volby) {
     const T = [0.5, 0.1], s2 = Math.SQRT1_2;
     const L = [T[0] - s2 / 2, T[1] + s2 / 2], R = [T[0] + s2 / 2, T[1] + s2 / 2], Bo = [T[0], T[1] + s2];
-    const k = (0.5 - (1 - s2)) / 0.5; // podíl |O-Q| / |O-M|: rýha kosočtverce protne hranu ve vzdálenosti 0,2929 od středu
+    const k = 2 * (1 - s2); // podíl |O-Q| / |O-M|: rýha kosočtverce protne hranu ve vzdálenosti 0,2929 od středu
     const Qf1 = J.lerp(T, L, k), Qf2 = J.lerp(T, R, k), Lc = J.stred(Qf1, Qf2);
     const Ap = [T[0], T[1] - (1 - s2)]; // vrchol okvětního lístku 0,2929 nad T
     const ctvrt = [
@@ -81,7 +81,7 @@
     return uprav(r, volby);
   }
   const CTV = (() => { // body čtvercové základny na stole (pro zápis kroků jeřábu)
-    const T = [0.5, 0.1], s2 = Math.SQRT1_2, k = (0.5 - (1 - s2)) / 0.5;
+    const T = [0.5, 0.1], s2 = Math.SQRT1_2, k = 2 * (1 - s2);
     const L = [T[0] - s2 / 2, T[1] + s2 / 2], R = [T[0] + s2 / 2, T[1] + s2 / 2], Bo = [T[0], T[1] + s2];
     return { T, L, R, Bo, Q1: J.lerp(T, L, k), Q2: J.lerp(T, R, k), Ap: [T[0], T[1] - (1 - s2)] };
   })();
@@ -388,7 +388,7 @@
   pridej({
     id: 'ninja', nazev: 'Ninja hvězdice', emoji: '✴️', obtiznost: 2, papir: '2 čtverce 15 × 15 cm (dvě barvy)',
     popis: 'Vrhací hvězdice shuriken ze dvou zrcadlových modulů.',
-    listy: [{ rubNahoru: false }], vzor: true,
+    listy: [{ rubNahoru: true }],
     kroky: [
       V({ k: [[1, 0.5], [0, 0.5]], text: 'Přeložte čtverec napůl (pravou polovinu na levou).' }),
       V({ k: [[0, 0.5], [0.5, 0.5]], text: 'Ještě jednou napůl – úzký pruh 1 : 4.' }),
@@ -396,16 +396,14 @@
         V({ k: [[0.5, 0], [0.25, 0.25]] }), V({ k: [[0.25, 1], [0.5, 0.75]] })),
       vice('Oba konce přehněte ještě jednou šikmo – pruh se zalomí do tvaru Z.',
         H({ cara: [[0.25, 0.25], [0.5, 0.5]], strana: [0.45, 0.1] }), H({ cara: [[0.25, 0.5], [0.5, 0.75]], strana: [0.3, 0.9] })),
-      stav('Druhý modul složte zrcadlově (šikmé přehyby na opačnou stranu). Moduly položte křížem na sebe a cípy zastrčte do kapes.', st => {
-        const r = [];
-        const b = J.ohraniceni(st.facety), cx = b.st[0], cy = b.st[1];
-        for (const f of st.facety) {
-          const c = J.polohaFacety(f);
-          r.push({ p: f.p, c, z: f.z + 100 });
-          // druhý modul: zrcadlení podle svislé osy a pootočení o 90°
-          r.push({ p: f.p.map(zrcP), c: c.map(q => { const x = 2 * cx - q[0], y = q[1]; return [cx - (y - cy), cy + (x - cx)]; }), z: f.z, s: 1 });
-        }
-        return r;
+      stav('Druhý modul složte zrcadlově (šikmé přehyby na opačnou stranu). Moduly položte křížem na sebe a cípy zastrčte do kapes druhého modulu.', st => {
+        // hotová hvězdice jen jako obrázek: střední čtverec a čtyři cípy do větrníku, barvy modulů se střídají
+        const c = J.ohraniceni(st.facety).st, a = 0.18, x0 = c[0] - a, x1 = c[0] + a, y0 = c[1] - a, y1 = c[1] + a, d = 2 * a;
+        return [
+          { c: [[x0, y0], [x1, y0], [x1, y0 - d]], z: 1 }, { c: [[x1, y1], [x0, y1], [x0, y1 + d]], z: 1 },
+          { c: [[x1, y0], [x1, y1], [x1 + d, y1]], z: 1, s: 1 }, { c: [[x0, y1], [x0, y0], [x0 - d, y0]], z: 1, s: 1 },
+          { c: [[x0, y0], [x1, y0], [x1, y1]], z: 2 }, { c: [[x0, y0], [x1, y1], [x0, y1]], z: 2, s: 1 }
+        ];
       })
     ],
     hotovo: 'Hotovo – ninja hvězdice.'
@@ -419,14 +417,12 @@
     kroky: [
       V({ cara: svisla(0.5), strana: [1, 0.5], rozlozit: true, text: 'Barevnou stranou dolů. Přeložte napůl svisle a rozložte.' }),
       vice('Levou a pravou hranu přehněte ke středové rýze.', V({ cara: svisla(0.25), strana: [0, 0.5] }), V({ cara: svisla(0.75), strana: [1, 0.5] })),
-      vice('Levý dolní a pravý horní roh přehněte šikmo dovnitř.',
-        V({ k: [[0.25, 1], [0.5, 0.75]], filtr: q => q[1] > 0.5 }), V({ k: [[0.75, 0], [0.5, 0.25]], filtr: q => q[1] < 0.5 })),
-      vice('Velké šikmé přehyby: levý horní a pravý dolní roh přehněte k protější hraně.',
-        V({ cara: [[0.25, 0.25], [0.75, 0.75]], strana: [0.3, 0.05], filtr: q => q[1] < 0.6 && q[0] < 0.55 }),
-        V({ cara: [[0.25, 0.25], [0.75, 0.75]], strana: [0.7, 0.95], filtr: q => q[1] > 0.4 && q[0] > 0.45 })),
-      pootoc(45, 'Pootočte – vznikl kosodélník.'),
-      vice('Oba ostré cípy přehněte k protějším rohům a rozložte – připraví se zámky.',
-        V({ k: [B(0.25, 0), B(0.75, 0.5)], rozlozit: true }), V({ k: [B(0.75, 1), B(0.25, 0.5)], rozlozit: true }))
+      vice('Levý horní a pravý dolní roh přehněte šikmo dovnitř (malé trojúhelníky).',
+        V({ k: [[0.25, 0], [0.5, 0.25]], filtr: q => q[1] < 0.5 }), V({ k: [[0.75, 1], [0.5, 0.75]], filtr: q => q[1] > 0.5 })),
+      vice('Velké šikmé přehyby: horní levou část přehněte dolů k pravé hraně, dolní pravou nahoru k levé hraně – vznikne kosodélník.',
+        V({ cara: [[0.75, 0], [0.25, 0.5]], strana: [0.25, 0] }), V({ cara: [[0.75, 0.5], [0.25, 1]], strana: [0.75, 1] })),
+      vice('Oba ostré cípy přehněte k protějším tupým rohům a rozložte – střed tvoří čtverec, cípy jsou zámky.',
+        V({ k: [[0.75, 0], [0.25, 0.5]], rozlozit: true }), V({ k: [[0.25, 1], [0.75, 0.5]], rozlozit: true }))
     ],
     hotovo: 'Hotovo – modul. Cípy (zámky) se zasouvají do kapes sousedních modulů.'
   });
@@ -444,17 +440,14 @@
         H({ cara: vodorovna(0.5), strana: [0.5, 0], rozlozit: true }), H({ cara: svisla(0.5), strana: [0, 0.5], rozlozit: true })),
       stav('Podle rýh složte čtvercovou základnu – všechny rohy se sejdou dole.', () => zakladnaCtverec(false, false, kJ),
         [[[0.05, 0.05], [0.25, 0.25]], [[0.95, 0.05], [0.75, 0.25]]]),
-      vice('Spodní šikmé hrany přední vrstvy přehněte ke středové ose.',
-        V({ cara: [CTV.Bo, CTV.Q1], strana: CTV.L, vrstvy: 1, bod: J.lerp(CTV.L, CTV.Bo, 0.1) }),
-        V({ cara: [CTV.Bo, CTV.Q2], strana: CTV.R, vrstvy: 1, bod: J.lerp(CTV.R, CTV.Bo, 0.1) })),
+      vice('Spodní šikmé hrany přední vrstvy přehněte ke středové ose a rozložte.',
+        V({ cara: [CTV.Bo, CTV.Q1], strana: CTV.L, vrstvy: 1, bod: J.lerp(CTV.L, CTV.Bo, 0.1), rozlozit: true }),
+        V({ cara: [CTV.Bo, CTV.Q2], strana: CTV.R, vrstvy: 1, bod: J.lerp(CTV.R, CTV.Bo, 0.1), rozlozit: true })),
       V({ cara: [CTV.Q1, CTV.Q2], strana: CTV.T, vrstvy: 1, bod: J.lerp(CTV.T, CTV.Bo, 0.1), rozlozit: true, text: 'Horní trojúhelník přehněte dolů a rozložte.' }),
-      vice('Boční cípy rozložte zpět.',
-        V({ cara: [CTV.Bo, CTV.Q1], strana: [0.5, 0.45], vrstvy: 1, bod: J.lerp(CTV.Bo, [0.5, 0.45], 0.4).map((v, i) => v - (i ? 0 : 0.03)) }),
-        V({ cara: [CTV.Bo, CTV.Q2], strana: [0.5, 0.45], vrstvy: 1, bod: J.lerp(CTV.Bo, [0.5, 0.45], 0.4).map((v, i) => v + (i ? 0 : 0.03)) })),
       stav('Okvětní přehyb: spodní roh přední vrstvy zvedněte nahoru, boky se sklopí ke středu podle rýh.', () => zakladnaCtverec(true, false, kJ),
         [[[0.5, 0.75], [0.5, 0.2]]]),
       otoc(),
-      stav('Na druhé straně zopakujte kroky 4–7 – vznikne ptačí základna.', () => zakladnaCtverec(true, true, Object.assign({ zezadu: true }, kJ))),
+      stav('Na druhé straně zopakujte kroky 4–6 – vznikne ptačí základna.', () => zakladnaCtverec(true, true, Object.assign({ zezadu: true }, kJ))),
       vice('Spodní hrany přední vrstvy přehněte ke středové ose (zúžit nohy).',
         V({ cara: [CTV.Bo, J.add(CTV.Bo, [-Math.sin(Math.PI / 16), -Math.cos(Math.PI / 16)])], strana: [0, 0.3], vrstvy: 1, bod: [CTV.Q1[0] + 0.03, CTV.Q1[1] + 0.03] }),
         V({ cara: [CTV.Bo, J.add(CTV.Bo, [Math.sin(Math.PI / 16), -Math.cos(Math.PI / 16)])], strana: [1, 0.3], vrstvy: 1, bod: [CTV.Q2[0] - 0.03, CTV.Q2[1] + 0.03] })),
@@ -463,13 +456,13 @@
         V({ cara: [CTV.Bo, J.add(CTV.Bo, [-Math.sin(Math.PI / 16), -Math.cos(Math.PI / 16)])], strana: [0, 0.3], vrstvy: 1, bod: [CTV.Q1[0] + 0.03, CTV.Q1[1] + 0.03] }),
         V({ cara: [CTV.Bo, J.add(CTV.Bo, [Math.sin(Math.PI / 16), -Math.cos(Math.PI / 16)])], strana: [1, 0.3], vrstvy: 1, bod: [CTV.Q2[0] - 0.03, CTV.Q2[1] + 0.03] })),
       vice('Obě spodní úzké špičky vnitřním obráceným přehybem vytočte nahoru mezi křídla – krk a ocas.',
-        { op: 'prehyb', druh: 'vnitrni', cara: [[0.5, 0.42], [0.3, 0.32]], strana: [0.5, 0.8], papir: p => p[0] < 0.5 && p[1] < 0.5 },
-        { op: 'prehyb', druh: 'vnitrni', cara: [[0.5, 0.42], [0.7, 0.32]], strana: [0.5, 0.8], papir: p => p[0] > 0.5 && p[1] > 0.5 }),
-      { op: 'prehyb', druh: 'vnitrni', k: [st => J.bod(st, [0, 0]), st => J.add(J.bod(st, [0, 0]), [0.12, 0.02])], papir: p => p[0] < 0.25 && p[1] < 0.25,
+        { op: 'prehyb', druh: 'vnitrni', cara: [[0.5, 0.42], [0.3, 0.32]], strana: [0.5, 0.8], papir: p => J.delka(J.sub(p, [1, 0])) < 0.5 },
+        { op: 'prehyb', druh: 'vnitrni', cara: [[0.5, 0.42], [0.7, 0.32]], strana: [0.5, 0.8], papir: p => J.delka(J.sub(p, [0, 1])) < 0.5 }),
+      { op: 'prehyb', druh: 'vnitrni', cara: st => { const h = J.bod(st, [1, 0]); return [J.add(h, [-0.1, 0.06]), J.add(h, [0.02, 0.1])]; }, strana: st => J.bod(st, [1, 0]), papir: p => J.delka(J.sub(p, [1, 0])) < 0.5,
         text: 'Špičku krku vytočte obráceným přehybem dolů – hlava.' },
       vice('Křídla sklopte dolů – přední k vám, zadní dozadu.',
-        V({ cara: [[0, 0.28], [1, 0.28]], strana: [0.5, 0], papir: p => J.delka(J.sub(p, [1, 0])) < 0.48 }),
-        H({ cara: [[0, 0.28], [1, 0.28]], strana: [0.5, 0], papir: p => J.delka(J.sub(p, [0, 1])) < 0.48 }))
+        V({ cara: [[0, 0.28], [1, 0.28]], strana: [0.5, 0], papir: p => J.delka(J.sub(p, [1, 1])) < 0.48 }),
+        H({ cara: [[0, 0.28], [1, 0.28]], strana: [0.5, 0], papir: p => J.delka(J.sub(p, [0, 0])) < 0.48 }))
     ],
     hotovo: 'Hotovo – jeřáb. Křídla roztáhněte a jemně profoukněte zespodu, aby se nafouklo tělo.'
   });

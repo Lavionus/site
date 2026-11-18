@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v795';
+const CACHE = PREFIX + 'v832';
 const JADRO = [
   './',
   './index.html',
@@ -421,6 +421,16 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.open(CACHE).then(cache => fetch(e.request)
       .then(resp => { if (resp.ok) cache.put(e.request.url, resp.clone()); return resp; })
       .catch(() => cache.match(e.request.url).then(c => c || new Response('{"format":"denik-doplnky","verze":1,"polozky":[]}', { headers: { 'Content-Type': 'application/json' } })))));
+    return;
+  }
+
+  // Mozaika zpráv: katalog webů (a lokální data.json) nejdřív ze sítě – po přidání webů platí hned; v cache jen poslední
+  // verze bez ?t= (stránka ho přidává při každém ⟳, jinak by cache rostla o 1,7 MB s každým obnovením)
+  if (/\/obsah\/zpravy\/(zdroje|data(-nove|-starsi)?)\.json$/.test(url.pathname)) {
+    const klicZ = url.origin + url.pathname;
+    e.respondWith(caches.open(CACHE).then(cache => fetch(e.request.url, { cache: 'no-cache' })
+      .then(resp => { if (resp.ok) cache.put(klicZ, resp.clone()); return resp; })
+      .catch(() => cache.match(klicZ).then(c => c || new Response('', { status: 503 })))));
     return;
   }
 

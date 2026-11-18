@@ -1,0 +1,52 @@
+# Mozaika zpráv (obsah/zpravy.html): každých 20 minut stáhne RSS kanály z katalogu
+# obsah/zpravy/zdroje.json a výsledek uloží do větve `zpravy-data` (vždy jediný commit
+# přes force-push → historie ani větev main se nezanáší). Stránka data čte z
+#   https://raw.githubusercontent.com/<repo>/zpravy-data/zpravy-nove.json (posledních 6 h, při každé obnově)
+#   …/zpravy-starsi.json (zbytek do 48 h, jen když je potřeba); zpravy.json = vše, slouží ke sloučení příště
+# Ruční spuštění: záložka Actions → „Zprávy – stažení kanálů" → Run workflow.
+name: Zprávy – stažení kanálů
+
+on:
+  schedule:
+    - cron: '7,27,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zpravy-data
+  cancel-in-progress: false
+
+jobs:
+  stahni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+            obsah/zpravy/zdroje.json
+          sparse-checkout-cone-mode: false
+
+      - name: Předchozí data (kvůli 48h historii a nalezeným obrázkům)
+        run: |
+          if git fetch -q --depth=1 origin zpravy-data 2>/dev/null; then
+            git show FETCH_HEAD:zpravy.json > /tmp/predchozi.json || echo '{}' > /tmp/predchozi.json
+          else
+            echo '{}' > /tmp/predchozi.json
+          fi
+
+      - name: Stáhnout kanály
+        run: python3 .github/scripts/zpravy_stahni.py --predchozi /tmp/predchozi.json --vystup out/zpravy.json
+
+      - name: Zveřejnit do větve zpravy-data
+        run: |
+          cd out
+          git init -q -b zpravy-data
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898699+github-actions[bot]@users.noreply.github.com'
+          git add zpravy.json zpravy-nove.json zpravy-starsi.json
+          git commit -qm "Zprávy $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" zpravy-data

@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
+<script src="vysetrovani/pripad.js"></script>
+<script src="vysetrovani/metoda.js"></script>
 <style>
 body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px clamp(10px,3vw,24px)}
 .container{max-width:960px;margin:0 auto}
@@ -46,6 +48,9 @@ tbody.vyber tr.zvolen td{background:var(--accent-soft)}
 .pozn{font-size:.78rem;color:var(--text-faint);margin-top:8px;line-height:1.5}
 .vzorec{font-size:.9rem;line-height:1.7;margin-top:6px}
 .btn{padding:6px 12px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text-muted);cursor:pointer;font-size:.8rem;margin-top:8px}
+.metoda-radek{text-align:center;margin:-6px 0 14px}
+.metoda-radek button{padding:6px 14px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);cursor:pointer;font-size:.85rem}
+.metoda-radek button:hover{border-color:var(--accent)}
 .legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--text-muted);margin-top:6px}
 .legenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 </style>
@@ -54,6 +59,7 @@ tbody.vyber tr.zvolen td{background:var(--accent-soft)}
 <div class="container">
   <h1>🚗 Rychlost z brzdné stopy</h1>
   <p class="sub">Odhad rychlosti vozidla z délky stopy blokovaných kol a opačně celková dráha zastavení z rychlosti.</p>
+  <div class="metoda-radek"><button type="button" data-metoda>📐 Metoda a meze</button></div>
   <div class="varovani">⚠️ <b>Jen orientační výpočet.</b> Znalecký posudek z dopravních nehod je jiná liga: počítá s naměřeným součinitelem adheze na místě, zatížením náprav, stopami po střetu, deformační energií, technickým stavem vozidla a analýzou záznamů. Hodnoty tření níže jsou typická rozmezí z literatury.</div>
 
   <div class="taby" id="taby">
@@ -81,7 +87,7 @@ tbody.vyber tr.zvolen td{background:var(--accent-soft)}
     <p class="pozn">Graf: počáteční rychlost v závislosti na délce stopy pro minimální a maximální součinitel zvoleného povrchu; bod = zadaná stopa.</p>
     <div class="vzorec">
       <i>a</i> = <i>g</i> · (η · μ · cos α + sin α) &nbsp;·&nbsp; <i>v</i> = √(<i>v</i><sub>k</sub>² + 2 · <i>a</i> · <i>s</i>) &nbsp;(+ <i>a</i>·<i>t</i><sub>n</sub>/2 za náběh)<br>
-      <span class="pozn">g = 9,81 m/s², α = arctg(sklon/100). Bez sklonu, ztrát a náběhu je to klasické v = √(2·μ·g·s).</span>
+      <span class="pozn">g = 9,81 m/s², α = arctg(sklon/100). Bez sklonu, ztrát a náběhu je to klasické v = √(2·μ·g·s). Předpoklady, meze a ověření na případech se známou rychlostí: <a href="#" data-metoda>📐 Metoda a meze</a>.</span>
     </div>
   </div>
 
@@ -167,7 +173,9 @@ tbody.vyber tr.zvolen td{background:var(--accent-soft)}
 <script>
 (function () {
   const B = window.BRZDY, $ = id => document.getElementById(id);
-  const KLIC = 'webapp_brzdna_draha_';
+  // modelový případ (?pripad=17): vlastní úložiště, výchozí hodnoty ze spisu
+  const MP = window.ModelovyPripad && ModelovyPripad.aktivni ? MODELOVY_PRIPAD : null;
+  const KLIC = MP ? 'webapp_brzdna_draha_pripad' + MP.id + '_' : 'webapp_brzdna_draha_';
   const cz = (x, d = 0) => x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
   const nacti = (k, d) => { try { const v = localStorage.getItem(KLIC + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
   const uloz = (k, v) => { try { localStorage.setItem(KLIC + k, JSON.stringify(v)); } catch (e) { } };
@@ -328,13 +336,47 @@ tbody.vyber tr.zvolen td{background:var(--accent-soft)}
   }
 
   naplnSelecty(); tabulka();
-  const st = nacti('vstup', null);
+  const st = nacti('vstup', MP ? { s: MP.brzdna.s, povrch: 'asfalt_suchy', sklon: MP.brzdna.sklon, abs: false } : null);
   if (st) POLE.forEach(id => { if (st[id] == null) return; if ($(id).type === 'checkbox') $(id).checked = st[id]; else $(id).value = st[id]; });
   POLE.forEach(id => { $(id).addEventListener('input', prepocet); $(id).addEventListener('change', prepocet); });
   const tab = nacti('tab', 'stopa');
   if (tab === 'zastaveni') document.querySelector('#taby [data-p="zastaveni"]').click(); else prepocet();
   window.addEventListener('resize', prepocet);
 })();
+</script>
+<script>
+MetodaPanel.nastav({
+  nastroj: 'brzdna_draha',
+  princip: [
+    'Při brzdění s blokovanými koly se pohybová energie vozidla mění třením pneumatik o vozovku v teplo. Ze známé délky stopy a součinitele adheze μ se proto dá zpětně spočítat rychlost na začátku stopy; k ní se přičte rychlost ztracená během náběhu brzd, kdy kola ještě stopu nekreslí.',
+    'Součinitel μ pro konkrétní místo není znám přesně, proto nástroj počítá s rozsahem μ min–μ max zvoleného povrchu a výsledkem je rozsah rychlostí, ne jedno číslo. Střed rozsahu je jen orientační.'
+  ],
+  vzorce: [
+    'a = g · (η · μ · cos α + sin α)\ng = 9,81 m/s², α = arctg(sklon/100), η = účinnost brzd',
+    'v_stopa = √(v_k² + 2 · a · s)\ns = délka stopy, v_k = rychlost na konci stopy (střet)',
+    'v_0 = v_stopa + a · t_n / 2\nt_n = náběh brzd, zpomalení při něm roste lineárně 0 → a',
+    'bez sklonu, náběhu a koncové rychlosti:\nv = √(2 · μ · g · s)',
+    'dráha zastavení (t_r = reakční doba):\ns = v·t_r + v·t_n/2 + v²/(2a) − a·t_n²/24'
+  ],
+  predpoklady: [
+    'Kola byla po celé délce stopy blokovaná (vozidlo bez ABS nebo s nefunkčním ABS) a stopa je změřena od začátku do konce.',
+    'Zpomalení je po celé délce stopy stálé – jeden povrch, jeden součinitel, rovnoměrný sklon.',
+    'Skutečný součinitel μ leží v rozsahu zvoleného povrchu z tabulky (rozsahy lze v tabulce upravit).',
+    'Náběh brzd je zadán správně; během něj zpomalení roste lineárně od nuly.'
+  ],
+  meze: [
+    'Největší zdroj nejistoty je μ: opotřebený či ohlazený povrch, voda, nečistoty, teplota, stav pneumatik a rychlost ho mění víc, než kolik je šířka tabulkového rozsahu. Ve znalecké praxi se μ měří na místě (zkušební brzdění, decelerometr).',
+    'S ABS stopa blokovaných kol obvykle nevzniká nebo je slabá a přerušovaná; výpočet z ní rychlost spíš podhodnotí.',
+    'Neuvedený sklon z kopce rychlost nadhodnotí, neuvedený sklon do kopce podhodnotí.',
+    'Nástroj nezahrnuje energii spotřebovanou deformací při střetu (zadává se jen jako rychlost na konci stopy), smyk se stáčením vozidla, rozdílné zatížení náprav ani přívěs.',
+    'Rozsah výsledku není statistický interval spolehlivosti – je to jen důsledek rozsahu μ. Chybu měření délky stopy a nejistotu náběhu do něj nástroj nezapočítává.',
+    'Tabulka μ ve stránce je souhrn typických rozmezí uváděných v literatuře o rekonstrukci nehod, ne hodnoty převzaté z jednoho konkrétního zdroje.'
+  ],
+  literatura: [
+    'Fricke, L. B.: Traffic Accident Reconstruction. Northwestern University Traffic Institute, Evanston 1990.',
+    'Burg, H.; Moser, A. (ed.): Handbuch Verkehrsunfallrekonstruktion. Vieweg+Teubner, Wiesbaden.'
+  ]
+});
 </script>
 </body>
 </html>

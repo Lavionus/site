@@ -7,44 +7,209 @@
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-.container{max-width:900px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
-.sub{text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:18px}
-.cols{display:flex;gap:16px;flex-wrap:wrap}
-.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:20px;flex:1;min-width:300px}
-h2{font-size:1rem;color:var(--accent);margin-bottom:12px}
-.drop{border:2px dashed var(--border-strong);border-radius:8px;padding:24px;text-align:center;cursor:pointer}
-.drop:hover{border-color:var(--accent)}
-.fileName{margin-top:8px;color:var(--text-faint);font-size:.85rem}
-select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px 10px;font-size:.85rem;margin-bottom:10px}
-.hashval{background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:10px;font-family:monospace;font-size:.8rem;word-break:break-all;min-height:20px}
-.result{text-align:center;padding:20px;border-radius:8px;font-size:1.1rem;font-weight:700;margin-bottom:20px}
-.result.match{background:#1e3a2a;color:#4caf7d;border:1px solid #2a5a3a}
-.result.nomatch{background:#3a1e1e;color:#e05d5d;border:1px solid #5a2a2a}
-.result.pending{background:var(--bg-elevated);color:var(--text-faint);border:1px solid var(--border)}
-.note{font-size:.78rem;color:var(--text-faint);margin-top:8px;text-align:center}
+[hidden]{display:none !important}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+
+/* horní lišta podle vzoru Databanky promptů */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin-right:6px}
+.lista .skup{display:flex;flex-direction:column;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:760px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px)}
+.nabidka .tl{text-align:left;background:none;border-color:transparent;padding:6px 10px;white-space:normal}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .prep::before{content:'';display:inline-block;width:1.2em;color:var(--accent);font-weight:700}
+.nabidka .prep[aria-pressed="true"]{background:none;border-color:transparent}
+.nabidka .prep[aria-pressed="true"]::before{content:'✓'}
+.slaby{font-size:.72rem;color:var(--warn);margin-left:6px}
+
+/* záložky */
+.zalozky{display:flex;gap:4px;padding:10px 16px 0;max-width:1200px;margin:0 auto;flex-wrap:wrap}
+.zalozky button{background:none;border:1px solid transparent;border-bottom:2px solid transparent;color:var(--text-muted);padding:6px 12px;cursor:pointer;font:inherit;font-size:.9rem;border-radius:6px 6px 0 0}
+.zalozky button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.panel{max-width:1200px;margin:0 auto;padding:12px 16px}
+.uvod{color:var(--text-muted);font-size:.86rem;margin-bottom:12px;line-height:1.45}
+
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
+h2{font-size:1rem;color:var(--accent);margin-bottom:10px}
+.drop{border:2px dashed var(--border-strong);border-radius:8px;padding:22px 14px;text-align:center;cursor:pointer;color:var(--text-muted)}
+.drop:hover,.drop.nad{border-color:var(--accent);background:var(--accent-soft)}
+.drop b{color:var(--text)}
+.drop .tlacitka{margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+
+.prubeh{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:.85rem;flex-wrap:wrap}
+.prubeh progress{flex:1;min-width:140px;height:12px;accent-color:var(--accent)}
+.manifest-info{font-size:.84rem;color:var(--text-muted);line-height:1.5}
+.manifest-info b{color:var(--text)}
+.chyby-manifestu{color:var(--warn);font-size:.8rem;margin-top:4px}
+
+.souhrn{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.cip{border:1px solid var(--border);background:var(--bg-control);color:var(--text);border-radius:999px;padding:3px 10px;font-size:.8rem;cursor:pointer;font-family:inherit}
+.cip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.cip .n{font-weight:700;margin-left:4px}
+.st-shoda{color:var(--ok)} .st-zmeneno{color:var(--danger)} .st-chybi{color:var(--danger)}
+.st-navic{color:var(--warn)} .st-prejmenovano{color:var(--warn)} .st-neovereno{color:var(--text-faint)}
+
+.tab-obal{overflow-x:auto;border:1px solid var(--border);border-radius:8px;background:var(--bg-elevated)}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{background:var(--bg-panel);color:var(--text-muted);font-weight:600;position:sticky;top:0;white-space:nowrap}
+td.cesta{min-width:160px;word-break:break-word}
+td.cislo{text-align:right;white-space:nowrap}
+td.otisk{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.72rem;word-break:break-all;min-width:200px;color:var(--text-muted)}
+td.stav{white-space:nowrap;font-weight:600}
+.puvodni{display:block;color:var(--text-faint);font-size:.74rem}
+.prazdno{padding:22px;text-align:center;color:var(--text-faint)}
+
+/* dva soubory */
+.cols{display:flex;gap:14px;flex-wrap:wrap}
+.cols .card{flex:1;min-width:260px}
+.fileName{margin:8px 0;color:var(--text-faint);font-size:.85rem;word-break:break-all}
+select,input[type=text],textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:7px 9px;font:inherit;font-size:.86rem}
+label.pole{display:block;font-size:.8rem;color:var(--text-muted);margin-bottom:8px}
+label.pole span{display:block;margin-bottom:3px}
+.hashval{background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;padding:9px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.78rem;word-break:break-all;min-height:20px}
+.result{text-align:center;padding:16px;border-radius:8px;font-size:1.05rem;font-weight:700;margin-bottom:14px;border:1px solid var(--border)}
+.result.match{background:color-mix(in srgb,var(--ok) 14%,var(--bg-elevated));color:var(--ok);border-color:var(--ok)}
+.result.nomatch{background:color-mix(in srgb,var(--danger) 14%,var(--bg-elevated));color:var(--danger);border-color:var(--danger)}
+.result.pending{background:var(--bg-elevated);color:var(--text-faint)}
+.note{font-size:.78rem;color:var(--text-faint);margin-top:8px}
+
+/* záznam o ověření */
+.zaznam-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 12px}
+.papir{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:28px 32px;font-size:.84rem;line-height:1.45;max-width:900px;margin:0 auto}
+.papir h3{text-align:center;font-size:1.15rem;letter-spacing:.04em;margin-bottom:4px}
+.papir .podtitul{text-align:center;color:var(--text-muted);margin-bottom:16px;font-size:.8rem}
+.papir dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px;margin-bottom:14px}
+.papir dt{color:var(--text-muted)}
+.papir dd{word-break:break-word}
+.papir h4{font-size:.9rem;margin:14px 0 6px;border-bottom:1px solid var(--border);padding-bottom:3px}
+.papir table{font-size:.74rem}
+.papir td.otisk{color:var(--text);min-width:0}
+.papir .podpisy{display:flex;gap:40px;margin-top:36px;flex-wrap:wrap}
+.papir .podpisy div{flex:1;min-width:200px;border-top:1px solid var(--text-muted);padding-top:4px;color:var(--text-muted);font-size:.78rem}
+.papir .pozn{font-size:.76rem;color:var(--text-muted);margin-top:12px}
+
+@media (max-width:520px){
+  .panel{padding:10px}
+  .papir{padding:16px 12px}
+  .papir dl{grid-template-columns:1fr}
+  .papir dt{margin-top:4px}
+}
+@media print{
+  body{background:#fff;padding:0}
+  body *{visibility:hidden}
+  #zaznam,#zaznam *{visibility:visible}
+  #zaznam{position:absolute;left:0;top:0;width:100%;max-width:none;border:0;padding:0;background:#fff;color:#000}
+  #zaznam th{background:#eee;color:#000;position:static}
+  #zaznam dt,#zaznam .pozn,#zaznam .podtitul,#zaznam .podpisy div{color:#333}
+  #zaznam .st-shoda,#zaznam .st-zmeneno,#zaznam .st-chybi,#zaznam .st-navic,#zaznam .st-prejmenovano{color:#000}
+  #zaznam tr{break-inside:avoid}
+  @page{margin:14mm}
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>🔐 Porovnání otisků souborů</h1>
-  <p class="sub">Spočítá hash dvou souborů lokálně v prohlížeči (soubory nikam neopouští toto zařízení) a porovná, zda jsou identické.</p>
+<header class="lista" id="lista">
+  <h1>🔐 Otisky souborů</h1>
+  <div class="skup" role="group" aria-label="Soubory"><span class="skup-nazev" aria-hidden="true">Soubory</span><div class="skup-tl">
+    <button class="tl hlavni" data-prikaz="slozka" title="Vybrat celou složku">📂<span class="txt"> Složka</span></button>
+    <button class="tl" data-nabidka="nabSoubor" title="Soubory, manifest, export">📁<span class="txt"> Soubor</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Ověření"><span class="skup-nazev" aria-hidden="true">Ověření</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabAlg" title="Algoritmy otisků">🔑<span class="txt"> Algoritmy</span> ▾</button>
+    <button class="tl" data-prikaz="manifest" title="Načíst referenční manifest a porovnat se složkou">📋<span class="txt"> Manifest</span></button>
+    <button class="tl" data-prikaz="zaznam" title="Záznam o ověření integrity k tisku / PDF">🧾<span class="txt"> Záznam</span></button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Jak postupovat" aria-label="Nápověda">❓</button></span>
+</header>
 
-  <div class="card" style="margin-bottom:16px">
-    <label style="font-size:.8rem;color:var(--text-faint)">Algoritmus</label>
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="slozka">📂 Vybrat složku…</button>
+  <button class="tl" data-prikaz="soubory">📄 Vybrat soubory…</button>
+  <button class="tl" data-prikaz="manifest">📋 Načíst manifest (sha256sum, md5sum, CSV, JSON)…</button>
+  <hr>
+  <div class="titulek">Export manifestu</div>
+  <button class="tl" data-prikaz="exportSum">⬇ sha256sum (.sha256)</button>
+  <button class="tl" data-prikaz="exportCsv">⬇ CSV</button>
+  <button class="tl" data-prikaz="exportJson">⬇ JSON</button>
+  <hr>
+  <button class="tl" data-prikaz="vymazat">🗑 Vymazat seznam a manifest</button>
+</div>
+<div id="nabAlg" class="nabidka" hidden>
+  <div class="titulek">Algoritmy dávky</div>
+  <button class="tl prep" data-alg="SHA-256">SHA-256 <span class="slaby" style="color:var(--ok)">doporučený</span></button>
+  <button class="tl prep" data-alg="SHA-512">SHA-512</button>
+  <button class="tl prep" data-alg="SHA-1">SHA-1 <span class="slaby">⚠ slabý</span></button>
+  <button class="tl prep" data-alg="MD5">MD5 <span class="slaby">⚠ slabý</span></button>
+  <hr>
+  <div class="titulek" style="text-transform:none;letter-spacing:0">SHA-1 a MD5 jen pro shodu se staršími manifesty – nejsou odolné proti záměrné kolizi.</div>
+</div>
+
+<input type="file" id="vstSlozka" webkitdirectory multiple hidden>
+<input type="file" id="vstSoubory" multiple hidden>
+<input type="file" id="vstManifest" accept=".sha256,.sha1,.sha512,.md5,.txt,.csv,.json,.sum,text/*,application/json" hidden>
+
+<nav class="zalozky" role="tablist">
+  <button role="tab" data-zal="davka" aria-selected="true">📂 Složka a manifest</button>
+  <button role="tab" data-zal="dva" aria-selected="false">⚖ Dva soubory</button>
+  <button role="tab" data-zal="zaznam" aria-selected="false">🧾 Záznam o ověření</button>
+</nav>
+
+<main>
+<section class="panel" id="pDavka">
+  <p class="uvod">Spočítá otisky (hash) celé složky nebo vybraných souborů lokálně v prohlížeči, vytvoří manifest a porovná složku s dříve pořízeným manifestem. Soubory ani otisky neopouštějí toto zařízení.</p>
+  <div class="drop" id="dropDavka" tabindex="0">
+    <b>Přetáhni sem soubory nebo celou složku</b><br>
+    <span style="font-size:.82rem">podsložky se projdou celé, cesty se zachovají</span>
+    <div class="tlacitka">
+      <button class="tl hlavni" data-prikaz="slozka">📂 Vybrat složku</button>
+      <button class="tl" data-prikaz="soubory">📄 Vybrat soubory</button>
+      <button class="tl" data-prikaz="manifest">📋 Načíst manifest</button>
+    </div>
+  </div>
+  <div class="prubeh" id="prubeh" hidden>
+    <span id="prubehText">Počítám…</span>
+    <progress id="prubehBar" max="1" value="0"></progress>
+    <button class="tl" id="btnZrusit">✖ Zrušit</button>
+  </div>
+  <div class="card" id="manifestKarta" hidden style="margin-top:12px">
+    <h2>📋 Referenční manifest</h2>
+    <div class="manifest-info" id="manifestInfo"></div>
+  </div>
+  <div class="souhrn" id="souhrn"></div>
+  <div class="tab-obal"><table id="tabulka"></table></div>
+</section>
+
+<section class="panel" id="pDva" hidden>
+  <p class="uvod">Ověří, zda jsou dvě kopie souboru (např. forenzní obraz a jeho kopie) bit po bitu totožné.</p>
+  <div class="card">
+    <label class="pole"><span>Algoritmus</span>
     <select id="algo">
       <option value="SHA-256" selected>SHA-256</option>
-      <option value="SHA-1">SHA-1</option>
       <option value="SHA-384">SHA-384</option>
       <option value="SHA-512">SHA-512</option>
-    </select>
+      <option value="SHA-1">SHA-1 (slabý)</option>
+      <option value="MD5">MD5 (slabý)</option>
+    </select></label>
   </div>
-
   <div id="result" class="result pending">Nahraj oba soubory pro porovnání</div>
-
   <div class="cols">
     <div class="card">
       <h2>Soubor A</h2>
@@ -59,56 +224,39 @@ select{width:100%;background:var(--bg-input);border:1px solid var(--border-stron
       <div class="hashval" id="hashB"></div>
     </div>
   </div>
-  <p class="note">Vhodné pro ověření, zda dvě kopie souboru (např. forenzní obraz a originál) jsou bit po bitu totožné.</p>
-</div>
+  <p class="note"><span id="dvaSilny">Shoda otisku <b class="dvaAlg">SHA-256</b> prakticky vylučuje rozdíl v obsahu.</span><span id="dvaSlaby" hidden><b class="dvaAlg">MD5</b> je kryptograficky slabý (známé kolize): shoda vyloučí náhodnou změnu, ne záměrně podvržený soubor.</span> <span>Název a datum souboru se do otisku nepočítají.</span></p>
+</section>
 
-<script>
-const $=id=>document.getElementById(id);
-let bufA=null,bufB=null;
+<section class="panel" id="pZaznam" hidden>
+  <div class="card">
+    <h2>Údaje do záznamu</h2>
+    <div class="zaznam-form">
+      <label class="pole"><span>Ověřil (jméno, hodnost)</span><input type="text" id="zOveril" autocomplete="name"></label>
+      <label class="pole"><span>Útvar / funkce</span><input type="text" id="zUtvar"></label>
+      <label class="pole"><span>Věc / číslo jednací</span><input type="text" id="zVec"></label>
+      <label class="pole"><span>Poznámka</span><input type="text" id="zPozn"></label>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+      <button class="tl hlavni" data-prikaz="tisk">🖨 Tisk / uložit PDF</button>
+      <span class="note" style="margin:4px 0 0">Jméno a útvar se pamatují v tomto prohlížeči; věc a poznámka ne.</span>
+    </div>
+  </div>
+  <article class="papir" id="zaznam" data-i18n="ne"></article>
+</section>
+</main>
 
-async function hashBuffer(algo,buffer){
-  const h=await crypto.subtle.digest(algo,buffer);
-  return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+<dialog id="dlgNapoveda" style="max-width:min(640px,94vw);border:1px solid var(--border);border-radius:10px;background:var(--bg-panel);color:var(--text);padding:18px">
+  <h2>Jak postupovat</h2>
+  <ol style="padding-left:20px;font-size:.86rem;line-height:1.5">
+    <li><b>Zajištění:</b> vyber nebo přetáhni složku se stopami, počkej na výpočet a exportuj manifest (sha256sum). Manifest ulož odděleně od dat.</li>
+    <li><b>Ověření později:</b> vyber znovu tutéž složku a načti manifest. Každý soubor dostane výsledek: shoda, změněno, chybí ve složce, navíc ve složce, přejmenováno (stejný otisk, jiná cesta).</li>
+    <li><b>Záznam:</b> v záložce Záznam o ověření doplň jméno a věc a vytiskni nebo ulož jako PDF.</li>
+  </ol>
+  <p class="note" style="text-align:left">Manifest z <code>sha256sum</code> / <code>md5sum</code> (i s hvězdičkou pro binární režim), z PowerShellu přes CSV nebo z tohoto nástroje (JSON). Cesty se porovnávají i bez názvu vybrané složky. Soubory nad 256 MiB se čtou po blocích (SHA-256, SHA-1, MD5); SHA-512 se u souborů nad 1 GiB nepočítá.</p>
+  <form method="dialog" style="text-align:right;margin-top:12px"><button class="tl">Zavřít</button></form>
+</dialog>
 
-async function recompute(){
-  const algo=$('algo').value;
-  if(bufA)$('hashA').textContent=await hashBuffer(algo,bufA);
-  if(bufB)$('hashB').textContent=await hashBuffer(algo,bufB);
-  updateResult();
-}
-
-function updateResult(){
-  const res=$('result');
-  const a=$('hashA').textContent,b=$('hashB').textContent;
-  if(!a||!b){res.className='result pending';res.textContent='Nahraj oba soubory pro porovnání';return;}
-  if(a===b){res.className='result match';res.textContent='✅ Otisky souhlasí — soubory jsou identické';}
-  else{res.className='result nomatch';res.textContent='❌ Otisky se liší — soubory nejsou identické';}
-}
-
-function setupDrop(dropId,fileId,nameId,which){
-  const drop=$(dropId),file=$(fileId),name=$(nameId);
-  drop.onclick=()=>file.click();
-  drop.ondragover=e=>{e.preventDefault();drop.style.borderColor='#6aa6fd';};
-  drop.ondragleave=()=>{drop.style.borderColor='#555';};
-  drop.ondrop=e=>{e.preventDefault();drop.style.borderColor='#555';if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
-  file.onchange=()=>{if(file.files[0])load(file.files[0]);};
-  function load(f){
-    name.textContent='📄 '+f.name+' ('+(f.size/1024).toFixed(1)+' KB)';
-    const r=new FileReader();
-    r.onload=async()=>{
-      if(which==='A')bufA=r.result; else bufB=r.result;
-      const algo=$('algo').value;
-      $(which==='A'?'hashA':'hashB').textContent=await hashBuffer(algo,r.result);
-      updateResult();
-    };
-    r.readAsArrayBuffer(f);
-  }
-}
-
-setupDrop('dropA','fileA','nameA','A');
-setupDrop('dropB','fileB','nameB','B');
-$('algo').addEventListener('change',recompute);
-</script>
+<script src="hash_compare/jadro.js"></script>
+<script src="hash_compare/ui.js"></script>
 </body>
 </html>

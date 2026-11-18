@@ -432,14 +432,14 @@
   }
 
   /* ---------- kreslení do SVG ---------- */
-  const BARVY = { lic: '#d9534f', rub: '#fbf8f1', cara: '#1d1d1f', ryska: '#8c8c8c' };
+  const BARVY = { lic: '#d9534f', lic2: '#3b6fb6', rub: '#fbf8f1', cara: '#1d1d1f', ryska: '#8c8c8c' };
   const f3 = v => (Math.round(v * 1000) / 1000).toString();
   const bodyStr = pts => pts.map(q => f3(q[0]) + ',' + f3(q[1])).join(' ');
   function barvaStrany(st, poly, barvy) {
     const l = st.listy[poly.s] || st.listy[0];
     const horniLic = !l.rubNahoru;
     const lic = poly.horni === horniLic;
-    const sada = poly.s && barvy.lic2 ? barvy.lic2 : barvy.lic;
+    const sada = poly.s ? barvy.lic2 : barvy.lic;
     return lic ? sada : barvy.rub;
   }
   /** Rámec pro kreslení: ohraničení + okraj. */
@@ -598,12 +598,15 @@
   /* ---------- vzor přehybů (crease pattern) ---------- */
   /** Rysky listu s vůči zvolené straně: 'lic' (barevná) nebo 'rub'. Při pohledu na rub je vzor zrcadlený
       a hora/údolí prohozené. Vrací [{a, b, t}] v souřadnicích listu (0..w, 0..h). */
-  function vzorPrehybu(sestava, strana = 'lic', s = 0) {
+  function vzorPrehybu(sestava, strana = 'lic', s = 0, osa = 'x') {
     const l = sestava.konec.listy[s];
-    const horniJeLic = !l.rubNahoru;
-    const pohledZhora = (strana === 'lic') === horniJeLic;
-    return sestava.konec.rysky.filter(r => r.s === s).map(r => pohledZhora ? { a: r.a, b: r.b, t: r.t }
-      : { a: [l.w - r.a[0], r.a[1]], b: [l.w - r.b[0], r.b[1]], t: r.t === 'V' ? 'M' : 'V' });
+    const prohod = t => t === 'V' ? 'M' : 'V';
+    const zrc = (q, o) => o === 'y' ? [q[0], l.h - q[1]] : [l.w - q[0], q[1]];
+    // 1) do pohledu na líc (rysky jsou vůči straně, která byla na začátku nahoře)
+    let r = sestava.konec.rysky.filter(x => x.s === s).map(x => l.rubNahoru ? { a: zrc(x.a, 'x'), b: zrc(x.b, 'x'), t: prohod(x.t) } : { a: x.a, b: x.b, t: x.t });
+    // 2) pohled na rub = zrcadlo podle osy, kolem které se list při tisku otáčí
+    if (strana === 'rub') r = r.map(x => ({ a: zrc(x.a, osa), b: zrc(x.b, osa), t: prohod(x.t) }));
+    return r;
   }
 
   /* ---------- papír k tisku: rozvržení čtverců na A4 ---------- */
@@ -639,12 +642,12 @@
     { id: 'mrizka', nazev: 'Mřížka' },
     { id: 'seigaiha', nazev: 'Vlny seigaiha' },
     { id: 'asanoha', nazev: 'Konopný list (asanoha)' },
-    { id: 'kosocteverce', nazev: 'Kosočtverce' },
+    { id: 'kosoctverce', nazev: 'Kosočtverce' },
     { id: 'hvezdicky', nazev: 'Hvězdičky' },
     { id: 'kvitky', nazev: 'Kvítky' },
     { id: 'prechod', nazev: 'Barevný přechod' }
   ];
-  /** Definice vzoru: vrací {defs, fill} – fill použitelný jako atribut fill. m = měřítko (mm na motiv). */
+  /** Definice vzoru: vrací {defs, fill} – fill použitelný jako atribut fill. m = velikost motivu v mm. */
   function vzorSvg(id, typ, b1, b2, m = 10) {
     m = Math.max(2, Number(m) || 10);
     const pat = (w, h, obsah, rot) => `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${f3(w)}" height="${f3(h)}"${rot ? ` patternTransform="rotate(${rot})"` : ''}><rect width="${f3(w)}" height="${f3(h)}" fill="${b1}"/>${obsah}</pattern>`;
@@ -661,14 +664,14 @@
         return { defs: `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${f3(s)}" height="${f3(h)}"><rect width="${f3(s)}" height="${f3(h)}" fill="${b1}"/>${vlna(h, 0)}${vlna(0, h / 2)}${vlna(s, h / 2)}${vlna(h, h)}</pattern>`, fill: `url(#${id})` };
       }
       case 'asanoha': {
-        // šestiúhelníková síť s paprsky – zjednodušený konopný list
+        // trojúhelníková síť s paprsky ze středů – zjednodušený konopný list
         const w = s, v = s * Math.sqrt(3) / 2, c = [w / 2, v / 3];
         const cary = [[0, 0], [w, 0], [w / 2, v]].map(q => `M${f3(c[0])} ${f3(c[1])}L${f3(q[0])} ${f3(q[1])}`).join('') +
           `M0 0L${f3(w)} 0L${f3(w / 2)} ${f3(v)}Z M${f3(w / 2)} ${f3(v)}L${f3(w)} ${f3(2 * v)}M${f3(w / 2)} ${f3(v)}L0 ${f3(2 * v)}` +
           [[0, 2 * v], [w, 2 * v], [w / 2, v]].map(q => `M${f3(w / 2)} ${f3(v + 2 * v / 3)}L${f3(q[0])} ${f3(q[1])}`).join('');
         return { defs: `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${f3(w)}" height="${f3(2 * v)}"><rect width="${f3(w)}" height="${f3(2 * v)}" fill="${b1}"/><path d="${cary}" stroke="${b2}" stroke-width="${f3(m * 0.035)}" fill="none"/></pattern>`, fill: `url(#${id})` };
       }
-      case 'kosocteverce': return { defs: pat(s, s, `<path d="M${f3(h)} 0L${f3(s)} ${f3(h)}L${f3(h)} ${f3(s)}L0 ${f3(h)}Z" fill="${b2}"/>`), fill: `url(#${id})` };
+      case 'kosoctverce': return { defs: pat(s, s, `<path d="M${f3(h)} 0L${f3(s)} ${f3(h)}L${f3(h)} ${f3(s)}L0 ${f3(h)}Z" fill="${b2}"/>`), fill: `url(#${id})` };
       case 'hvezdicky': {
         const hv = (cx, cy, r) => { const b = []; for (let i = 0; i < 10; i++) { const u = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.42 : r; b.push([cx + rr * Math.cos(u), cy + rr * Math.sin(u)]); } return `<polygon points="${bodyStr(b)}" fill="${b2}"/>`; };
         return { defs: pat(s, s, hv(h / 2, h / 2, s * 0.18) + hv(h * 1.5, h * 1.5, s * 0.18)), fill: `url(#${id})` };
@@ -688,11 +691,45 @@
     const k = a / Math.max(list.w, list.h);
     const barva = volby.barva || '#555';
     const sirka = volby.sirka || 0.3;
-    return vzor.map(r => {
+    const obrys = list.w !== list.h ? `<rect x="${f3(x)}" y="${f3(y)}" width="${f3(list.w * k)}" height="${f3(list.h * k)}" fill="none" stroke="${barva}" stroke-width="${sirka}"/>` : '';
+    return obrys + vzor.map(r => {
       const A = [x + r.a[0] * k, y + r.a[1] * k], B = [x + r.b[0] * k, y + r.b[1] * k];
       const pom = r.t === 'V' ? '3 1.6' : '3.5 1 0.6 1';
-      return `<line x1="${f3(A[0])}" y1="${f3(A[1])}" x2="${f3(B[0])}" y2="${f3(B[1])}" stroke="${r.t === 'V' ? (volby.barvaV || barva) : (volby.barvaM || barva)}" stroke-width="${sirka}" stroke-dasharray="${pom}"/>`;
+      return `<line x1="${f3(A[0])}" y1="${f3(A[1])}" x2="${f3(B[0])}" y2="${f3(B[1])}" stroke="${barva}" stroke-width="${sirka}" stroke-dasharray="${pom}"/>`;
     }).join('');
+  }
+
+  /** SVG jedné stránky A4 (mm) se čtverci k vystřižení.
+      v: {a, okraj, mezera, spad, strana: 'lic'|'rub', otaceni, vzorLic, vzorRub: {typ, b1, b2, m}, cp: {vzor, list, strana, barva}
+          (vzor přehybů – vzorPrehybu už ve správném pohledu), barvy: [..] (barvy jednotlivých čtverců, přepíše b1), pocet, znacky} */
+  function stranaPapiru(v) {
+    const spad = Math.max(0, Number(v.spad) || 0);
+    const roz = rozvrzeni(v.a, v.okraj, Math.max(Number(v.mezera) || 0, 2 * spad + 2));
+    const n = v.pocet === undefined ? roz.pozice.length : Math.min(v.pocet, roz.pozice.length);
+    const rub = v.strana === 'rub';
+    const vz = rub ? v.vzorRub : v.vzorLic;
+    const defs = [], telo = [];
+    for (let i = 0; i < n; i++) {
+      const poz = rub ? zrcadliPozici(roz.pozice[i], v.a, v.otaceni) : roz.pozice[i];
+      const b1 = v.barvy && !rub ? v.barvy[i % v.barvy.length] : vz.b1;
+      const id = `v${rub ? 'r' : 'l'}${i}`;
+      const vzor = vzorSvg(id, vz.typ, b1, vz.b2, vz.m);
+      if (vzor.defs) defs.push(vzor.defs);
+      const x = poz.x, y = poz.y, a = v.a;
+      // vzor vlastním souřadnicovým systémem čtverce (stejný motiv na každém čtverci)
+      telo.push(`<g transform="translate(${f3(x)} ${f3(y)})"><rect x="${f3(-spad)}" y="${f3(-spad)}" width="${f3(a + 2 * spad)}" height="${f3(a + 2 * spad)}" fill="${vzor.fill}"/></g>`);
+      if (v.cp && v.cp.strana === v.strana) telo.push(svgVzoruPrehybu(v.cp.vzor, v.cp.list, x, y, a, { barva: v.cp.barva || '#444', sirka: 0.25 }));
+      if (v.znacky !== false) { // ořezové značky v rozích (mimo čtverec)
+        const d = 3, o = spad + 1;
+        const zn = [];
+        for (const [cx, cy, sx, sy] of [[x, y, -1, -1], [x + a, y, 1, -1], [x + a, y + a, 1, 1], [x, y + a, -1, 1]]) {
+          zn.push(`M${f3(cx + sx * o)} ${f3(cy)}h${f3(sx * d)}M${f3(cx)} ${f3(cy + sy * o)}v${f3(sy * d)}`);
+        }
+        telo.push(`<path d="${zn.join('')}" stroke="#888" stroke-width="0.2" fill="none"/>`);
+      }
+      if (v.popisky && !rub) telo.push(`<text x="${f3(x + a / 2)}" y="${f3(y + a + spad + 3.2)}" font-size="2.6" text-anchor="middle" fill="#777" font-family="sans-serif">${v.popisky[i] || ''}</text>`);
+    }
+    return { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${A4.w} ${A4.h}" width="${A4.w}mm" height="${A4.h}mm"><defs>${defs.join('')}</defs><rect width="${A4.w}" height="${A4.h}" fill="#fff"/>${telo.join('')}</svg>`, pocet: n, naStranu: roz.pozice.length };
   }
 
   /* ---------- modulární origami – Sonobe ---------- */
@@ -723,7 +760,7 @@
     novyStav, kopieStavu, polohaFacety, ohraniceni, normalizujZ, bod, vyres,
     caraOperace, prehyb, otoc, pootoc, klicovyStav, ryskyZeSousedstvi, pridejRysky, proved, sestav,
     snimek, BARVY, ramec, svgPolygony, svgZnacky, svgKroku, sipka, sipkaRovna, symbolOtoceni,
-    vzorPrehybu, A4, rozvrzeni, maxCtverec, zrcadliPozici, VZORY, vzorSvg, svgVzoruPrehybu,
+    vzorPrehybu, stranaPapiru, A4, rozvrzeni, maxCtverec, zrcadliPozici, VZORY, vzorSvg, svgVzoruPrehybu,
     SONOBE, rozdelBarvy, stranekModulu, POMLCKY
   };
   if (typeof module !== 'undefined') module.exports = api;

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Fotofiltry – umělecké efekty a úpravy fotek</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="foto_filtry/jadro.js"></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text)}
+[hidden]{display:none !important}
+*{box-sizing:border-box}
+
+/* horní lišta (vzor Databanka promptů) */
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.info{color:var(--text-faint);font-size:.78rem;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover:not(:disabled){background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:240px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka label{display:flex;align-items:center;gap:8px;padding:4px 10px;font-size:.82rem;color:var(--text-muted)}
+
+/* rozložení: filtry | plátno | panel */
+.rozlozeni{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr) 300px}
+aside{background:var(--bg-panel);overflow:auto;min-height:0;padding:10px 12px 40px}
+aside.vlevo{border-right:1px solid var(--border)}
+aside.vpravo{border-left:1px solid var(--border)}
+aside h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:14px 0 6px;font-weight:600}
+aside h3:first-child{margin-top:2px}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:.85rem;font-family:inherit;width:100%}
+.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.kategorie{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.stitek{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:2px 9px;font-size:.76rem;color:var(--text-muted);cursor:pointer;font-family:inherit}
+.stitek[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:4px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);display:flex;flex-direction:column;gap:3px;min-width:0}
+.karta:hover{border-color:var(--border-strong);background:var(--bg-hover)}
+.karta:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.karta.aktivni{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--accent-soft)}
+.karta .mini{width:100%;aspect-ratio:4/3;border-radius:5px;background:color-mix(in srgb,var(--text) 6%,transparent);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.karta canvas{width:100%;height:100%;object-fit:cover;display:block}
+.karta span{font-size:.74rem;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kat-nadpis{grid-column:1/-1;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin:8px 0 0;font-weight:600}
+
+main{position:relative;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;padding:14px;background:color-mix(in srgb,var(--bg-deep) 80%,var(--text) 4%)}
+.scena{position:relative;max-width:100%;max-height:100%;line-height:0;box-shadow:var(--shadow);touch-action:none}
+.scena canvas{max-width:100%;max-height:calc(100vh - 90px);display:block}
+.scena.plna canvas{max-width:none;max-height:none}
+#puvodni{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.delic{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);pointer-events:none}
+.delic::after{content:'⇔';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--accent);color:var(--on-accent,#fff);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+.popis-pred,.popis-po{position:absolute;top:8px;background:rgba(0,0,0,.55);color:#fff;font-size:.72rem;padding:2px 7px;border-radius:4px;line-height:1.4;pointer-events:none}
+.popis-pred{left:8px}.popis-po{right:8px}
+.prace{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;padding:3px 12px;font-size:.78rem;color:var(--text-muted);box-shadow:var(--shadow);z-index:5}
+.vitej{max-width:520px;text-align:center;border:2px dashed var(--border-strong);border-radius:14px;padding:36px 24px;background:var(--bg-panel);cursor:pointer}
+.vitej.nad,main.nad .vitej{border-color:var(--accent);background:var(--accent-soft)}
+.vitej h2{margin:0 0 8px;font-size:1.25rem}
+.vitej p{color:var(--text-muted);font-size:.9rem;line-height:1.5;margin:6px 0}
+.vitej .tlacitka{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+
+.parametr{margin:9px 0}
+.parametr .hlava{display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-muted);margin-bottom:2px;gap:6px}
+.parametr .hodn{color:var(--text);font-variant-numeric:tabular-nums;cursor:pointer}
+.parametr input[type=range]{width:100%;accent-color:var(--accent)}
+.parametr input[type=color]{width:100%;height:30px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);padding:2px;cursor:pointer}
+.parametr select{width:100%}
+.filtr-popis{font-size:.8rem;color:var(--text-muted);line-height:1.45;margin:2px 0 8px}
+.radek{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.radek .tl{flex:1}
+.prazdne{font-size:.8rem;color:var(--text-faint);line-height:1.5}
+.vrstvy{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.vrstvy li{display:flex;align-items:center;gap:6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:4px 6px 4px 9px;font-size:.8rem}
+.vrstvy li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vrstvy li small{color:var(--text-faint)}
+.vrstvy .tl{padding:1px 6px;font-size:.75rem}
+details.blok{border-top:1px solid var(--border);margin-top:14px;padding-top:6px}
+details.blok summary{cursor:pointer;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:600;padding:6px 0;list-style:none;display:flex;justify-content:space-between}
+details.blok summary::after{content:'▾'}
+details.blok:not([open]) summary::after{content:'▸'}
+
+.napoveda{max-width:560px;line-height:1.55;font-size:.9rem}
+.napoveda h2{margin:0 0 8px;font-size:1.1rem}
+.napoveda ul{padding-left:20px;margin:6px 0}
+.napoveda kbd{border:1px solid var(--border);border-radius:4px;padding:0 5px;font-size:.78rem}
+dialog.okno{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin:auto}
+dialog.okno::backdrop{background:rgba(0,0,0,.45)}
+
+/* mobil: pod sebou (plátno nahoře) */
+@media (max-width:860px){
+  body{height:auto;min-height:100vh;overflow:auto}
+  .rozlozeni{display:flex;flex-direction:column}
+  main{order:1;min-height:auto;padding:8px}
+  aside.vlevo{order:2;border:0;border-top:1px solid var(--border);padding-bottom:8px}
+  aside.vpravo{order:3;border:0;border-top:1px solid var(--border)}
+  aside{overflow:visible;padding-bottom:20px}
+  .scena canvas{max-height:60vh}
+  /* galerie jako vodorovný pás pod fotkou */
+  .galerie{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:92px;overflow-x:auto;padding-bottom:6px}
+  .kat-nadpis{display:none}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <div class="skup skup-projekt"><h1>🎨 Fotofiltry</h1><span class="info" id="info"></span></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" title="Otevřít a uložit fotku">📁<span class="txt"> Soubor</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="ulozit" title="Uložit výsledek v plném rozlišení (Ctrl+S)" disabled data-potrebuje>💾<span class="txt"> Uložit</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Upravit"><span class="skup-nazev" aria-hidden="true">Upravit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+    <button class="tl" data-prikaz="znovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+    <button class="tl" data-nabidka="nabUpravy" title="Vrátit, náhodný filtr">🛠<span class="txt"> Úpravy</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <button class="tl" data-prikaz="porovnat" aria-pressed="false" title="Porovnání před/po posuvníkem (P)">◧<span class="txt"> Před / po</span></button>
+    <button class="tl" id="tlOriginal" title="Podržet = ukázat originál (mezerník)">👁<span class="txt"> Originál</span></button>
+    <button class="tl" data-nabidka="nabZobrazit" title="Velikost zobrazení">🔍 ▾</button>
+  </div></div>
+  <span class="vpravo"><button class="tl" data-prikaz="napoveda" title="Nápověda (F1)" aria-label="Nápověda">❓</button></span>
+</header>
+
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít fotku… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="vlozit">📋 Vložit ze schránky <kbd>Ctrl+V</kbd></button>
+  <button class="tl" data-prikaz="ukazka">🌄 Ukázková fotka</button>
+  <hr>
+  <button class="tl" data-prikaz="ulozitPNG" data-potrebuje disabled>💾 Uložit jako PNG (bez ztráty)</button>
+  <button class="tl" data-prikaz="ulozitJPG" data-potrebuje disabled>💾 Uložit jako JPEG</button>
+  <button class="tl" data-prikaz="ulozitWEBP" data-potrebuje disabled>💾 Uložit jako WebP</button>
+  <label>Kvalita JPEG/WebP <input type="range" id="kvalita" min="50" max="100" value="92"> <span id="kvalitaH">92</span></label>
+  <label>Rozlišení <select id="rozliseni" class="vstup" style="width:auto">
+    <option value="0">plné (originál)</option><option value="4000">max. 4000 px</option><option value="2000">max. 2000 px</option><option value="1200">max. 1200 px</option>
+  </select></label>
+  <hr>
+  <button class="tl" data-prikaz="kopirovat" data-potrebuje disabled>📄 Kopírovat výsledek do schránky</button>
+</div>
+<div id="nabUpravy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nahodny" data-potrebuje disabled>🎲 Náhodný filtr <kbd>R</kbd></button>
+  <button class="tl" data-prikaz="zrusitFiltr" data-potrebuje disabled>✕ Zrušit rozpracovaný filtr <kbd>Esc</kbd></button>
+  <button class="tl" data-prikaz="resetUpravy" data-potrebuje disabled>⟲ Vynulovat základní úpravy</button>
+  <hr>
+  <button class="tl" data-prikaz="vseZpet" data-potrebuje disabled>🗑 Vše zpět na originál</button>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="prizpusobit">⤢ Přizpůsobit oknu</button>
+  <button class="tl" data-prikaz="plna">1:1 Skutečná velikost náhledu</button>
+  <hr>
+  <button class="tl" data-prikaz="mrizkaPanel">🗂 Skrýt / ukázat galerii filtrů</button>
+</div>
+
+<input type="file" id="soubor" accept="image/*" hidden>
+
+<div class="rozlozeni" id="rozlozeni">
+  <aside class="vlevo" id="panelFiltry" aria-label="Filtry">
+    <input type="search" class="vstup" id="hledat" placeholder="🔍 Hledat filtr…" aria-label="Hledat filtr">
+    <div class="kategorie" id="kategorie"></div>
+    <div class="galerie" id="galerie"></div>
+  </aside>
+
+  <main id="hlavni">
+    <div class="vitej" id="vitej" role="button" tabindex="0">
+      <h2>🎨 Fotofiltry</h2>
+      <p>Přetáhni sem fotku, vlož ji ze schránky (Ctrl+V) nebo klikni a vyber soubor.</p>
+      <p>Pointilismus, olejomalba, akvarel, kresba tužkou i uhlem, šrafování, komiks, pop-art, tiskový rastr, vitráž, ASCII, glitch, VHS, miniatura a další – celkem <b id="pocetFiltru"></b> filtrů a základní úpravy. Filtry jdou vrstvit na sebe.</p>
+      <p style="font-size:.8rem">Fotka nikam neodchází – vše se počítá v prohlížeči.</p>
+      <div class="tlacitka">
+        <button class="tl hlavni-tl" data-prikaz="otevrit">📂 Vybrat fotku</button>
+        <button class="tl" data-prikaz="ukazka">🌄 Vyzkoušet na ukázce</button>
+      </div>
+    </div>
+    <div class="scena" id="scena" hidden>
+      <canvas id="platno"></canvas>
+      <canvas id="puvodni" hidden></canvas>
+      <div class="delic" id="delic" hidden></div>
+      <span class="popis-pred" id="popisPred" hidden>před</span>
+      <span class="popis-po" id="popisPo" hidden>po</span>
+    </div>
+    <div class="prace" id="prace" hidden>⏳ Počítám…</div>
+  </main>
+
+  <aside class="vpravo" aria-label="Nastavení">
+    <h3>Filtr</h3>
+    <div id="panelFiltr"><p class="prazdne">Vyber filtr v galerii vlevo. Jeho nastavení se objeví tady.</p></div>
+    <h3>Vrstvy</h3>
+    <ul class="vrstvy" id="vrstvy"></ul>
+    <p class="prazdne" id="vrstvyPrazdne">Zatím žádné. Tlačítkem „✓ Použít“ se filtr zapeče a můžeš přidat další přes něj.</p>
+    <details class="blok" id="blokUpravy" open>
+      <summary>Základní úpravy</summary>
+      <div id="panelUpravy"></div>
+      <button class="tl" data-prikaz="resetUpravy" style="width:100%;margin-top:6px">⟲ Vynulovat úpravy</button>
+    </details>
+  </aside>
+</div>
+
+<dialog class="okno" id="napoveda">
+  <div class="napoveda">
+    <h2>❓ Jak na Fotofiltry</h2>
+    <ul>
+      <li>Fotku otevři tlačítkem, přetažením nebo vložením ze schránky.</li>
+      <li>Klikni na filtr v galerii – náhledy ukazují, jak bude vypadat na tvé fotce. Vpravo nastavíš parametry a <b>sílu</b> (prolnutí s originálem).</li>
+      <li><b>✓ Použít</b> filtr zapeče jako vrstvu; pak můžeš přidat další přes něj (např. Olejomalba → Vinětace v úpravách → Rastr). Vrstvu jde kdykoli odebrat.</li>
+      <li>Základní úpravy (jas, kontrast, teplota…) se počítají jako první, před všemi filtry.</li>
+      <li>Náhled pracuje se zmenšenou fotkou; <b>Uložit</b> přepočítá vše v plném rozlišení. Velikosti tahů a teček se přepočítají, aby výsledek vypadal stejně.</li>
+    </ul>
+    <p><kbd>Ctrl+O</kbd> otevřít · <kbd>Ctrl+S</kbd> uložit · <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu · <kbd>P</kbd> před/po · <kbd>mezerník</kbd> podržet originál · <kbd>R</kbd> náhodný filtr · <kbd>Esc</kbd> zrušit filtr · <kbd>Enter</kbd> použít</p>
+    <div class="radek"><button class="tl" onclick="this.closest('dialog').close()">Zavřít</button></div>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+const FF = window.FOTOFILTRY;
+const $ = id => document.getElementById(id);
+const NAHLED_MAX = 1400, MINI_MAX = 150;
+
+const stav = {
+  obr: null,          // ImageBitmap/Image originálu
+  jmeno: 'fotka',
+  upr: FF.vychoziUpravy(),
+  hotove: [],         // zapečené vrstvy [{id, p, sila}]
+  aktivni: null,      // rozpracovaný filtr {id, p, sila}
+  kategorie: '',
+  porovnat: false,
+  delic: 0.5
+};
+let historie = [], budoucnost = [];
+
+// ── worker (náhled) a druhý worker (miniatury), ať se navzájem nebrzdí
+const worker = new Worker('foto_filtry/worker.js'), workerMini = new Worker('foto_filtry/worker.js');
+let pozadavek = 0, bezi = false, cekaDalsi = false, odpovedi = {};
+worker.onmessage = e => {
+  const m = e.data;
+  const hotovo = odpovedi[m.id]; delete odpovedi[m.id];
+  if (hotovo) hotovo(m);
+};
+function spocitej(zprava) {
+  return new Promise(res => { const id = ++pozadavek; odpovedi[id] = res; worker.postMessage(Object.assign({ id }, zprava)); });
+}
+
+const platno = $('platno'), ctx = platno.getContext('2d');
+const puvodni = $('puvodni');
+
+// kreslení náhledu – nové požadavky se slučují, počítá se vždy nejnovější stav
+async function prekresli() {
+  if (!stav.obr) return;
+  if (bezi) { cekaDalsi = true; return; }
+  bezi = true;
+  const t = setTimeout(() => { $('prace').hidden = false; }, 150);
+  const m = await spocitej({ typ: 'vypocet', klic: 'nahled', upr: stav.upr, hotove: stav.hotove, aktivni: stav.aktivni });
+  clearTimeout(t); $('prace').hidden = true; bezi = false;
+  if (m.typ === 'chyba') Dialog.chyba('Filtr selhal: ' + m.zprava);
+  else ctx.putImageData(new ImageData(new Uint8ClampedArray(m.data), m.w, m.h), 0, 0);
+  if (cekaDalsi) { cekaDalsi = false; prekresli(); }
+}
+
+// ── miniatury v galerii
+let miniId = 0, miniCasovac = 0;
+workerMini.onmessage = e => {
+  const m = e.data;
+  if (m.typ !== 'nahled' || m.id !== miniId) return;
+  const c = document.querySelector(`.karta[data-id="${m.fid}"] canvas`);
+  if (!c) return;
+  c.width = m.w; c.height = m.h;
+  c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(m.data), m.w, m.h), 0, 0);
+};
+function obnovMiniatury() {
+  clearTimeout(miniCasovac);
+  miniCasovac = setTimeout(() => {
+    if (!stav.obr) return;
+    workerMini.postMessage({ typ: 'nahledy', id: ++miniId, klic: 'mini', upr: stav.upr, hotove: stav.hotove });
+  }, 350);
+}
+
+function obrazData(obr, max) {
+  const s = Math.min(1, max / Math.max(obr.width, obr.height));
+  const w = Math.max(1, Math.round(obr.width * s)), h = Math.max(1, Math.round(obr.height * s));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(obr, 0, 0, w, h);
+  return x.getImageData(0, 0, w, h);
+}
+function posliZdroj(w, klic, id) { w.postMessage({ typ: 'zdroj', klic, w: id.width, h: id.height, data: id.data.buffer }, [id.data.buffer]); }
+
+async function nactiObrazek(blob, jmeno) {
+  let obr;
+  try { obr = await createImageBitmap(blob, { imageOrientation: 'from-image' }); }
+  catch (e) { return Dialog.chyba('Tenhle soubor neumím otevřít jako obrázek.'); }
+  stav.obr = obr;
+  stav.jmeno = (jmeno || 'fotka').replace(/\.[^.]+$/, '');
+  const n = obrazData(obr, NAHLED_MAX);
+  platno.width = puvodni.width = n.width; platno.height = puvodni.height = n.height;
+  puvodni.getContext('2d').putImageData(n, 0, 0);
+  ctx.putImageData(n, 0, 0);
+  posliZdroj(worker, 'nahled', n);
+  posliZdroj(workerMini, 'mini', obrazData(obr, MINI_MAX));
+  $('vitej').hidden = true; $('scena').hidden = false;
+  $('info').textContent = `${obr.width} × ${obr.height} px`;
+  document.querySelectorAll('[data-potrebuje]').forEach(b => { b.disabled = false; });
+  prekresli(); obnovMiniatury();
+}
+
+// ── galerie filtrů
+function vykresliKategorie() {
+  const k = $('kategorie');
+  k.innerHTML = '';
+  for (const [id, nazev] of [['', 'Vše'], ...FF.KATEGORIE]) {
+    const b = document.createElement('button');
+    b.className = 'stitek'; b.textContent = nazev; b.setAttribute('aria-pressed', String(stav.kategorie === id));
+    b.onclick = () => { stav.kategorie = id; vykresliKategorie(); filtrujGalerii(); };
+    k.appendChild(b);
+  }
+}
+function vykresliGalerii() {
+  const g = $('galerie');
+  for (const [kid, knazev] of FF.KATEGORIE) {
+    const h = document.createElement('div'); h.className = 'kat-nadpis'; h.dataset.kat = kid; h.textContent = knazev; g.appendChild(h);
+    for (const f of FF.FILTRY.filter(x => x.kategorie === kid)) {
+      const b = document.createElement('button');
+      b.className = 'karta'; b.dataset.id = f.id; b.dataset.kat = kid; b.title = f.popis;
+      b.innerHTML = '<div class="mini"><canvas width="4" height="3"></canvas></div><span></span>';
+      b.querySelector('span').textContent = f.nazev;
+      b.onclick = () => vyberFiltr(f.id);
+      g.appendChild(b);
+    }
+  }
+  $('pocetFiltru').textContent = FF.FILTRY.length;
+}
+const bezDiakritiky = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function filtrujGalerii() {
+  const q = bezDiakritiky($('hledat').value.trim());
+  document.querySelectorAll('.karta').forEach(b => {
+    const f = FF.najdi(b.dataset.id);
+    b.hidden = (stav.kategorie && f.kategorie !== stav.kategorie) || (q && !bezDiakritiky(f.nazev + ' ' + f.popis).includes(q));
+  });
+  document.querySelectorAll('.kat-nadpis').forEach(h => {
+    h.hidden = ![...document.querySelectorAll(`.karta[data-kat="${h.dataset.kat}"]`)].some(b => !b.hidden);
+  });
+}
+
+// ── stav, historie
+const snimek = () => JSON.stringify({ upr: stav.upr, hotove: stav.hotove, aktivni: stav.aktivni });
+let posledni = snimek();
+function zapamatuj() {
+  const s = snimek();
+  if (s === posledni) return;
+  historie.push(posledni); if (historie.length > 100) historie.shift();
+  budoucnost = []; posledni = s; tlacitkaHistorie();
+}
+function obnov(s) {
+  const o = JSON.parse(s);
+  stav.upr = o.upr; stav.hotove = o.hotove; stav.aktivni = o.aktivni; posledni = s;
+  vykresliVse();
+}
+function tlacitkaHistorie() {
+  document.querySelector('[data-prikaz="zpet"]').disabled = !historie.length;
+  document.querySelector('[data-prikaz="znovu"]').disabled = !budoucnost.length;
+}
+function vykresliVse() {
+  vykresliPanelFiltru(); vykresliVrstvy(); vykresliUpravy(); tlacitkaHistorie(); prekresli(); obnovMiniatury();
+}
+
+function vyberFiltr(id) {
+  if (!stav.obr) return prikaz('otevrit');
+  const f = FF.najdi(id);
+  stav.aktivni = { id, p: FF.vychozi(f), sila: 100 };
+  zapamatuj(); vykresliPanelFiltru(); prekresli();
+}
+
+// ovládací prvek parametru; zmena(hodnota, hotovo) – hotovo=true při puštění posuvníku
+function prvek(q, hodnota, zmena) {
+  const d = document.createElement('div'); d.className = 'parametr';
+  const hl = document.createElement('div'); hl.className = 'hlava';
+  const nazev = document.createElement('span'); nazev.textContent = q.nazev; hl.appendChild(nazev);
+  d.appendChild(hl);
+  if (q.typ === 'barva') {
+    const i = document.createElement('input'); i.type = 'color'; i.value = hodnota; i.setAttribute('aria-label', q.nazev);
+    i.oninput = () => zmena(i.value, false); i.onchange = () => zmena(i.value, true);
+    d.appendChild(i);
+  } else if (q.typ === 'volba') {
+    const s = document.createElement('select'); s.className = 'vstup'; s.setAttribute('aria-label', q.nazev);
+    for (const [v, t] of q.moznosti) { const o = document.createElement('option'); o.value = v; o.textContent = t; s.appendChild(o); }
+    s.value = hodnota; s.onchange = () => zmena(s.value, true);
+    d.appendChild(s);
+  } else {
+    const hod = document.createElement('span'); hod.className = 'hodn'; hod.title = 'Dvojklik = výchozí hodnota';
+    const ukaz = v => { hod.textContent = (+v).toLocaleString('cs') + (q.jednotka ? ' ' + q.jednotka : ''); };
+    ukaz(hodnota); hl.appendChild(hod);
+    const i = document.createElement('input'); i.type = 'range'; i.min = q.min; i.max = q.max; i.step = q.krok || 1; i.value = hodnota;
+    i.setAttribute('aria-label', q.nazev);
+    i.oninput = () => { ukaz(i.value); zmena(+i.value, false); };
+    i.onchange = () => zmena(+i.value, true);
+    const vychozi = () => { i.value = q.vychozi; ukaz(q.vychozi); zmena(q.vychozi, true); };
+    i.ondblclick = vychozi; hod.ondblclick = vychozi;
+    d.appendChild(i);
+  }
+  return d;
+}
+
+function vykresliPanelFiltru() {
+  const p = $('panelFiltr');
+  p.innerHTML = '';
+  document.querySelectorAll('.karta').forEach(b => b.classList.toggle('aktivni', !!stav.aktivni && b.dataset.id === stav.aktivni.id));
+  if (!stav.aktivni) { p.innerHTML = '<p class="prazdne">Vyber filtr v galerii vlevo. Jeho nastavení se objeví tady.</p>'; return; }
+  const a = stav.aktivni, f = FF.najdi(a.id);
+  const h = document.createElement('div'); h.style.cssText = 'font-weight:600;font-size:.95rem'; h.textContent = f.nazev; p.appendChild(h);
+  const ds = document.createElement('p'); ds.className = 'filtr-popis'; ds.textContent = f.popis; p.appendChild(ds);
+  for (const q of f.param) p.appendChild(prvek(q, a.p[q.id], (v, hotovo) => { a.p[q.id] = v; prekresli(); if (hotovo) zapamatuj(); }));
+  p.appendChild(prvek({ nazev: 'Síla filtru', min: 0, max: 100, vychozi: 100, jednotka: '%' }, a.sila, (v, hotovo) => { a.sila = v; prekresli(); if (hotovo) zapamatuj(); }));
+  const r = document.createElement('div'); r.className = 'radek';
+  r.innerHTML = '<button class="tl hlavni-tl" data-prikaz="pouzit" title="Zapéct jako vrstvu a pokračovat dalším filtrem (Enter)">✓ Použít</button><button class="tl" data-prikaz="zrusitFiltr" title="Esc">✕ Zrušit</button>';
+  p.appendChild(r);
+}
+
+function vykresliVrstvy() {
+  const u = $('vrstvy'); u.innerHTML = '';
+  $('vrstvyPrazdne').hidden = stav.hotove.length > 0;
+  stav.hotove.forEach((k, i) => {
+    const li = document.createElement('li');
+    const s = document.createElement('span'); s.textContent = `${i + 1}. ${FF.najdi(k.id).nazev}`;
+    if (k.sila < 100) { const sm = document.createElement('small'); sm.textContent = ` ${k.sila} %`; s.appendChild(sm); }
+    const upr = document.createElement('button'); upr.className = 'tl'; upr.textContent = '✎'; upr.title = 'Upravit (vrstvy nad ní se zahodí)';
+    upr.onclick = async () => {
+      if (i < stav.hotove.length - 1 && !(await Dialog.potvrd('Úprava této vrstvy zahodí vrstvy nad ní. Pokračovat?'))) return;
+      stav.aktivni = stav.hotove[i]; stav.hotove = stav.hotove.slice(0, i); zapamatuj(); vykresliVse();
+    };
+    const x = document.createElement('button'); x.className = 'tl'; x.textContent = '✕'; x.title = 'Odebrat vrstvu';
+    x.onclick = () => { stav.hotove.splice(i, 1); zapamatuj(); vykresliVse(); };
+    li.append(s, upr, x); u.appendChild(li);
+  });
+}
+
+function vykresliUpravy() {
+  const p = $('panelUpravy'); p.innerHTML = '';
+  for (const q of FF.UPRAVY) p.appendChild(prvek(q, stav.upr[q.id], (v, hotovo) => {
+    stav.upr[q.id] = v; prekresli();
+    if (hotovo) { zapamatuj(); obnovMiniatury(); }
+  }));
+}
+
+// ── ukládání v plném rozlišení
+async function vysledekPlny() {
+  const max = +$('rozliseni').value || Infinity;
+  const plny = obrazData(stav.obr, max);
+  $('prace').textContent = `⏳ Počítám plné rozlišení ${plny.width} × ${plny.height}…`; $('prace').hidden = false;
+  posliZdroj(worker, 'plny', plny);
+  const m = await spocitej({ typ: 'vypocet', klic: 'plny', upr: stav.upr, hotove: stav.hotove, aktivni: stav.aktivni });
+  posliZdroj(worker, 'plny', new ImageData(1, 1));   // uvolnit paměť ve workeru
+  $('prace').hidden = true; $('prace').textContent = '⏳ Počítám…';
+  if (m.typ === 'chyba') { Dialog.chyba('Výpočet selhal: ' + m.zprava); return null; }
+  const c = document.createElement('canvas'); c.width = m.w; c.height = m.h;
+  c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(m.data), m.w, m.h), 0, 0);
+  return c;
+}
+async function uloz(typ) {
+  if (!stav.obr) return;
+  const c = await vysledekPlny(); if (!c) return;
+  const pripona = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[typ];
+  const blob = await new Promise(r => c.toBlob(r, typ, +$('kvalita').value / 100));
+  const nazvy = [...stav.hotove, stav.aktivni].filter(Boolean).map(k => k.id).join('_');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `${stav.jmeno}${nazvy ? '_' + nazvy : '_upraveno'}.${pripona}`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+// ── porovnání před/po
+function nastavPorovnani(zap) {
+  stav.porovnat = zap;
+  document.querySelector('[data-prikaz="porovnat"]').setAttribute('aria-pressed', String(zap));
+  $('puvodni').hidden = $('delic').hidden = $('popisPred').hidden = $('popisPo').hidden = !zap;
+  aktualizujDelic();
+}
+function aktualizujDelic() {
+  const p = stav.delic * 100;
+  $('puvodni').style.clipPath = `inset(0 ${100 - p}% 0 0)`;
+  $('delic').style.left = `calc(${p}% - 1px)`;
+}
+function ukazOriginal(zap) {
+  if (!stav.obr) return;
+  if (zap) { $('puvodni').hidden = false; $('puvodni').style.clipPath = 'none'; }
+  else { $('puvodni').style.clipPath = ''; nastavPorovnani(stav.porovnat); }
+}
+const scena = $('scena');
+let tahne = false;
+scena.addEventListener('pointerdown', e => { if (!stav.porovnat) return; tahne = true; scena.setPointerCapture(e.pointerId); posunDelic(e); });
+scena.addEventListener('pointermove', e => { if (tahne) posunDelic(e); });
+scena.addEventListener('pointerup', () => { tahne = false; });
+function posunDelic(e) { const r = platno.getBoundingClientRect(); stav.delic = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); aktualizujDelic(); }
+const tlOrig = $('tlOriginal');
+tlOrig.addEventListener('pointerdown', () => ukazOriginal(true));
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => tlOrig.addEventListener(t, () => ukazOriginal(false)));
+
+// ── příkazy
+async function prikaz(co) {
+  zavriNabidky();
+  switch (co) {
+    case 'otevrit': $('soubor').click(); break;
+    case 'ukazka': {
+      const r = await fetch('foto_filtry/ukazka.webp'); nactiObrazek(await r.blob(), 'ukazka'); break;
+    }
+    case 'vlozit': {
+      try {
+        for (const it of await navigator.clipboard.read()) {
+          const t = it.types.find(x => x.startsWith('image/'));
+          if (t) return nactiObrazek(await it.getType(t), 'schranka');
+        }
+        Dialog.info('Ve schránce není obrázek.');
+      } catch (e) { Dialog.info('Prohlížeč nedovolil číst schránku. Zkus Ctrl+V přímo na stránce.'); }
+      break;
+    }
+    case 'ulozit': case 'ulozitPNG': uloz('image/png'); break;
+    case 'ulozitJPG': uloz('image/jpeg'); break;
+    case 'ulozitWEBP': uloz('image/webp'); break;
+    case 'kopirovat': {
+      const c = await vysledekPlny(); if (!c) return;
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': new Promise(r => c.toBlob(r, 'image/png')) })]);
+        Dialog.info('Výsledek je ve schránce.');
+      } catch (e) { Dialog.chyba('Kopírování do schránky se nepovedlo.'); }
+      break;
+    }
+    case 'zpet': if (historie.length) { budoucnost.push(posledni); obnov(historie.pop()); } break;
+    case 'znovu': if (budoucnost.length) { historie.push(posledni); obnov(budoucnost.pop()); } break;
+    case 'pouzit':
+      if (!stav.aktivni) return;
+      stav.hotove.push(stav.aktivni); stav.aktivni = null; zapamatuj(); vykresliVse(); break;
+    case 'zrusitFiltr': if (stav.aktivni) { stav.aktivni = null; zapamatuj(); vykresliPanelFiltru(); prekresli(); } break;
+    case 'resetUpravy': stav.upr = FF.vychoziUpravy(); zapamatuj(); vykresliUpravy(); prekresli(); obnovMiniatury(); break;
+    case 'vseZpet':
+      if (!(await Dialog.potvrd('Zahodit všechny filtry a úpravy?'))) return;
+      stav.upr = FF.vychoziUpravy(); stav.hotove = []; stav.aktivni = null; zapamatuj(); vykresliVse(); break;
+    case 'nahodny': {
+      const f = FF.FILTRY[Math.floor(Math.random() * FF.FILTRY.length)];
+      vyberFiltr(f.id);
+      document.querySelector(`.karta[data-id="${f.id}"]`)?.scrollIntoView({ block: 'nearest' });
+      break;
+    }
+    case 'porovnat': if (stav.obr) nastavPorovnani(!stav.porovnat); break;
+    case 'prizpusobit': scena.classList.remove('plna'); break;
+    case 'plna': scena.classList.add('plna'); break;
+    case 'mrizkaPanel': {
+      const p = $('panelFiltry'), r = $('rozlozeni');
+      p.hidden = !p.hidden;
+      r.style.gridTemplateColumns = p.hidden ? 'minmax(0,1fr) 300px' : '';
+      break;
+    }
+    case 'napoveda': $('napoveda').showModal(); break;
+  }
+}
+
+// nabídky lišty
+function zavriNabidky() {
+  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
+  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $(b.dataset.nabidka), bylo = !n.hidden;
+  zavriNabidky();
+  if (bylo) return;
+  n.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect();
+  n.style.top = (r.bottom + 4) + 'px';
+  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
+}));
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-prikaz]');
+  if (b && !b.disabled) { e.stopPropagation(); return prikaz(b.dataset.prikaz); }
+  if (!e.target.closest('.nabidka')) zavriNabidky();
+});
+addEventListener('resize', zavriNabidky);
+$('kvalita').oninput = () => { $('kvalitaH').textContent = $('kvalita').value; };
+
+// vstup souborů: výběr, přetažení, vložení
+$('soubor').onchange = () => { const f = $('soubor').files[0]; if (f) nactiObrazek(f, f.name); $('soubor').value = ''; };
+$('vitej').addEventListener('click', e => { if (!e.target.closest('button')) prikaz('otevrit'); });
+$('vitej').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); prikaz('otevrit'); } });
+const hlavni = $('hlavni');
+hlavni.addEventListener('dragover', e => { e.preventDefault(); hlavni.classList.add('nad'); });
+hlavni.addEventListener('dragleave', () => hlavni.classList.remove('nad'));
+hlavni.addEventListener('drop', e => {
+  e.preventDefault(); hlavni.classList.remove('nad');
+  const f = [...e.dataTransfer.files].find(x => x.type.startsWith('image/'));
+  if (f) nactiObrazek(f, f.name);
+});
+document.addEventListener('paste', e => {
+  const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith('image/'));
+  if (f) { e.preventDefault(); nactiObrazek(f, 'schranka'); }
+});
+
+// klávesy
+document.addEventListener('keydown', e => {
+  const vPoli = e.target.closest('input[type=search], input[type=text], select, textarea');
+  if (document.querySelector('dialog[open]')) return;
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && e.key.toLowerCase() === 'o') { e.preventDefault(); return prikaz('otevrit'); }
+  if (ctrl && e.key.toLowerCase() === 's') { e.preventDefault(); return prikaz('ulozit'); }
+  if (vPoli) return;
+  if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); return prikaz(e.shiftKey ? 'znovu' : 'zpet'); }
+  if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); return prikaz('znovu'); }
+  if (ctrl || e.altKey) return;
+  if (e.key === 'F1') { e.preventDefault(); return prikaz('napoveda'); }
+  if (e.key === 'Escape') { if (document.querySelector('.nabidka:not([hidden])')) return zavriNabidky(); return prikaz('zrusitFiltr'); }
+  if (!stav.obr) return;
+  if (e.key === 'Enter' && !e.target.closest('button')) return prikaz('pouzit');
+  if (e.key === 'p' || e.key === 'P') return prikaz('porovnat');
+  if (e.key === 'r' || e.key === 'R') return prikaz('nahodny');
+  if (e.key === ' ' && !e.repeat && !e.target.closest('button')) { e.preventDefault(); ukazOriginal(true); }
+});
+document.addEventListener('keyup', e => { if (e.key === ' ') ukazOriginal(false); });
+
+$('hledat').addEventListener('input', filtrujGalerii);
+vykresliKategorie(); vykresliGalerii(); vykresliUpravy(); tlacitkaHistorie();
+if (window.self === window.top) document.body.classList.add('samostatne');
+</script>
+</body>
+</html>

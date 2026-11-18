@@ -169,7 +169,7 @@
       const w = kontejner.clientWidth, h = kontejner.clientHeight;
       renderer.setSize(w, h, false); kamera.aspect = w / h; kamera.updateProjectionMatrix();
       if (cekajiciPohled) { const j = cekajiciPohled; cekajiciPohled = null; pohled(j.jak, j.box); }   // pohled spočtený bez velikosti
-      else if (posledniBox && Math.abs(kamera.aspect / aspektPohledu - 1) > 0.15) pohled('ponech', posledniBox);   // výrazně jiný poměr stran: model znovu vměstnat
+      else if (!volby.drzPohled && posledniBox && Math.abs(kamera.aspect / aspektPohledu - 1) > 0.15) pohled('ponech', posledniBox);   // výrazně jiný poměr stran: model znovu vměstnat (drzPohled = nechat, jak ho má uživatel)
       snimek();
       if (volby.zmenaVelikosti) volby.zmenaVelikosti(w, h);
     }

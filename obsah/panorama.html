@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Skládání panoramat</title>
-<meta name="description" content="Složí panorama z více fotek přímo v prohlížeči: hledání bodů, párování, RANSAC, válcová projekce s ohniskem z EXIFu, vyrovnání expozice, šev s prolnutím, ořez, ruční korekce a export JPG/PNG v plném rozlišení.">
+<meta name="description" content="Profesionální skládání panoramat v prohlížeči: kontrolní body s RANSAC, globální optimalizace rotací a ohniska, víc řad a sférická 360° panoramata, projekce válcová, equirect, Mercator, malá planeta i přímočará, vícepásmové prolnutí, vyrovnání expozice, export JPG/PNG s GPano, prohlížeč 360° a projekty.">
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../dialog.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="panorama/jadro.js"></script>
+<script src="panorama/slozeni.js"></script>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -21,24 +22,28 @@ body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui
 .lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
 .lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
 .lista .skup-tl{display:flex;align-items:center;gap:2px}
-.lista .vpravo{margin-left:auto}
+.lista .vpravo{margin-left:auto;display:flex;gap:2px}
 .samostatne .lista{padding-right:72px}
 .tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
-.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
 .tl:focus-visible,.btn:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
 .tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
-.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl.hlavni-tl:hover:not(:disabled){background:var(--accent-hover)}
 .tl:disabled{opacity:.5;cursor:default}
-@media (max-width:900px){.lista .txt{display:none}}
-.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;max-width:calc(100vw - 12px);max-height:calc(100vh - 70px);overflow-y:auto}
 .nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
-.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka kbd,.pomoc kbd{margin-left:auto;font-size:.7rem;color:var(--text-faint);font-family:inherit;border:1px solid var(--border);border-radius:4px;padding:0 5px}
 .nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
-.nabidka .pole{padding:4px 8px}
-.nabidka .zatrh{padding:4px 8px}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+.nabidka .pole,.nabidka .zatrh{padding:4px 8px}
 .nabidka .mrizka{display:grid;grid-template-columns:repeat(3,44px);gap:4px;justify-content:center;padding:4px}
 .nabidka .mrizka .tl{justify-content:center;border-color:var(--border);background:var(--bg-control)}
-.nabidka .pozn{font-size:.76rem;color:var(--text-muted);padding:2px 8px;max-width:300px;line-height:1.4}
+.nabidka .dva{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;padding:4px 8px}
+.nabidka .tri{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 6px;padding:4px 8px}
+.nabidka .dva .pole,.nabidka .tri .pole{padding:0}
+.nabidka .pozn{font-size:.76rem;color:var(--text-muted);padding:2px 8px;max-width:320px;line-height:1.4}
 [hidden]{display:none !important}
 
 .btn{text-decoration:none;background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit}
@@ -46,6 +51,7 @@ body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui
 .btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
 .btn.primary:hover{background:var(--accent-hover)}
 .btn.mini{padding:4px 9px;font-size:.78rem}
+.btn:disabled{opacity:.5;cursor:default}
 .vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.86rem;font-family:inherit;min-width:0}
 .pole{display:grid;gap:3px;font-size:.8rem;color:var(--text-muted)}
 .pole .vstup{width:100%;color:var(--text)}
@@ -67,8 +73,10 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .plocha{flex:1;min-height:260px;position:relative;display:flex;align-items:center;justify-content:center;padding:10px;overflow:auto}
 .platna{position:relative;max-width:100%;line-height:0}
 .platna canvas{max-width:100%;height:auto;display:block}
-#vrstva{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
-.uvod{max-width:640px;text-align:center;color:var(--text-muted);line-height:1.6;border:2px dashed var(--border-strong);border-radius:12px;padding:28px 18px;background:var(--bg-panel)}
+#platno{width:auto;max-height:max(220px,calc(100vh - 250px))}
+#vrstva{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+#vrstva.tahne{cursor:grabbing}
+.uvod{max-width:660px;text-align:center;color:var(--text-muted);line-height:1.6;border:2px dashed var(--border-strong);border-radius:12px;padding:28px 18px;background:var(--bg-panel)}
 .uvod h2{color:var(--text);font-size:1.15rem;margin:0 0 6px}
 .uvod .akce{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 body.tazeni .uvod,body.tazeni .plocha{outline:3px dashed var(--accent);outline-offset:-6px}
@@ -76,78 +84,151 @@ body.tazeni .uvod,body.tazeni .plocha{outline:3px dashed var(--accent);outline-o
 .stav progress{width:140px}
 .stav .txt-stav{flex:1;min-width:160px;color:var(--text-muted)}
 .stav .rozmer{font-weight:600}
-.varovani{color:var(--danger)}
+.stav .kvalita{font-weight:600}
+.dobre{color:var(--ok)}.stredni{color:var(--warn)}.spatne,.varovani{color:var(--danger)}
 details.info{font-size:.78rem;color:var(--text-muted);width:100%}
-details.info table{border-collapse:collapse;margin-top:4px}
-details.info td,details.info th{padding:2px 8px;border-bottom:1px solid var(--border);text-align:left}
+.tab-obal{overflow-x:auto}
+details.info table,.okno table.tab{border-collapse:collapse;margin-top:4px}
+details.info td,details.info th,.okno table.tab td,.okno table.tab th{padding:2px 8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+details.info tr[data-dvojice]{cursor:pointer}
+details.info tr[data-dvojice]:hover{background:var(--bg-hover)}
 
 dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(94vw,560px);max-height:92vh;box-shadow:0 10px 40px rgba(0,0,0,.5)}
-dialog.okno.siroke{width:min(96vw,1100px)}
+dialog.okno.siroke{width:min(96vw,1200px)}
 dialog.okno::backdrop{background:rgba(0,0,0,.5)}
 .okno form{display:flex;flex-direction:column;max-height:92vh}
-.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.okno header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;gap:8px;align-items:center}
+.okno header .zavrit{margin-left:auto}
 .okno .telo{padding:12px 16px;overflow:auto;display:grid;gap:10px;font-size:.88rem;line-height:1.5}
 .okno footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .okno footer .vlevo{margin-right:auto}
 .okno .radek2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.okno .radek3{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
 @media (max-width:520px){.okno .radek2{grid-template-columns:1fr}}
 .okno ul,.okno ol{margin:0;padding-left:20px}
 .okno h3{font-size:.95rem;margin:4px 0 0}
 .vysledek img{max-width:100%;max-height:50vh;display:block;margin:0 auto;border:1px solid var(--border)}
 .dvojice{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:640px){.dvojice{grid-template-columns:1fr}}
-.dvojice canvas{width:100%;height:auto;border:1px solid var(--border);border-radius:6px;cursor:crosshair;background:var(--bg-deep)}
+.dvojice canvas{width:100%;height:auto;border:1px solid var(--border);border-radius:6px;cursor:crosshair;background:var(--bg-deep);touch-action:manipulation}
 .dvojice .pole{margin-bottom:4px}
+.legenda{font-size:.78rem;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.pomoc{font-size:.85rem;line-height:1.55}
+.pomoc table{border-collapse:collapse;width:100%}
+.pomoc td{padding:3px 6px;border-bottom:1px solid var(--border);vertical-align:top}
+.pomoc td:first-child{white-space:nowrap;width:1%}
+.pomoc h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin:12px 0 4px}
+.seznam-proj{display:grid;gap:6px}
+.proj{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:6px;background:var(--bg-panel)}
+.proj img{width:96px;height:48px;object-fit:cover;border-radius:4px;background:var(--bg-deep)}
+.proj .jm{flex:1;min-width:0}
+.proj .jm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj .jm span{font-size:.76rem;color:var(--text-muted)}
+#pl360{width:100%;height:min(62vh,560px);display:block;border-radius:6px;background:#181a1e;cursor:grab;touch-action:none}
 </style>
 </head>
 <body>
 <header class="lista" id="lista">
   <h1>🌄 Panorama</h1>
-  <div class="skup" role="group" aria-label="Fotky"><span class="skup-nazev" aria-hidden="true">Fotky</span><div class="skup-tl">
-    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Přidat fotky, ukázka">📁<span class="txt"> Fotky</span> ▾</button>
+  <div class="skup" role="group" aria-label="Projekt"><span class="skup-nazev" aria-hidden="true">Projekt</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" aria-expanded="false" title="Fotky, projekty, ukázky">📁<span class="txt"> Projekt</span> ▾</button>
   </div></div>
-  <div class="skup" role="group" aria-label="Výpočet"><span class="skup-nazev" aria-hidden="true">Výpočet</span><div class="skup-tl">
-    <button class="tl hlavni-tl" data-prikaz="sloz" id="tlSloz" title="Najít body, spárovat a složit náhled">▶<span class="txt"> Složit</span></button>
-    <button class="tl" data-nabidka="nabNastaveni" aria-expanded="false" title="Projekce, ohnisko, prolnutí, ořez">⚙️<span class="txt"> Nastavení</span> ▾</button>
+  <div class="skup" role="group" aria-label="Zarovnání"><span class="skup-nazev" aria-hidden="true">Zarovnání</span><div class="skup-tl">
+    <button class="tl hlavni-tl" data-prikaz="sloz" id="tlSloz" title="Najít kontrolní body, optimalizovat a složit náhled (Ctrl+Enter)">▶<span class="txt"> Složit</span></button>
+    <button class="tl" data-prikaz="optimalizuj" id="tlOpt" disabled title="Znovu optimalizovat nad upravenými kontrolními body (O)">🎯<span class="txt"> Optimalizovat</span></button>
+    <button class="tl" data-prikaz="body" id="tlBody" disabled title="Kontrolní body dvojic snímků (K)">📍<span class="txt"> Body</span></button>
+    <button class="tl" data-nabidka="nabNastaveni" aria-expanded="false" title="Ohnisko, hledání bodů, optimalizace">⚙️<span class="txt"> Nastavení</span> ▾</button>
   </div></div>
-  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
-    <button class="tl" data-nabidka="nabUpravy" aria-expanded="false" title="Ruční posun a otočení snímku, ruční body">✋<span class="txt"> Ručně</span> ▾</button>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabProjekce" aria-expanded="false" title="Projekce a natočení pohledu">🌐<span class="txt"> Projekce</span> ▾</button>
+    <button class="tl" data-nabidka="nabProlnuti" aria-expanded="false" title="Expozice, šev, prolnutí, ořez">🎨<span class="txt"> Prolnutí</span> ▾</button>
+    <button class="tl" data-nabidka="nabUpravy" aria-expanded="false" title="Ruční posun a otočení snímku, Zpět/Znovu">✋<span class="txt"> Úpravy</span> ▾</button>
   </div></div>
   <div class="skup" role="group" aria-label="Export"><span class="skup-nazev" aria-hidden="true">Export</span><div class="skup-tl">
-    <button class="tl" data-prikaz="export" id="tlExport" disabled title="Vytvořit panorama v plném rozlišení (JPG/PNG)">💾<span class="txt"> Uložit</span></button>
+    <button class="tl" data-prikaz="export" id="tlExport" disabled title="Panorama v plném rozlišení (E)">💾<span class="txt"> Uložit obrázek</span></button>
+    <button class="tl" data-prikaz="prohlizec" id="tl360" title="Prohlížeč 360° (V)">🔭<span class="txt"> 360°</span></button>
   </div></div>
-  <div class="vpravo"><button class="tl" data-prikaz="navod" title="Jak fotit a jak to funguje">❓<span class="txt"> Návod</span></button></div>
+  <div class="vpravo">
+    <button class="tl" data-prikaz="zpet" id="tlZpet" disabled title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+    <button class="tl" data-prikaz="znovu" id="tlZnovu" disabled title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+    <button class="tl" data-prikaz="napoveda" title="Nápověda a klávesové zkratky (F1)" aria-label="Nápověda">❓</button>
+  </div>
 </header>
 
 <div id="nabSoubor" class="nabidka" hidden>
-  <button class="tl" data-prikaz="pridat">📂 Přidat fotky…</button>
-  <button class="tl" data-prikaz="ukazka">🧪 Ukázkové fotky (vygenerovaná krajina)</button>
+  <button class="tl" data-prikaz="pridat">📂 Přidat fotky… <kbd>Ctrl+I</kbd></button>
+  <button class="tl" data-prikaz="ukazka">🧪 Ukázka: jedna řada (6 snímků)</button>
+  <button class="tl" data-prikaz="ukazka360">🧪 Ukázka: 360°, dvě řady (14 snímků)</button>
+  <hr>
+  <button class="tl" data-prikaz="novy">✚ Nový projekt</button>
+  <button class="tl" data-prikaz="otevrit">📂 Otevřít projekt… <kbd>Ctrl+O</kbd></button>
+  <button class="tl" data-prikaz="ulozit">💾 Uložit projekt <kbd>Ctrl+S</kbd></button>
+  <button class="tl" data-prikaz="ulozitJako">💾 Uložit projekt jako… <kbd>Ctrl+Shift+S</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="exportProjekt">⬇️ Exportovat projekt do souboru (.panorama)</button>
+  <button class="tl" data-prikaz="importProjekt">⬆️ Importovat projekt ze souboru…</button>
+  <button class="tl" data-prikaz="exportPto">⬇️ Export pro Hugin (.pto)</button>
   <hr>
   <button class="tl" data-prikaz="odebratVse">🗑️ Odebrat všechny fotky</button>
 </div>
 <div id="nabNastaveni" class="nabidka" hidden>
-  <label class="pole">Projekce
-    <select class="vstup" id="nProjekce"><option value="valec">Válcová – vodorovné panorama (doporučeno)</option><option value="rovina">Rovinná – málo snímků, skeny, mozaika</option></select></label>
-  <label class="pole">Model mezi snímky
-    <select class="vstup" id="nModel"><option value="">Automaticky (válec: posun + otočení, rovina: homografie)</option><option value="posun">Jen posun</option><option value="euklid">Posun + otočení</option><option value="homografie">Homografie (perspektiva)</option></select></label>
-  <label class="pole">Ohnisko – ekvivalent 35 mm (mm)
-    <input class="vstup" id="nOhnisko" type="number" min="8" max="800" step="0.1" placeholder="z EXIFu, jinak 28"></label>
-  <div class="pozn" id="nOhniskoPozn">Prázdné = z EXIFu každé fotky (bez EXIFu 28 mm).</div>
-  <div class="mrizka" style="grid-template-columns:1fr 1fr;padding:4px 8px">
-    <label class="pole">Náhled (px)<select class="vstup" id="nNahled"><option>600</option><option selected>900</option><option>1200</option><option>1600</option></select></label>
-    <label class="pole">Bodů na snímek<select class="vstup" id="nBody"><option>400</option><option selected>700</option><option>1200</option></select></label>
-  </div>
+  <div class="titulek">Ohnisko</div>
+  <label class="pole">Ekvivalent 35 mm (mm)
+    <input class="vstup" id="nOhnisko" type="number" min="4" max="1200" step="0.1" placeholder="z EXIFu, jinak odhad"></label>
+  <div class="pozn">Prázdné = z EXIFu každé fotky; bez EXIFu se ohnisko odhadne z geometrie snímků.</div>
+  <label class="pole">Optimalizace ohniska
+    <select class="vstup" id="nOhniskoRezim"><option value="spolecne">Společné pro všechny snímky (jeden objektiv)</option><option value="kazdy">Každý snímek zvlášť (zoom)</option><option value="pevne">Neměnit (věřit EXIFu)</option></select></label>
   <hr>
-  <label class="zatrh"><input type="checkbox" id="nZisky" checked> Vyrovnat expozici mezi snímky</label>
-  <label class="zatrh"><input type="checkbox" id="nVyrovnat" checked> Vyrovnat horizont (válec)</label>
-  <label class="zatrh"><input type="checkbox" id="nOrez" checked> Oříznout na obdélník</label>
-  <label class="zatrh"><input type="checkbox" id="nObrysy" checked> Ukazovat obrysy snímků</label>
-  <label class="pole">Šířka prolnutí u švu: <span id="nPrechodTxt">6 %</span> šířky snímku
+  <div class="titulek">Hledání bodů</div>
+  <div class="dva">
+    <label class="pole">Náhled (px)<select class="vstup" id="nNahled"><option>600</option><option selected>900</option><option>1200</option><option>1600</option></select></label>
+    <label class="pole">Bodů na snímek<select class="vstup" id="nBody"><option>400</option><option selected>700</option><option>1200</option><option>2000</option></select></label>
+  </div>
+  <label class="pole">Model mozaiky (jen projekce Rovina)
+    <select class="vstup" id="nModel"><option value="">Homografie (perspektiva)</option><option value="posun">Jen posun (skeny)</option><option value="euklid">Posun + otočení</option><option value="homografie">Homografie</option></select></label>
+  <label class="zatrh"><input type="checkbox" id="nDoladit" checked> Doladit ručně přidané body korelací</label>
+  <div class="pozn">Náhled, počet bodů a ohnisko se projeví po ▶ Složit, režim ohniska po 🎯 Optimalizovat.</div>
+</div>
+<div id="nabProjekce" class="nabidka" hidden>
+  <label class="pole">Projekce
+    <select class="vstup" id="nProjekce">
+      <option value="valec">Válcová – vodorovné panorama</option>
+      <option value="equi">Sférická 360° (equirectangular)</option>
+      <option value="mercator">Mercatorova – vyšší panorama</option>
+      <option value="stereo">Malá planeta (stereografická)</option>
+      <option value="primo">Přímočará – rovné čáry, do ~120°</option>
+      <option value="rovina">Rovina – mozaika, skeny (bez koule)</option>
+    </select></label>
+  <hr>
+  <div class="titulek">Natočení pohledu (°)</div>
+  <div class="tri">
+    <label class="pole">Otočení<input class="vstup" id="pYaw" type="number" step="0.5" value="0"></label>
+    <label class="pole">Sklon<input class="vstup" id="pPitch" type="number" step="0.5" value="0"></label>
+    <label class="pole">Náklon<input class="vstup" id="pRoll" type="number" step="0.1" value="0"></label>
+  </div>
+  <div class="pozn">Táhněte náhled myší: vodorovně otáčí, svisle mění sklon. Malá planeta: sklon −90° dá „tunel".</div>
+  <button class="tl" data-prikaz="vyrovnat">📐 Vyrovnat horizont a vystředit <kbd>H</kbd></button>
+  <label class="zatrh"><input type="checkbox" id="nVyrovnat" checked> Automaticky vyrovnávat horizont</label>
+  <div class="pozn" id="pUhly"></div>
+</div>
+<div id="nabProlnuti" class="nabidka" hidden>
+  <label class="zatrh"><input type="checkbox" id="nZisky" checked> Vyrovnat expozici a barvy mezi snímky</label>
+  <label class="pole">Šev
+    <select class="vstup" id="nSev"><option value="vaha">Podle středů snímků (nejostřejší, víc řad)</option><option value="rozdil">Kolem rozdílů – pohyblivé objekty (jedna řada)</option></select></label>
+  <label class="pole">Prolnutí
+    <select class="vstup" id="nProlnuti"><option value="multi">Vícepásmové (Burt–Adelson)</option><option value="linear">Lineární přechod</option><option value="zadne">Žádné (ostrý šev)</option></select></label>
+  <label class="pole" id="nPrechodPole"><span>Šířka lineárního přechodu: <b id="nPrechodTxt">6 %</b> šířky snímku</span>
     <input type="range" id="nPrechod" min="0" max="25" step="1" value="6"></label>
-  <div class="pozn">Projekce, model, ohnisko, náhled a body se projeví po ▶ Složit, ostatní hned.</div>
+  <hr>
+  <label class="zatrh"><input type="checkbox" id="nOrez" checked> Oříznout na největší obdélník</label>
+  <label class="zatrh"><input type="checkbox" id="nObrysy" checked> Ukazovat obrysy snímků</label>
 </div>
 <div id="nabUpravy" class="nabidka" hidden>
-  <div class="pozn" id="uVybrany">Vyberte snímek kliknutím v náhledu nebo v pásu nahoře. Táhnout ho jde myší, šipkami (Shift = ×10), [ a ] otáčí.</div>
+  <button class="tl" data-prikaz="zpet">↶ Zpět <kbd>Ctrl+Z</kbd></button>
+  <button class="tl" data-prikaz="znovu">↷ Znovu <kbd>Ctrl+Y</kbd></button>
+  <hr>
+  <div class="pozn" id="uVybrany">Vyberte snímek kliknutím v náhledu nebo v pásu. Ctrl+tažení ho posune, šipky (Shift = ×10) a [ ] ho posunou/otočí.</div>
   <div class="mrizka">
     <button class="tl" data-prikaz="uprava" data-u="uhel,-1" title="Otočit doleva">⟲</button>
     <button class="tl" data-prikaz="uprava" data-u="dy,-1" title="Nahoru">↑</button>
@@ -159,24 +240,27 @@ dialog.okno::backdrop{background:rgba(0,0,0,.5)}
     <button class="tl" data-prikaz="uprava" data-u="dy,1" title="Dolů">↓</button>
     <span></span>
   </div>
-  <label class="pole">Krok<select class="vstup" id="uKrok"><option value="1">1 px / 0,1°</option><option value="5" selected>5 px / 0,5°</option><option value="25">25 px / 2,5°</option></select></label>
+  <label class="pole">Krok<select class="vstup" id="uKrok"><option value="1">jemný (1 px / 0,1°)</option><option value="5" selected>střední (5 px / 0,5°)</option><option value="25">hrubý (25 px / 2,5°)</option></select></label>
   <hr>
-  <button class="tl" data-prikaz="rucniBody">📍 Ruční body mezi dvěma snímky…</button>
-  <button class="tl" data-prikaz="nulaVse">↺ Zrušit všechny ruční úpravy</button>
+  <button class="tl" data-prikaz="nulaVse">↺ Zrušit ruční posuny všech snímků</button>
 </div>
 <input type="file" id="soubory" accept="image/*" multiple hidden>
+<input type="file" id="souborProjekt" accept=".panorama,application/json" hidden>
+<input type="file" id="soubor360" accept="image/*" hidden>
 
 <main>
   <div class="pas" id="pas" aria-label="Snímky"></div>
   <div class="plocha" id="plocha">
     <div class="uvod" id="uvod">
       <h2>Přetáhněte sem fotky panoramatu</h2>
-      <div>Ideálně 3–15 snímků s překryvem kolem 30 %, focených z jednoho místa otáčením kolem objektivu.
+      <div>Jedna řada i víc řad až po 360° kouli. Ideálně překryv 30–50 %, fotit z jednoho místa otáčením kolem objektivu.
       Pořadí se zjistí samo. Vše se počítá jen ve vašem prohlížeči, fotky se nikam neodesílají.</div>
       <div class="akce">
         <button class="btn primary" data-prikaz="pridat">📂 Vybrat fotky</button>
-        <button class="btn" data-prikaz="ukazka">🧪 Vyzkoušet na ukázce</button>
-        <button class="btn" data-prikaz="navod">❓ Jak fotit</button>
+        <button class="btn" data-prikaz="ukazka">🧪 Ukázka – řada</button>
+        <button class="btn" data-prikaz="ukazka360">🧪 Ukázka – 360°</button>
+        <button class="btn" data-prikaz="otevrit">📂 Otevřít projekt</button>
+        <button class="btn" data-prikaz="napoveda">❓ Jak fotit</button>
       </div>
     </div>
     <div class="platna" id="platna" hidden>
@@ -187,8 +271,9 @@ dialog.okno::backdrop{background:rgba(0,0,0,.5)}
   <div class="stav" id="stav">
     <progress id="prubeh" max="1" value="0" hidden></progress>
     <span class="txt-stav" id="stavText">Žádné fotky.</span>
+    <span class="kvalita" id="kvalita"></span>
     <span class="rozmer" id="rozmer"></span>
-    <details class="info" id="info" hidden><summary>Podrobnosti párování</summary><div id="infoObsah"></div></details>
+    <details class="info" id="info" hidden><summary>Podrobnosti zarovnání</summary><div id="infoObsah"></div></details>
   </div>
 </main>
 
@@ -200,569 +285,108 @@ dialog.okno::backdrop{background:rgba(0,0,0,.5)}
       <label class="pole">Kvalita JPG<select class="vstup" id="eKvalita"><option value="0.8">80 %</option><option value="0.9" selected>90 %</option><option value="0.95">95 %</option></select></label>
     </div>
     <label class="pole">Rozlišení<select class="vstup" id="eMeritko"></select></label>
+    <label class="zatrh"><input type="checkbox" id="eXmp" checked> <span>Vložit metadata 360° (XMP GPano) pro prohlížeče fotosfér</span></label>
+    <div id="eXmpPozn" class="pozn" style="font-size:.78rem;color:var(--text-muted)"></div>
     <div id="eOdhad"></div>
     <div id="eVarovani" class="varovani" hidden></div>
     <div class="vysledek" id="eVysledek" hidden></div>
   </div>
   <footer>
     <button class="btn vlevo" value="zavrit">Zavřít</button>
+    <button class="btn" type="button" id="eDo360" hidden>🔭 Otevřít v 360°</button>
     <a class="btn primary" id="eStahnout" hidden>⬇️ Stáhnout</a>
     <button class="btn primary" type="button" id="eVytvorit">Vytvořit</button>
   </footer>
 </form></dialog>
 
 <dialog class="okno siroke" id="dlgBody"><form method="dialog">
-  <header>📍 Ruční body</header>
+  <header>📍 Kontrolní body <span id="bSouhrn" style="font-weight:400;font-size:.82rem;color:var(--text-muted)"></span></header>
   <div class="telo">
-    <div style="font-size:.82rem;color:var(--text-muted)">Klikněte na stejné místo nejdřív vlevo, pak vpravo. Pro posun stačí 1 dvojice, pro posun + otočení 2, pro homografii 4.
-    Ruční body mají přednost před automatickými a spojí i snímky, které se samy nespárovaly (mlha, voda, nebe).</div>
+    <div class="radek3">
+      <label class="pole" style="flex:2;min-width:220px">Dvojice (nejhorší nahoře)<select class="vstup" id="bDvojice"></select></label>
+      <label class="pole" style="flex:1;min-width:140px">Snímek A<select class="vstup" id="bA"></select></label>
+      <label class="pole" style="flex:1;min-width:140px">Snímek B<select class="vstup" id="bB"></select></label>
+    </div>
+    <div class="legenda"><span><i style="background:#2ecc40"></i>chyba &lt; 3 px</span><span><i style="background:#ff9f1a"></i>3–10 px</span><span><i style="background:#ff4136"></i>&gt; 10 px</span><span><i style="background:#fff;border:1px solid #888"></i>ruční / nový</span>
+      <span>Klik na bod = výběr, jinde = nový bod (nejdřív A, pak B). Delete smaže vybraný.</span></div>
     <div class="dvojice">
-      <div><label class="pole">Snímek A<select class="vstup" id="bA"></select></label><canvas id="bPlA" width="10" height="10"></canvas></div>
-      <div><label class="pole">Snímek B<select class="vstup" id="bB"></select></label><canvas id="bPlB" width="10" height="10"></canvas></div>
+      <canvas id="bPlA" width="10" height="10" aria-label="Snímek A"></canvas>
+      <canvas id="bPlB" width="10" height="10" aria-label="Snímek B"></canvas>
     </div>
     <div id="bStav" style="font-size:.82rem"></div>
   </div>
   <footer>
-    <button class="btn vlevo" type="button" id="bZpet">↶ Odebrat poslední</button>
-    <button class="btn" type="button" id="bSmaz">🗑️ Smazat body této dvojice</button>
-    <button class="btn primary" value="hotovo">Hotovo a složit</button>
+    <button class="btn vlevo" type="button" id="bSmazVybrany" disabled>🗑️ Smazat vybraný</button>
+    <button class="btn" type="button" id="bSmazDvojici">Smazat body dvojice</button>
+    <span class="radek3" style="align-items:center"><button class="btn" type="button" id="bVycistit">🧹 Smazat všude body s chybou &gt;</button>
+      <input class="vstup" id="bPrah" type="number" min="1" step="1" value="10" style="width:64px" aria-label="Práh chyby v px"> px</span>
+    <button class="btn primary" value="hotovo">🎯 Optimalizovat</button>
   </footer>
 </form></dialog>
 
-<dialog class="okno" id="dlgNavod"><form method="dialog">
-  <header>❓ Jak fotit panorama a jak to funguje</header>
+<dialog class="okno siroke" id="dlg360"><form method="dialog">
+  <header>🔭 Prohlížeč 360° <span id="v360Info" style="font-weight:400;font-size:.82rem;color:var(--text-muted)"></span>
+    <button class="btn mini zavrit" value="zavrit" aria-label="Zavřít">✕</button></header>
   <div class="telo">
+    <canvas id="pl360" width="960" height="540" aria-label="Pohled 360°"></canvas>
+    <div class="radek3">
+      <button class="btn mini" type="button" id="v360Panorama">🌄 Aktuální panorama</button>
+      <button class="btn mini" type="button" id="v360Soubor">📂 Otevřít soubor 360°…</button>
+      <label class="pole" style="min-width:160px">Zorné pole <b id="v360FovTxt">90°</b><input type="range" id="v360Fov" min="30" max="120" value="90"></label>
+      <span style="font-size:.78rem;color:var(--text-muted)">Táhněte myší / prstem, kolečko = přiblížení, šipky = rozhlížení.</span>
+    </div>
+  </div>
+</form></dialog>
+
+<dialog class="okno" id="dlgProjekty"><form method="dialog">
+  <header>📂 Uložené projekty</header>
+  <div class="telo"><div class="seznam-proj" id="seznamProj"></div>
+    <div class="pozn" style="font-size:.78rem;color:var(--text-muted)">Projekty se ukládají jen v tomto prohlížeči (IndexedDB) i s fotkami. Pro zálohu nebo přenos použijte Export projektu do souboru.</div></div>
+  <footer><button class="btn primary" value="zavrit">Zavřít</button></footer>
+</form></dialog>
+
+<dialog class="okno" id="dlgNavod"><form method="dialog">
+  <header>❓ Nápověda</header>
+  <div class="telo pomoc">
+    <h3>Postup</h3>
+    <ol>
+      <li>Přidejte fotky (pořadí nevadí) a klikněte <b>▶ Složit</b> – najdou se kontrolní body, RANSAC vyřadí nesouhlasné a globální optimalizace dorovná natočení všech snímků i ohnisko.</li>
+      <li>Zkontrolujte <b>chybu zarovnání</b> dole (zelená &lt; 2 px). Podrobnosti ukážou nejhorší dvojice; klik na řádek otevře její body.</li>
+      <li>V <b>📍 Body</b> smažte špatné body nebo přidejte vlastní (mlha, voda, nebe). Pak <b>🎯 Optimalizovat</b>.</li>
+      <li>Zvolte <b>🌐 Projekci</b>, tažením náhledu natočte pohled, <b>H</b> vyrovná horizont. <b>💾</b> složí plné rozlišení.</li>
+    </ol>
+    <h3>Klávesy</h3>
+    <table>
+      <tr><td><kbd>Ctrl+Enter</kbd></td><td>Složit (hledat body + optimalizovat)</td></tr>
+      <tr><td><kbd>O</kbd></td><td>Optimalizovat nad současnými body</td></tr>
+      <tr><td><kbd>K</kbd></td><td>Kontrolní body; v nich <kbd>Delete</kbd> smaže vybraný bod</td></tr>
+      <tr><td><kbd>H</kbd></td><td>Vyrovnat horizont a vystředit</td></tr>
+      <tr><td><kbd>1</kbd>–<kbd>6</kbd></td><td>Projekce: válec, 360°, Mercator, planeta, přímočará, rovina</td></tr>
+      <tr><td><kbd>E</kbd> / <kbd>V</kbd></td><td>Uložit obrázek / prohlížeč 360°</td></tr>
+      <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>Zpět / Znovu (body, natočení, posuny, výběr snímků)</td></tr>
+      <tr><td><kbd>Ctrl+S</kbd> / <kbd>Ctrl+O</kbd> / <kbd>Ctrl+I</kbd></td><td>Uložit / otevřít projekt, přidat fotky</td></tr>
+      <tr><td>tažení náhledu</td><td>otočení a sklon pohledu; s <kbd>Ctrl</kbd> posune vybraný snímek</td></tr>
+      <tr><td><kbd>←↑→↓</kbd> <kbd>[</kbd> <kbd>]</kbd></td><td>posun a otočení vybraného snímku (Shift = ×10)</td></tr>
+      <tr><td><kbd>F1</kbd> / <kbd>?</kbd></td><td>Tato nápověda</td></tr>
+    </table>
     <h3>Focení</h3>
     <ul>
-      <li><b>Otáčejte se kolem objektivu, ne kolem sebe.</b> Foťák/telefon držte na místě a natáčejte ho; když se posouvá, vzniká paralaxa a blízké předměty se ve švu zdvojí. Se stativem otáčejte kolem vstupní pupily objektivu (panoramatická hlava).</li>
-      <li><b>Překryv 30–50 %</b> sousedních snímků. Méně než 20 % často nestačí na spárování.</li>
-      <li><b>Stejné nastavení:</b> nezoomujte, zamkněte expozici a vyvážení bílé (AE/AF lock, ruční režim). Rozdíly jasu stránka vyrovná, ale méně je lépe.</li>
-      <li>Držte <b>horizont ve stejné výšce</b>; pro vyšší panorama foťte na výšku.</li>
-      <li>Pohyblivé věci (lidé, auta, vlny) ve švu mohou zmizet nebo se zdvojit – šev se jim snaží vyhnout, ale nemusí.</li>
-      <li>Jednolité plochy (nebe, voda, mlha) nemají body k párování – pomůže zachytit i kus krajiny nebo <b>ruční body</b>.</li>
+      <li><b>Otáčejte se kolem objektivu, ne kolem sebe</b> – jinak vzniká paralaxa a blízké předměty se ve švu zdvojí. Se stativem kolem vstupní pupily (panoramatická hlava).</li>
+      <li><b>Překryv 30–50 %</b> v řadě i mezi řadami. Stejné nastavení: nezoomovat, zamknout expozici a vyvážení bílé.</li>
+      <li>Pro 360° kouli foťte 2–3 řady (sklon ±30–45°) a případně snímek nahoru a dolů.</li>
+      <li>Pohyblivé objekty: šev „Kolem rozdílů" se jim vyhne (u jedné řady).</li>
     </ul>
-    <h3>Postup ve stránce</h3>
-    <ol>
-      <li>Přidejte fotky (pořadí nevadí), klikněte <b>▶ Složit</b>.</li>
-      <li>Zkontrolujte náhled. Snímek s červeným rámečkem se nespojil – přidejte ruční body nebo změňte nastavení.</li>
-      <li>Případně snímek posuňte/otočte (✋ Ručně) a dejte <b>💾 Uložit</b> – panorama se složí znovu v plném rozlišení.</li>
-    </ol>
     <h3>Jak to funguje</h3>
-    <div>Ve zmenšených náhledech (ve Web Workeru) se najdou rohy Harrisovým detektorem, popíšou se binárními deskriptory BRIEF a spárují se podle Hammingovy vzdálenosti
-    (vzájemně nejlepší shoda + poměrový test). RANSAC z párů vybere geometricky souhlasné a odhadne transformaci. U válcové projekce se body nejdřív promítnou na válec
-    o poloměru rovném ohnisku (z EXIFu: ekvivalent 35 mm, nebo skutečné ohnisko a rozlišení snímače) – pak se snímky liší skoro jen posunem. Pořadí a vazby určí kostra grafu
-    s nejvíce shodami, kořenem je prostřední snímek. Expozice se vyrovná zisky po kanálech (Brown &amp; Lowe), šev se hledá dynamickým programováním po nejmenším rozdílu barev
-    a kolem něj se snímky lineárně prolnou. Nakonec se najde největší vepsaný obdélník.</div>
-    <div><b>Paměť:</b> výsledek se skládá po jednom snímku v plném rozlišení. Velmi velké panorama (stovky megapixelů) prohlížeč nemusí zvládnout – stránka upozorní a nabídne menší rozlišení.</div>
+    <div>Body: Harrisovy rohy na snímku promítnutém na kouli, binární deskriptory BRIEF, vzájemně nejlepší shoda s poměrovým testem, RANSAC homografie (u čistě otočené kamery přesná).
+    Bez EXIFu se ohnisko odhadne z homografií (Szeliski–Shum). Počáteční natočení po kostře grafu dvojic (Horn), pak <b>bundle adjustment</b> (Levenberg–Marquardt, Huberova ztráta) rotací všech snímků a ohniska.
+    Horizont: osy x kamer leží vodorovně (Brown–Lowe). Expozice: zisky po kanálech. Šev: váhy ke středům, nebo dynamické programování po nejmenším rozdílu. Prolnutí: Laplaceova pyramida.
+    Rovina = 2D mozaika (skeny, mapy) s modelem posun / otočení / homografie po kostře, bez globální optimalizace.</div>
+    <div><b>Export:</b> sférická projekce vloží XMP GPano (prohlížeče fotosfér, Facebook, Google Photos). Projekt lze uložit v prohlížeči i s fotkami, exportovat do souboru .panorama, nebo pro Hugin (.pto – kontrolní body a natočení, neověřeno ve všech verzích Huginu).</div>
+    <div><b>Paměť:</b> plné rozlišení se skládá po jednom snímku ve Web Workeru. Panoramata přes ~100 Mpx (mobil ~16 Mpx) prohlížeč nemusí zvládnout – stránka nabídne menší rozlišení.</div>
   </div>
   <footer><button class="btn primary" value="ok">Rozumím</button></footer>
 </form></dialog>
 
-<script>
-'use strict';
-const $ = id => document.getElementById(id);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-if (window.self === window.top) document.body.classList.add('samostatne');
-const KLIC = 'webapp_panorama_nastaveni';
-const MOBIL = matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) < 900;
-const LIMIT_MPX = MOBIL ? 16 : 100, LIMIT_STRANA = 16384;
-
-/* ---------- stav ---------- */
-let snimky = [];          // { id, nazev, soubor, plnaW, plnaH, nahled (canvas), mini, exif, pouzit }
-let aktivni = [];         // id snímků poslaných do posledního výpočtu (index = index ve workeru)
-let upravy = {};          // id → { dx, dy, uhel } v px celé fotky
-let rucni = [];           // [{ a: id, b: id, body: [[xa, ya, xb, yb]] }] v px celé fotky
-let zarovnano = null, nahled = null, vybrany = null, pocitam = false, dalsiId = 1;
-const N = Object.assign({ projekce: 'valec', model: '', ohnisko: '', nahled: '900', body: '700', zisky: true, vyrovnat: true, orez: true, obrysy: true, prechod: 6 },
-  (() => { try { return JSON.parse(localStorage.getItem(KLIC)) || {}; } catch (e) { return {}; } })());
-function ulozN() { try { localStorage.setItem(KLIC, JSON.stringify(N)); } catch (e) {} }
-
-/* ---------- worker ---------- */
-let worker = null, poHotovo = null;
-function W() {
-  if (worker) return worker;
-  worker = new Worker('panorama/worker.js');
-  worker.onmessage = e => zprava(e.data);
-  worker.onerror = e => { konecVypoctu(); $('eVytvorit').disabled = false; Dialog.chyba('Výpočet selhal: ' + (e.message || 'chyba workeru')); };
-  return worker;
-}
-function zprava(m) {
-  if (m.typ === 'prubeh') return ukazPrubeh(m.text, m.podil);
-  if (m.typ === 'chyba') { konecVypoctu(); $('eVytvorit').disabled = false; return Dialog.chyba(m.zprava); }
-  if (m.typ === 'zarovnano') { zarovnano = m; return ukazInfo(); }
-  if (m.typ === 'nahled') { konecVypoctu(); nahled = m.prazdny ? null : m; kresliNahled(); if (zarovnano) ukazInfo(); return; }
-  if (m.typ === 'chciSnimek') return posliSnimek(m.i);
-  if (m.typ === 'hotovo') { konecVypoctu(); if (poHotovo) poHotovo(m); }
-}
-function ukazPrubeh(text, podil) {
-  $('prubeh').hidden = false; $('prubeh').value = podil || 0; $('stavText').textContent = text;
-}
-function konecVypoctu() {
-  pocitam = false; $('prubeh').hidden = true; $('tlSloz').disabled = false;
-}
-
-/* ---------- načtení fotek ---------- */
-async function pridejSoubory(seznam, exifVychozi) {
-  const chyby = [];
-  for (const f of seznam) {
-    if (!/^image\//.test(f.type) && !/\.(jpe?g|png|webp|avif|bmp|gif)$/i.test(f.name || '')) { chyby.push(f.name); continue; }
-    ukazPrubeh('Načítám ' + f.name, 0);
-    try {
-      let ex = exifVychozi || {};
-      if (!exifVychozi) try { ex = PANO.exif(await f.slice(0, 262144).arrayBuffer()); } catch (e) { ex = {}; }
-      const s = { id: dalsiId++, nazev: f.name || 'snímek', soubor: f, exif: ex, pouzit: true };
-      await pripravNahled(s);
-      snimky.push(s);
-    } catch (e) { chyby.push(f.name); }
-  }
-  $('prubeh').hidden = true;
-  if (chyby.length) Dialog.chyba('Tyto soubory se nepodařilo načíst (prohlížeč je neumí dekódovat, např. HEIC): ' + chyby.join(', '));
-  zarovnano = null; nahled = null;
-  vykresliPas(); kresliNahled();
-  $('stavText').textContent = snimky.length ? `${snimky.length} fotek. Klikněte na ▶ Složit.` : 'Žádné fotky.';
-}
-async function pripravNahled(s) {
-  const bmp = await createImageBitmap(s.soubor, { imageOrientation: 'from-image' });
-  s.plnaW = bmp.width; s.plnaH = bmp.height;
-  const max = +N.nahled, k = Math.min(1, max / Math.max(bmp.width, bmp.height));
-  const c = document.createElement('canvas');
-  c.width = Math.max(2, Math.round(bmp.width * k)); c.height = Math.max(2, Math.round(bmp.height * k));
-  const cx = c.getContext('2d', { willReadFrequently: true });
-  cx.imageSmoothingQuality = 'high';
-  cx.drawImage(bmp, 0, 0, c.width, c.height);
-  bmp.close();
-  s.nahled = c; s.nahledMax = max;
-  if (!s.mini) {
-    const m = document.createElement('canvas'), km = 160 / Math.max(c.width, c.height);
-    m.width = Math.round(c.width * km); m.height = Math.round(c.height * km);
-    m.getContext('2d').drawImage(c, 0, 0, m.width, m.height);
-    s.mini = m.toDataURL('image/jpeg', 0.75);
-  }
-}
-function ohniskoPlne(s) {
-  if (+N.ohnisko > 0) return { f: PANO.zEkv35(s.plnaW, s.plnaH, +N.ohnisko), zdroj: 'ruční' };
-  const f = PANO.ohniskoPx(s.plnaW, s.plnaH, s.exif);
-  return f ? { f, zdroj: 'EXIF' } : { f: PANO.zEkv35(s.plnaW, s.plnaH, 28), zdroj: 'výchozí' };
-}
-
-/* ---------- pás snímků ---------- */
-function poradiSnimku() {
-  // čísla podle polohy v náhledu zleva doprava (automatické pořadí)
-  const r = {};
-  if (!nahled) return r;
-  nahled.obrysy.map(o => ({ id: aktivni[o.i], x: o.body.reduce((s, p) => s + p[0], 0) / o.body.length }))
-    .sort((a, b) => a.x - b.x).forEach((o, i) => { r[o.id] = i + 1; });
-  return r;
-}
-function vykresliPas() {
-  const por = poradiSnimku();
-  const spoj = id => { if (!zarovnano) return true; const i = aktivni.indexOf(id); return i < 0 || zarovnano.spojene[i]; };
-  $('pas').innerHTML = snimky.map(s => {
-    const f = ohniskoPlne(s), mm = PANO.ekv35(s.plnaW, s.plnaH, f.f);
-    return `<div class="karta${s.pouzit ? '' : ' vypnuta'}${vybrany === s.id ? ' vybrana' : ''}${s.pouzit && !spoj(s.id) ? ' nespojena' : ''}" data-karta="${s.id}" title="${esc(s.nazev)}">
-      ${por[s.id] ? `<span class="cislo">${por[s.id]}</span>` : ''}
-      <img src="${s.mini}" alt="">
-      <div class="jm">${esc(s.nazev)}</div>
-      <div class="meta">${s.plnaW}×${s.plnaH} · ${mm.toFixed(0)} mm (${f.zdroj})</div>
-      <div class="radek"><label class="zatrh" style="font-size:.74rem"><input type="checkbox" data-pouzit="${s.id}"${s.pouzit ? ' checked' : ''}> použít</label>
-      <button class="pryc" type="button" data-odeber="${s.id}" title="Odebrat" aria-label="Odebrat">✕</button></div>
-    </div>`;
-  }).join('');
-  $('uvod').hidden = snimky.length > 0 && !!nahled;
-  const s = snimky.find(x => x.id === vybrany);
-  $('uVybrany').textContent = s ? `Vybraný snímek: ${s.nazev}` + (upravy[s.id] ? ` (posun ${Math.round(upravy[s.id].dx || 0)}, ${Math.round(upravy[s.id].dy || 0)} px, otočení ${(upravy[s.id].uhel || 0).toFixed(1)}°)` : '')
-    : 'Vyberte snímek kliknutím v náhledu nebo v pásu nahoře. Táhnout ho jde myší, šipkami (Shift = ×10), [ a ] otáčí.';
-}
-
-/* ---------- výpočet ---------- */
-function nastaveniProWorker() {
-  const ix = id => aktivni.indexOf(id);
-  return {
-    valec: N.projekce === 'valec', model: N.model, maxBody: +N.body, vyrovnat: N.vyrovnat,
-    zisky: N.zisky, orez: N.orez, prechod: +N.prechod,
-    upravy: aktivni.map(id => upravy[id] || null),
-    rucni: rucni.filter(r => ix(r.a) >= 0 && ix(r.b) >= 0 && r.body.length).map(r => ({ a: ix(r.a), b: ix(r.b), body: r.body }))
-  };
-}
-async function sloz() {
-  if (pocitam) return;
-  const pouzite = snimky.filter(s => s.pouzit);
-  if (pouzite.length < 2) return Dialog.info(snimky.length < 2 ? 'Přidejte aspoň dvě fotky.' : 'Zapněte aspoň dva snímky.');
-  pocitam = true; $('tlSloz').disabled = true;
-  try {
-    for (const s of pouzite) if (s.nahledMax !== +N.nahled) { ukazPrubeh('Připravuji náhled ' + s.nazev, 0); await pripravNahled(s); }
-  } catch (e) { konecVypoctu(); return Dialog.chyba('Fotku se nepodařilo znovu načíst.'); }
-  aktivni = pouzite.map(s => s.id);
-  const data = pouzite.map(s => {
-    const c = s.nahled, d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, c.width, c.height).data;
-    return { w: c.width, h: c.height, plnaW: s.plnaW, plnaH: s.plnaH, f: ohniskoPlne(s).f * c.width / s.plnaW, rgba: d };
-  });
-  ukazPrubeh('Hledám body…', 0);
-  W().postMessage({ typ: 'zarovnej', snimky: data, nast: nastaveniProWorker() }, data.map(d => d.rgba.buffer));
-}
-let cekaPrekresleni = false;
-function prekresli() {
-  if (!zarovnano) return;
-  if (pocitam) { cekaPrekresleni = true; return; }
-  pocitam = true;
-  W().postMessage({ typ: 'prekresli', nast: nastaveniProWorker() });
-}
-
-function ukazInfo() {
-  const z = zarovnano, jm = i => esc(snimky.find(s => s.id === aktivni[i]).nazev);
-  const nesp = z.spojene.map((v, i) => v ? null : jm(i)).filter(Boolean);
-  const mod = { posun: 'posun', euklid: 'posun + otočení', homografie: 'homografie' }[z.model];
-  $('info').hidden = false;
-  $('infoObsah').innerHTML = `<div>Model: ${mod} · body na snímek: ${z.body.join(', ')} · výpočet ${(z.ms / 1000).toFixed(1)} s</div>
-    <table><tr><th>Dvojice</th><th>Shody</th><th>Souhlasné (RANSAC)</th><th></th></tr>${z.hrany.filter(h => h.inl || h.kandidat >= 8).sort((a, b) => b.inl - a.inl).map(h =>
-      `<tr><td>${jm(h.a)} ↔ ${jm(h.b)}</td><td>${h.shod}</td><td>${h.inl}${h.rucne ? ' (ruční body)' : ''}</td><td>${h.pouzita ? '✔ použito' : h.inl ? 'navíc' : 'zamítnuto' + (h.kandidat ? ' (' + h.kandidat + ')' : '')}</td></tr>`).join('')}</table>`;
-  $('stavText').innerHTML = nesp.length
-    ? `<span class="varovani">Nespojené snímky: ${nesp.join(', ')}. Přidejte ruční body, zkuste jiné ohnisko nebo snímek vypněte.</span>`
-    : `Spojeno ${z.spojene.length} snímků.`;
-  vykresliPas();
-}
-
-/* ---------- náhled ---------- */
-function kresliNahled() {
-  $('platna').hidden = !nahled;
-  $('uvod').hidden = !!nahled;
-  $('tlExport').disabled = !nahled;
-  if (cekaPrekresleni) { cekaPrekresleni = false; prekresli(); }
-  if (!nahled) { $('rozmer').textContent = ''; return; }
-  const p = $('platno'), v = $('vrstva');
-  p.width = v.width = nahled.W; p.height = v.height = nahled.H;
-  const id = new ImageData(new Uint8ClampedArray(nahled.rgba), nahled.W, nahled.H);
-  p.getContext('2d').putImageData(id, 0, 0);
-  $('rozmer').textContent = `${nahled.plnyW} × ${nahled.plnyH} px (${(nahled.plnyW * nahled.plnyH / 1e6).toFixed(1)} Mpx)`;
-  kresliVrstvu();
-  vykresliPas();
-}
-function kresliVrstvu(tah) {
-  const v = $('vrstva'), c = v.getContext('2d');
-  c.clearRect(0, 0, v.width, v.height);
-  if (!nahled) return;
-  const sk = Math.max(1, nahled.W / (v.clientWidth || nahled.W)), lw = 1.5 * sk;
-  const o = nahled.orez;
-  if (o) {
-    c.fillStyle = 'rgba(0,0,0,.45)';
-    c.fillRect(0, 0, v.width, o.y); c.fillRect(0, o.y + o.h, v.width, v.height - o.y - o.h);
-    c.fillRect(0, o.y, o.x, o.h); c.fillRect(o.x + o.w, o.y, v.width - o.x - o.w, o.h);
-  }
-  const por = poradiSnimku(), styl = getComputedStyle(document.body);
-  const akc = styl.getPropertyValue('--accent').trim() || '#2862bb';
-  for (const ob of nahled.obrysy) {
-    const id = aktivni[ob.i], vyb = id === vybrany;
-    if (!N.obrysy && !vyb) continue;
-    const dx = vyb && tah ? tah.dx : 0, dy = vyb && tah ? tah.dy : 0;
-    c.beginPath();
-    ob.body.forEach(([x, y], i) => i ? c.lineTo(x + dx, y + dy) : c.moveTo(x + dx, y + dy));
-    c.closePath();
-    c.setLineDash(vyb ? [] : [6 * sk, 4 * sk]);
-    c.lineWidth = vyb ? lw * 2 : lw; c.strokeStyle = vyb ? akc : 'rgba(255,255,255,.85)';
-    c.stroke();
-    const cx = ob.body.reduce((s, p) => s + p[0], 0) / ob.body.length + dx, cy = ob.body.reduce((s, p) => s + p[1], 0) / ob.body.length + dy;
-    c.setLineDash([]);
-    c.font = `bold ${Math.round(16 * sk)}px system-ui,sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.lineWidth = 4 * sk; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(por[id] || '', cx, cy);
-    c.fillStyle = vyb ? akc : '#fff'; c.fillText(por[id] || '', cx, cy);
-  }
-}
-function bodPlatna(e) {
-  const v = $('vrstva'), r = v.getBoundingClientRect();
-  return [(e.clientX - r.left) * v.width / r.width, (e.clientY - r.top) * v.height / r.height];
-}
-function uvnitr(pt, poly) {
-  let in_ = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i], [xj, yj] = poly[j];
-    if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi) in_ = !in_;
-  }
-  return in_;
-}
-let tah = null;
-$('vrstva').addEventListener('pointerdown', e => {
-  if (!nahled) return;
-  const pt = bodPlatna(e), pod = nahled.obrysy.filter(o => uvnitr(pt, o.body)).map(o => aktivni[o.i]);
-  if (!pod.length) { vybrany = null; kresliVrstvu(); vykresliPas(); return; }
-  if (!pod.includes(vybrany)) { vybrany = pod[pod.length - 1]; kresliVrstvu(); vykresliPas(); }
-  tah = { x: pt[0], y: pt[1], dx: 0, dy: 0, id: e.pointerId, presun: false };
-  $('vrstva').setPointerCapture(e.pointerId);
-});
-$('vrstva').addEventListener('pointermove', e => {
-  if (!tah || e.pointerId !== tah.id) return;
-  const pt = bodPlatna(e);
-  tah.dx = pt[0] - tah.x; tah.dy = pt[1] - tah.y;
-  if (Math.hypot(tah.dx, tah.dy) > 3) tah.presun = true;
-  if (tah.presun) kresliVrstvu(tah);
-});
-$('vrstva').addEventListener('pointerup', e => {
-  if (!tah || e.pointerId !== tah.id) return;
-  const t = tah; tah = null;
-  if (t.presun && vybrany) {
-    const m = nahled.mPano / nahled.k, u = upravy[vybrany] || (upravy[vybrany] = { dx: 0, dy: 0, uhel: 0 });
-    u.dx += t.dx * m; u.dy += t.dy * m;
-    prekresli(); vykresliPas();
-  }
-});
-function uprav(co, smer, nasobek = 1) {
-  if (!vybrany) return Dialog.info('Nejdřív vyberte snímek v náhledu.');
-  const k = +$('uKrok').value * nasobek, u = upravy[vybrany] || (upravy[vybrany] = { dx: 0, dy: 0, uhel: 0 });
-  // posun v px náhledu převedený na px celé fotky
-  const m = nahled ? nahled.mPano / nahled.k : 1;
-  if (co === 'uhel') u.uhel += smer * k / 10; else u[co] += smer * k * m;
-  prekresli(); vykresliPas();
-}
-
-/* ---------- export ---------- */
-function moznostiMeritka() {
-  const sel = $('eMeritko'), w = nahled.plnyW, h = nahled.plnyH;
-  const volby = [1, 0.75, 0.5, 0.35, 0.25, 0.15];
-  const vejde = m => w * m * h * m / 1e6 <= LIMIT_MPX && Math.max(w, h) * m <= LIMIT_STRANA;
-  const prvni = volby.find(vejde) || 0.1;
-  sel.innerHTML = volby.map(m => `<option value="${m}"${m === prvni ? ' selected' : ''}>${Math.round(m * 100)} % – ${Math.round(w * m)} × ${Math.round(h * m)} px (${(w * m * h * m / 1e6).toFixed(1)} Mpx)${vejde(m) ? '' : ' ⚠️'}</option>`).join('');
-  odhad();
-}
-function odhad() {
-  const m = +$('eMeritko').value, w = Math.round(nahled.plnyW * m), h = Math.round(nahled.plnyH * m);
-  const nejvetsi = Math.max(...snimky.filter(s => aktivni.includes(s.id)).map(s => s.plnaW * s.plnaH));
-  const mb = (w * h * 4 * 2 + nejvetsi * 4 * 3) / 1048576;
-  $('eOdhad').textContent = `Výsledek ${w} × ${h} px, potřeba paměti zhruba ${Math.round(mb)} MB. Skládá se po jednom snímku z originálů.`;
-  const nad = w * h / 1e6 > LIMIT_MPX || Math.max(w, h) > LIMIT_STRANA;
-  $('eVarovani').hidden = !nad;
-  $('eVarovani').textContent = nad ? `Pozor: přes ${LIMIT_MPX} Mpx nebo ${LIMIT_STRANA} px na stranu – prohlížeč nemusí takové plátno vytvořit nebo dojde paměť. Zvolte menší rozlišení.` : '';
-}
-let urlVysledku = null;
-async function exportuj() {
-  if (!nahled || pocitam) return;
-  if (!$('eVarovani').hidden && !await Dialog.potvrd('Rozlišení je nad doporučeným limitem a výpočet může selhat nebo zamrznout kartu. Pokračovat?')) return;
-  const typ = $('eTyp').value, m = +$('eMeritko').value;
-  pocitam = true; $('eVytvorit').disabled = true;
-  $('eVysledek').hidden = true; $('eStahnout').hidden = true;
-  poHotovo = r => {
-    $('eVytvorit').disabled = false;
-    if (urlVysledku) URL.revokeObjectURL(urlVysledku);
-    urlVysledku = URL.createObjectURL(r.blob);
-    const jm = 'panorama_' + new Date().toISOString().slice(0, 10) + (typ === 'image/png' ? '.png' : '.jpg');
-    $('eVysledek').innerHTML = `<img src="${urlVysledku}" alt="Hotové panorama"><div style="text-align:center;margin-top:6px">${r.W} × ${r.H} px · ${(r.blob.size / 1048576).toFixed(1)} MB</div>`;
-    $('eVysledek').hidden = false;
-    const a = $('eStahnout'); a.href = urlVysledku; a.download = jm; a.hidden = false;
-    $('stavText').textContent = 'Panorama je hotové.';
-  };
-  W().postMessage({ typ: 'finalni', nast: nastaveniProWorker(), meritko: m, format: typ, kvalita: +$('eKvalita').value, orez: N.orez ? nahled.orez : null });
-}
-async function posliSnimek(i) {
-  const s = snimky.find(x => x.id === aktivni[i]);
-  try {
-    const bmp = await createImageBitmap(s.soubor, { imageOrientation: 'from-image' });
-    worker.postMessage({ typ: 'snimek', bitmap: bmp }, [bmp]);
-  } catch (e) {
-    konecVypoctu(); $('eVytvorit').disabled = false;
-    Dialog.chyba('Fotku ' + s.nazev + ' se nepodařilo načíst v plném rozlišení (málo paměti?).');
-    worker.terminate(); worker = null;
-  }
-}
-
-/* ---------- ruční body ---------- */
-let bCeka = null;
-function naplnBody() {
-  const ak = snimky.filter(s => s.pouzit), opt = ak.map(s => `<option value="${s.id}">${esc(s.nazev)}</option>`).join('');
-  const a = $('bA').value, b = $('bB').value;
-  $('bA').innerHTML = opt; $('bB').innerHTML = opt;
-  if (ak.some(s => s.id == a)) $('bA').value = a;
-  else if (vybrany) $('bA').value = vybrany;
-  if (ak.some(s => s.id == b) && b !== $('bA').value) $('bB').value = b;
-  else { const d = ak.find(s => s.id != $('bA').value); if (d) $('bB').value = d.id; }
-  bCeka = null; kresliBody();
-}
-function zaznamBody(vytvor) {
-  const a = +$('bA').value, b = +$('bB').value;
-  let z = rucni.find(r => r.a === a && r.b === b);
-  if (!z && vytvor) rucni.push(z = { a, b, body: [] });
-  return z;
-}
-const BARVY = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6'];
-function kresliBody() {
-  const z = zaznamBody(false), body = z ? z.body : [];
-  [['bA', 'bPlA', 0], ['bB', 'bPlB', 2]].forEach(([sel, pl, o]) => {
-    const s = snimky.find(x => x.id === +$(sel).value), c = $(pl);
-    if (!s) return;
-    c.width = s.nahled.width; c.height = s.nahled.height;
-    const cx = c.getContext('2d'), k = s.nahled.width / s.plnaW, r = Math.max(4, c.width / 120);
-    cx.drawImage(s.nahled, 0, 0);
-    const kresli = (x, y, i, barva) => {
-      cx.beginPath(); cx.arc(x * k, y * k, r, 0, 7); cx.lineWidth = r / 2; cx.strokeStyle = '#000'; cx.stroke();
-      cx.strokeStyle = barva; cx.lineWidth = r / 3; cx.stroke();
-      cx.font = `bold ${Math.round(r * 2.6)}px system-ui,sans-serif`; cx.fillStyle = barva; cx.fillText(String(i), x * k + r * 1.4, y * k - r);
-    };
-    body.forEach((q, i) => kresli(q[o], q[o + 1], i + 1, BARVY[i % BARVY.length]));
-    if (bCeka && o === 0) kresli(bCeka[0], bCeka[1], body.length + 1, '#fff');
-  });
-  $('bStav').textContent = `${body.length} dvojic bodů` + (bCeka ? ' – teď klikněte na stejné místo vpravo.' : '.');
-}
-function klikBody(e, strana) {
-  const s = snimky.find(x => x.id === +$(strana ? 'bB' : 'bA').value), c = e.currentTarget, r = c.getBoundingClientRect();
-  if (!s || $('bA').value === $('bB').value) return Dialog.info('Vyberte dva různé snímky.');
-  const x = (e.clientX - r.left) / r.width * s.plnaW, y = (e.clientY - r.top) / r.height * s.plnaH;
-  if (!strana) bCeka = [x, y];
-  else if (bCeka) { zaznamBody(true).body.push([bCeka[0], bCeka[1], x, y]); bCeka = null; }
-  else return Dialog.info('Nejdřív klikněte do levého snímku.');
-  kresliBody();
-}
-$('bPlA').addEventListener('click', e => klikBody(e, 0));
-$('bPlB').addEventListener('click', e => klikBody(e, 1));
-$('bA').addEventListener('change', () => { bCeka = null; kresliBody(); });
-$('bB').addEventListener('change', () => { bCeka = null; kresliBody(); });
-$('bZpet').addEventListener('click', () => { const z = zaznamBody(false); if (bCeka) bCeka = null; else if (z) z.body.pop(); kresliBody(); });
-$('bSmaz').addEventListener('click', () => { const z = zaznamBody(false); if (z) z.body = []; bCeka = null; kresliBody(); });
-$('dlgBody').addEventListener('close', () => { if ($('dlgBody').returnValue === 'hotovo' && rucni.some(r => r.body.length)) sloz(); });
-
-/* ---------- ukázkové fotky: vykreslená krajina nafocená otáčející se kamerou ---------- */
-function kresliKrajinu(W, H) {
-  const c = document.createElement('canvas'); c.width = W; c.height = H;
-  const x = c.getContext('2d'), r = PANO.prng(42);
-  const nebe = x.createLinearGradient(0, 0, 0, H * 0.55);
-  nebe.addColorStop(0, '#3b6fb6'); nebe.addColorStop(1, '#cfe3f5');
-  x.fillStyle = nebe; x.fillRect(0, 0, W, H);
-  x.fillStyle = '#fff4c2'; x.beginPath(); x.arc(W * 0.62, H * 0.14, 38, 0, 7); x.fill();
-  for (let i = 0; i < 26; i++) {
-    const cx = r() * W, cy = H * (0.05 + r() * 0.25);
-    x.fillStyle = `rgba(255,255,255,${0.55 + r() * 0.35})`;
-    for (let k = 0; k < 6; k++) { x.beginPath(); x.ellipse(cx + (r() - 0.5) * 90, cy + (r() - 0.5) * 18, 30 + r() * 40, 12 + r() * 12, 0, 0, 7); x.fill(); }
-  }
-  const hrbet = (zaklad, amp, barva, hrub) => {
-    x.fillStyle = barva; x.beginPath(); x.moveTo(0, H);
-    let y = zaklad, v = 0;
-    for (let i = 0; i <= W; i += 6) { v = v * 0.85 + (r() - 0.5) * hrub; y = Math.max(zaklad - amp, Math.min(zaklad + amp * 0.3, y + v)); x.lineTo(i, y); }
-    x.lineTo(W, H); x.fill();
-  };
-  hrbet(H * 0.40, 110, '#8a9bb5', 9); hrbet(H * 0.47, 80, '#5d7a6a', 8); hrbet(H * 0.56, 45, '#4f7a3a', 6);
-  x.fillStyle = '#6f9a48'; x.fillRect(0, H * 0.62, W, H * 0.38);
-  x.fillStyle = '#5a8fc0'; x.beginPath(); x.ellipse(W * 0.3, H * 0.78, 260, 40, 0, 0, 7); x.fill();
-  for (let i = 0; i < 160; i++) {
-    const tx = r() * W, ty = H * (0.58 + r() * 0.36), s = 10 + r() * 26 * (ty / H);
-    x.fillStyle = '#5b3a1e'; x.fillRect(tx - s * 0.08, ty, s * 0.16, s * 0.4);
-    x.fillStyle = r() < 0.5 ? '#2f5d2a' : '#3e7a34'; x.beginPath(); x.moveTo(tx, ty - s * 1.4); x.lineTo(tx - s * 0.55, ty + s * 0.05); x.lineTo(tx + s * 0.55, ty + s * 0.05); x.fill();
-  }
-  for (let i = 0; i < 14; i++) {
-    const hx = 80 + r() * (W - 160), hy = H * (0.66 + r() * 0.2), s = 26 + r() * 22;
-    x.fillStyle = ['#e8dcc0', '#f2efe8', '#d9b48a'][i % 3]; x.fillRect(hx, hy - s * 0.7, s * 1.3, s * 0.7);
-    x.fillStyle = ['#a33b2b', '#6b4b3a', '#8a2f2f'][i % 3]; x.beginPath(); x.moveTo(hx - 4, hy - s * 0.7); x.lineTo(hx + s * 0.65, hy - s * 1.25); x.lineTo(hx + s * 1.3 + 4, hy - s * 0.7); x.fill();
-    x.fillStyle = '#33414f'; x.fillRect(hx + s * 0.2, hy - s * 0.5, s * 0.25, s * 0.25); x.fillRect(hx + s * 0.8, hy - s * 0.5, s * 0.25, s * 0.25);
-  }
-  x.fillStyle = '#ddd'; x.fillRect(W * 0.8, H * 0.5, 22, 120); x.beginPath(); x.moveTo(W * 0.8 - 4, H * 0.5); x.lineTo(W * 0.8 + 11, H * 0.5 - 60); x.lineTo(W * 0.8 + 26, H * 0.5); x.fillStyle = '#7a2f25'; x.fill();
-  return x.getImageData(0, 0, W, H);
-}
-async function ukazka() {
-  ukazPrubeh('Kreslím ukázkovou krajinu…', 0);
-  await new Promise(r => setTimeout(r, 30));
-  const tex = kresliKrajinu(3000, 700), t = { w: tex.width, h: tex.height, d: tex.data };
-  const f = 700, w = 900, h = 600, expozice = [1.0, 0.92, 1.08, 0.96, 1.04], soubory = [];
-  for (const i of [2, 0, 4, 1, 3]) {
-    ukazPrubeh('Fotím ukázkový snímek ' + (i + 1), i / 5);
-    const im = PANO.pohledZValce(t, f, 450 + i * 520, 350 + (i % 2 ? 6 : -4), w, h, expozice[i]);
-    const c = document.createElement('canvas'); c.width = w; c.height = h;
-    c.getContext('2d').putImageData(new ImageData(im.d, w, h), 0, 0);
-    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
-    soubory.push(new File([blob], `ukazka_${i + 1}.jpg`, { type: 'image/jpeg' }));
-  }
-  // ohnisko 700 px u 900×600 = ekvivalent 28 mm (dodáme místo EXIFu)
-  await pridejSoubory(soubory, { ohnisko35: PANO.ekv35(w, h, f) });
-}
-
-/* ---------- nabídky a události ---------- */
-function zavriNabidky() {
-  document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
-  document.querySelectorAll('[data-nabidka][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
-}
-document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('click', e => {
-  e.stopPropagation();
-  const n = $(b.dataset.nabidka), bylo = !n.hidden;
-  zavriNabidky();
-  if (bylo) return;
-  n.hidden = false; b.setAttribute('aria-expanded', 'true');
-  const r = b.getBoundingClientRect();
-  n.style.top = (r.bottom + 4) + 'px';
-  n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
-}));
-const PRIKAZY = {
-  pridat: () => $('soubory').click(),
-  ukazka,
-  odebratVse: async () => {
-    if (!snimky.length || !await Dialog.potvrd('Odebrat všechny fotky z panoramatu?')) return;
-    snimky = []; aktivni = []; upravy = {}; rucni = []; zarovnano = null; nahled = null; vybrany = null;
-    $('info').hidden = true; $('stavText').textContent = 'Žádné fotky.'; vykresliPas(); kresliNahled();
-  },
-  sloz,
-  export: () => { if (!nahled) return; moznostiMeritka(); $('eVysledek').hidden = true; $('eStahnout').hidden = true; $('dlgExport').showModal(); },
-  navod: () => $('dlgNavod').showModal(),
-  uprava: b => {
-    const [co, s] = b.dataset.u.split(',');
-    if (co === 'nula') { if (vybrany) { delete upravy[vybrany]; prekresli(); vykresliPas(); } return; }
-    uprav(co, +s);
-  },
-  nulaVse: () => { upravy = {}; rucni = []; prekresli(); vykresliPas(); Dialog.info('Ruční úpravy i body zrušeny. Pro body klikněte znovu na ▶ Složit.'); },
-  rucniBody: () => {
-    if (snimky.filter(s => s.pouzit).length < 2) return Dialog.info('Potřebujete aspoň dvě fotky.');
-    $('dlgBody').showModal(); naplnBody();
-  }
-};
-document.addEventListener('click', async e => {
-  const p = e.target.closest('[data-prikaz]');
-  if (p) {
-    const vNabidce = p.closest('.nabidka');
-    e.stopPropagation();
-    if (!vNabidce || p.dataset.prikaz !== 'uprava') zavriNabidky();
-    return PRIKAZY[p.dataset.prikaz](p);
-  }
-  if (!e.target.closest('.nabidka')) zavriNabidky();
-  const od = e.target.closest('[data-odeber]');
-  if (od) {
-    const id = +od.dataset.odeber;
-    snimky = snimky.filter(s => s.id !== id); delete upravy[id]; rucni = rucni.filter(r => r.a !== id && r.b !== id);
-    if (vybrany === id) vybrany = null;
-    vykresliPas(); return;
-  }
-  const k = e.target.closest('[data-karta]');
-  if (k && !e.target.closest('input,label')) { vybrany = +k.dataset.karta; vykresliPas(); kresliVrstvu(); }
-});
-$('pas').addEventListener('change', e => {
-  const c = e.target.closest('[data-pouzit]');
-  if (!c) return;
-  const s = snimky.find(x => x.id === +c.dataset.pouzit); s.pouzit = c.checked; vykresliPas();
-  $('stavText').textContent = 'Výběr snímků se změnil – klikněte na ▶ Složit.';
-});
-$('soubory').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) pridejSoubory(f); });
-document.addEventListener('keydown', e => {
-  if (!vybrany || !nahled || e.target.closest('input,select,textarea,dialog')) return;
-  const n = e.shiftKey ? 10 : 1, mapa = { ArrowLeft: ['dx', -1], ArrowRight: ['dx', 1], ArrowUp: ['dy', -1], ArrowDown: ['dy', 1], '[': ['uhel', -1], ']': ['uhel', 1] };
-  const a = mapa[e.key];
-  if (a) { e.preventDefault(); uprav(a[0], a[1], n / 5); }
-});
-// přetažení souborů
-['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); document.body.classList.add('tazeni'); } }));
-['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { if (t === 'dragleave' && e.relatedTarget) return; document.body.classList.remove('tazeni'); }));
-document.addEventListener('drop', e => { e.preventDefault(); const f = [...(e.dataTransfer && e.dataTransfer.files || [])]; if (f.length) pridejSoubory(f); });
-
-/* nastavení */
-const POLE = { nProjekce: 'projekce', nModel: 'model', nOhnisko: 'ohnisko', nNahled: 'nahled', nBody: 'body', nZisky: 'zisky', nVyrovnat: 'vyrovnat', nOrez: 'orez', nObrysy: 'obrysy', nPrechod: 'prechod' };
-for (const [id, kl] of Object.entries(POLE)) {
-  const el = $(id);
-  if (el.type === 'checkbox') el.checked = !!N[kl]; else el.value = N[kl];
-  el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
-    N[kl] = el.type === 'checkbox' ? el.checked : el.value; ulozN();
-    $('nPrechodTxt').textContent = N.prechod + ' %';
-    if (kl === 'obrysy') return kresliVrstvu();
-    if (['zisky', 'orez', 'prechod'].includes(kl)) return prekresli();
-    if (kl === 'ohnisko') vykresliPas();
-    if (zarovnano) $('stavText').textContent = 'Nastavení se změnilo – klikněte na ▶ Složit.';
-  });
-}
-$('nPrechodTxt').textContent = N.prechod + ' %';
-$('eMeritko').addEventListener('change', odhad);
-$('eVytvorit').addEventListener('click', exportuj);
-$('dlgExport').addEventListener('close', () => { if (urlVysledku) { URL.revokeObjectURL(urlVysledku); urlVysledku = null; } });
-addEventListener('resize', () => kresliVrstvu());
-vykresliPas();
-</script>
+<script src="panorama/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖨️ Stopy tiskárny (MIC)</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="mic/jadro.js"></script>
+<script src="mic/ui.js" defer></script>
+<style>
+body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction:column;font-family:var(--font, system-ui, sans-serif);color:var(--text);overflow:hidden}
+[hidden]{display:none !important}
+.lista{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none;z-index:50}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0 6px 0 0}
+.skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.skup-tl{display:flex;align-items:center;gap:2px}
+.vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover:not(:disabled){background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover:not(:disabled){background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+.tl.ik{min-width:30px;padding:4px 6px}
+select.tl,input.tl{padding:4px 6px}
+input.tl{width:64px}
+@media (max-width:1700px){.lista .skup:not(.zal) .txt{display:none}}
+@media (max-width:1100px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px}
+.nabidka .tl{text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0;width:100%}
+
+/* ---- rozbor ---- */
+.strana{flex:1;min-height:0}
+#strRozbor{display:grid;grid-template-columns:minmax(0,1fr) 390px}
+.prohlizec{position:relative;overflow:hidden;background:var(--bg-deep);min-height:0}
+#plocha{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
+#plocha.vyber{cursor:crosshair}
+#plocha.tahne{cursor:grabbing}
+.info{position:absolute;left:8px;bottom:8px;background:color-mix(in srgb,var(--bg-panel) 85%,transparent);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:.75rem;color:var(--text-muted);pointer-events:none;font-variant-numeric:tabular-nums}
+.uvod{position:absolute;inset:0;overflow:auto;padding:20px}
+.uvod-box{max-width:640px;margin:20px auto;padding:30px;border:2px dashed var(--border-strong);border-radius:14px;text-align:center;color:var(--text-muted);background:var(--bg-elevated)}
+.uvod.nad .uvod-box{border-color:var(--accent);background:var(--accent-soft)}
+.uvod h2{color:var(--text);margin:0 0 10px;font-size:1.25rem}
+.uvod p{margin:8px 0;line-height:1.5}
+.uvod .tlacitka{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.uvod .tl{font-size:.95rem;padding:8px 14px}
+.panel{background:var(--bg-elevated);border-left:1px solid var(--border);overflow-y:auto;padding:12px 14px 60px;min-height:0}
+@media (max-width:900px){
+  body{height:auto;overflow:auto}
+  #strRozbor{grid-template-columns:1fr}
+  .prohlizec{height:62vh}
+  .panel{border-left:0;border-top:1px solid var(--border);overflow:visible}
+}
+.karta{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px}
+.karta h3{margin:0 0 8px;font-size:.95rem;color:var(--accent)}
+.karta p,.karta li{font-size:.86rem;line-height:1.5;margin:4px 0;color:var(--text)}
+.karta ul{margin:4px 0;padding-left:18px}
+.verdikt{border-width:2px}
+.verdikt.nic{border-color:var(--ok)}
+.verdikt.nasel{border-color:var(--warn)}
+.verdikt.kod{border-color:var(--danger)}
+.velke{font-size:1.25rem;font-weight:700;margin:4px 0}
+table.udaje{width:100%;border-collapse:collapse;font-size:.85rem}
+table.udaje td,table.udaje th{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:top;text-align:left}
+table.udaje td:first-child{color:var(--text-muted)}
+.stitek{display:inline-block;padding:1px 8px;border-radius:10px;font-size:.75rem;font-weight:600;border:1px solid var(--border);white-space:nowrap}
+.stitek.vysoka{background:color-mix(in srgb,var(--danger) 18%,transparent);border-color:var(--danger)}
+.stitek.stredni{background:color-mix(in srgb,var(--warn) 18%,transparent);border-color:var(--warn)}
+.stitek.nizka{background:var(--bg-control)}
+.stitek.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);border-color:var(--ok)}
+.mala{font-size:.78rem;color:var(--text-muted)}
+canvas.matice{display:block;max-width:100%;margin:8px auto;border-radius:6px}
+#prehled{display:block;width:100%;cursor:pointer;border-radius:6px;border:1px solid var(--border);touch-action:none}
+.stav{font-size:.82rem;color:var(--text-muted);padding:2px 0 8px;word-break:break-word}
+progress{width:100%;height:8px;accent-color:var(--accent)}
+.radek{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.klikaci tr{cursor:pointer}
+.klikaci tr:hover td{background:var(--bg-hover)}
+
+/* ---- ruční dekodér ---- */
+.clanek{max-width:900px;margin:0 auto;padding:20px 18px 80px;line-height:1.6}
+.posuvna{overflow-y:auto}
+.clanek h2{color:var(--accent);margin:26px 0 8px;font-size:1.2rem}
+.clanek h2:first-child{margin-top:4px}
+.clanek p,.clanek li{font-size:.95rem}
+.clanek .box{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:12px 0}
+.clanek table{border-collapse:collapse;width:100%;font-size:.88rem;margin:8px 0}
+.clanek td,.clanek th{border:1px solid var(--border);padding:5px 8px;text-align:left;vertical-align:top}
+.clanek th{background:var(--bg-elevated)}
+.clanek a{color:var(--accent)}
+.obal-tab{overflow-x:auto}
+.mrizka-dek{display:grid;grid-template-columns:28px repeat(15,minmax(22px,34px)) 30px;gap:3px;justify-content:center;margin:10px 0;user-select:none}
+.mrizka-dek .hl{font-size:.72rem;color:var(--text-muted);text-align:center;align-self:center}
+.mrizka-dek button{aspect-ratio:1;border:1px solid var(--border);background:var(--bg-elevated);border-radius:5px;cursor:pointer;padding:0;position:relative}
+.mrizka-dek button.par{background:color-mix(in srgb,var(--bg-control) 70%,var(--bg-elevated))}
+.mrizka-dek button.je::after{content:'';position:absolute;inset:22%;border-radius:50%;background:#e0b400;box-shadow:0 0 0 1px #9a7b00}
+.mrizka-dek button.spatne{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 14%,var(--bg-elevated))}
+.mrizka-dek button.navrh{outline:2px dashed var(--danger);outline-offset:1px}
+.mrizka-dek .stav-p{font-size:.8rem;text-align:center;align-self:center}
+.dek-sloupce{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.dek-sloupce{grid-template-columns:1fr}.mrizka-dek{grid-template-columns:20px repeat(15,minmax(16px,1fr)) 22px;gap:2px}}
+.formular{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:.9rem}
+.formular input{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font:inherit;min-width:0}
+.porov-drop{border:2px dashed var(--border-strong);border-radius:12px;padding:16px;text-align:center;color:var(--text-muted);margin:10px 0}
+.porov-drop.nad{border-color:var(--accent);background:var(--accent-soft)}
+td.nahl img{width:56px;height:auto;border-radius:3px;border:1px solid var(--border);display:block}
+.skupina{display:inline-block;min-width:22px;text-align:center;border-radius:6px;font-weight:700;padding:0 6px;color:#111}
+dialog{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:12px;max-width:min(640px,94vw);padding:18px 22px;margin:auto;box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 8px;color:var(--accent);font-size:1.15rem}
+dialog li,dialog p{font-size:.9rem;line-height:1.5}
+kbd{border:1px solid var(--border);border-radius:4px;padding:0 5px;font-size:.8rem;background:var(--bg-control)}
+#protokol{display:none}
+@media print{
+  body{height:auto;overflow:visible;background:#fff;color:#000}
+  body > *:not(#protokol){display:none !important}
+  #protokol{display:block}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🖨️ Stopy tiskárny (MIC)</h1>
+  <div class="skup zal" role="group" aria-label="Stránka"><span class="skup-nazev" aria-hidden="true">Stránka</span><div class="skup-tl">
+    <button class="tl" data-zalozka="Rozbor" aria-pressed="true" title="Rozbor skenu">🔍<span class="txt"> Rozbor</span></button>
+    <button class="tl" data-zalozka="Dekoder" aria-pressed="false" title="Ruční dekodér a kodér mřížky 15 × 8">🧮<span class="txt"> Dekodér</span></button>
+    <button class="tl" data-zalozka="Porovnani" aria-pressed="false" title="Porovnat víc výtisků – pocházejí ze stejné tiskárny?">🗂️<span class="txt"> Porovnání</span></button>
+    <button class="tl" data-zalozka="Co" aria-pressed="false" title="Co je Machine Identification Code">📖<span class="txt"> Co je MIC</span></button>
+    <button class="tl" data-zalozka="Ochrana" aria-pressed="false" title="Jak se tečkám bránit">🛡️<span class="txt"> Ochrana</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl hlavni" id="btnOtevrit" title="Otevřít sken nebo fotku (PNG, JPEG, WebP, PDF) – Ctrl+O">📂<span class="txt"> Otevřít</span></button>
+    <button class="tl ik" id="btnFoto" title="Vyfotit stránku fotoaparátem" aria-label="Vyfotit">📷</button>
+    <button class="tl" data-nabidka="nabUkazka" title="Vyzkoušet na vygenerovaném vzorku">🧪<span class="txt"> Ukázka</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Zobrazit"><span class="skup-nazev" aria-hidden="true">Zobrazit</span><div class="skup-tl">
+    <select id="pohled" class="tl" aria-label="Pohled" title="Pohled na obrázek (V přepíná)">
+      <option value="zvyrazneno">Zvýrazněné tečky</option>
+      <option value="original">Originál</option>
+      <option value="modry">Modrý kanál</option>
+      <option value="mapa">Mapa žlutosti</option>
+      <option value="vycisteno">Bez teček</option>
+    </select>
+    <button class="tl ik" id="btnOddalit" title="Oddálit (−)" aria-label="Oddálit">−</button>
+    <button class="tl ik" id="btnCely" title="Celý obrázek (0)" aria-label="Celý obrázek">⤢</button>
+    <button class="tl ik" id="btn11" title="Skutečná velikost 1:1 (1)" aria-label="Skutečná velikost">1:1</button>
+    <button class="tl ik" id="btnPriblizit" title="Přiblížit (+)" aria-label="Přiblížit">+</button>
+    <button class="tl ik" id="btnZnacky" aria-pressed="true" title="Kroužky kolem teček a rámečky kódu (M)" aria-label="Značky">◎</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rozbor"><span class="skup-nazev" aria-hidden="true">Rozbor</span><div class="skup-tl">
+    <label class="mala" for="dpi">DPI</label><input id="dpi" class="tl" type="number" min="72" max="4800" step="1" value="600" title="Rozlišení skenu – převod na milimetry a očekávaná velikost teček">
+    <select id="citlivost" class="tl" aria-label="Citlivost" title="Citlivost hledání teček">
+      <option value="7">Citlivost nízká</option><option value="5" selected>Citlivost běžná</option><option value="3.5">Citlivost vysoká</option>
+    </select>
+    <button class="tl" id="btnOblast" aria-pressed="false" title="Vybrat oblast rozboru tažením (nebo Shift + tažení kdykoli)">▭<span class="txt"> Oblast</span></button>
+    <button class="tl ik" id="btnCelaStr" title="Rozebrat celou stránku" aria-label="Celá stránka" disabled>⛶</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výsledek"><span class="skup-nazev" aria-hidden="true">Výsledek</span><div class="skup-tl">
+    <button class="tl" id="btnProtokol" disabled title="Protokol o rozboru k tisku nebo do PDF (Ctrl+P)">🧾<span class="txt"> Protokol</span></button>
+    <button class="tl" data-nabidka="nabExport" id="btnExport" disabled title="Uložit výsledky">⬇<span class="txt"> Export</span> ▾</button>
+  </div></div>
+  <span class="vpravo"><button class="tl ik" id="btnNapoveda" title="Nápověda a klávesy (F1)" aria-label="Nápověda">❓</button></span>
+</header>
+<div id="nabUkazka" class="nabidka" hidden>
+  <button class="tl" data-ukazka="xerox">🟡 Vzorek typu Xerox DocuColor</button>
+  <button class="tl" data-ukazka="otoceny">🔄 Tentýž vzorek na otočeném listu</button>
+  <button class="tl" data-ukazka="jiny">🔷 Vzorek jiného výrobce (neznámé kódování)</button>
+</div>
+<div id="nabExport" class="nabidka" hidden>
+  <button class="tl" data-export="cisty">🧹 Obrázek bez teček (PNG)</button>
+  <button class="tl" data-export="pohled">🖼️ Aktuální pohled se značkami (PNG)</button>
+  <hr>
+  <button class="tl" data-export="protokol">🧾 Protokol (HTML)</button>
+  <button class="tl" data-export="json">🗃️ Data rozboru (JSON)</button>
+  <button class="tl" data-export="zprava">📋 Zpráva do schránky</button>
+</div>
+<input type="file" id="soubor" accept="image/*,application/pdf,.pdf" hidden>
+<input type="file" id="fotak" accept="image/*" capture="environment" hidden>
+<input type="file" id="souborPorov" accept="image/*,application/pdf,.pdf" multiple hidden>
+
+<main id="strRozbor" class="strana">
+  <section class="prohlizec" id="prohlizec">
+    <canvas id="plocha" hidden></canvas>
+    <div class="info" id="info" hidden></div>
+    <div class="uvod" id="uvod"><div class="uvod-box">
+      <h2>Co prozradí vytištěná stránka?</h2>
+      <p>Barevné laserové tiskárny a kopírky na každou stránku přidávají <b>skoro neviditelné žluté tečky</b> – Machine Identification Code. Mohou nést sériové číslo tiskárny a čas tisku.</p>
+      <p>Naskenujte stránku <b>barevně, 600 dpi, do PNG</b> (bez „vylepšování") a přetáhněte ji sem. Fotka z mobilu většinou nestačí – tečky mají kolem 0,1 mm.</p>
+      <div class="tlacitka">
+        <button class="tl hlavni" id="btnOtevrit2">📂 Otevřít sken</button>
+        <button class="tl" id="btnUkazka2">🧪 Vyzkoušet na ukázce</button>
+      </div>
+      <p class="mala">Vše se počítá jen ve vašem prohlížeči, nic se nikam neodesílá.</p>
+    </div></div>
+  </section>
+  <aside class="panel" id="panel">
+    <div class="stav" id="stav">Zatím nic nenačteno.</div>
+    <progress id="prubeh" max="1" value="0" hidden></progress>
+    <div id="vysledky"></div>
+    <div class="karta" id="kartaInspektor" hidden>
+      <h3>Inspektor výskytu</h3>
+      <canvas class="matice" id="inspMatice"></canvas>
+      <p class="mala" id="inspPopis"></p>
+      <div class="radek">
+        <button class="tl" id="inspPred" title="Předchozí výskyt">◀</button>
+        <span class="mala" id="inspPoradi"></span>
+        <button class="tl" id="inspDalsi" title="Další výskyt">▶</button>
+        <button class="tl" id="inspDoDek" title="Otevřít bity v ručním dekodéru">🧮 Do dekodéru</button>
+      </div>
+    </div>
+    <div class="karta" id="kartaPrehled" hidden>
+      <h3>Přehled stránky</h3>
+      <canvas id="prehled"></canvas>
+      <p class="mala">Modře výhled, červeně oblast rozboru. Kliknutím nebo tažením se posunete.</p>
+    </div>
+    <div class="karta">
+      <h3>Jak stránku nasnímat</h3>
+      <ul>
+        <li><b>Skener:</b> barevně, 600 dpi (minimum 300), formát PNG nebo TIFF→PNG. JPEG žlutou barvu rozmaže.</li>
+        <li>Vypněte automatické odstranění pozadí, zostření a „čištění dokumentu" – tečky smaže.</li>
+        <li>Nejlépe je vidět na <b>prázdném bílém papíře</b> (okraje, mezery mezi odstavci). Pod černým tiskem tečky zaniknou.</li>
+        <li><b>Mobil:</b> jen s makro objektivem nebo lupou, rovně, bez blesku, ideálně pod modrým světlem (žlutá pak ztmavne).</li>
+        <li>Tečky tisknou jen <b>barevné laserové</b> tiskárny a kopírky. Černobílá laserovka ani inkoustovka je obvykle nemá.</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+
+<section id="strDekoder" class="strana posuvna" hidden><div class="clanek">
+  <h2>Ruční dekodér a kodér mřížky Xerox DocuColor</h2>
+  <p>Klikáním zapínejte tečky podle toho, co vidíte pod lupou nebo na skenu. Horní řada a levý sloupec jsou paritní; každý sloupec i řada (kromě horní) musí mít <b>lichý</b> počet teček. Vadné řady a sloupce se zbarví, jediná chybějící tečka se navrhne čárkovaně.</p>
+  <div class="obal-tab"><div class="mrizka-dek" id="mrizkaDek"></div></div>
+  <div class="radek" style="justify-content:center">
+    <button class="tl" id="dekVymazat">🗑 Vymazat</button>
+    <button class="tl" id="dekOpravit" disabled title="Doplnit / odebrat tečku na místě, kde se kříží vadná řada a sloupec">🩹 Opravit podle parity</button>
+    <button class="tl" id="dekRotace" title="Otočit mřížku o 180°">🔄 Otočit 180°</button>
+    <button class="tl" id="dekZrcadlo" title="Zrcadlit zleva doprava">↔ Zrcadlit</button>
+    <button class="tl" id="dekZRozboru" title="Převzít nejlepší kód z rozboru">⬅ Z rozboru</button>
+  </div>
+  <div class="dek-sloupce">
+    <div class="karta"><h3>Dekódováno</h3><table class="udaje" id="dekVysledek"></table></div>
+    <div class="karta"><h3>Zakódovat</h3>
+      <div class="formular">
+        <label for="kodCas">Datum a čas</label><input type="datetime-local" id="kodCas">
+        <label for="kodSerie">Sériové číslo</label><input type="text" id="kodSerie" inputmode="numeric" maxlength="8" placeholder="až 8 číslic">
+        <label for="kodS15">Sloupec 15</label><input type="number" id="kodS15" min="0" max="127" value="0">
+      </div>
+      <div class="radek"><button class="tl hlavni" id="kodVytvor">⬆ Zakódovat do mřížky</button></div>
+      <p class="mala">Kodér slouží k výuce a ověření dekodéru – skutečné tiskárny mohou mít v nevyužitých sloupcích jiné hodnoty.</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="strPorovnani" class="strana posuvna" hidden><div class="clanek">
+  <h2>Porovnání výtisků</h2>
+  <p>Přidejte skeny několika výtisků. Každý se rozebere celý a tabulka ukáže, které pocházejí ze <b>stejné tiskárny</b> – podle sériového čísla (vzor Xerox) nebo podle shody opakující se dlaždice teček (ostatní výrobci).</p>
+  <div class="porov-drop" id="porovDrop">
+    <p>Přetáhněte sem soubory, nebo</p>
+    <div class="radek" style="justify-content:center">
+      <button class="tl hlavni" id="porovPridat">➕ Přidat soubory</button>
+      <button class="tl" id="porovAktualni" disabled>➕ Přidat rozebíraný dokument</button>
+      <button class="tl" id="porovVymazat" disabled>🗑 Vymazat seznam</button>
+    </div>
+  </div>
+  <div class="stav" id="porovStav"></div>
+  <progress id="porovPrubeh" max="1" value="0" hidden></progress>
+  <div class="obal-tab"><table class="udaje klikaci" id="porovTabulka"></table></div>
+  <div id="porovMatice"></div>
+  <p class="mala">U jiných vzorů než Xerox může dlaždice obsahovat i čas tisku – dva výtisky téže tiskárny se pak liší v malé části teček. Shoda 70–90 % proto znamená „pravděpodobně stejná tiskárna". Kliknutím na řádek dokument otevřete v Rozboru.</p>
+</div></section>
+
+<section id="strCo" class="strana posuvna" hidden><div class="clanek">
+  <h2>Machine Identification Code – žluté tečky na výtiscích</h2>
+  <p><b>MIC</b> (také <i>yellow dots</i>, <i>tracking dots</i>, tiskárenská steganografie) je vzor drobných žlutých teček, který barevné laserové tiskárny a kopírky přidávají na každou vytištěnou stránku. Tečka má průměr zhruba desetinu milimetru a žlutá na bílém papíře je pro oko téměř neviditelná. Ukáže se pod lupou s modrým světlem nebo v modrém kanálu barevného skenu – právě to dělá tahle stránka.</p>
+  <div class="box">
+    <b>Co tečky nesou:</b> typicky <b>sériové číslo tiskárny</b> (celé nebo jeho část) a <b>datum a čas tisku</b>. Vzor se po stránce opakuje mnohokrát, takže stačí i útržek papíru.
+  </div>
+  <h2>Proč to existuje</h2>
+  <p>S nástupem kvalitních barevných kopírek v 80. a 90. letech se výrobci (podle dostupných zpráv nejdřív Xerox a Canon) dohodli s vládními úřady, že výtisky půjdou dohledat ke konkrétnímu přístroji. Cílem byl boj s paděláním bankovek. Žádný zveřejněný zákon to nenařizuje – jde o neveřejnou dohodu výrobců, o které se uživatelé z návodů nedozvědí.</p>
+  <h2>Jak to vyšlo najevo</h2>
+  <div class="obal-tab"><table>
+    <tr><th>Rok</th><th>Událost</th></tr>
+    <tr><td>2004</td><td>Časopis PC World popsal, že nizozemská policie dohledala padělatele podle kódu z barevné tiskárny.</td></tr>
+    <tr><td>2005</td><td>Electronic Frontier Foundation (EFF) rozluštila kódování tiskáren Xerox DocuColor a začala vést seznam tiskáren s tečkami.</td></tr>
+    <tr><td>2008</td><td>Otázkou souladu s ochranou soukromí se zabývali poslanci Evropského parlamentu.</td></tr>
+    <tr><td>2017</td><td>Novináři zveřejnili sken uniklého dokumentu NSA. Z teček na něm šlo vyčíst čas tisku (9. 5. 2017 v 6:20) a sériové číslo tiskárny; autorka úniku Reality Winner byla brzy zatčena. EFF tehdy dodala, že nejspíš všechny současné barevné laserové tiskárny tisknou nějaký forenzní kód.</td></tr>
+    <tr><td>2018</td><td>Tým z TU Dresden vydal nástroj DEDA, který popsal čtyři základní typy vzorů a umí je i znečitelnit.</td></tr>
+  </table></div>
+  <h2>Kódování Xerox DocuColor (podle EFF)</h2>
+  <p>Jediné veřejně a podrobně popsané kódování. Mřížka má <b>15 sloupců × 8 řad</b>. Horní řada a levý sloupec jsou paritní (každý sloupec i každá řada kromě horní má lichý počet teček). Každý sloupec je jedno číslo: řady shora mají váhu 64, 32, 16, 8, 4, 2, 1. Vyzkoušet si ho můžete v záložce 🧮 Dekodér.</p>
+  <div class="obal-tab"><table>
+    <tr><th>Sloupec</th><th>Význam</th></tr>
+    <tr><td>1</td><td>parita řad</td></tr>
+    <tr><td>2</td><td>minuta</td></tr>
+    <tr><td>3, 4, 9</td><td>nevyužité</td></tr>
+    <tr><td>5</td><td>hodina (možná UTC, hodiny tiskárny nemusí jít přesně)</td></tr>
+    <tr><td>6 / 7 / 8</td><td>den / měsíc / rok bez století</td></tr>
+    <tr><td>10</td><td>oddělovač (obvykle samé jedničky)</td></tr>
+    <tr><td>11–14</td><td>sériové číslo, po dvou číslicích (sloupec 14 = první dvojice)</td></tr>
+    <tr><td>15</td><td>neznámé, u dané tiskárny stálé</td></tr>
+  </table></div>
+  <p>Ostatní výrobci používají jiné mřížky (jiná rozteč, velikost, tvar opakování) a jejich kódování veřejně popsané není. Tahle stránka u nich ukáže, že tečky jsou, jak hustá je mřížka a jak vypadá opakující se dlaždice – ale číslo z ní nevyčte. Dva výtisky ale umí porovnat (záložka 🗂️ Porovnání).</p>
+  <h2>Jak rozbor funguje</h2>
+  <ol>
+    <li>Žlutost pixelu = průměr červené a zelené minus modrá, odečte se místní pozadí papíru. Skvrny nad prahem šumu jsou kandidáti na tečky; velké žluté plochy (logo, barevný tisk) se vyřadí.</li>
+    <li>Natočení skenu se najde tak, aby průměty teček na osy tvořily co nejostřejší řady a sloupce. Rozteč mřížky dá koherence vzdáleností mezi tečkami.</li>
+    <li>Tečky ležící na společné mřížce se spojí do skupin. V každé se hledají okna 15 × 8 se správnou paritou ve všech 8 orientacích; nejvýš 2 chybějící tečky se smí doplnit, ale jen tam, kde je v obraze tmavý tisk.</li>
+    <li>Každý přečtený kód se přiloží na všechny skupiny – jistota roste s počtem výskytů, které vysvětlí bez rozporu.</li>
+    <li>U ostatních vzorů se hledá nejmenší perioda opakování a dlaždice se složí většinovým hlasováním ze všech opakování.</li>
+  </ol>
+  <h2>Co tečky neprozradí</h2>
+  <ul>
+    <li>Jméno majitele – sériové číslo spojí s kupujícím jen výrobce, prodejce nebo servis (záruční list, registrace).</li>
+    <li>Jestli je tisk z černobílé laserové nebo inkoustové tiskárny: ty žluté tečky obvykle nemají, mohou ale mít jiné stopy (pruhování válce, mechanické otisky, rozptyl inkoustu).</li>
+    <li>Absence nalezených teček neznamená, že stránka nic nekóduje – snímek mohl být málo ostrý, JPEG žlutou smazal, nebo tiskárna používá neznámý vzor.</li>
+  </ul>
+  <p class="mala">Zdroje: EFF – DocuColor Tracking Dot Decoding Guide a seznam tiskáren (2005–2017); Richter, Escher, Schönfeld, Strufe: Forensic Analysis and Anonymisation of Printed Documents (ACM IH&amp;MMSec 2018). Údaje k 11/2026.</p>
+</div></section>
+
+<section id="strOchrana" class="strana posuvna" hidden><div class="clanek">
+  <h2>Jak se tečkám bránit</h2>
+  <div class="box">Tečky jsou běžná součást výtisku. Ochrana dává smysl, pokud zveřejňujete citlivé dokumenty (oznamovatelé, novináři, anonymní dopisy) nebo prostě nechcete, aby šlo výtisk spojit s vaší tiskárnou.</div>
+  <h2>Když sdílíte sken nebo fotku</h2>
+  <ul>
+    <li><b>Neposílejte originální barevný sken.</b> Převod na čistě černobílý obrázek (1 bit) nebo do odstínů šedi z červeného kanálu žluté tečky odstraní.</li>
+    <li>Export <b>🧹 Obrázek bez teček</b> neutralizuje žlutou v okolí každé tečky. Výsledek si znovu otevřete a ověřte rozborem, že nic nezbylo.</li>
+    <li>Nezapomeňte na <b>metadata</b> souboru (EXIF, PDF – autor, software, čas). Pomůže stránka EXIF prohlížeč nebo Anonymizace fotek.</li>
+    <li>Nejbezpečnější je dokument <b>přepsat</b> – sken nese i další stopy (vady skeneru, papír, rukopisné poznámky).</li>
+  </ul>
+  <h2>Když tisknete</h2>
+  <ul>
+    <li>Tiskněte na <b>černobílé laserové</b> tiskárně – nemá žlutý toner. Ani ta ale není beze stop.</li>
+    <li>Nástroj <b>DEDA</b> (TU Dresden, svobodný software GPL, github.com/dfd-tud/deda) umí vytvořit masku pro konkrétní tiskárnu: přidá tečky na všechna možná místa, takže kód přestane být čitelný.</li>
+    <li>Tisk z cizí tiskárny (knihovna, copy centrum) přesouvá stopu jinam, nemaže ji – a kamery i platby kartou zůstávají.</li>
+  </ul>
+  <h2>Ověřte si vlastní tiskárnu</h2>
+  <ol>
+    <li>Vytiskněte prázdnou stránku nebo stránku s trochou barevného textu (některé tiskárny tisknou tečky jen při barevném tisku).</li>
+    <li>Naskenujte ji barevně v 600 dpi do PNG.</li>
+    <li>Otevřete ji v záložce 🔍 Rozbor. Pohled „Zvýrazněné tečky" ukáže mřížku i tam, kde ji rozbor nedokáže přečíst.</li>
+  </ol>
+</div></section>
+
+<dialog id="napoveda">
+  <h2>Ovládání</h2>
+  <ul>
+    <li><b>Posun:</b> tažení myší / prstem, šipky. <b>Zoom:</b> kolečko myši, dva prsty, <kbd>+</kbd> <kbd>−</kbd>, <kbd>0</kbd> celý obrázek, <kbd>1</kbd> skutečná velikost, dvojklik.</li>
+    <li><b>Oblast rozboru:</b> tlačítko ▭ Oblast nebo <kbd>Shift</kbd> + tažení. ⛶ vrátí celou stránku.</li>
+    <li><b>Klik na rámeček kódu</b> otevře inspektor výskytu (plná čára = přečteno přesně, čárkovaně = doplněno podle parity).</li>
+    <li><kbd>V</kbd> přepíná pohledy, <kbd>M</kbd> značky, <kbd>Ctrl</kbd>+<kbd>O</kbd> otevřít, <kbd>Ctrl</kbd>+<kbd>P</kbd> protokol, <kbd>F1</kbd> nápověda.</li>
+  </ul>
+  <h2>Pohledy</h2>
+  <ul>
+    <li><b>Zvýrazněné tečky</b> – jen žlutost nad okolím, tečky jsou tmavé.</li>
+    <li><b>Modrý kanál</b> – jako pod modrým světlem: žlutá ztmavne, nic se nepočítá.</li>
+    <li><b>Mapa žlutosti</b> – síla žluté barevně (slabá = žlutá, silná = červená).</li>
+    <li><b>Bez teček</b> – náhled exportu s potlačenou žlutou.</li>
+  </ul>
+  <h2>Jistota</h2>
+  <p><b>Vysoká</b> = kód bez rozporu sedí na 3 a více výskytech vzoru. <b>Střední</b> = 2 výskyty nebo jedno přesné čtení. <b>Nízká</b> = jen jedno doplněné okno (nezobrazuje se jako výsledek).</p>
+  <div class="radek" style="justify-content:flex-end"><button class="tl hlavni" id="napovedaZavrit">Zavřít</button></div>
+</dialog>
+
+<div id="protokol"></div>
+</body>
+</html>
