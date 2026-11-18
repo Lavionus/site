@@ -145,6 +145,7 @@
     if (v.od === v.do) ch.push('Vazba nemůže vést sama na sebe.');
     if (v.popis !== undefined && (typeof v.popis !== 'string' || v.popis.length > 2000)) ch.push('Vazba – neplatný popis.');
     if (v.kdy !== undefined && (typeof v.kdy !== 'string' || !RE_CAS.test(v.kdy))) ch.push('Vazba – neplatný čas.');
+    if (v.sila !== undefined && !(Number.isInteger(v.sila) && v.sila >= 1 && v.sila <= 5)) ch.push('Vazba – síla musí být celé číslo 1–5.');
     for (const k of ['vytvoreno', 'upraveno', 'smazano']) if (v[k] !== undefined && (typeof v[k] !== 'string' || !RE_CAS.test(v[k]))) ch.push('Vazba – neplatné datum.');
     return ch;
   }
@@ -208,11 +209,15 @@
           if (s !== 'pripady') os.createIndex('pripad', 'pripad');
         }
       };
-      q.onsuccess = () => { const d = q.result; d.onversionchange = () => { d.close(); db = null; }; ok(d); };
+      // onclose = prohlížeč spojení zavřel sám (vymazaná data webu) – příště se otevře znovu
+      q.onsuccess = () => { const d = q.result; d.onversionchange = () => { d.close(); db = null; }; d.onclose = () => { db = null; }; ok(d); };
       q.onerror = () => ko(chybaIdb(q.error));
       q.onblocked = () => ko(chybaIdb(new Error('databázi drží otevřenou jiná záložka')));
     }).catch(e => { db = null; throw e; }));
     const pozadavek = q => new Promise((ok, ko) => { q.onsuccess = () => ok(q.result); q.onerror = () => ko(q.error); });
+    const chybaZapisu = e => e && e.name === 'QuotaExceededError'
+      ? new ChybaSpisu('Úložiště prohlížeče je plné – záznam se neuložil. Uvolněte místo (⚙️ Nastavení, velké fotky, staré případy po exportu balíčku).')
+      : (e || new Error('zápis přerušen'));
     return {
       async cti(s, id) { const d = await otevri(); const r = await pozadavek(d.transaction(s).objectStore(s).get(id)); return r === undefined ? null : r; },
       async vse(s, pid) {
@@ -223,8 +228,12 @@
         if (!ops.length) return;
         const d = await otevri();
         const tx = d.transaction([...new Set(ops.map(o => o.store))], 'readwrite');
-        for (const o of ops) { const os = tx.objectStore(o.store); if (o.smaz !== undefined) os.delete(o.smaz); else os.put(o.rec); }
-        await new Promise((ok, ko) => { tx.oncomplete = ok; tx.onerror = () => ko(tx.error); tx.onabort = () => ko(tx.error || new Error('zápis přerušen')); });
+        const hotovo = new Promise((ok, ko) => { tx.oncomplete = ok; tx.onerror = () => ko(chybaZapisu(tx.error)); tx.onabort = () => ko(chybaZapisu(tx.error)); });
+        hotovo.catch(() => {});
+        // chyba při vkládání (např. DataCloneError) nesmí nechat transakci dokončit jen zčásti (záznam bez historie)
+        try { for (const o of ops) { const os = tx.objectStore(o.store); if (o.smaz !== undefined) os.delete(o.smaz); else os.put(o.rec); } }
+        catch (e) { try { tx.abort(); } catch (x) { /* už ukončená */ } throw e; }
+        await hotovo;
       },
       async smazPripad(pid) {
         const d = await otevri();
@@ -289,14 +298,17 @@
     return h;
   }
   // {pole: [před, po]} – název a jednotlivá pole dat (u vazby typ, popis, kdy)
-  function rozdil(stara, nova, klice) {
+  // souhrn = true: u polí s objektem/polem jen null („změněno“, bez obsahu) – rozložení nástěnky apod. nenafukuje historii
+  function rozdil(stara, nova, klice, souhrn) {
     const z = {};
     // klice = přímá pole (případ); jinak název + jednotlivá pole dat entity
     const hodnota = (o, k) => !o ? undefined : (klice || k === 'nazev') ? o[k] : (o.data || {})[k];
     const vsechny = klice || ['nazev', ...new Set([...Object.keys((stara && stara.data) || {}), ...Object.keys(nova.data || {})])];
     for (const k of vsechny) {
       const a = hodnota(stara, k), b = hodnota(nova, k);
-      if (JSON.stringify(a) !== JSON.stringify(b)) z[k] = [a === undefined ? null : a, b === undefined ? null : b];
+      if (JSON.stringify(a) === JSON.stringify(b)) continue;
+      const slozite = x => x !== null && typeof x === 'object';
+      z[k] = souhrn && (slozite(a) || slozite(b)) ? null : [a === undefined ? null : a, b === undefined ? null : b];
     }
     return z;
   }
@@ -360,11 +372,14 @@
       : (radici[a.typ] ? radici[a.typ](a, b) : 0) || a.nazev.localeCompare(b.nazev, 'cs'));
   }
   // založí nebo upraví entitu; vrátí uloženou (beze změny vrátí původní a nic nezapíše)
+  // o = { nastroj, historie: 'souhrn' } – souhrn: změněná složená pole se do historie zapíší bez obsahu (viz rozdil)
   async function uloz(vstup, o = {}) {
     if (!jeObjekt(vstup)) throw new ChybaSpisu('Neplatný záznam.');
     const stara = vstup.id ? await entita(vstup.id) : null;
     const pripadId = pid(vstup.pripad || (stara && stara.pripad));
     if (stara && stara.pripad !== pripadId) throw new ChybaSpisu('Záznam patří k jinému případu.');
+    if (stara && vstup.typ && vstup.typ !== stara.typ) throw new ChybaSpisu('Záznam s tímto id je jiného typu.');
+    if (stara && stara.smazano && !o.vcetneSmazanych) throw new ChybaSpisu('Záznam je smazaný – nejdřív ho obnov.');
     if (!(await ad().cti('pripady', pripadId))) throw new ChybaSpisu('Případ neexistuje.');
     const ted = cas();
     const e = { id: vstup.id || noveId(vstup.typ || 'e'), pripad: pripadId, typ: stara ? stara.typ : vstup.typ, nazev: String(vstup.nazev || '').trim(),
@@ -372,7 +387,7 @@
     if (stara && stara.smazano) e.smazano = stara.smazano;
     const ch = validuj(e);
     if (ch.length) throw new ChybaSpisu(ch.join(' '), ch);
-    const zmeny = rozdil(stara, e);
+    const zmeny = rozdil(stara, e, null, o.historie === 'souhrn');
     if (stara && !Object.keys(zmeny).length) return stara;
     const akce = stara ? 'zmena' : 'zalozeno';
     await ad().zapis([{ store: 'entity', rec: e }, { store: 'historie', rec: zaznamHistorie(pripadId, e.id, akce, zmeny, o.nastroj, ted, stara && stara.upraveno) }]);
@@ -406,10 +421,37 @@
     const v = { id: o.id || noveId('v'), pripad: a.pripad, od, do: doId, typ: String(typ || '').trim(), vytvoreno: ted, upraveno: ted };
     if (o.popis && String(o.popis).trim()) v.popis = String(o.popis).trim();
     if (o.kdy) v.kdy = o.kdy;
+    if (o.sila !== undefined && o.sila !== null) v.sila = o.sila;
     const ch = validujVazbu(v);
     if (ch.length) throw new ChybaSpisu(ch.join(' '), ch);
     await ad().zapis([{ store: 'vazby', rec: v }, { store: 'historie', rec: zaznamHistorie(v.pripad, v.id, 'zalozeno', { typ: [null, v.typ], od: [null, od], do: [null, doId] }, o.nastroj, ted) }]);
     oznam({ druh: 'vazba', akce: 'zalozeno', id: v.id, pripad: v.pripad, od, do: doId });
+    return v;
+  }
+  // úprava existující vazby (S2): zmeny ⊂ {od, do, typ, popis, kdy, sila}; prázdná hodnota pole odebere
+  // (od/do/typ jsou povinné). Beze změny nic nezapíše a vrátí původní vazbu.
+  async function upravVazbu(id, zmeny, o = {}) {
+    const stara = await ad().cti('vazby', id);
+    if (!stara || !zdravy('vazby', stara)) throw new ChybaSpisu('Vazba neexistuje.');
+    const v = Object.assign({}, stara), POLE = ['od', 'do', 'typ', 'popis', 'kdy', 'sila'];
+    for (const k of POLE) {
+      if (!jeObjekt(zmeny) || !(k in zmeny)) continue;
+      const x = typeof zmeny[k] === 'string' ? zmeny[k].trim() : zmeny[k];
+      if (x === undefined || x === null || x === '') delete v[k]; else v[k] = x;
+    }
+    if (v.od !== stara.od || v.do !== stara.do) {
+      const [a, b] = [await entita(v.od), await entita(v.do)];
+      if (!a || !b) throw new ChybaSpisu('Vazba vede na neexistující záznam.');
+      if (a.pripad !== stara.pripad || b.pripad !== stara.pripad) throw new ChybaSpisu('Vazba musí spojovat záznamy jednoho případu.');
+      if (a.smazano || b.smazano) throw new ChybaSpisu('Vazba nemůže vést na smazaný záznam.');
+    }
+    const ch = validujVazbu(v);
+    if (ch.length) throw new ChybaSpisu(ch.join(' '), ch);
+    const zm = rozdil(stara, v, POLE);
+    if (!Object.keys(zm).length) return stara;
+    v.upraveno = cas();
+    await ad().zapis([{ store: 'vazby', rec: v }, { store: 'historie', rec: zaznamHistorie(v.pripad, id, 'zmena', zm, o.nastroj, v.upraveno, stara.upraveno) }]);
+    oznam({ druh: 'vazba', akce: 'zmena', id, pripad: v.pripad, od: v.od, do: v.do });
     return v;
   }
   // vazby, které vedou z/do entity (bez id = všechny vazby aktivního případu); smazané jen s {smazane:true}
@@ -466,8 +508,16 @@
       soubory.push(Object.assign(bez, { data: naBase64(await blob.arrayBuffer()) }));
     }
     const obsah = { pripad: p, entity: await nacti('entity', p.id), vazby: await nacti('vazby', p.id), historie: await nacti('historie', p.id), soubory };
-    const text = JSON.stringify(obsah);
-    return JSON.stringify({ format: FORMAT, verze: VERZE, exportovano: cas(), otisk: await sha256(text), obsah });
+    // text obsahu se do balíčku vloží přímo (stejný výsledek jako JSON.stringify celku, jen bez druhé kopie v paměti)
+    try {
+      const text = JSON.stringify(obsah);
+      soubory.length = 0;
+      const hlava = JSON.stringify({ format: FORMAT, verze: VERZE, exportovano: cas(), otisk: await sha256(text) });
+      return hlava.slice(0, -1) + ',"obsah":' + text + '}';
+    } catch (e) {
+      if (e instanceof RangeError) throw new ChybaSpisu('Balíček je příliš velký pro jeden soubor (prohlížeč neudrží tak dlouhý text) – soubory případu mají dohromady stovky MB. Zmenšete nebo odeberte velké fotky.');
+      throw e;
+    }
   }
 
   async function importuj(text, o = {}) {
@@ -622,7 +672,7 @@
     DB, KLIC_AKTIVNI, FORMAT, VERZE, TYPY, VAZBY, nazevVazby, ChybaSpisu,
     pametovyAdapter, nastavUloziste(a) { A = a; poskozenych = 0; }, get poskozenych() { return poskozenych; },
     aktivni, otevri, pripady, pripad, zalozPripad, ulozPripad, smazPripad,
-    entita, seznam, uloz, smaz, obnov, vazba, vazby, historie, ulozSoubor, soubor, souhrn,
+    entita, seznam, uloz, smaz, obnov, vazba, upravVazbu, vazby, historie, ulozSoubor, soubor, souhrn,
     validuj, validujVazbu, exportuj, importuj, zalozModelovy, modelovaData, sha256,
     odebirej, zavri() { if (kanal) kanal.close(); kanal = null; odberatele.clear(); },
     el, formatCas, otevriStranku

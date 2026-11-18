@@ -7,9 +7,11 @@
   const chyba = e => Dialog.chyba(e && e.message ? e.message : String(e));
 
   /* ---------- vykreslení ---------- */
-  let cekaRender = null;
+  let cekaRender = null, poradi = 0;
   function render() { clearTimeout(cekaRender); cekaRender = setTimeout(vykresli, 30); }
+  // vykreslení je async – starší běh, který předběhl novější (rychlé změny, import), už nic nevypíše
   async function vykresli() {
+    const moje = ++poradi, aktualni = () => moje === poradi;
     try {
       const id = S.aktivni();
       pripad = id ? await S.pripad(id) : null;
@@ -32,6 +34,7 @@
 
     const vsechny = await S.seznam(null, { smazane: $('smazane').checked });
     const sh = await S.souhrn();
+    if (!aktualni()) return;
     // dlaždice = souhrn počtů a zároveň záložky typů
     const dl = $('dlazdice');
     dl.replaceChildren(
@@ -44,16 +47,19 @@
     $('seznam').hidden = zalozka === 'historie';
     $('historie').hidden = zalozka !== 'historie';
     $('hledat').parentNode.hidden = zalozka === 'historie';
-    if (zalozka === 'historie') return vykresliHistorii();
+    if (zalozka === 'historie') return vykresliHistorii(aktualni);
     const hledat = $('hledat').value.trim();
-    const sez = $('seznam');
-    sez.replaceChildren();
-    if (zalozka === 'vazby') return vykresliVazby(vsechny, hledat);
+    if (zalozka === 'vazby') return vykresliVazby(vsechny, hledat, aktualni);
 
     const polozky = await S.seznam(filtrTyp || null, { hledat, smazane: $('smazane').checked });
     const vz = await S.vazby(null, { pripad: pripad.id });
+    if (!aktualni()) return;
+    const sez = $('seznam');
+    sez.replaceChildren();
+    const pocet = new Map();      // počet vazeb entity (jedním průchodem – na velkém spisu ne n × m)
+    for (const v of vz) for (const x of [v.od, v.do]) pocet.set(x, (pocet.get(x) || 0) + 1);
     for (const e of polozky) {
-      const n = vz.filter(v => v.od === e.id || v.do === e.id).length;
+      const n = pocet.get(e.id) || 0;
       sez.append(el('button', { type: 'button', class: 'karta' + (e.smazano ? ' smazana' : ''), dataset: { id: e.id } },
         el('span', { class: 'ik', text: T[e.typ].ikona, title: T[e.typ].nazev }),
         el('span', { class: 'tx' }, el('div', { class: 'nz', 'data-i18n': 'ne', text: e.nazev }),
@@ -74,12 +80,14 @@
     return casti.filter(Boolean).join(' · ');
   }
 
-  async function vykresliVazby(vsechny, hledat) {
+  async function vykresliVazby(vsechny, hledat, aktualni) {
     const jmeno = Object.fromEntries(vsechny.map(e => [e.id, T[e.typ].ikona + ' ' + e.nazev]));
     const h = hledat.toLowerCase();
     const vz = (await S.vazby(null, { pripad: pripad.id, smazane: $('smazane').checked }))
       .filter(v => !h || ((jmeno[v.od] || '') + ' ' + (jmeno[v.do] || '') + ' ' + (v.popis || '') + ' ' + S.nazevVazby(v.typ)).toLowerCase().includes(h));
+    if (!aktualni()) return;
     const sez = $('seznam');
+    sez.replaceChildren();
     for (const v of vz) {
       sez.append(el('button', { type: 'button', class: 'karta' + (v.smazano ? ' smazana' : ''), dataset: { id: v.od } },
         el('span', { class: 'ik', text: '🔗' }),
@@ -90,15 +98,16 @@
     if (!vz.length) sez.append(el('div', { class: 'prazdne', text: 'Zatím žádné vazby – přidejte je na kartě záznamu.' }));
   }
 
-  async function vykresliHistorii() {
+  async function vykresliHistorii(aktualni) {
     const hi = (await S.historie(null, { pripad: pripad.id })).slice(0, 300);
     const nazvy = Object.fromEntries((await S.seznam(null, { smazane: true })).map(e => [e.id, T[e.typ].ikona + ' ' + e.nazev]));
+    if (!aktualni()) return;
     const AKCE = { zalozeno: 'založeno', zmena: 'změna', smazano: 'smazáno', obnoveno: 'obnoveno', import: 'import balíčku' };
     $('historie').replaceChildren(...hi.map(h => el('li', {},
       el('span', { class: 'kdy', 'data-i18n': 'ne', text: S.formatCas(h.kdy) + ' · ' + (h.nastroj || '') }), ' ',
       el('b', { text: AKCE[h.akce] || h.akce }), ' ',
       nazvy[h.entita] ? el('button', { type: 'button', class: 'odkaz', 'data-i18n': 'ne', text: nazvy[h.entita], onclick: () => SpisKarta.otevri(h.entita, { nastroj: NASTROJ }) })
-        : el('span', { 'data-i18n': 'ne', text: h.entita === pripad.id ? '' : (h.zmeny && h.zmeny.typ ? '🔗 ' + S.nazevVazby(h.zmeny.typ[1] || '') : '') }),
+        : el('span', { 'data-i18n': 'ne', text: h.entita === pripad.id ? '' : (h.zmeny && Array.isArray(h.zmeny.typ) ? '🔗 ' + S.nazevVazby(String(h.zmeny.typ[1] || '')) : '') }),
       h.zmeny && h.akce === 'zmena' ? el('span', { class: 'kdy', 'data-i18n': 'ne', text: ' (' + Object.keys(h.zmeny).join(', ') + ')' }) : null)));
     if (!hi.length) $('historie').append(el('li', { class: 'prazdne', text: 'Historie je prázdná.' }));
   }
@@ -172,11 +181,11 @@
       if (!(await Dialog.potvrd(`Natrvalo smazat případ „${pripad.nazev}“ včetně ${n} záznamů, vazeb, historie a souborů? Nejde vrátit – pokud si nejste jistí, nejdřív exportujte balíček.`, { ok: 'Smazat natrvalo' }))) return;
       try { await S.smazPripad(pripad.id); Dialog.info('Případ smazán.'); } catch (e) { chyba(e); }
     },
-    async modelovy() {
+    async modelovy(tise) {
       try {
         const r = await S.zalozModelovy(window.MODELOVY_PRIPAD, { nastroj: 'modelovy-pripad' });
         await S.otevri(r.pripad);
-        Dialog.info(r.pridano ? 'Modelový případ 17/2026 založen (' + r.pridano + ' záznamů a vazeb).' : 'Modelový případ už existuje – otevřen beze změn.');
+        if (tise !== true) Dialog.info(r.pridano ? 'Modelový případ 17/2026 založen (' + r.pridano + ' záznamů a vazeb).' : 'Modelový případ už existuje – otevřen beze změn.');
       } catch (e) { chyba(e); }
     },
     async export() {
@@ -252,5 +261,7 @@
 
   SpisVyber.vloz($('vyberMisto'), { nastroj: NASTROJ, bezOdkazu: true, novy: () => formularPripadu(null) });
   render();
+  // průvodce modelovým případem (?pripad=17): založit/otevřít modelový spis bez dotazu
+  if (window.ModelovyPripad && window.ModelovyPripad.aktivni) PRIKAZY.modelovy(true);
   window.SPIS_APP = { PRIKAZY, render: vykresli };
 })();

@@ -125,6 +125,6 @@
     }
   }
 
-  const API = { postav, profilZavitu };
+  const API = { postav, profilZavitu, zavitovaTyc };   // zavitovaTyc používá i kloubova_hadice
   if (typeof module !== 'undefined') module.exports = API; else window.IBC_GEOM = API;
 })();

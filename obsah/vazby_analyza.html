@@ -51,6 +51,10 @@ MetodaPanel.nastav({
   ]
 });
 </script>
+<script src="spis/jadro.js"></script>
+<script src="spis/vyber.js"></script>
+<script src="spis/odkazy.js"></script>
+<script src="spis/napojeni.js"></script>
 <style>
 body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px clamp(8px,2vw,20px)}
 .container{max-width:1280px;margin:0 auto}
@@ -58,6 +62,8 @@ h1{font-size:1.5rem;margin-bottom:4px;font-weight:600;text-align:center}
 .sub{text-align:center;color:var(--text-faint);font-size:.84rem;margin-bottom:12px}
 .lista{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:8px;margin-bottom:10px}
 .lista select{width:auto;max-width:220px}
+.lista .spis-misto{display:inline-flex;gap:4px;align-items:center}
+.lista [hidden]{display:none}
 .lista .sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px}
 button.b{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.8rem;cursor:pointer;white-space:nowrap}
 button.b:hover{background:var(--bg-hover)}
@@ -67,7 +73,7 @@ button.b.nebezp{color:var(--danger)}
 input,select,textarea{background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:6px 8px;font-size:.88rem;font-family:inherit;width:100%}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .rozvrh{display:grid;grid-template-columns:1fr 320px;gap:10px}
-@media(max-width:860px){.rozvrh{grid-template-columns:1fr}}
+@media(max-width:860px){.rozvrh{grid-template-columns:minmax(0,1fr)}}
 .platno{position:relative;background:var(--bg-deep);border:1px solid var(--border);border-radius:var(--radius);height:min(68vh,680px);min-height:320px;overflow:hidden;touch-action:none}
 .platno canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
 .platno canvas.tahne{cursor:grabbing}
@@ -90,6 +96,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .detail li:hover{color:var(--accent)}
 .detail .akce{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .pozn{font-size:.75rem;color:var(--text-faint);line-height:1.5;margin-top:6px}
+.pozn code{overflow-wrap:anywhere}
 .cesta-vysl{font-size:.8rem;margin-top:6px;line-height:1.6;word-break:break-word}
 .metriky{width:100%;border-collapse:collapse;font-size:.78rem}
 .metriky th,.metriky td{padding:4px 5px;border-bottom:1px solid var(--border);text-align:left}
@@ -115,6 +122,8 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
   <p class="sub">Graf osob, telefonů, vozidel, adres, firem, účtů, e-mailů a událostí. Data zůstávají jen v tomto prohlížeči (localStorage) – pro zálohu použij export JSON.</p>
 
   <div class="lista">
+    <span id="spisMisto" class="spis-misto"></span>
+    <button class="b" id="prevodSpis" hidden title="Převést vlastní případ analýzy vazeb do zvoleného spisu (originál zůstane)">📥 Převést do spisu</button>
     <select id="pripad" aria-label="Případ"></select>
     <button class="b" id="novyPripad" title="Nový případ">➕ Případ</button>
     <button class="b" id="prejmenuj" title="Přejmenovat případ">✏️</button>
@@ -188,6 +197,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     <h3 id="dlgEntNadpis">Nová entita</h3>
     <label>Typ</label><select id="feTyp"></select>
     <label>Název / identifikátor</label><input id="feNazev" required maxlength="120">
+    <div id="feKdyRadek" hidden><label>Čas události (ve spisu povinný)</label><input id="feKdy" type="datetime-local"></div>
     <label>Poznámka</label><textarea id="fePozn" rows="3" maxlength="2000"></textarea>
     <div class="tl"><button class="b" value="zrusit" formnovalidate>Zrušit</button><button class="b hl" value="ok">Uložit</button></div>
   </form>
@@ -215,7 +225,8 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     firma:   { nazev: 'Firma',   ikona: '🏢', tvar: 'ctverec',  barva: '#e07a5f' },
     ucet:    { nazev: 'Účet',    ikona: '💳', tvar: 'kosoctverec', barva: '#2bb5a8' },
     email:   { nazev: 'E-mail',  ikona: '✉️', tvar: 'obalka',   barva: '#d66bb0' },
-    udalost: { nazev: 'Událost', ikona: '⚡', tvar: 'hvezda',   barva: '#e05d5d' }
+    udalost: { nazev: 'Událost', ikona: '⚡', tvar: 'hvezda',   barva: '#e05d5d' },
+    stopa:   { nazev: 'Stopa',   ikona: '🧪', tvar: 'trojuhelnik', barva: '#a1887f' }
   };
   const ALIASY = { osoba: 'osoba', person: 'osoba', clovek: 'osoba', podezrely: 'osoba', telefon: 'telefon', tel: 'telefon', mobil: 'telefon', phone: 'telefon', cislo: 'telefon',
     vozidlo: 'vozidlo', auto: 'vozidlo', spz: 'vozidlo', rz: 'vozidlo', car: 'vozidlo', vehicle: 'vozidlo', adresa: 'adresa', address: 'adresa', misto: 'adresa',
@@ -483,7 +494,91 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     return gr;
   }
 
-  g.VAZBY = { TYPY, typZNazvu, odhadTypu, klicNazvu, prazdnyGraf, najdiEntitu, pridejEntitu, pridejVazbu, smazEntitu, podgraf, sousede, stupne,
+  /* ---------- jednotný spis (S2) ----------
+     Typy: osoba↔osoba, firma→osoba (grafTyp), telefon↔telefon, vozidlo↔vozidlo, adresa↔misto, účet↔účet, e-mail→účet (grafTyp),
+     událost↔událost (ve spisu povinný čas; v grafu jen ty s vazbou nebo založené tady), stopa↔stopa. Poznámka↔popis.
+     Vazba: z/do↔od/do, popis↔popis (prázdný = název typu), datum↔kdy (den), síla↔sila. Polohy uzlů jsou pohled nástroje
+     (ukládají se zvlášť, do spisu ne). Neznámá pole spisu se zachovají. */
+  const TYP_ZE_SPISU = { osoba: 'osoba', telefon: 'telefon', vozidlo: 'vozidlo', misto: 'adresa', ucet: 'ucet', udalost: 'udalost', stopa: 'stopa' };
+  const TYP_DO_SPISU = { osoba: 'osoba', firma: 'osoba', telefon: 'telefon', vozidlo: 'vozidlo', adresa: 'misto', ucet: 'ucet', email: 'ucet', udalost: 'udalost', stopa: 'stopa' };
+  const RE_DEN = /^\d{4}-\d{2}-\d{2}$/;
+  // nazevVazby(typ) → čitelný popis typu vazby spisu (SPIS.nazevVazby; bez spisu vrátí typ)
+  function zeSpisu(entity, vazby, nazevVazby) {
+    const nv = nazevVazby || (t => t), gr = prazdnyGraf(), sVazbou = new Set();
+    for (const v of vazby) { sVazbou.add(v.od); sVazbou.add(v.do); }
+    for (const e of entity) {
+      const d = e.data || {}, typ = TYP_ZE_SPISU[e.typ] && TYPY[d.grafTyp] && TYP_DO_SPISU[d.grafTyp] === e.typ ? d.grafTyp : TYP_ZE_SPISU[e.typ];
+      if (!typ || e.smazano) continue;
+      if (e.typ === 'udalost' && !sVazbou.has(e.id) && e.zdroj !== 'vazby_analyza') continue;
+      gr.entity.push({ id: e.id, typ, nazev: e.nazev, pozn: d.popis || '' });
+    }
+    const ids = new Set(gr.entity.map(e => e.id));
+    for (const v of vazby) if (!v.smazano && ids.has(v.od) && ids.has(v.do))
+      gr.vazby.push({ id: v.id, z: v.od, do: v.do, popis: v.popis || nv(v.typ), datum: String(v.kdy || '').slice(0, 10), sila: Number.isInteger(v.sila) ? v.sila : 3 });
+    return gr;
+  }
+  // čas z textu (název / poznámka události): „15. 11. 2026 02:08“, „12. 3. 2026, 2:10“, „2026-11-15T02:08“
+  function casZTextu(t) {
+    t = String(t || ''); let m;
+    if ((m = t.match(/(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/))) return `${m[1]}-${m[2]}-${m[3]}T${m[4] || '00'}:${m[5] || '00'}`;
+    if ((m = t.match(/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/))) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}T${(m[4] || '0').padStart(2, '0')}:${m[5] || '00'}`;
+    return '';
+  }
+  function entitaDoSpisu(e, puvodni) {
+    const pd = (puvodni && puvodni.data) || {};
+    const typ = puvodni ? puvodni.typ : TYP_DO_SPISU[e.typ] || 'osoba';
+    const data = Object.assign({}, pd, { popis: e.pozn || undefined, grafTyp: TYP_ZE_SPISU[typ] === e.typ ? undefined : e.typ });
+    if (typ === 'udalost' && !pd.kdy) {
+      data.kdy = e.kdy || casZTextu(e.nazev) || casZTextu(e.pozn);
+      if (!data.kdy) throw new Error(`Událost „${e.nazev}“ nemá čas – ve spisu je povinný (zadejte ho ve formuláři nebo do názvu, např. 15. 11. 2026 02:08).`);
+    }
+    return { id: e.id, typ, nazev: e.nazev, data };
+  }
+  function typVazby(popis) {
+    const t = bezDiak(popis).toLowerCase();
+    if (/hovor|sms|volal|telefonat/.test(t)) return 'hovor';
+    if (/pouziva|drzitel|vlastni|majitel|uzivatel/.test(t)) return 'drzitel';
+    if (/platb|prevod|zaplat/.test(t)) return 'platba';
+    if (/\bzna|pritel|kamarad|pribuz/.test(t)) return 'zna';
+    return 'souvisi';
+  }
+  // podoba vazby pro SPIS.vazba / SPIS.upravVazbu: {od, do, typ, popis, kdy, sila}
+  function vazbaDoSpisu(v, puvodni, nazevVazby) {
+    const nv = nazevVazby || (t => t), typ = puvodni ? puvodni.typ : typVazby(v.popis);
+    const popis = puvodni && v.popis === (puvodni.popis || nv(puvodni.typ)) ? puvodni.popis : (v.popis && v.popis !== nv(typ) ? v.popis : undefined);
+    let kdy;
+    if (puvodni && String(puvodni.kdy || '').slice(0, 10) === v.datum) kdy = puvodni.kdy;
+    else if (RE_DEN.test(v.datum)) kdy = v.datum + 'T00:00';
+    const navic = v.datum && !kdy ? ' (' + v.datum + ')' : '';
+    return { od: v.z, do: v.do, typ, popis: popis || navic ? (popis || nv(typ)) + navic : undefined, kdy, sila: v.sila };
+  }
+  // sloučí graf `zdroj` do `cil` (převod do spisu, import JSON): entity podle názvu, nové dostanou nové id;
+  // shodné vazby (stejné konce, popis i datum) se nezdvojí. Vrací {entit, vazeb}.
+  function slucGraf(cil, zdroj) {
+    const mapa = {}; let entit = 0, vazeb = 0;
+    for (const e of zdroj.entity) {
+      let x = najdiEntitu(cil, e.nazev);
+      if (!x) { x = { id: noveId('e'), typ: TYPY[e.typ] ? e.typ : 'osoba', nazev: String(e.nazev).trim(), pozn: e.pozn || '' }; if (e.kdy) x.kdy = e.kdy; cil.entity.push(x); entit++; }
+      mapa[e.id] = x.id;
+    }
+    for (const v of zdroj.vazby) {
+      const z = mapa[v.z], d = mapa[v.do];
+      if (!z || !d || z === d) continue;
+      if (cil.vazby.some(w => ((w.z === z && w.do === d) || (w.z === d && w.do === z)) && w.popis === (v.popis || '') && w.datum === (v.datum || ''))) continue;
+      pridejVazbu(cil, z, d, v.popis, v.datum, v.sila); vazeb++;
+    }
+    return { entit, vazeb };
+  }
+  // pro spis: události bez zjistitelného času (spis ho vyžaduje) vynechat i s jejich vazbami → {graf, vynechano: [názvy]}
+  function bezUdalostiBezCasu(gr) {
+    const ven = new Set(gr.entity.filter(e => e.typ === 'udalost' && !e.kdy && !casZTextu(e.nazev) && !casZTextu(e.pozn)).map(e => e.id));
+    return { graf: { entity: gr.entity.filter(e => !ven.has(e.id)), vazby: gr.vazby.filter(v => !ven.has(v.z) && !ven.has(v.do)) },
+      vynechano: gr.entity.filter(e => ven.has(e.id)).map(e => e.nazev) };
+  }
+  const klicEntity = e => JSON.stringify([e.typ, e.nazev, e.pozn || '', e.kdy || '']);
+  const klicVazby = v => JSON.stringify([v.z, v.do, v.popis, v.datum, v.sila]);
+
+  g.VAZBY = { bezUdalostiBezCasu, TYP_ZE_SPISU, TYP_DO_SPISU, zeSpisu, casZTextu, entitaDoSpisu, typVazby, vazbaDoSpisu, slucGraf, klicEntity, klicVazby, TYPY, typZNazvu, odhadTypu, klicNazvu, prazdnyGraf, najdiEntitu, pridejEntitu, pridejVazbu, smazEntitu, podgraf, sousede, stupne,
     mezilehlost, nejkratsiCesta, komponenty, vychoziPozice, silovyKrok, rozdelCsv, importCsv, normDatum, zkontrolujGraf, noveId, zModelovehoPripadu };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
@@ -520,8 +615,38 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     aktivni = pripady.find(p => p.id === a) || pripady[0];
   }
   let casUlozeni = null;
+  // se zvoleným spisem (S2): graf = osoby, telefony, vozidla, místa, účty, stopy (+ události s vazbou) a vazby spisu;
+  // vlastní případy nástroje zůstávají netknuté, polohy uzlů se ukládají zvlášť (pohled, ne data spisu)
+  let N = null, spisPripad = null, vlastniAktivni = null;
+  const snE = new Map(), snV = new Map(), KLIC_POZICE = KLIC + 'spis_pozice';
+  function poziceSpisu() { try { const p = JSON.parse(localStorage.getItem(KLIC_POZICE) || '{}'); return p && typeof p === 'object' ? p : {}; } catch (e) { return {}; } }
+  function ulozPozice() {
+    const p = poziceSpisu();
+    p[spisPripad] = Object.fromEntries(aktivni.entity.filter(e => Number.isFinite(e.x)).map(e => [e.id, [Math.round(e.x * 10) / 10, Math.round(e.y * 10) / 10, e.pevny ? 1 : 0]]));
+    try { localStorage.setItem(KLIC_POZICE, JSON.stringify(p)); } catch (e) { }
+  }
+  function doSpisu() {
+    const E = aktivni.entity.map(e => ({ id: e.id, typ: e.typ, nazev: e.nazev, pozn: e.pozn, kdy: e.kdy })), Vz = aktivni.vazby.map(v => Object.assign({}, v));
+    N.zapis(async (S, pripad) => {
+      const o = { nastroj: 'vazby_analyza' }, nv = S.nazevVazby, ids = new Set(E.map(e => e.id));
+      const smazat = [...snE.keys()].filter(id => !ids.has(id)), chyby = [];
+      // chyba jednoho záznamu (např. událost bez času) nezastaví ostatní; po zápisu se graf znovu načte ze spisu
+      const zkus = f => async x => { try { await f(x); } catch (e) { chyby.push(e.message); } };
+      await SpisNapojeni.zapisZmeny(snE, E, { klic: V.klicEntity, uloz: zkus(async e => { await S.uloz(Object.assign(V.entitaDoSpisu(e, await S.entita(e.id)), { pripad }), o); }) });
+      const puv = new Map((await S.vazby(null, { pripad, smazane: true })).map(v => [v.id, v]));
+      await SpisNapojeni.zapisZmeny(snV, Vz, { klic: V.klicVazby,
+        uloz: zkus(async v => {
+          const p = puv.get(v.id), x = V.vazbaDoSpisu(v, p, nv);
+          if (p) await S.upravVazbu(v.id, x, o); else await S.vazba(x.od, x.do, x.typ, Object.assign({ id: v.id, popis: x.popis, kdy: x.kdy, sila: x.sila }, o));
+        }),
+        smaz: id => S.smaz(id, o) });
+      for (const id of smazat) await S.smaz(id, o);   // entity až po jejich vazbách
+      if (chyby.length) { dlg.chyba([...new Set(chyby)].join(' ')); N.obnov(); }
+    });
+  }
   function uloz(hned) {
     clearTimeout(casUlozeni);
+    if (spisPripad) { ulozPozice(); doSpisu(); return; }
     const f = () => {
       try {
         localStorage.setItem(KLIC + 'pripady', JSON.stringify(pripady.map(p => ({ id: p.id, nazev: p.nazev,
@@ -572,6 +697,7 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
       case 'ctverec': zaobl(r * 0.9, r * 0.9, 2); break;
       case 'kosoctverec': mnohouh(4, -Math.PI / 2, r * 1.2); break;
       case 'obalka': zaobl(r * 1.15, r * 0.78, 3); break;
+      case 'trojuhelnik': mnohouh(3, -Math.PI / 2, r * 1.25); break;
       case 'hvezda': for (let i = 0; i < 10; i++) { const u = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.55 : r * 1.2; i ? c.lineTo(x + rr * Math.cos(u), y + rr * Math.sin(u)) : c.moveTo(x + rr * Math.cos(u), y + rr * Math.sin(u)); } c.closePath(); break;
       default: c.arc(x, y, r, 0, Math.PI * 2);
     }
@@ -818,16 +944,24 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
     upravovana = e || null;
     $('dlgEntNadpis').textContent = e ? 'Upravit entitu' : 'Nová entita';
     $('feTyp').value = e ? e.typ : (typ || 'osoba'); $('feNazev').value = e ? e.nazev : ''; $('fePozn').value = e ? e.pozn : '';
+    $('feTyp').disabled = !!(spisPripad && e);   // typ záznamu spisu nejde změnit
+    $('feTyp').title = $('feTyp').disabled ? 'Typ záznamu spisu nejde změnit – založte nový záznam.' : '';
+    $('feKdy').value = ''; kdyRadek(!e);
     $('dlgEnt').returnValue = ''; otevri($('dlgEnt')); $('feNazev').focus();
   }
+  function kdyRadek(novy) { $('feKdyRadek').hidden = !(spisPripad && novy && $('feTyp').value === 'udalost'); }
+  $('feTyp').addEventListener('change', () => kdyRadek(!upravovana));
   $('feNazev').addEventListener('input', () => { if (!upravovana && $('feNazev').value.length > 5) $('feTyp').value = V.odhadTypu($('feNazev').value) === 'osoba' ? $('feTyp').value : V.odhadTypu($('feNazev').value); });
   $('dlgEnt').addEventListener('close', () => {
     if ($('dlgEnt').returnValue !== 'ok') return;
     const n = $('feNazev').value.trim(); if (!n) return;
     if (upravovana) { Object.assign(upravovana, { typ: $('feTyp').value, nazev: n, pozn: $('fePozn').value.trim() }); vybrano = { druh: 'e', id: upravovana.id }; }
     else {
+      const kdy = $('feKdy').value;
+      if (spisPripad && $('feTyp').value === 'udalost' && !kdy && !V.casZTextu(n) && !V.casZTextu($('fePozn').value)) { dlg.chyba('Událost ve spisu potřebuje čas – vyplňte „Čas události“.'); return; }
       if (V.najdiEntitu(aktivni, n)) { dlg.info('Entita s tímto názvem už existuje – vybrána.'); vyber({ druh: 'e', id: V.najdiEntitu(aktivni, n).id }); return; }
       const e = V.pridejEntitu(aktivni, $('feTyp').value, n, $('fePozn').value.trim());
+      if (spisPripad && e.typ === 'udalost' && kdy) e.kdy = kdy;
       const [wx, wy] = naSvet(W / 2 + (Math.random() - 0.5) * 80, H / 2 + (Math.random() - 0.5) * 80); e.x = wx; e.y = wy;
       viditelne.add(e.typ); vybrano = { druh: 'e', id: e.id };
     }
@@ -963,6 +1097,15 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
           predpocitej(aktivni); zmena(true); zobrazVse();
         } else {
           const d = JSON.parse(r.result), pole = Array.isArray(d.pripady) ? d.pripady : [d];
+          if (spisPripad) {   // ve spisu se soubor sloučí do grafu spisu (nové vlastní případy se nezakládají)
+            let ent = 0, vaz = 0;
+            const ven = [];
+            for (const p of pole) { const b = V.bezUdalostiBezCasu(V.zkontrolujGraf(p)), x = V.slucGraf(aktivni, b.graf); ent += x.entit; vaz += x.vazeb; ven.push(...b.vynechano); }
+            aktivni.entity.forEach(e => viditelne.add(e.typ));
+            predpocitej(aktivni); zmena(true); zobrazVse();
+            dlg.info(`Do spisu přibylo ${ent} entit a ${vaz} vazeb.` + (ven.length ? ` Vynechané události bez času (ve spisu je čas povinný): ${ven.join(', ')}.` : ''));
+            return;
+          }
           const nove = pole.map(p => ({ id: V.noveId('p'), nazev: String(p.nazev || f.name.replace(/\.json$/i, '')), ...V.zkontrolujGraf(p) }));
           pripady.push(...nove); prepniPripad(nove[0]); dlg.info(`Naimportováno: ${nove.map(p => p.nazev).join(', ')}`);
         }
@@ -1012,12 +1155,65 @@ dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14p
   predpocitej(aktivni);
   alpha = 0.05;
   zmena(false); zobrazVse(); stavSim(); spust();
-  if (MP) { // hned ukázat prostředníka: velikost uzlů podle mezilehlosti + nejsilnější cesta Brabec → Kříž
+  function ukazModel() { // hned ukázat prostředníka: velikost uzlů podle mezilehlosti + nejsilnější cesta Brabec → Kříž
     $('velikost').value = 'mezi';
     const a = V.najdiEntitu(aktivni, 'Tomáš Brabec'), b = V.najdiEntitu(aktivni, 'Roman Kříž');
     if (a && b) { $('cestaA').value = a.id; $('cestaB').value = b.id; $('cestaRezim').value = 'sila'; $('najdiCestu').click(); }
     uloz(true);
   }
+  if (MP) ukazModel();
+
+  /* ---------- jednotný spis (S2) ---------- */
+  function ovladaniPripadu(veSpisu) {
+    ['pripad', 'novyPripad', 'prejmenuj', 'smazPripad'].forEach(id => { $(id).hidden = veSpisu; });
+    $('prevodSpis').hidden = !veSpisu;
+  }
+  N = SpisNapojeni.pripoj({
+    nastroj: 'vazby_analyza', lista: $('spisMisto'),
+    naZmenu: async (pripad, jiny) => {
+      if (pripad) {
+        const gr = V.zeSpisu(await SPIS.seznam(null, { pripad }), await SPIS.vazby(null, { pripad }), SPIS.nazevVazby);
+        const pz = poziceSpisu()[pripad] || {}, stare = !jiny && spisPripad === pripad ? new Map(aktivni.entity.map(e => [e.id, e])) : new Map();
+        for (const e of gr.entity) {
+          const s = stare.get(e.id), q = pz[e.id];
+          if (s) Object.assign(e, { x: s.x, y: s.y, vx: s.vx, vy: s.vy, pevny: s.pevny });
+          else if (Array.isArray(q)) Object.assign(e, { x: q[0], y: q[1], pevny: !!q[2] });
+        }
+        if (!spisPripad) vlastniAktivni = aktivni;
+        spisPripad = pripad;
+        snE.clear(); snV.clear();
+        gr.entity.forEach(e => snE.set(e.id, V.klicEntity(e))); gr.vazby.forEach(v => snV.set(v.id, V.klicVazby(v)));
+        aktivni = Object.assign({ id: 'spis:' + pripad, nazev: N.nazev }, gr);
+        ovladaniPripadu(true);
+        if (jiny) { prepniPripad(aktivni); if (N.model) ukazModel(); }
+        else { if (vybrano && !(vybrano.druh === 'e' ? entita(vybrano.id) : aktivni.vazby.find(v => v.id === vybrano.id))) vybrano = null; predpocitej(aktivni); zmena(false); }
+      } else if (jiny) {
+        spisPripad = null; ovladaniPripadu(false);
+        prepniPripad(pripady.includes(vlastniAktivni) ? vlastniAktivni : pripady[0]);
+      }
+    }
+  });
+  $('prevodSpis').onclick = () => {
+    const p = vlastniAktivni || pripady[0];
+    N.prevod(p.entity.length, `vlastní případ „${p.nazev}“ (${p.entity.length} entit, ${p.vazby.length} vazeb)`, async () => {
+      const b = V.bezUdalostiBezCasu(p), x = V.slucGraf(aktivni, b.graf);
+      aktivni.entity.forEach(e => viditelne.add(e.typ));
+      predpocitej(aktivni); zmena(true);
+      return `Do spisu přibylo ${x.entit} entit a ${x.vazeb} vazeb (stejně pojmenované entity se sloučily).`
+        + (b.vynechano.length ? ` Vynechané události bez času (ve spisu je čas povinný): ${b.vynechano.join(', ')}.` : '')
+        + ' Jiný vlastní případ převedete po přepnutí na „Pracovat bez spisu“.';
+    });
+  };
+  // S4: skok z karty jiného nástroje – ?entita=<id> vybere uzel grafu (detail vpravo)
+  const vyberEntitu = id => { if (entita(id)) vyber({ druh: 'e', id }); };
+  SpisOdkazy.zde('vazby_analyza', p => vyberEntitu(p.entita));
+  N.hotovo.then(async () => {
+    const c = await SpisOdkazy.cil();
+    if (!c) return;
+    if (c.prepnuto) await N.obnov();
+    vyberEntitu(c.e.id);
+  });
+  window.VAZBY_APP = { get aktivni() { return aktivni; }, get spis() { return N.pripad; }, hotovo: () => N.hotovo, get vybrano() { return vybrano; } };
   window.addEventListener('resize', () => { velikostPlatna(); prekresli(); });
 })();
 </script>

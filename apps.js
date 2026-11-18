@@ -2852,6 +2852,12 @@ const KATALOG_SEKCE = [
         "tagy": ["vzduchotechnika", "VZT", "rozbočka", "rozdělovač", "odsávání", "rekuperace", "ventilace", "spiro", "trubky", "vývody", "difuzor", "tlaková ztráta", "nízký odpor", "spojka hadic", "prodloužení hadice", "úchyty", "odlomitelné podpory", "3D tisk", "STL", "3MF", "generátor"]
       },
       {
+        "soubor": "obsah/kloubova_hadice.html",
+        "nazev": "🦾 Kloubová hadice – ostřik a odsávání",
+        "stav": "vyvoj",
+        "tagy": ["kloubová hadice", "článková hadice", "stavitelná hadice", "husí krk", "chladicí kapalina", "ostřik", "emulze", "olej", "ofuk", "vzduch", "odsávání", "tryska", "plochá tryska", "sací hubice", "koule", "jamka", "kloub", "zacvaknutí", "obráběcí stroj", "soustruh", "frézka", "CNC", "závit G", "rozbočka", "magnetická patka", "stavitelný držák", "kalibrace vůle", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
         "soubor": "obsah/cookieCutter.html",
         "nazev": "🍪 Vykrajovátka",
         "stav": "beta",
@@ -3992,6 +3998,18 @@ const KATALOG_SEKCE = [
         "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů", "kóty", "půdorys", "fotka jako podklad", "fotopozice", "kriminalistika"]
       },
       {
+        "soubor": "obsah/fotodokumentace.html",
+        "nazev": "📸 Fotodokumentace",
+        "stav": "vyvoj",
+        "tagy": ["fotodokumentace", "fototabulka", "místo činu", "anotace", "značky stop", "měřítko", "kalibrace", "perspektiva", "homografie", "měření", "nejistota", "EXIF", "SHA-256", "zakrytí SPZ", "rozmazání obličeje", "lupa", "spis", "kriminalistika"]
+      },
+      {
+        "soubor": "obsah/teren.html",
+        "nazev": "📱 Terén – sken štítků a předání stop",
+        "stav": "vyvoj",
+        "tagy": ["terén", "telefon", "mobil", "QR", "štítek", "sken", "předání", "řetězec předávání", "chain of custody", "fotodokumentace", "offline", "balíček spisu"]
+      },
+      {
         "soubor": "obsah/investigation_checklist.html",
         "nazev": "✅ Kontrolní seznamy vyšetřování",
         "stav": "beta",
@@ -4120,6 +4138,24 @@ const KATALOG_SEKCE = [
     "nazev": "📁 Spis a výslech",
     "skupina": "vysetrovani",
     "polozky": [
+      {
+        "soubor": "obsah/spis.html",
+        "nazev": "📁 Spis případu",
+        "stav": "vyvoj",
+        "tagy": ["spis", "případ", "vyšetřování", "osoby", "stopy", "vazby", "události", "evidence", "balíček", "export", "import", "historie změn", "modelový případ"]
+      },
+      {
+        "soubor": "obsah/nastenka.html",
+        "nazev": "🧷 Nástěnka vyšetřovatele",
+        "stav": "vyvoj",
+        "tagy": ["nástěnka", "provázky", "vazby", "spis", "tvrzení", "důkazy", "rozpor", "alibi", "myšlenková mapa", "vyšetřování", "kriminalistika"]
+      },
+      {
+        "soubor": "obsah/rozbor_vypovedi.html",
+        "nazev": "🗒️ Rozbor výpovědi",
+        "stav": "vyvoj",
+        "tagy": ["výpověď", "úřední záznam", "podání vysvětlení", "rozbor textu", "alibi", "rozpor", "tvrzení", "časová osa", "spis", "svědek"]
+      },
       {
         "soubor": "obsah/case_timeline.html",
         "nazev": "🕵️ Časová osa případu",

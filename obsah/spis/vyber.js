@@ -57,11 +57,11 @@
           el('span', { class: 'sv-znak', text: p.id === akt ? '✓' : '' }), el('span', { 'data-i18n': 'ne', text: p.nazev }), p.cislo ? el('span', { class: 'sv-cislo', 'data-i18n': 'ne', text: p.cislo }) : null));
       }
       if (!seznam.length && !chyba) nab.append(el('div', { class: 'sv-pozn', text: 'Zatím žádný případ.' }));
-      nab.append(el('hr'),
+      nab.append(...[el('hr'),
         el('button', { type: 'button', role: 'menuitem', onclick: novy, disabled: !!chyba }, '➕ Nový případ…'),
         akt ? el('button', { type: 'button', role: 'menuitem', onclick: () => vyber(null) }, '✕ Pracovat bez spisu') : null,
         volby.bezOdkazu ? null : el('button', { type: 'button', role: 'menuitem', onclick: () => { zavri(); S.otevriStranku('spis.html'); } }, '📂 Otevřít spis případu'),
-        el('div', { class: 'sv-pozn', text: 'Spis je uložený jen v tomto prohlížeči. Na jiné zařízení se přenáší souborem (balíček spisu).' }));
+        el('div', { class: 'sv-pozn', text: 'Spis je uložený jen v tomto prohlížeči. Na jiné zařízení se přenáší souborem (balíček spisu).' })].filter(Boolean));
       document.body.append(nab);
       tl.setAttribute('aria-expanded', 'true');
       const r = tl.getBoundingClientRect();

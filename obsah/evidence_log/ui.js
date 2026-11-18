@@ -36,11 +36,27 @@
     return (Array.isArray(raw) ? raw : []).filter(x => x && typeof x === 'object').map(J.normalizuj);
   }
   let items = nacti();
-  const ulozit = () => { localStorage.setItem(KEY, JSON.stringify(items)); render(); };
+  let zvyrazneny = null;   // S4: stopa ze skoku ?entita=…
+  // se zvoleným spisem (S2) se čte a zapisuje do spisu (entity `stopa`), vlastní úložiště zůstává netknuté
+  let N = null;
+  const veSpisu = () => !!(N && N.pripad);
+  const snimek = new Map();   // id → klíč záznamu, jak byl naposledy ve spisu
+  function ulozit() {
+    if (veSpisu()) { render(); doSpisu(); return; }
+    localStorage.setItem(KEY, JSON.stringify(items)); render();
+  }
+  function doSpisu() {
+    const kopie = items.slice();
+    N.zapis(async (S, pripad) => SpisNapojeni.zapisZmeny(snimek, kopie, {
+      klic: J.klicZaznamu,
+      uloz: async it => { const e = await S.entita(it.id); await S.uloz(Object.assign(J.doSpisu(it, e), { pripad }), { nastroj: 'evidence_log' }); },
+      smaz: id => S.smaz(id, { nastroj: 'evidence_log' })
+    }));
+  }
   if (MP) localStorage.setItem(KEY, JSON.stringify(items));
 
   $('caseName').value = localStorage.getItem(KEY_CASE) || '';
-  $('caseName').addEventListener('input', () => localStorage.setItem(KEY_CASE, $('caseName').value));
+  $('caseName').addEventListener('input', () => { if (!veSpisu()) localStorage.setItem(KEY_CASE, $('caseName').value); });
   const spis = () => $('caseName').value.trim();
 
   // výběry druhů, stavů a obalu
@@ -69,7 +85,7 @@
     const vid = zobrazene(), tdy = ted();
     $('tbody').innerHTML = vid.map(it => {
       const v = J.kontrola(it, tdy);
-      return `<tr data-id="${esc(it.id)}">
+      return `<tr data-id="${esc(it.id)}"${it.id === zvyrazneny ? ' class="zvyrazneny" aria-current="true"' : ''}>
         <td data-k="Č." class="cislo">${esc(it.num) || '<span class="mala">?</span>'}</td>
         <td data-k="Zajištěno">${esc(J.formatCas(it.time))}</td>
         <td data-k="Druh">${esc(J.nazev(J.DRUHY, it.druh))}</td>
@@ -79,7 +95,7 @@
         <td data-k="Umístění">${esc(J.drzitel(it))}</td>
         <td data-k="Otisk"><div>${znakOtisku(it)}</div></td>
         <td data-k="Řetězec"><div><span class="mala">${it.predani.length}× předáno</span> ${znakKontroly(v)}</div></td>
-        <td data-k="" class="akce"><button class="tl mini" data-upravit title="Upravit, řetězec předání">✏️</button> <button class="tl mini" data-stitek title="Štítek">🏷️</button> <button class="tl mini" data-smazat title="Smazat">🗑️</button></td>
+        <td data-k="" class="akce">${veSpisu() ? '<button class="tl mini" data-karta title="Karta ve spisu – kde všude stopa je (fotky, náčrt, osa)">📁</button> ' : ''}<button class="tl mini" data-upravit title="Upravit, řetězec předání">✏️</button> <button class="tl mini" data-stitek title="Štítek">🏷️</button> <button class="tl mini" data-smazat title="Smazat">🗑️</button></td>
       </tr>`;
     }).join('');
     $('empty').hidden = vid.length > 0;
@@ -100,7 +116,9 @@
   $('tbody').addEventListener('click', async e => {
     const tr = e.target.closest('tr[data-id]'); if (!tr) return;
     const it = items.find(x => x.id === tr.dataset.id);
-    if (e.target.closest('[data-smazat]')) {
+    if (e.target.closest('[data-karta]')) {
+      SpisKarta.otevri(it.id, { nastroj: 'evidence_log', akce: [{ text: '✏️ Upravit v deníku', fn: () => otevriStopu(it.id) }] });
+    } else if (e.target.closest('[data-smazat]')) {
       if (await Dialog.potvrd(`Smazat stopu ${it.num || ''} z deníku?`)) { items = items.filter(x => x !== it); ulozit(); }
     } else if (e.target.closest('[data-stitek]')) otevriStitky([it]);
     else otevriStopu(it.id);
@@ -120,7 +138,7 @@
   const infoSouboru = f => ({ nazev: f.name, velikost: f.size, zmeneno: f.lastModified ? lokalne(new Date(f.lastModified)) : '' });
 
   /* ---------- dialog stopy ---------- */
-  let koncept = null, rezimSouboru = 'otisk';
+  let koncept = null, rezimSouboru = 'otisk', zakladKonceptu = null;   // klíč záznamu při otevření dialogu (změna jinde = střet)
   const POLE = { sNum: 'num', sTime: 'time', sDruh: 'druh', sStav: 'stav', sDesc: 'desc', sPlace: 'place', sBy: 'by', sHandover: 'handover', sNote: 'note', sHash: 'hash' };
   function zKonceptu() { for (const [id, k] of Object.entries(POLE)) koncept[k] = $(id).value; koncept.hash = koncept.hash.trim(); }
 
@@ -128,6 +146,7 @@
     const it = id && items.find(x => x.id === id);
     koncept = JSON.parse(JSON.stringify(it || J.normalizuj({ time: ted(), num: dalsiCislo(), by: posledniZajistil() })));
     koncept._novy = !it;
+    zakladKonceptu = it ? J.klicZaznamu(it) : null;
     for (const [pole, k] of Object.entries(POLE)) $(pole).value = koncept[k] || '';
     $('stopaNadpis').textContent = it ? 'Stopa ' + (it.num || '') : 'Nová stopa';
     $('btnSmazStopu').hidden = !it;
@@ -171,10 +190,17 @@
     ['pKomu', 'pUcel', 'pPozn'].forEach(id => { $(id).value = ''; }); $('pObal').value = 'neporusen';
     vykresliRetezec();
   };
-  $('btnUlozStopu').onclick = () => {
+  $('btnUlozStopu').onclick = async () => {
     zKonceptu();
     if (!koncept.desc.trim() && !koncept.num.trim()) { $('sDesc').focus(); Dialog.chyba('Vyplňte aspoň číslo nebo popis stopy.'); return; }
     if (koncept.hash && !J.jeSha256(koncept.hash)) { $('sHash').focus(); Dialog.chyba('Otisk musí mít 64 hexadecimálních znaků (SHA-256).'); return; }
+    // stopu mezitím změnil nebo smazal jiný nástroj / záložka (spis) – nepřepsat potichu cizí změnu (např. předání z Terénu)
+    const ted = !koncept._novy && items.find(x => x.id === koncept.id);
+    if (!koncept._novy && !ted) {
+      if (!(await Dialog.potvrd('Stopa byla mezitím smazána (v jiné záložce nebo jiném nástroji). Uložit váš záznam jako novou stopu?', { ok: 'Uložit jako novou', zrus: 'Zahodit' }))) { $('dlgStopa').close(); return; }
+      koncept.id = J.novyId(); koncept._novy = true;
+    } else if (ted && J.klicZaznamu(ted) !== zakladKonceptu &&
+      !(await Dialog.potvrd('Stopa byla mezitím změněna jinde (jiná záložka, Terén, spis). Uložením se tamty změny přepíšou vaší verzí. Uložit přesto?', { ok: 'Přepsat', zrus: 'Zpět k úpravám' }))) return;
     const novy = koncept._novy; delete koncept._novy;
     if (koncept.overeno && !J.stejnyOtisk(koncept.hash, koncept.overeno.otisk)) delete koncept.overeno;
     const it = J.normalizuj(koncept);
@@ -319,6 +345,19 @@
     exportJson: () => stahni(J.exportJson(spis(), items), 'application/json', '.json'),
     exportCsv: () => stahni(J.csv(items), 'text/csv', '.csv'),
     importJson: () => $('fileImport').click(),
+    prevodDoSpisu: () => {
+      const vlastni = nacti();
+      return N.prevod(vlastni.length, `${vlastni.length} stop z vlastního deníku${MP ? ' modelového případu' : ''}`, async (S, pripad) => {
+        let nove = 0;
+        for (const it of vlastni) {
+          const id = SpisNapojeni.bezpecneId(pripad + '.ev.' + it.id);
+          if (await S.entita(id)) continue;
+          await S.uloz(Object.assign(J.doSpisu(Object.assign({}, it, { id }), null), { pripad }), { nastroj: 'evidence_log' });
+          nove++;
+        }
+        return `Do spisu převedeno ${nove} stop` + (vlastni.length - nove ? `, ${vlastni.length - nove} tam už bylo.` : '.');
+      });
+    },
     smazatVse: async () => { if (await Dialog.potvrd('Opravdu smazat všechny záznamy evidenčního deníku?')) { items = []; ulozit(); } }
   };
   $('fileImport').onchange = async e => {
@@ -326,9 +365,16 @@
     if (!f) return;
     let d;
     try { d = J.importuj(await f.text()); } catch (err) { Dialog.chyba('Neplatný soubor: ' + err.message); return; }
-    const nahradit = !items.length || await Dialog.potvrd(`Soubor obsahuje ${d.items.length} stop. Nahradit jimi současný deník (${items.length} stop)? Jinak se sloučí podle ID.`, { ok: 'Nahradit', zrus: 'Sloučit' });
+    // ve spisu: id, které ve spisu patří jinému případu, jiné entitě než stopě nebo smazanému záznamu, dostane nové id
+    // (jinak by import přepsal cizí data nebo skončil chybou „Záznam patří k jinému případu“)
+    if (veSpisu()) for (const it of d.items) {
+      const e = SpisNapojeni.platneId(it.id) ? await SPIS.entita(it.id) : { smazano: true };
+      if (e && (e.pripad !== N.pripad || e.typ !== 'stopa' || e.smazano)) it.id = J.novyId();
+    }
+    // ve spisu se jen slučuje – nahrazení by smazalo stopy, které zapsaly jiné nástroje
+    const nahradit = !veSpisu() && (!items.length || await Dialog.potvrd(`Soubor obsahuje ${d.items.length} stop. Nahradit jimi současný deník (${items.length} stop)? Jinak se sloučí podle ID.`, { ok: 'Nahradit', zrus: 'Sloučit' }));
     items = nahradit ? d.items : J.slouc(items, d.items);
-    if (d.case && (nahradit || !spis())) { $('caseName').value = d.case; localStorage.setItem(KEY_CASE, d.case); }
+    if (d.case && !veSpisu() && (nahradit || !spis())) { $('caseName').value = d.case; localStorage.setItem(KEY_CASE, d.case); }
     ulozit();
     Dialog.info('Načteno stop: ' + d.items.length);
   };
@@ -365,5 +411,37 @@
   });
 
   render();
-  window.EVIDENCE_APP = { items: () => items, PRIKAZY, otevriStopu, otevriStitky, render, KEY };
+
+  /* ---------- jednotný spis (S2) ---------- */
+  N = SpisNapojeni.pripoj({
+    nastroj: 'evidence_log', lista: $('spisMisto'),
+    naZmenu: async (pripad, jiny) => {
+      J.nastavSpis(!!pripad);
+      if (pripad) {
+        items = (await SPIS.seznam('stopa', { pripad })).map(J.zeSpisu);
+        snimek.clear(); items.forEach(it => snimek.set(it.id, J.klicZaznamu(it)));
+        $('caseName').value = N.nazev; $('caseName').readOnly = true;
+      } else if (jiny) {
+        items = nacti(); snimek.clear();
+        $('caseName').value = localStorage.getItem(KEY_CASE) || ''; $('caseName').readOnly = false;
+      }
+      $('miPrevod').hidden = !pripad;
+      $('spisPozn').hidden = !pripad;
+      render();
+    }
+  });
+  // S4: skok z karty jiného nástroje – ?entita=<id stopy> řádek zvýrazní a posune do pohledu
+  function zvyrazni(id) {
+    zvyrazneny = id; render();
+    const tr = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+    if (tr) tr.scrollIntoView({ block: 'center' });
+  }
+  SpisOdkazy.zde('evidence_log', p => zvyrazni(p.entita));
+  N.hotovo.then(async () => {
+    const c = await SpisOdkazy.cil();
+    if (!c) return;
+    if (c.prepnuto) await N.obnov();
+    zvyrazni(c.e.id);
+  });
+  window.EVIDENCE_APP = { items: () => items, PRIKAZY, otevriStopu, otevriStitky, render, KEY, get spis() { return N.pripad; }, hotovo: () => N.hotovo, get zvyrazneny() { return zvyrazneny; } };
 })();

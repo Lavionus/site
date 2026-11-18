@@ -118,10 +118,14 @@
     return o;
   }
 
-  // aktuální držitel / umístění: poslední předání, jinak staré pole „Předáno / uloženo“, jinak kdo zajistil
+  // nad spisem (S2) je v poli handover jen obal/pečeť (stopa.data.obal), ne uložení – držitel z něj neplyne
+  let rezimSpisu = false;
+  const nastavSpis = b => { rezimSpisu = !!b; };
+  // aktuální držitel / umístění: poslední předání, jinak staré pole „Předáno / uloženo“ (jen bez spisu), jinak kdo zajistil
+  // (nad spisem stejně jako Terén: poslední převzetí, jinak kdo zajistil)
   function drzitel(it) {
     const p = it.predani && it.predani[it.predani.length - 1];
-    return (p && p.komu) || it.handover || it.by || '';
+    return (p && p.komu) || (!rezimSpisu && it.handover) || it.by || '';
   }
 
   const stejnaOsoba = (a, b) => String(a || '').trim().toLowerCase().replace(/\s+/g, ' ') === String(b || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -135,7 +139,7 @@
     else if (ted && t0 > ted) add('chyba', 'čas zajištění je v budoucnosti');
     if (!String(it.by || '').trim()) add('pozor', 'chybí, kdo stopu zajistil');
     if (!String(it.num || '').trim()) add('pozor', 'chybí číslo stopy');
-    if (it.stav && it.stav !== 'zajisteno' && !(it.predani || []).length && !String(it.handover || '').trim()) add('pozor', 'stav „' + nazev(STAVY, it.stav) + '“, ale není zapsané žádné předání ani uložení');
+    if (it.stav && it.stav !== 'zajisteno' && !(it.predani || []).length && (rezimSpisu || !String(it.handover || '').trim())) add('pozor', 'stav „' + nazev(STAVY, it.stav) + '“, ale není zapsané žádné předání ani uložení');
     if (it.druh === 'digitalni' && !jeSha256(it.hash)) add('pozor', 'digitální stopa bez otisku SHA-256');
     if (it.hash && !jeSha256(it.hash)) add('pozor', 'otisk není platný SHA-256 (64 hex znaků)');
     let drz = it.by, pred = t0;
@@ -242,10 +246,65 @@
     });
   }
 
+  /* ---------- jednotný spis (S2): záznam deníku ↔ entita `stopa` ----------
+     cislo↔num, nazev↔desc, druh/stav (text spisu)↔klíč deníku, misto↔place, zajistil↔by, kdy↔time, obal↔handover,
+     sha256↔hash, popis↔note, predani[]↔predani[]; navíc souborDeniku a overeno. Neznámá pole spisu se zachovají;
+     text druhu/stavu ze spisu se nepřepíše, dokud se v deníku nezmění. Neplatný čas/otisk jde do kdyText/otiskText. */
+  const RE_CAS_SPIS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
+  const bezD = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  function druhZeSpisu(t) {
+    if (!String(t || '').trim()) return '';
+    if (DRUHY.some(x => x[0] === t)) return t;
+    const d = DRUHY.find(x => bezD(t).startsWith(bezD(x[1]).slice(0, 5)));
+    return d ? d[0] : 'jina';
+  }
+  function stavZeSpisu(t) {
+    const b = bezD(t);
+    if (!b) return 'zajisteno';
+    const s = STAVY.find(x => x[0] === t || bezD(x[1]) === b);
+    if (s) return s[0];
+    if (/odesl|expert|kup|dna/.test(b)) return 'expertiza';
+    if (/vracen/.test(b)) return 'vraceno';
+    if (/vydan/.test(b)) return 'vydano';
+    if (/znicen|skart/.test(b)) return 'zniceno';
+    if (/uschov|ulozen/.test(b)) return 'ulozeno';
+    if (/zajisten/.test(b)) return 'zajisteno';
+    return 'zpracovani';
+  }
+  function zeSpisu(e) {
+    const d = (e && e.data) || {};
+    return normalizuj({
+      id: e.id, time: d.kdy || d.kdyText || '', num: d.cislo || '', desc: e.nazev, place: d.misto, by: d.zajistil, handover: d.obal,
+      hash: d.sha256 || d.otiskText || '', note: d.popis, druh: druhZeSpisu(d.druh), stav: stavZeSpisu(d.stav),
+      predani: d.predani, soubor: d.souborDeniku, overeno: d.overeno
+    });
+  }
+  function doSpisu(it, puvodni) {
+    const pd = (puvodni && puvodni.data) || {};
+    const ponech = (k, klic, f) => pd[k] && f(pd[k]) === klic ? pd[k] : undefined;
+    const cas = tx(it.time).trim(), casOk = RE_CAS_SPIS.test(cas), otisk = tx(it.hash).trim();
+    const prazdne = v => (v === '' || v == null ? undefined : v);
+    const data = Object.assign({}, pd, {
+      cislo: prazdne(tx(it.num).trim()),
+      druh: it.druh ? ponech('druh', it.druh, druhZeSpisu) || nazev(DRUHY, it.druh) + ' stopa' : undefined,
+      misto: prazdne(it.place), zajistil: prazdne(it.by), obal: prazdne(it.handover), popis: prazdne(it.note),
+      kdy: casOk ? cas : undefined, kdyText: !casOk && cas ? cas : undefined,
+      stav: ponech('stav', it.stav, stavZeSpisu) || nazev(STAVY, it.stav || 'zajisteno'),
+      sha256: jeSha256(otisk) ? otisk.toLowerCase() : undefined, otiskText: otisk && !jeSha256(otisk) ? otisk : undefined,
+      predani: (it.predani || []).length ? it.predani.map(p => Object.assign({}, p)) : undefined,
+      souborDeniku: it.soubor || undefined, overeno: it.overeno || undefined
+    });
+    const nz = tx(it.desc).trim() || (tx(it.num).trim() ? 'Stopa ' + tx(it.num).trim() : 'Stopa');
+    return { id: it.id, typ: 'stopa', nazev: nz.slice(0, 300), data };
+  }
+  // klíč pro porovnání „změnilo se v deníku něco?“ (pořadí polí z normalizuj je stálé)
+  const klicZaznamu = it => JSON.stringify(it);
+
   const api = {
     VERZE, DRUHY, STAVY, OBALY, nazev, Sha256, sha256, otiskSouboru, LIMIT_SUBTLE, jeSha256, stejnyOtisk,
-    novyId, normalizuj, drzitel, kontrola, importuj, slouc, exportJson, csv, formatCas, retezecText,
-    seradit, filtr, qrText, plusHodin, druhZTextu, zPripadu
+    novyId, normalizuj, drzitel, nastavSpis, kontrola, importuj, slouc, exportJson, csv, formatCas, retezecText,
+    seradit, filtr, qrText, plusHodin, druhZTextu, zPripadu,
+    druhZeSpisu, stavZeSpisu, zeSpisu, doSpisu, klicZaznamu
   };
   if (typeof module !== 'undefined') module.exports = api;
   else window.EvidenceJadro = api;

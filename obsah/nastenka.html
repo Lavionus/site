@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="cs" data-i18n-platno="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧷 Nástěnka vyšetřovatele</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="vysetrovani/pripad.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+/* horní lišta podle vzoru prompty.html / spis.html */
+.lista{position:relative;z-index:50;display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin-right:4px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl:disabled{opacity:.45;cursor:default}
+.tl.hlavni,.tl[aria-pressed="true"]{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+@media (max-width:900px){.lista .txt{display:none}}
+@media (max-width:520px){.lista h1 .nazev{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:230px;max-width:min(92vw,360px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{text-align:left;background:none;border-color:transparent;padding:7px 10px;color:var(--text);font-weight:400}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .pozn{font-size:.74rem;color:var(--text-faint);padding:4px 10px;line-height:1.4;white-space:normal}
+.nabidka kbd{float:right;margin-left:14px;color:var(--text-faint);font-size:.74rem;font-family:inherit}
+
+.hlavni-cast{flex:1;display:flex;min-height:0;position:relative}
+/* panel entit spisu */
+.panel{width:270px;flex:0 0 270px;display:flex;flex-direction:column;background:var(--bg-panel);border-right:1px solid var(--border);min-height:0}
+.panel .hlava{padding:8px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.panel .hlava .rada{display:flex;gap:6px;align-items:center}
+.panel .hlava b{font-size:.84rem;flex:1}
+.panel .napoveda{font-size:.72rem;color:var(--text-faint);line-height:1.35}
+.vstup{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.86rem;font-family:inherit}
+.seznam{flex:1;overflow-y:auto;padding:4px 6px 30px}
+.skupina{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin:10px 4px 4px}
+.pol{display:flex;gap:7px;align-items:center;padding:5px 6px;border:1px solid var(--border);border-radius:7px;margin-bottom:4px;background:var(--bg-elevated);cursor:grab;user-select:none;touch-action:pan-y}
+.pol:hover,.pol:focus-visible{border-color:var(--accent);outline:none}
+.pol .ik{font-size:1.1rem;width:1.4em;text-align:center;flex:0 0 auto}
+.pol img{width:38px;height:30px;object-fit:cover;border-radius:4px;flex:0 0 auto}
+.pol .tx{flex:1;min-width:0;font-size:.8rem;line-height:1.3}
+.pol .tx .nz{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.pol .tx .po{font-size:.7rem;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pol .na{font-size:.72rem;color:var(--ok);flex:0 0 auto}
+.pol.naPlose{opacity:.75}
+.prazdny-seznam{font-size:.8rem;color:var(--text-faint);padding:14px 6px;line-height:1.45}
+.duch{position:fixed;z-index:80;pointer-events:none;background:var(--bg-elevated);border:1px solid var(--accent);border-radius:7px;padding:5px 9px;font-size:.8rem;box-shadow:var(--shadow);max-width:220px;opacity:.92}
+
+/* plocha */
+.plocha{flex:1;position:relative;min-width:0;overflow:hidden;background:var(--bg-deep)}
+.plocha canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default}
+.plocha.provazek canvas{cursor:crosshair}
+.plocha.posun canvas{cursor:grabbing}
+.prazdno{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;padding:20px}
+.prazdno .box{pointer-events:auto;max-width:440px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:16px;line-height:1.5;font-size:.88rem;color:var(--text-muted)}
+.prazdno .box h2{font-size:1.05rem;color:var(--text);margin-bottom:6px}
+.prazdno .box .tlacitka{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.legenda{position:absolute;left:10px;bottom:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.74rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
+.legenda b{display:block;color:var(--text);font-size:.74rem}
+.legenda i{display:inline-block;width:26px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legenda .rozpor{border-color:var(--danger)} .legenda .overeno{border-color:var(--ok)}
+.legenda .tvrzeni{border-top:2px dashed var(--text-muted)} .legenda .neutralni{border-top:2px solid var(--text-muted)}
+.legenda .smazane{border-top:2px dotted var(--text-faint)}
+.ovladani{position:absolute;right:10px;bottom:10px;display:flex;gap:4px;align-items:center}
+.ovladani .tl{min-width:34px;text-align:center}
+.stav-ulozeni{position:absolute;right:10px;top:8px;font-size:.72rem;color:var(--text-faint);background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:2px 8px;pointer-events:none}
+@media (max-width:700px){
+  .panel{position:absolute;z-index:40;left:0;top:0;bottom:0;width:min(86vw,300px);box-shadow:var(--shadow)}
+  .legenda{bottom:52px;font-size:.68rem;padding:4px 8px}
+  .legenda b{display:none}
+}
+
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(96vw,520px);max-height:92vh;box-shadow:var(--shadow)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno .hlava{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.okno .hlava h2{font-size:1rem;flex:1;overflow-wrap:anywhere}
+.okno .telo{padding:6px 14px 14px;font-size:.88rem;line-height:1.55}
+.okno .telo label{display:block;font-size:.76rem;color:var(--text-faint);margin:9px 0 3px}
+.okno .telo h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin:14px 0 4px}
+.okno .telo ul{padding-left:20px}
+.okno .pata{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--border)}
+.okno .spojeni{font-size:.84rem;color:var(--text-muted);overflow-wrap:anywhere}
+textarea.vstup{resize:vertical;min-height:70px}
+
+/* tisk: jen obrázek nástěnky */
+.tisk{display:none}
+@media print{
+  @page{size:landscape;margin:8mm}
+  body{display:block;overflow:visible;background:#fff}
+  body > *:not(#tisk){display:none!important}
+  .tisk{display:block}
+  .tisk img{display:block;max-width:100%;max-height:190mm;margin:0 auto}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🧷<span class="nazev"> Nástěnka</span></h1>
+  <span id="vyberMisto"></span>
+  <button class="tl" id="tlPanel" data-prikaz="panel" aria-pressed="true" title="Panel entit spisu">📋<span class="txt"> Entity</span></button>
+  <button class="tl" id="tlProvazek" data-prikaz="provazek" aria-pressed="false" data-pripad title="Provázek: táhněte z kartičky na kartičku – založí vazbu ve spisu">🧵<span class="txt"> Provázek</span></button>
+  <button class="tl" data-prikaz="vazbyVybranych" data-vyber title="Zobrazit vazby vybraných kartiček ze spisu (i založené v jiných nástrojích)">🔗<span class="txt"> Vazby vybraných</span></button>
+  <button class="tl" data-nabidka="nabUpravy" aria-expanded="false" data-pripad title="Zpět, poznámka, zvýraznění, odebrání">✏️<span class="txt"> Úpravy</span> ▾</button>
+  <button class="tl" data-nabidka="nabZobrazit" aria-expanded="false" title="Přiblížení, legenda">🔍<span class="txt"> Zobrazit</span> ▾</button>
+  <button class="tl" data-nabidka="nabTisk" aria-expanded="false" data-pripad title="Tisk a PDF nástěnky">🖨️<span class="txt"> Tisk</span> ▾</button>
+  <button class="tl" data-prikaz="zpet" id="tlZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět">↶</button>
+  <button class="tl" data-prikaz="znovu" id="tlZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu">↷</button>
+  <div class="vpravo">
+    <button class="tl" data-prikaz="ukazka" title="Založí/otevře modelový případ 17/2026 a rozloží připravenou nástěnku">🕵️<span class="txt"> Ukázka – modelový případ</span></button>
+    <button class="tl" data-prikaz="napoveda" title="Jak nástěnka funguje" aria-label="Nápověda">❓</button>
+  </div>
+</header>
+<div id="nabUpravy" class="nabidka" hidden>
+  <button class="tl" data-prikaz="zpet">↶ Zpět <kbd>Ctrl+Z</kbd></button>
+  <button class="tl" data-prikaz="znovu">↷ Znovu <kbd>Ctrl+Y</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="poznamka">📝 Přidat poznámku…</button>
+  <button class="tl" data-prikaz="karta" data-vyber>📇 Otevřít kartu ve spisu <kbd>Enter</kbd></button>
+  <button class="tl" data-prikaz="zvyraznit" data-vyber>🖍️ Zvýraznit / zrušit zvýraznění</button>
+  <button class="tl" data-prikaz="vybratVse">▣ Vybrat vše <kbd>Ctrl+A</kbd></button>
+  <hr>
+  <button class="tl" data-prikaz="odebrat" data-vyber>✕ Odebrat z nástěnky <kbd>Del</kbd></button>
+  <div class="pozn">Odebrání z nástěnky spis nemění. Vazbu ve spisu smažete v kartě záznamu (📇).</div>
+</div>
+<div id="nabZobrazit" class="nabidka" hidden>
+  <button class="tl" data-prikaz="priblizit">➕ Přiblížit</button>
+  <button class="tl" data-prikaz="oddalit">➖ Oddálit</button>
+  <button class="tl" data-prikaz="vse">⤢ Celá nástěnka</button>
+  <hr>
+  <button class="tl" data-prikaz="legenda">🎨 Legenda provázků</button>
+</div>
+<div id="nabTisk" class="nabidka" hidden>
+  <button class="tl" data-prikaz="tisk">🖨️ Vytisknout…</button>
+  <button class="tl" data-prikaz="pdf">📄 Stáhnout PDF</button>
+  <button class="tl" data-prikaz="png">🖼️ Stáhnout obrázek PNG</button>
+  <div class="pozn">Tiskne se celá nástěnka na jednu stranu se záhlavím případu a legendou.</div>
+</div>
+
+<main class="hlavni-cast">
+  <aside class="panel" id="panel" aria-label="Entity spisu">
+    <div class="hlava">
+      <div class="rada"><b>Entity spisu</b><button class="tl" data-prikaz="panel" title="Skrýt panel" aria-label="Skrýt panel">✕</button></div>
+      <input class="vstup" id="hledat" type="search" placeholder="Hledat osobu, stopu, telefon…" aria-label="Hledat v entitách spisu">
+      <div class="napoveda">Kartičku přetáhněte na plochu (nebo klepněte – přidá se doprostřed).</div>
+    </div>
+    <div class="seznam" id="seznamEntit"></div>
+  </aside>
+  <div class="plocha" id="plocha">
+    <canvas id="platno" tabindex="0" aria-label="Plocha nástěnky – kartičky a provázky"></canvas>
+    <div class="prazdno" id="prazdno" hidden>
+      <div class="box">
+        <h2 id="prazdnoNadpis">Žádný otevřený případ</h2>
+        <p id="prazdnoText">Vyberte případ v liště (📁 Spis), nebo si otevřete ukázku s modelovým případem 17/2026.</p>
+        <div class="tlacitka" id="prazdnoTlacitka">
+          <button class="tl hlavni" data-prikaz="ukazka">🕵️ Ukázka – modelový případ</button>
+          <button class="tl" data-prikaz="spis">📂 Otevřít spis případu</button>
+        </div>
+      </div>
+    </div>
+    <div class="legenda" id="legenda">
+      <b>Provázky</b>
+      <div><i class="rozpor"></i>vyvrací – rozpor</div>
+      <div><i class="overeno"></i>potvrzuje – ověřeno</div>
+      <div><i class="tvrzeni"></i>tvrzení (neověřeno)</div>
+      <div><i class="neutralni"></i>ostatní vazby</div>
+      <div><i class="smazane"></i>smazáno ve spisu</div>
+    </div>
+    <div class="ovladani">
+      <button class="tl" data-prikaz="oddalit" aria-label="Oddálit" title="Oddálit">−</button>
+      <button class="tl" data-prikaz="vse" id="tlZoom" title="Celá nástěnka">100 %</button>
+      <button class="tl" data-prikaz="priblizit" aria-label="Přiblížit" title="Přiblížit">+</button>
+    </div>
+    <div class="stav-ulozeni" id="stavUlozeni" hidden></div>
+  </div>
+</main>
+<div class="tisk" id="tisk"></div>
+
+<dialog class="okno" id="dlgVazba">
+  <form method="dialog">
+    <div class="hlava"><h2 id="vNadpis">🧵 Nová vazba ve spisu</h2></div>
+    <div class="telo">
+      <div class="spojeni" id="vSpojeni" data-i18n="ne"></div>
+      <label for="vTyp">Typ vazby</label><select class="vstup" id="vTyp"></select>
+      <label for="vPopis">Popis (proč to spolu souvisí)</label><textarea class="vstup" id="vPopis" rows="3" maxlength="2000"></textarea>
+    </div>
+    <div class="pata"><button class="tl" value="zrus" formnovalidate>Zrušit</button><button class="tl hlavni" value="ok" id="vUlozit">💾 Uložit vazbu</button></div>
+  </form>
+</dialog>
+<dialog class="okno" id="dlgPoznamka">
+  <form method="dialog">
+    <div class="hlava"><h2>📝 Poznámka na nástěnce</h2></div>
+    <div class="telo"><label for="pText">Text poznámky</label><textarea class="vstup" id="pText" rows="5" maxlength="2000"></textarea></div>
+    <div class="pata"><button class="tl" value="zrus" formnovalidate>Zrušit</button><button class="tl hlavni" value="ok" id="pUlozit">💾 Uložit</button></div>
+  </form>
+</dialog>
+<dialog class="okno" id="dlgNapoveda">
+  <div class="hlava"><h2>❓ Jak nástěnka funguje</h2></div>
+  <div class="telo">
+    <h3>Kartičky = záznamy spisu</h3>
+    <p>V panelu <b>📋 Entity</b> jsou osoby, stopy, místa, události, fotografie, dokumenty, vozidla, telefony a účty aktivního případu. Přetáhněte je na plochu. Kartička ukazuje vždy aktuální údaje ze spisu – změna v jiné záložce (spis, deník, časová osa…) se hned projeví. Kartička záznamu smazaného ve spisu zešedne a je označená ⚠.</p>
+    <h3>Provázky = vazby spisu</h3>
+    <p>Zapněte <b>🧵 Provázek</b> a táhněte z jedné kartičky na druhou – vyberete typ vazby a ve spisu se založí vazba (uvidí ji i Analýza vazeb a karta záznamu). Vazby založené jinde přidáte tlačítkem <b>🔗 Vazby vybraných</b>; chybějící protějšky se rozmístí kolem. Dvojklik na provázek změní typ vazby.</p>
+    <ul><li><b>Červená</b> = vyvrací (rozpor), <b>zelená</b> = potvrzuje (ověřeno), <b>čárkovaná</b> = vede z/do tvrzení, které není ověřené, šedá = ostatní.</li></ul>
+    <h3>Ovládání</h3>
+    <ul>
+      <li>Klik vybere, Shift+klik přidá do výběru, tažení přesouvá. Dvojklik (nebo Enter) otevře kartu záznamu ve spisu.</li>
+      <li>Tažení prázdné plochy posouvá, kolečko myši přibližuje (na dotykovém displeji dva prsty).</li>
+      <li>Zpět/Znovu vrací rozložení nástěnky; vazbu, která už ve spisu vznikla, Zpět jen sundá z plochy.</li>
+    </ul>
+    <h3>Uložení</h3>
+    <p>Rozložení (pozice, poznámky, zvýraznění) se ukládá ke spisu jako dokument „nástěnka“ – přenáší se v balíčku spisu spolu s ostatními daty. Vše zůstává jen v tomto prohlížeči.</p>
+  </div>
+  <div class="pata"><button class="tl hlavni" data-zavrit>Zavřít</button></div>
+</dialog>
+
+<script src="spis/jadro.js"></script>
+<script src="spis/vyber.js"></script>
+<script src="spis/karta.js"></script>
+<script src="whiteboard/jadro.js"></script>
+<script src="nastenka/jadro.js"></script>
+<script src="nastenka/ui.js"></script>
+</body>
+</html>

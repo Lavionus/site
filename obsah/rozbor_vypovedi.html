@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗒️ Rozbor výpovědi</title>
+<meta name="description" content="Rozbor výpovědi a úředního záznamu: automatické vyznačení časů, dat, osob, míst, SPZ, telefonů, částek a účtů v českém textu, zvýraznění ověřené / tvrzení / rozpor s důkazem ze spisu a přenos jedním klikem na časovou osu a do vazeb spisu.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="vysetrovani/pripad.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+/* horní lišta podle vzoru prompty.html */
+.lista{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.lista::-webkit-scrollbar{display:none}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin-right:6px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible,.vstup:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tl:disabled{opacity:.5;cursor:default}
+.tl.hlavni{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni:hover{background:var(--accent-hover)}
+.tl.nebezpecne{color:var(--danger)}
+.tl.mini{padding:1px 7px;font-size:.78rem}
+@media (max-width:820px){.lista .txt{display:none}}
+@media (max-width:520px){.lista h1 .nazev{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:230px;max-width:min(92vw,380px);max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{text-align:left;background:none;border-color:transparent;padding:7px 10px;white-space:normal}
+.nabidka .tl:hover{background:var(--bg-hover)}
+.nabidka .tl[aria-checked="true"]{color:var(--accent);font-weight:600}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .pozn{font-size:.74rem;color:var(--text-faint);padding:4px 10px;line-height:1.4;white-space:normal}
+
+.hlaseni{border:1px solid var(--danger);color:var(--danger);background:var(--bg-elevated);border-radius:8px;padding:10px 12px;margin:12px;font-size:.88rem;line-height:1.45}
+.uvod{max-width:760px;margin:16px auto;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:18px;line-height:1.55}
+.uvod h2{font-size:1.1rem;margin-bottom:6px}
+.uvod p,.uvod ul{color:var(--text-muted);font-size:.88rem}
+.uvod ul{padding-left:20px;margin:8px 0}
+.tlacitka{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+@media (max-width:560px){.uvod{margin:10px;padding:14px}}
+
+/* formulář dokumentu */
+.formular{max-width:900px;width:100%;margin:12px auto;padding:0 12px 40px}
+.formular h2{font-size:1.05rem;margin:4px 0 8px}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 12px}
+label.pop{display:block;font-size:.76rem;color:var(--text-faint);margin:8px 0 3px}
+.vstup{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.88rem;font-family:inherit}
+textarea.vstup{resize:vertical;min-height:260px;line-height:1.5}
+.pozn{font-size:.76rem;color:var(--text-faint);line-height:1.45;margin-top:6px}
+
+/* pracovní plocha: text | panel */
+.prace{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+.textova{overflow-y:auto;padding:14px 18px 60px;min-width:0}
+.hlavicka{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:10px}
+.hlavicka h2{font-size:1.05rem;overflow-wrap:anywhere}
+.hlavicka .meta{font-size:.8rem;color:var(--text-muted)}
+.text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;font-size:.96rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px;max-width:860px}
+.text span[data-n]{border-bottom:2px solid var(--text-muted);cursor:pointer;border-radius:2px}
+.text span.t-cas,.text span.t-datum{border-bottom-color:var(--accent)}
+.text span.t-osoba{border-bottom-color:var(--ok)}
+.text span.t-misto{border-bottom-color:var(--warn)}
+.text span.nejiste{border-bottom-style:dotted}
+.text span.odm{border-bottom:1px dashed var(--text-faint);color:var(--text-faint)}
+.text span.akt{outline:2px solid var(--accent);outline-offset:1px}
+.text span.z-overeno{background:color-mix(in srgb,var(--ok) 24%,transparent)}
+.text span.z-tvrzeni{background:color-mix(in srgb,var(--warn) 28%,transparent)}
+.text span.z-rozpor{background:color-mix(in srgb,var(--danger) 24%,transparent)}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.74rem;color:var(--text-muted);margin:8px 0 0;max-width:860px}
+.legenda i{display:inline-block;width:18px;height:0;border-bottom:2px solid;vertical-align:middle;margin-right:4px}
+.legenda b{display:inline-block;width:14px;height:12px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.stav{font-size:.8rem;color:var(--text-muted);margin:8px 0;min-height:1.2em;max-width:860px}
+.stav.var{color:var(--danger);font-weight:600}
+
+.panel{border-left:1px solid var(--border);overflow-y:auto;padding:10px 12px 60px;background:var(--bg-elevated);font-size:.86rem}
+.panel h3{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin:14px 0 6px;display:flex;gap:6px;align-items:center}
+.panel h3:first-child{margin-top:2px}
+.panel h3 .pocet{color:var(--text-faint);font-weight:400}
+.seznam{list-style:none;margin:0;padding:0}
+.seznam li{border:1px solid var(--border);border-radius:7px;padding:6px 8px;margin-bottom:5px;background:var(--bg)}
+.seznam li.akt{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.seznam li.odm{opacity:.6}
+.seznam li.odm .uryvek{text-decoration:line-through}
+.seznam .r1{display:flex;gap:6px;align-items:flex-start}
+.seznam .uryvek{flex:1;min-width:0;overflow-wrap:anywhere;cursor:pointer}
+.seznam .hod{font-size:.8rem;color:var(--text);margin-top:2px;overflow-wrap:anywhere}
+.seznam .pres{font-size:.72rem;color:var(--text-faint);margin-top:1px}
+.seznam .akce{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.seznam .stret{color:var(--danger);font-size:.78rem;margin-top:4px;font-weight:600}
+.seznam .ve-spisu{color:var(--ok);font-size:.78rem}
+.znak{display:inline-block;border-radius:10px;padding:0 7px;font-size:.7rem;border:1px solid var(--border);background:var(--bg-control);white-space:nowrap}
+.znak.overeno{border-color:var(--ok);color:var(--ok)}
+.znak.tvrzeni{border-color:var(--warn);color:var(--warn)}
+.znak.rozpor{border-color:var(--danger);color:var(--danger)}
+.odkaz{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline;text-align:left}
+
+@media (max-width:900px){
+  body{height:auto;min-height:100%}
+  .prace{display:flex;flex-direction:column}
+  .textova{overflow:visible;padding:10px 10px 16px}
+  .text{padding:10px 12px}
+  .panel{border-left:0;border-top:1px solid var(--border);overflow:visible}
+}
+
+/* plovoucí lišta nad označeným textem */
+.vyber-lista{position:fixed;z-index:65;display:flex;flex-wrap:wrap;gap:3px;max-width:min(94vw,420px);background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:5px}
+.vyber-lista .tl{padding:3px 7px;font-size:.78rem}
+.vyber-lista .odd{flex-basis:100%;height:0}
+
+/* dialogy */
+dialog.okno{margin:auto;border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);color:var(--text);width:min(96vw,620px);max-height:92vh;box-shadow:var(--shadow)}
+dialog.okno::backdrop{background:rgba(0,0,0,.5)}
+.okno .hlava{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-elevated)}
+.okno .hlava h2{font-size:1rem;flex:1}
+.okno .telo{padding:6px 14px 14px;font-size:.88rem;line-height:1.55}
+.okno .telo h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin:14px 0 4px}
+.okno .telo ul,.okno .telo ol{padding-left:20px}
+.okno .pata{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-elevated)}
+.okno blockquote{border-left:3px solid var(--border-strong);padding:4px 10px;color:var(--text-muted);margin:6px 0;overflow-wrap:anywhere}
+.volby{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0}
+.volby label{display:flex;gap:5px;align-items:center;cursor:pointer}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🗒️<span class="nazev"> Rozbor výpovědi</span></h1>
+  <span id="vyberMisto"></span>
+  <button class="tl hlavni" data-nabidka="nabDok" aria-expanded="false" title="Nový dokument, načtení textu, dokumenty spisu, ukázka">📄<span class="txt"> Dokument</span> ▾</button>
+  <button class="tl" data-nabidka="nabOznacit" aria-expanded="false" data-potrebuje-dok title="Označit vybraný úryvek textu">🖍️<span class="txt"> Označit</span> ▾</button>
+  <div class="vpravo"><button class="tl" data-prikaz="napoveda" title="Co automatika umí a neumí">❓<span class="txt"> Nápověda</span></button></div>
+</header>
+<div id="nabDok" class="nabidka" hidden>
+  <button class="tl" data-prikaz="novy">➕ Nový dokument (vložit text)</button>
+  <button class="tl" data-prikaz="nacist">📥 Načíst soubor .txt…</button>
+  <button class="tl" data-prikaz="schranka">📋 Vložit ze schránky</button>
+  <hr>
+  <div id="nabDokSeznam"></div>
+  <hr>
+  <button class="tl" data-prikaz="upravit" data-potrebuje-dok>✏️ Upravit text a údaje</button>
+  <button class="tl" data-prikaz="karta" data-potrebuje-dok>🗂️ Karta dokumentu ve spisu</button>
+  <button class="tl" data-prikaz="ukazka">🕵️ Ukázka – modelový případ 17/2026</button>
+  <hr>
+  <button class="tl nebezpecne" data-prikaz="smazat" data-potrebuje-dok>🗑️ Smazat dokument ze spisu…</button>
+</div>
+<div id="nabOznacit" class="nabidka" hidden>
+  <div class="pozn">Nejdřív v textu označte úryvek myší nebo prstem, pak vyberte, co to je.</div>
+  <button class="tl" data-prikaz="oznac" data-typ="cas">🕓 Čas</button>
+  <button class="tl" data-prikaz="oznac" data-typ="datum">📅 Datum</button>
+  <button class="tl" data-prikaz="oznac" data-typ="osoba">👤 Osoba</button>
+  <button class="tl" data-prikaz="oznac" data-typ="misto">📍 Místo</button>
+  <button class="tl" data-prikaz="oznac" data-typ="spz">🚗 SPZ</button>
+  <button class="tl" data-prikaz="oznac" data-typ="telefon">📱 Telefon</button>
+  <button class="tl" data-prikaz="oznac" data-typ="castka">💰 Částka</button>
+  <button class="tl" data-prikaz="oznac" data-typ="ucet">🏦 Účet</button>
+  <hr>
+  <button class="tl" data-prikaz="zvyrazni" data-stav="overeno">✅ Zvýraznit jako ověřené…</button>
+  <button class="tl" data-prikaz="zvyrazni" data-stav="tvrzeni">💬 Zvýraznit jako tvrzení…</button>
+  <button class="tl" data-prikaz="zvyrazni" data-stav="rozpor">⚠️ Zvýraznit jako rozpor…</button>
+</div>
+<input type="file" id="vstupSoubor" accept=".txt,.md,text/plain" hidden>
+
+<div id="chybaUloziste" class="hlaseni" role="alert" hidden></div>
+
+<section id="uvod" class="uvod" hidden>
+  <h2>🗒️ Rozbor výpovědi a úředního záznamu</h2>
+  <p>Vložte text výpovědi nebo úředního záznamu. Stránka v něm vyznačí <b>časy a data</b> (i „v pátek kolem půl deváté“ vůči datu záznamu), <b>osoby</b> (podle spisu i odhadem), <b>místa</b>, <b>SPZ</b>, <b>telefonní čísla</b>, <b>částky</b> a <b>čísla účtů</b>. Úryvky zvýrazníte jako ověřené, tvrzení nebo rozpor a připojíte k nim důkaz ze spisu. Čas jedním klikem přenesete na časovou osu, osobu, telefon nebo SPZ do vazeb spisu.</p>
+  <ul>
+    <li>Text i rozbor se ukládají do <b>spisu případu</b> jen v tomto prohlížeči – nic se neodesílá.</li>
+    <li>Automatika je pomůcka: dělá falešné nálezy a něco přehlédne. Čtení textu nenahrazuje.</li>
+    <li>Rozpoznávání funguje jen na českém textu.</li>
+  </ul>
+  <div class="tlacitka">
+    <button class="tl hlavni" data-prikaz="novyPripad">➕ Založit případ</button>
+    <button class="tl" data-prikaz="ukazka">🕵️ Ukázka – modelový případ 17/2026</button>
+  </div>
+</section>
+
+<section id="formular" class="formular" hidden>
+  <h2 id="fTitulek">➕ Nový dokument</h2>
+  <div class="mrizka">
+    <div><label class="pop" for="fNazev">Název dokumentu</label><input class="vstup" id="fNazev" maxlength="300" data-i18n="ne" placeholder="např. Výpověď svědka J. Nováka"></div>
+    <div><label class="pop" for="fDruh">Druh</label><select class="vstup" id="fDruh"><option value="výpověď">výpověď</option><option value="úřední záznam">úřední záznam</option><option value="protokol">protokol</option><option value="jiný">jiný</option></select></div>
+    <div><label class="pop" for="fDatum">Datum záznamu (vůči němu „včera“, „v pátek“)</label><input class="vstup" id="fDatum" type="date"></div>
+    <div><label class="pop" for="fOsoba">Kdo vypovídá (osoba ve spisu)</label><select class="vstup" id="fOsoba"></select></div>
+  </div>
+  <label class="pop" for="fText">Text výpovědi / záznamu</label>
+  <textarea class="vstup" id="fText" data-i18n="ne" placeholder="Vložte text (Ctrl+V), načtěte soubor .txt nebo použijte tlačítko Vložit ze schránky."></textarea>
+  <div class="tlacitka">
+    <button class="tl hlavni" id="fUlozit">💾 Uložit do spisu a rozebrat</button>
+    <button class="tl" data-prikaz="nacist">📥 Načíst .txt…</button>
+    <button class="tl" data-prikaz="schranka">📋 Vložit ze schránky</button>
+    <button class="tl" id="fZrusit">Zrušit</button>
+  </div>
+  <p class="pozn">Výpověď a úřední záznam se při přenosu na časovou osu ukládají s jistotou „jen tvrzení“ – co říká vypovídající, není ověřený fakt. Rozpoznávání funguje jen na českém textu.</p>
+</section>
+
+<main id="prace" class="prace" hidden>
+  <section class="textova">
+    <div class="hlavicka"><h2 id="dNazev" data-i18n="ne"></h2><span class="meta" id="dMeta"></span></div>
+    <div class="text" id="text" data-i18n="ne" aria-label="Text dokumentu s vyznačenými nálezy"></div>
+    <div class="legenda">
+      <span><i style="border-color:var(--accent)"></i>čas, datum</span>
+      <span><i style="border-color:var(--ok)"></i>osoba</span>
+      <span><i style="border-color:var(--warn)"></i>místo</span>
+      <span><i style="border-color:var(--text-muted)"></i>SPZ, telefon, částka, účet</span>
+      <span><i style="border-color:var(--text-muted);border-bottom-style:dotted"></i>nejisté</span>
+      <span><b style="background:color-mix(in srgb,var(--ok) 24%,transparent)"></b>ověřené</span>
+      <span><b style="background:color-mix(in srgb,var(--warn) 28%,transparent)"></b>tvrzení</span>
+      <span><b style="background:color-mix(in srgb,var(--danger) 24%,transparent)"></b>rozpor</span>
+    </div>
+    <p class="stav" id="stav" aria-live="polite"></p>
+  </section>
+  <aside class="panel" id="panel">
+    <h3>Nálezy <span class="pocet" id="pocetN"></span></h3>
+    <p class="pozn">Automatický návrh – zkontrolujte ho. ✕ odmítne falešný nález, ✏️ upraví hodnotu, ➜ přenese do spisu. Rozpoznávání funguje jen na českém textu.</p>
+    <div id="nalezy"></div>
+    <h3>Zvýraznění <span class="pocet" id="pocetZ"></span></h3>
+    <ul class="seznam" id="znacky"></ul>
+    <p class="pozn" id="znackyPrazdne">Označte v textu úryvek a zvolte „ověřené / tvrzení / rozpor“ – můžete připojit důkaz ze spisu.</p>
+  </aside>
+</main>
+
+<!-- zvýraznění + důkaz -->
+<dialog class="okno" id="dlgZnacka">
+  <div class="hlava"><h2>🖍️ Zvýraznění úryvku</h2></div>
+  <div class="telo">
+    <blockquote id="zUryvek" data-i18n="ne"></blockquote>
+    <div class="volby" role="radiogroup" aria-label="Stav úryvku">
+      <label><input type="radio" name="zStav" value="overeno"> ✅ ověřené</label>
+      <label><input type="radio" name="zStav" value="tvrzeni"> 💬 tvrzení</label>
+      <label><input type="radio" name="zStav" value="rozpor"> ⚠️ rozpor</label>
+    </div>
+    <label class="pop" for="zDukaz">Důkaz ze spisu (volitelné)</label>
+    <select class="vstup" id="zDukaz"></select>
+    <label class="pop" for="zPozn">Poznámka</label>
+    <input class="vstup" id="zPozn" maxlength="500" data-i18n="ne">
+    <p class="pozn">Důkaz se ve spisu propojí s dokumentem vazbou „potvrzuje“ (ověřené), „vyvrací“ (rozpor) nebo „souvisí“ (tvrzení).</p>
+  </div>
+  <div class="pata"><button class="tl nebezpecne" id="zSmazat">🗑️ Smazat</button><button class="tl" data-zavrit>Zrušit</button><button class="tl hlavni" id="zUlozit">Uložit</button></div>
+</dialog>
+
+<!-- nápověda -->
+<dialog class="okno" id="dlgNapoveda">
+  <div class="hlava"><h2>❓ Rozbor výpovědi</h2></div>
+  <div class="telo">
+    <h3>Co automatika umí</h3>
+    <ul>
+      <li><b>Časy</b>: „ve 21:30“, „ve 21 hodin“, „půl deváté“, „čtvrt na tři“, „tři čtvrtě na pět“, „kolem desáté“, „v deset“, části dne („večer“, „v noci“, „celou noc“, „o půlnoci“) i „v noci ze 14. na 15. listopadu“. U každého času je <b>přesnost</b>: přesný čas, zaokrouhleno (± 15 min), přibližně (± 30 min), interval.</li>
+      <li><b>Data</b>: „12. 3. 2026“, „12. března“, „včera“, „předevčírem“, „v pátek“, „minulou středu“ – relativní údaje se počítají od <b>data záznamu</b>. Čas bez data dostane datum ze stejné věty, jinak z posledního data před ním, jinak datum záznamu (pak je označený jako nejistý).</li>
+      <li><b>Osoby</b> podle spisu i ve skloňování (Fiala – Fialy – Fialovi, Brabec – Brabcem): porovnává se kmen příjmení. Mimo spis jen odhad podle dvou slov s velkým písmenem, iniciály („T. Brabec“) nebo slova „pan / paní“ – vždy jako nejisté.</li>
+      <li><b>Místa</b> podle spisu (i „v Dolní Lhotě“) a adresy „Ulice číslo“. <b>SPZ</b> (1AB 2345 i starší ABC 12-34), <b>telefony</b> (+420 a 9 číslic), <b>částky</b> (Kč, €), <b>účty</b> (číslo/kód banky, IBAN CZ).</li>
+    </ul>
+    <h3>Co neumí</h3>
+    <ul>
+      <li>Nerozumí smyslu: „nebyl jsem tam ve 22:00“ vyznačí stejně jako „byl jsem tam ve 22:00“. Zápor, ironii ani nepřímou řeč nepozná.</li>
+      <li>Dělá <b>falešné nálezy</b> (slovo s velkým písmenem není vždy osoba, „Horní Lhota“ nemusí být bydliště ze spisu) a něco <b>přehlédne</b> (přezdívky, „u nás“, „doma“, čísla slovy, „před hodinou“).</li>
+      <li>Chybí mu kontext: „v deset“ může být dopoledne i večer – takový čas je označený „dopoledne, nebo večer?“ a je třeba ho opravit ✏️.</li>
+      <li>Funguje jen na <b>českém</b> textu. V jiném jazyce nenajde téměř nic.</li>
+    </ul>
+    <p><b>Rozbor nenahrazuje čtení.</b> Text vždy přečtěte celý; nálezy jsou jen návrh, který potvrdíte přenosem do spisu, opravíte nebo odmítnete.</p>
+    <h3>Zvýraznění a přenos</h3>
+    <p>Úryvek označte myší (prstem), v liště nad ním zvolte druh nálezu nebo zvýraznění <b>ověřené / tvrzení / rozpor</b> s důkazem ze spisu. ➜ přenese nález do spisu: čas jako událost na časovou osu (u výpovědi a úředního záznamu s jistotou „jen tvrzení“, s vypovídajícím a místem ze stejné věty), osobu, telefon, SPZ, účet nebo místo jako entitu propojenou s dokumentem. Co už ve spisu je, se jen propojí – nic se nezdvojí. Když tvrzení koliduje s jinou událostí téže osoby na jiném místě, ukáže se <b>střet</b>.</p>
+    <h3>Spis</h3>
+    <p>Vše je uložené jen v tomto prohlížeči ve spisu případu. Na jiné zařízení se přenáší balíčkem spisu (📁 Spis případu → 📦 Balíček).</p>
+  </div>
+  <div class="pata"><button class="tl hlavni" data-zavrit>Zavřít</button></div>
+</dialog>
+
+<script src="spis/jadro.js"></script>
+<script src="spis/vyber.js"></script>
+<script src="spis/karta.js"></script>
+<script src="rozbor_vypovedi/jadro.js"></script>
+<script src="rozbor_vypovedi/ui.js"></script>
+</body>
+</html>

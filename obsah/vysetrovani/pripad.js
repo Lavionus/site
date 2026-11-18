@@ -106,16 +106,21 @@
 
     // kroky průvodce – pořadí odpovídá práci na případu
     kroky: [
+      { soubor: 'spis.html',                    nazev: 'Spis případu', ukol: 'Otevři spis 17/2026 – osoby, stopy, místa a události na jednom místě. Další nástroje do něj zapisují a čtou z něj.' },
       { soubor: 'investigation_checklist.html', nazev: 'Příprava ohledání', ukol: 'Projdi kontrolní seznam ohledání místa činu – co zajistit dřív, než se na místo vstoupí.' },
       { soubor: 'scene_sketch.html',            nazev: 'Náčrt místa činu', ukol: 'Prohlédni si náčrt prodejny se značkami stop 1–4 a fotopozicemi. Všimni si, kde leží střepy – sklo bylo rozbito zvenku.' },
+      { soubor: 'fotodokumentace.html',         nazev: 'Fotodokumentace', ukol: 'Čtyři snímky z místa se značkami stop. Klik na značku otevře stopu ve spisu; 🖨️ Fototabulka sestaví přílohu k protokolu.' },
       { soubor: 'evidence_log.html',            nazev: 'Evidence důkazů', ukol: 'Každá stopa má číslo, obal s pečetí a řetězec předání. Digitální stopy nesou otisk SHA-256.' },
+      { soubor: 'teren.html',                   nazev: 'Předání stopy v terénu', ukol: 'Na telefonu načti QR štítek stopy č. 5 (USB se záznamem kamery) a zapiš její předání – objeví se v řetězci předání v deníku.' },
       { soubor: 'brzdna_draha.html',            nazev: 'Rychlost z brzdné stopy', ukol: 'Z 38,5 m dlouhé stopy na suchém asfaltu spočítej rychlost vozidla při úniku.' },
       { soubor: 'vyska_z_fotky.html',           nazev: 'Výška osoby z kamery', ukol: 'Ze snímku čerpací stanice odhadni výšku řidiče i s nejistotou a porovnej s podezřelými (187 cm a 174 cm).' },
       { soubor: 'casova_analyza.html',          nazev: 'Časová analýza polohy', ukol: 'Ověř alibi L. Fialy – „celou noc doma“ – proti polohové historii jeho telefonu.' },
       { soubor: 'vazby_analyza.html',           nazev: 'Analýza vazeb', ukol: 'Graf osob, telefonů a vozidla: kdo komu volal a kdo je spojnicí mezi pachateli a překupníkem.' },
       { soubor: 'financni_toky.html',           nazev: 'Finanční stopy', ukol: 'Výpisy účtů ukážou, kam šly peníze za notebooky z bazaru R. Kříže – a kdo je dostal krátce po činu.' },
       { soubor: 'case_timeline.html',           nazev: 'Časová osa případu', ukol: 'Poskládej zjištění z předchozích kroků do jedné chronologie a rozliš události, důkazy a výpovědi.' },
+      { soubor: 'rozbor_vypovedi.html',         nazev: 'Rozbor výpovědi', ukol: 'Ve výpovědi L. Fialy vyznač časy, osoby a místa. Tvrzení „celou noc doma“ přenes na časovou osu ke srovnání s polohou telefonu.' },
       { soubor: 'interview_questions.html',     nazev: 'Příprava výslechu', ukol: 'Připrav výslech L. Fialy – otevřené otázky nejdřív, rozpory (poloha telefonu) až nakonec.' },
+      { soubor: 'nastenka.html',                nazev: 'Nástěnka vyšetřovatele', ukol: 'Shrnutí na jedné ploše: tvrzení Fialy a provázky k důkazům, které ho vyvracejí nebo s ním souvisejí.' },
       { soubor: 'protocol_gen.html',            nazev: 'Protokol o ohledání', ukol: 'Výsledek práce: protokol o ohledání místa činu s odkazy na stopy a náčrt.' }
     ]
   };

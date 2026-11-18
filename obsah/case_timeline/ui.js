@@ -34,7 +34,44 @@ let items = [];
   if (MP || Array.isArray(raw)) try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) { /* plné úložiště */ }
 }
 $('caseName').value = localStorage.getItem(KEY_CASE) || '';
-$('caseName').addEventListener('input', () => localStorage.setItem(KEY_CASE, $('caseName').value));
+$('caseName').addEventListener('input', () => { if (!veSpisu()) localStorage.setItem(KEY_CASE, $('caseName').value); });
+
+// se zvoleným spisem (S2): záznamy = entity `udalost`, stopy spisu se ukazují jako důkazy v čase zajištění (jen ke čtení);
+// vlastní úložiště osy zůstává netknuté
+let N = null;
+const veSpisu = () => !!(N && N.pripad);
+const snimek = new Map();
+let spisSeznamy = { osoby: [], mista: [], stopy: [] };
+const klicJmena = t => String(t || '').trim().toLowerCase().replace(/\s+/g, ' ');
+function doSpisu() {
+  const kopie = items.filter(it => !it.zeStopy && it.time);
+  N.zapis(async (S, pripad) => {
+    const mapa = async typ => new Map((await S.seznam(typ, { pripad })).map(e => [klicJmena(e.nazev), e.id]));
+    const os = await mapa('osoba'), mi = await mapa('misto'), o = { nastroj: 'case_timeline' };
+    await SpisNapojeni.zapisZmeny(snimek, kopie, {
+      klic: J.klicZaznamu,
+      uloz: async it => {
+        for (const jm of it.osoby) if (!os.has(klicJmena(jm))) os.set(klicJmena(jm), (await S.uloz({ typ: 'osoba', nazev: jm, data: {}, pripad }, o)).id);
+        if (it.misto && !mi.has(klicJmena(it.misto))) {
+          const d = it.lat != null ? { lat: it.lat, lon: it.lon } : {};
+          mi.set(klicJmena(it.misto), (await S.uloz({ typ: 'misto', nazev: it.misto, data: d, pripad }, o)).id);
+        }
+        const e = await S.entita(it.id);
+        await S.uloz(Object.assign(J.doSpisu(it, e, j => os.get(klicJmena(j)), j => mi.get(klicJmena(j))), { pripad }), o);
+      },
+      smaz: id => S.smaz(id, o)
+    });
+  });
+}
+async function zeSpisu(pripad) {
+  const vse = await SPIS.seznam(null, { pripad }), jmena = new Map(vse.map(e => [e.id, e.nazev]));
+  const jm = id => jmena.get(id) || '';
+  const udalosti = vse.filter(e => e.typ === 'udalost').map(e => J.zeSpisu(e, jm));
+  const stopy = vse.filter(e => e.typ === 'stopa');
+  spisSeznamy = { osoby: vse.filter(e => e.typ === 'osoba').map(e => e.nazev), mista: vse.filter(e => e.typ === 'misto').map(e => e.nazev), stopy };
+  snimek.clear(); udalosti.forEach(it => snimek.set(it.id, J.klicZaznamu(it)));
+  return udalosti.concat(stopy.map(J.zeStopy));
+}
 
 const stav = Object.assign({ pohled: 'seznam', filtr: '' }, ctiJson(KEY_POHLED) || {});
 if (!['seznam', 'drahy'].includes(stav.pohled)) stav.pohled = 'seznam';
@@ -42,6 +79,7 @@ if (!['', 'bez', 'overeno'].includes(stav.filtr)) stav.filtr = '';
 let vyrez = null, zvyraznene = new Set(), rozp = [];
 
 function uloz() {
+  if (veSpisu()) { render(); doSpisu(); return; }
   try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) { Dialog.chyba('Uložení selhalo: ' + e.message); }
   render();
 }
@@ -157,7 +195,7 @@ let sirkaOkna = innerWidth;
 addEventListener('resize', () => { if (innerWidth !== sirkaOkna && stav.pohled === 'drahy') { sirkaOkna = innerWidth; render(); } });
 
 /* ---------- editor záznamu ---------- */
-let upravovany = null;
+let upravovany = null, zakladUpravy = null;   // klíč záznamu při otevření editoru (změna jinde = střet)
 $('fType').innerHTML = Object.entries(J.TYPY).map(([k, t]) => `<option value="${k}">${t.ikona} ${esc(t.nazev)}</option>`).join('');
 $('fZdroj').innerHTML = Object.entries(J.ZDROJE).map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('');
 $('fJistota').innerHTML = Object.entries(J.JISTOTY).map(([k, j]) => `<label title="${esc(j.popis)}"><input type="radio" name="jistota" value="${k}"> <span class="jist ${k}">${j.ikona} ${esc(j.nazev)}</span></label>`).join('');
@@ -166,11 +204,12 @@ $('fJistota').addEventListener('change', () => { jistotaRuky.v = true; });
 $('fType').addEventListener('change', () => { if (!jistotaRuky.v) nastavJistotu(J.jistotaZTypu($('fType').value)); });
 function nastavJistotu(j) { const r = document.querySelector(`#fJistota input[value="${j}"]`); if (r) r.checked = true; }
 function obnovSeznamy() {
-  const osoby = [...new Set(items.flatMap(it => it.osoby).concat(MP ? MP.osoby.map(o => o.jmeno) : []))];
+  const osoby = [...new Set(items.flatMap(it => it.osoby).concat(veSpisu() ? spisSeznamy.osoby : MP ? MP.osoby.map(o => o.jmeno) : []))];
   $('rychleOsoby').innerHTML = osoby.map(o => `<button type="button" class="btn mini" data-osoba="${esc(o)}" data-i18n="ne">+ ${esc(o)}</button>`).join('');
-  const mista = [...new Set(items.map(it => it.misto).filter(Boolean).concat(MP ? Object.values(MP.mista).map(m => m.nazev) : []))];
+  const mista = [...new Set(items.map(it => it.misto).filter(Boolean).concat(veSpisu() ? spisSeznamy.mista : MP ? Object.values(MP.mista).map(m => m.nazev) : []))];
   $('seznamMist').innerHTML = mista.map(m => `<option value="${esc(m)}">`).join('');
-  const ev = ctiJson(KEY_EVID), stopy = (Array.isArray(ev) ? ev : []).filter(e => e && e.num);
+  const ev = veSpisu() ? spisSeznamy.stopy.map(e => ({ num: e.data.cislo, desc: e.nazev })) : ctiJson(KEY_EVID);
+  const stopy = (Array.isArray(ev) ? ev : []).filter(e => e && e.num);
   $('seznamStop').innerHTML = stopy.map(e => `<option value="${esc(e.num)}">${esc(String(e.desc || '').slice(0, 60))}</option>`).join('');
 }
 $('rychleOsoby').addEventListener('click', e => {
@@ -182,6 +221,7 @@ $('rychleOsoby').addEventListener('click', e => {
 });
 function otevriEditor(it) {
   upravovany = it || null;
+  zakladUpravy = it ? J.klicZaznamu(it) : null;
   const z = it || J.normalizuj({ type: 'udalost' });
   $('dlgZaznamTitul').textContent = it ? 'Upravit záznam' : 'Nový záznam';
   $('fTime').value = z.time ? z.time.slice(0, 16) : ''; $('fEnd').value = z.end ? z.end.slice(0, 16) : ''; $('fTol').value = z.tol || 0;
@@ -192,10 +232,11 @@ function otevriEditor(it) {
   $('dlgZaznam').showModal();
   $('fDesc').focus();
 }
-$('formZaznam').addEventListener('submit', e => {
+$('formZaznam').addEventListener('submit', async e => {
   const desc = $('fDesc').value.trim();
   if (!desc) { e.preventDefault(); $('fDesc').focus(); return; }
   if ($('fEnd').value && $('fTime').value && $('fEnd').value <= $('fTime').value) { e.preventDefault(); Dialog.info('Konec rozsahu musí být po začátku.'); return; }
+  if (veSpisu() && !$('fTime').value) { e.preventDefault(); $('fTime').focus(); Dialog.info('Ve spisu musí mít záznam čas (aspoň odhad – nejistotu zapište do pole ±).'); return; }
   const z = J.normalizuj(Object.assign({}, upravovany || {}, {
     id: upravovany ? upravovany.id : undefined,
     time: $('fTime').value, end: $('fEnd').value, tol: $('fTol').value, type: $('fType').value,
@@ -203,6 +244,16 @@ $('formZaznam').addEventListener('submit', e => {
     zdroj: $('fZdroj').value, stopa: $('fStopa').value, zdrojText: $('fZdrojText').value, desc
   }));
   if (upravovany && $('fMisto').value.trim() !== upravovany.misto) { delete z.lat; delete z.lon; }   // jiné místo → staré souřadnice neplatí
+  // záznam mezitím změnila / smazala jiná záložka nebo nástroj (spis) – nepřepsat potichu cizí změnu
+  const ted = upravovany && items.find(x => x.id === upravovany.id);
+  if (upravovany && (!ted || J.klicZaznamu(ted) !== zakladUpravy)) {
+    e.preventDefault();
+    const ok = await Dialog.potvrd(ted ? 'Záznam byl mezitím změněn jinde (jiná záložka nebo nástroj). Uložením se tamty změny přepíšou vaší verzí. Uložit přesto?'
+      : 'Záznam byl mezitím smazán (v jiné záložce nebo jiném nástroji). Uložit váš záznam jako nový?', { ok: ted ? 'Přepsat' : 'Uložit jako nový', zrus: 'Zpět k úpravám' });
+    if (!ok) return;
+    if (!ted) { z.id = J.novyId(); upravovany = null; }
+    $('dlgZaznam').close();
+  }
   items = upravovany ? items.map(x => x.id === upravovany.id ? z : x) : items.concat(z);
   uloz();
 });
@@ -214,7 +265,13 @@ $('btnSmazZaznam').onclick = async () => {
 };
 document.addEventListener('click', e => {
   const z = e.target.closest('.item[data-id], .blok[data-id]');
-  if (z && !(tah && tah.posunuto)) { const it = items.find(x => x.id === z.dataset.id); if (it) otevriEditor(it); }
+  if (z && !(tah && tah.posunuto)) {
+    const it = items.find(x => x.id === z.dataset.id);
+    if (it && it.zeStopy) { if (window.SpisKarta) SpisKarta.otevri(it.id, { nastroj: 'case_timeline' }); }
+    // S4: ve spisu klik otevře kartu entity (kde všude je, vazby); úprava na ose tlačítkem v kartě
+    else if (it && veSpisu() && window.SpisKarta) SpisKarta.otevri(it.id, { nastroj: 'case_timeline', akce: [{ text: '✏️ Upravit na ose', fn: () => otevriEditor(it) }] });
+    else if (it) otevriEditor(it);
+  }
 });
 $('timeline').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.id) e.target.click(); });
 $('seznamRozporu').addEventListener('click', e => {
@@ -228,12 +285,28 @@ $('seznamRozporu').addEventListener('click', e => {
 });
 
 /* ---------- importy ---------- */
-function vlozImport(nove, odkud) {
+async function vlozImport(nove, odkud) {
+  let bezCasu = 0;
+  if (veSpisu()) {   // ve spisu: čas povinný, id jen z povolených znaků (stejné id → stejný výsledek, opakovaný import nezdvojí)
+    bezCasu = nove.filter(x => !x.time).length;
+    const ven = [];
+    for (const x of nove.filter(x => x.time)) {
+      const y = Object.assign({}, x, { id: SpisNapojeni.bezpecneId(x.id) }), e = await SPIS.entita(y.id);
+      // stopa spisu (export osy obsahuje i stopy) je na ose sama – nepřepsat ji událostí
+      if (e && e.pripad === N.pripad && e.typ === 'stopa') continue;
+      // id jiného případu, jiné entity než události nebo smazané události → nové id (jinak přepis cizích dat / chyba zápisu)
+      if (e && (e.pripad !== N.pripad || e.typ !== 'udalost' || e.smazano)) y.id = J.novyId();
+      ven.push(y);
+    }
+    nove = ven;
+  }
   const d = J.bezDuplicit(items, nove), r = J.slouc(items, d.nove);
   items = r.items; uloz();
-  Dialog.info(`${odkud}: přidáno ${r.pridano}, aktualizováno ${r.nahrazeno} záznamů` + (d.preskoceno ? `, ${d.preskoceno} už na ose bylo (stejný typ, čas a osoba) – přeskočeno.` : '.'));
+  Dialog.info(`${odkud}: přidáno ${r.pridano}, aktualizováno ${r.nahrazeno} záznamů` + (d.preskoceno ? `, ${d.preskoceno} už na ose bylo (stejný typ, čas a osoba) – přeskočeno.` : '.')
+    + (bezCasu ? ` ${bezCasu} záznamů bez času se do spisu nepřevzalo (čas je ve spisu povinný).` : ''));
 }
 function importEvidence() {
+  if (veSpisu()) return Dialog.info('Stopy spisu jsou na ose samy – jako důkazy v čase zajištění. Upravují se v Evidenčním deníku nebo ve spisu.');
   let ev = ctiJson(KEY_EVID);
   if (!Array.isArray(ev) && MP) ev = MP.dukazy.map(d => ({ time: d.kdy, num: 'D-0' + d.c, desc: d.nazev + ' (' + d.druh + ')', place: d.misto }));
   if (!Array.isArray(ev) || !ev.length) return Dialog.info('Evidenční deník v tomto prohlížeči je prázdný.');
@@ -286,9 +359,9 @@ $('fileImport').onchange = () => {
     try {
       const d = J.nacti(JSON.parse(r.result));
       $('fileImport').value = '';
-      let nahradit = !items.length;
-      if (!nahradit) nahradit = await Dialog.potvrd(`Soubor má ${d.items.length} záznamů. Nahradit jimi současnou osu (${items.length})? Zrušit = sloučit (stejná id se přepíší).`);
-      if (d.case && (nahradit || !$('caseName').value)) { $('caseName').value = d.case; localStorage.setItem(KEY_CASE, d.case); }
+      let nahradit = !items.length && !veSpisu();
+      if (!nahradit && !veSpisu()) nahradit = await Dialog.potvrd(`Soubor má ${d.items.length} záznamů. Nahradit jimi současnou osu (${items.length})? Zrušit = sloučit (stejná id se přepíší).`);
+      if (d.case && !veSpisu() && (nahradit || !$('caseName').value)) { $('caseName').value = d.case; localStorage.setItem(KEY_CASE, d.case); }
       if (nahradit) { items = d.items; uloz(); } else vlozImport(d.items, 'JSON');
     } catch (e) { $('fileImport').value = ''; Dialog.chyba('Neplatný soubor JSON. ' + e.message); }
   };
@@ -327,7 +400,28 @@ const PRIKAZY = {
   exportCsv: () => stahni('﻿' + J.exportCsv(items), 'text/csv;charset=utf-8', '.csv'),
   tisk: () => { pripravTisk(); window.print(); },
   nazev: () => { $('caseName').focus(); $('caseName').select(); },
-  smazat: async () => { if (await Dialog.potvrd('Opravdu smazat všechny záznamy časové osy?')) { items = []; vyrez = null; uloz(); } },
+  smazat: async () => {
+    if (!await Dialog.potvrd(veSpisu() ? 'Opravdu smazat všechny události časové osy ve spisu? (Stopy zůstanou, smazané události jdou ve spisu obnovit.)' : 'Opravdu smazat všechny záznamy časové osy?')) return;
+    items = items.filter(it => it.zeStopy); vyrez = null; uloz();
+  },
+  prevodDoSpisu: () => {
+    const raw = ctiJson(KEY), vlastni = Array.isArray(raw) ? J.nacti(raw.filter(x => x && typeof x === 'object')).items : [];
+    const sCasem = vlastni.filter(it => it.time);
+    return N.prevod(sCasem.length, `${sCasem.length} záznamů vlastní časové osy` + (vlastni.length - sCasem.length ? ` (${vlastni.length - sCasem.length} bez času se převést nedá)` : ''), async (S, pripad) => {
+      const mapa = async typ => new Map((await S.seznam(typ, { pripad })).map(e => [klicJmena(e.nazev), e.id]));
+      const os = await mapa('osoba'), mi = await mapa('misto'), o = { nastroj: 'case_timeline' };
+      let nove = 0;
+      for (const it of sCasem) {
+        const id = SpisNapojeni.bezpecneId(pripad + '.ct.' + it.id);
+        if (await S.entita(id)) continue;
+        for (const jm of it.osoby) if (!os.has(klicJmena(jm))) os.set(klicJmena(jm), (await S.uloz({ typ: 'osoba', nazev: jm, data: {}, pripad }, o)).id);
+        if (it.misto && !mi.has(klicJmena(it.misto))) mi.set(klicJmena(it.misto), (await S.uloz({ typ: 'misto', nazev: it.misto, data: it.lat != null ? { lat: it.lat, lon: it.lon } : {}, pripad }, o)).id);
+        await S.uloz(Object.assign(J.doSpisu(Object.assign({}, it, { id }), null, j => os.get(klicJmena(j)), j => mi.get(klicJmena(j))), { pripad }), o);
+        nove++;
+      }
+      return `Do spisu převedeno ${nove} záznamů` + (sCasem.length - nove ? `, ${sCasem.length - nove} tam už bylo.` : '.');
+    });
+  },
   metoda: () => $('dlgMetoda').showModal()
 };
 function zavriNabidky() {
@@ -359,5 +453,40 @@ document.addEventListener('keydown', e => {
 });
 
 render();
-window.CaseTimelineUI = { get items() { return items; }, get vyrez() { return vyrez; }, render };
+
+/* ---------- jednotný spis (S2) ---------- */
+N = SpisNapojeni.pripoj({
+  nastroj: 'case_timeline', lista: $('spisMisto'),
+  naZmenu: async (pripad, jiny) => {
+    if (pripad) {
+      items = await zeSpisu(pripad);
+      $('caseName').value = N.nazev; $('caseName').readOnly = true;
+    } else if (jiny) {
+      const raw = ctiJson(KEY);
+      items = Array.isArray(raw) ? J.nacti(raw.filter(x => x && typeof x === 'object')).items : [];
+      snimek.clear(); $('caseName').value = localStorage.getItem(KEY_CASE) || ''; $('caseName').readOnly = false;
+    }
+    if (jiny) { vyrez = null; zvyraznene = new Set(); }
+    $('miPrevod').hidden = !pripad;
+    render();
+  }
+});
+/* S4: skok z karty – ?entita=<id> zvýrazní záznam (událost / stopu), u osoby všechny její záznamy */
+function zvyrazniEntitu(id, e) {
+  const jmeno = e && e.typ === 'osoba' ? e.nazev : null;
+  zvyraznene = new Set(items.filter(x => x.id === id || (jmeno && x.osoby.includes(jmeno))).map(x => x.id));
+  const prvni = J.serad(items).find(x => zvyraznene.has(x.id));
+  if (prvni && stav.pohled === 'drahy') vyrez = J.rozsah([prvni]) || vyrez;
+  render();
+  const el = prvni && document.querySelector(`[data-id="${CSS.escape(prvni.id)}"]`);
+  if (el) el.scrollIntoView({ block: 'center' });
+}
+SpisOdkazy.zde('case_timeline', async p => zvyrazniEntitu(p.entita, await SPIS.entita(p.entita)));
+N.hotovo.then(async () => {
+  const c = await SpisOdkazy.cil();
+  if (!c) return;
+  if (c.prepnuto) await N.obnov();
+  zvyrazniEntitu(c.e.id, c.e);
+});
+window.CaseTimelineUI = { get items() { return items; }, get vyrez() { return vyrez; }, render, get spis() { return N.pripad; }, hotovo: () => N.hotovo, get zvyraznene() { return [...zvyraznene]; } };
 })();

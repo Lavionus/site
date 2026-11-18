@@ -283,10 +283,55 @@
     });
   }
 
+  /* ---------- jednotný spis (S2): záznam osy ↔ entita `udalost` ----------
+     time↔kdy (ve spisu povinné), end↔do, tol↔nejistota, type↔druh (poloha/komunikace = druh udalost + typOsy),
+     jistota, osoby (jména)↔osoby (id entit `osoba`), misto (název)↔misto (id entity `misto`), desc↔popis (název = zkrácený
+     popis), zdroj+zdrojText+stopa → zdrojDruh/zdrojText/stopa a čitelný text zdroj. Neznámá pole spisu se zachovají. */
+  const DRUHY_SPISU = ['udalost', 'dukaz', 'svedek'];
+  const zkrat = t => { t = String(t || '').trim(); return t.length > 90 ? t.slice(0, 88).replace(/\s+\S*$/, '') + '…' : t; };
+  // jmeno(id) → název entity nebo ''
+  function zeSpisu(e, jmeno) {
+    const d = (e && e.data) || {}, jm = jmeno || (() => '');
+    let zdroj = '', zdrojText = '';
+    if ('zdrojDruh' in d || 'zdrojText' in d) { zdroj = d.zdrojDruh || ''; zdrojText = d.zdrojText || ''; }
+    else if (d.zdroj && Object.prototype.hasOwnProperty.call(ZDROJE, d.zdroj)) zdroj = d.zdroj;
+    else zdrojText = d.zdroj || '';
+    return normalizuj({
+      id: e.id, time: d.kdy, end: d.do, tol: d.nejistota, type: TYPY[d.typOsy] ? d.typOsy : d.druh,
+      osoby: (Array.isArray(d.osoby) ? d.osoby : []).map(jm).filter(Boolean), misto: d.misto ? jm(d.misto) : '',
+      lat: d.lat, lon: d.lon, zdroj, zdrojText, stopa: d.stopa, jistota: d.jistota, desc: d.popis || e.nazev
+    });
+  }
+  // stopa spisu na ose jako důkaz v čase zajištění (jen ke čtení – upravuje se ve spisu / deníku)
+  function zeStopy(e) {
+    const d = (e && e.data) || {};
+    return Object.assign(normalizuj({
+      id: e.id, time: d.kdy, type: 'dukaz', jistota: 'overeno', zdroj: 'stopa', stopa: d.cislo, misto: d.misto,
+      desc: 'Zajištění stopy' + (d.cislo ? ' ' + d.cislo : '') + ': ' + e.nazev
+    }), { zeStopy: true });
+  }
+  // idOsoby(jméno) / idMista(název) → id entity (nástroj chybějící předem založí)
+  function doSpisu(it, puvodni, idOsoby, idMista) {
+    if (!it.time) throw new Error('Záznam „' + zkrat(it.desc) + '“ nemá čas – ve spisu je čas události povinný.');
+    const pd = (puvodni && puvodni.data) || {};
+    const druh = DRUHY_SPISU.includes(it.type) ? it.type : 'udalost';
+    const zdrojCitelny = [it.zdroj ? ZDROJE[it.zdroj] : '', it.zdrojText].filter(Boolean).join(' – ');
+    const data = Object.assign({}, pd, {
+      kdy: it.time, do: it.end || undefined, nejistota: it.tol || undefined, druh, typOsy: druh === it.type ? undefined : it.type,
+      jistota: it.jistota, osoby: it.osoby.map(idOsoby).filter(Boolean), misto: it.misto ? idMista(it.misto) || undefined : undefined,
+      lat: it.lat, lon: it.lon, zdroj: zdrojCitelny || undefined, zdrojDruh: it.zdroj || undefined, zdrojText: it.zdrojText || undefined,
+      stopa: it.stopa || undefined, popis: it.desc || undefined
+    });
+    if (it.lat == null) { delete data.lat; delete data.lon; }
+    const ponechNazev = puvodni && (pd.popis ? pd.popis === it.desc : puvodni.nazev === it.desc);
+    return { id: it.id, typ: 'udalost', nazev: ponechNazev ? puvodni.nazev : (zkrat(it.desc) || 'Událost'), data };
+  }
+  const klicZaznamu = it => JSON.stringify(it);
+
   const api = {
     TYPY, JISTOTY, ZDROJE, jistotaZTypu, novyId, cas, ms, naCas, normalizuj, nacti, exportJson, slouc, bezDuplicit, interval, serad,
     normText, stejneMisto, rozpory, idsRozporu, drahy, rozsah, rozvrhni, znacky, zoom, formatCas, formatKdy, popisZdroje,
-    exportCsv, zEvidence, zCasoveAnalyzy, zModelovehoPripadu
+    exportCsv, zEvidence, zCasoveAnalyzy, zModelovehoPripadu, zeSpisu, zeStopy, doSpisu, klicZaznamu
   };
   if (typeof module !== 'undefined') module.exports = api;
   else window.CaseTimelineJadro = api;
