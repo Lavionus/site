@@ -235,13 +235,15 @@
   let zivePolozky = [], posledniZive = 0, ziveKanalu = 0;
   async function stahniZive() {
     const cors = new Set((data && data.cors) || []);
+    const presun = (data && data.presmerovani) || {};   // kanál se přesunul → číst rovnou novou adresu
     const vybrane = vybraneZdroje();
     const ukoly = [];
     for (const z of katalog.zdroje) {
       if (!vybrane.has(z.id)) continue;
       for (const k of z.kanaly) {
-        if (cors.has(k.url)) ukoly.push({ z, k, url: k.url });
-        else if (N.proxy) ukoly.push({ z, k, url: J.prezProxy(N.proxy, k.url) });
+        const url = presun[k.url] || k.url;
+        if (cors.has(k.url)) ukoly.push({ z, k, url });
+        else if (N.proxy) ukoly.push({ z, k, url: J.prezProxy(N.proxy, url) });
       }
     }
     const vysledek = [];

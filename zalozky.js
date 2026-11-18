@@ -225,7 +225,6 @@ const Zalozky = (function () {
     const f = document.createElement('iframe');
     f.title = t('Aktivní aplikace');
     f.setAttribute('allow', POVOLENI);
-    f.allowFullscreen = true;
     f.addEventListener('load', () => napoj(k, f));
     f.src = page;
     k.iframe = f;

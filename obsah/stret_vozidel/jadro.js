@@ -63,7 +63,7 @@
       stopa: 0, stopaTol: 0.3, tn: 0.2,
       phi: i ? 40 : 30, phiTol: 3, d: i ? 9 : 7, dTol: 0.3,
       kola: 'blok', podilMin: 0.3, podilMax: 0.7, fMin: 0.5, fMax: 0.7,
-      znamaV: false, znamaOd: 0, znamaDo: 0,
+      znamaV: false, znamaOd: 0, znamaDo: 0, limit: 0,
       natoceni: null
     };
   }
@@ -88,7 +88,7 @@
     out.mc = Object.assign({}, z.mc, p.mc);
     out.vozidla = p.vozidla.map((v, i) => {
       const o = Object.assign(noveVozidlo(i), v);
-      for (const k of ['hmotnost', 'naklad', 'hmotTol', 'delka', 'sirka', 'theta', 'thetaTol', 'stopa', 'stopaTol', 'tn', 'phi', 'phiTol', 'd', 'dTol', 'podilMin', 'podilMax', 'fMin', 'fMax', 'znamaOd', 'znamaDo']) {
+      for (const k of ['hmotnost', 'naklad', 'hmotTol', 'delka', 'sirka', 'theta', 'thetaTol', 'stopa', 'stopaTol', 'tn', 'phi', 'phiTol', 'd', 'dTol', 'podilMin', 'podilMax', 'fMin', 'fMax', 'znamaOd', 'znamaDo', 'limit']) {
         o[k] = Number(o[k]); if (!Number.isFinite(o[k])) o[k] = noveVozidlo(i)[k];
       }
       o.natoceni = o.natoceni == null || o.natoceni === '' || !Number.isFinite(+o.natoceni) ? null : +o.natoceni;
@@ -246,6 +246,8 @@
     const par = parametry(p);
     const data = {}; VELICINY.forEach(k => { data[k] = []; });
     const duvody = {}; let zapornaE = 0, platnych = 0;
+    // dovolená rychlost: posuzuje se rychlost na začátku brzdné stopy, bez stopy rychlost před střetem
+    const limity = p.vozidla.map(v => v.limit > 0 ? v.limit : null), nad = [0, 0], posouzeno = [0, 0];
     const vzorky = [], kazdy = Math.max(1, Math.floor(n / (o.vzorku || 1500)));
     for (let k = 0; k < n; k++) {
       const t = par.map(() => r());
@@ -260,6 +262,11 @@
       if (x.v0[1] != null && Number.isFinite(x.v0[1])) data.v0B.push(kmh(x.v0[1]));
       data.dvA.push(kmh(x.dv[0])); data.dvB.push(kmh(x.dv[1])); data.ztrata.push(x.ztrata / 1000);
       if (Number.isFinite(x.restituce)) data.restituce.push(x.restituce);
+      limity.forEach((L, i) => {
+        if (L == null) return;
+        const rv = x.v0[i] != null && Number.isFinite(x.v0[i]) ? x.v0[i] : x.v[i];
+        posouzeno[i]++; if (kmh(rv) > L) nad[i]++;
+      });
       if (k % kazdy === 0) vzorky.push([kmh(x.v[0]), kmh(x.v[1])]);
     }
     const q = {};
@@ -267,7 +274,8 @@
       const s = data[k].sort((a, b) => a - b);
       q[k] = s.length ? { od: kvantil(s, 0.025), med: kvantil(s, 0.5), do: kvantil(s, 0.975), n: s.length } : null;
     }
-    return { n, platnych, neplatnych: n - platnych, duvody, zapornaE, q, vzorky };
+    const limit = limity.map((L, i) => L == null || !posouzeno[i] ? null : { limit: L, podil: nad[i] / posouzeno[i], n: posouzeno[i] });
+    return { n, platnych, neplatnych: n - platnych, duvody, zapornaE, q, vzorky, limit };
   }
 
   /* ---------- citlivost: každý vstup zvlášť na dolní a horní mez, ostatní ve středu ---------- */
@@ -368,11 +376,11 @@
     {
       klic: 'krizovatka', ik: '┼', nazev: 'Boční střet v křižovatce',
       popis: 'A vjíždí do křižovatky a před střetem brzdí (stopa 14 m na mokrém asfaltu), B jede po hlavní a A ho zasáhne do pravého boku.',
-      zkusit: ['Výsledky ukazují i rychlost A na začátku brzdné stopy – stejný výpočet jako stránka Rychlost z brzdné stopy, jen s rychlostí při střetu na konci stopy.', 'Citlivost: který vstup interval nejvíc rozšiřuje?'],
+      zkusit: ['Výsledky ukazují i rychlost A na začátku brzdné stopy – stejný výpočet jako stránka Rychlost z brzdné stopy, jen s rychlostí při střetu na konci stopy.', 'V obci je limit 50 km/h: Výsledky ukážou, v kolika procentech kombinací vstupů ho A a B překročili (u A se posuzuje rychlost na začátku brzdění).', 'Citlivost: který vstup interval nejvíc rozšiřuje?'],
       povrch: 'asfalt_mokry', sklon: 0, sklonSmer: 90, e: 0.1, odchylkaSily: -8, seed: 202,
       voz: [
-        { nazev: 'A osobní', hmotnost: 1240, naklad: 90, hmotTol: 50, delka: 4.3, sirka: 1.75, misto: 'predek', theta: 90, v: 48, f: 0.55, kola: 'blok', stopa: 14, muStopa: 0.55, tn: 0.2, rot: 20 },
-        { nazev: 'B osobní', hmotnost: 1390, naklad: 160, hmotTol: 50, delka: 4.6, sirka: 1.8, misto: 'pravy', theta: 0, v: 46, f: 0.5, kola: 'blok', rot: 40 }
+        { nazev: 'A osobní', hmotnost: 1240, naklad: 90, hmotTol: 50, delka: 4.3, sirka: 1.75, misto: 'predek', theta: 90, v: 48, f: 0.55, kola: 'blok', stopa: 14, muStopa: 0.55, tn: 0.2, limit: 50, rot: 20 },
+        { nazev: 'B osobní', hmotnost: 1390, naklad: 160, hmotTol: 50, delka: 4.6, sirka: 1.8, misto: 'pravy', theta: 0, v: 46, f: 0.5, kola: 'blok', limit: 50, rot: 40 }
       ]
     },
     {
@@ -441,6 +449,7 @@
       const dTol = Math.max(0.3, Math.round(pr.d[i] * 0.05 * 10) / 10);
       o.d = Math.round((pr.d[i] + chyba(dTol)) * 10) / 10; o.dTol = dTol;
       if (v.stopa) { o.stopa = Math.round((v.stopa + chyba(0.3)) * 10) / 10; o.stopaTol = 0.3; o.tn = v.tn || 0.2; }
+      if (v.limit) o.limit = v.limit;
       if (v.znama) { o.znamaV = true; o.znamaOd = v.znama[0]; o.znamaDo = v.znama[1]; }
       o.natoceni = Math.round(n360(pr.phi[i] + (v.rot || 0)));
       return o;

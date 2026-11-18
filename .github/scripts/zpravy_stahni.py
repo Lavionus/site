@@ -50,6 +50,8 @@ def stahni(url, timeout=20, limit=6_000_000, hlavicky=None, origin=True):
         data = r.read(limit + 1)
         if hlavicky is not None:
             hlavicky.update({k.lower(): v for k, v in r.headers.items()})
+            if r.geturl() != url:                # přesměrování: prohlížeč by na 30x bez CORS skončil
+                hlavicky['x-presmerovano'] = r.geturl()
         enc = (r.headers.get('Content-Encoding') or '').lower()
         if enc == 'gzip':
             data = gzip.decompress(data)
@@ -330,8 +332,13 @@ def zpracuj_kanal(zdroj, kanal):
         h = {}                                   # některé weby (Independent) hlavičku Origin odmítnou
         data, cs = stahni(kanal['url'], hlavicky=h, origin=False)
     pol = rozeber(data, cs)
+    # CORS hlavičky jsou z konečné odpovědi – po přesměrování platí pro novou adresu, kterou
+    # stránka dostane v `presmerovani` a čte rovnou ji (přesměrování samo CORS nemívá)
     cors = h.get('access-control-allow-origin', '').strip() in ('*', ORIGIN)
-    return pol, round(time.time() - t0, 2), cors
+    nova = h.get('x-presmerovano')
+    if nova:
+        print(f"  ↪ {kanal['url']} přesměrován na {nova} (stránka použije novou; v zdroje.json lze opravit)", file=sys.stderr)
+    return pol, round(time.time() - t0, 2), cors, nova
 
 
 def main():
@@ -364,6 +371,7 @@ def main():
     stav = {}
     nove = {}
     cors = []
+    presmerovani = {}       # adresa z katalogu → kam se kanál přesunul (stránka čte rovnou novou)
     kraje_clanku = {}       # id → kraje, v jejichž regionálních kanálech článek je
     with cf.ThreadPoolExecutor(12) as ex:
         bud = {ex.submit(zpracuj_kanal, z, k): (z, k) for z, k in ukoly}
@@ -371,7 +379,7 @@ def main():
             z, k = bud[f]
             s = stav.setdefault(z['id'], {'ok': 0, 'chyby': [], 'pocet': 0})
             try:
-                pol, trvani, ma_cors = f.result()
+                pol, trvani, ma_cors, nova = f.result()
             except Exception as e:
                 s['chyby'].append(f"{k['url']}: {type(e).__name__}: {str(e)[:120]}")
                 continue
@@ -379,6 +387,8 @@ def main():
             s['pocet'] += len(pol)
             if ma_cors:
                 cors.append(k['url'])
+            if nova:
+                presmerovani[k['url']] = nova
             if a.test:
                 sobr = sum(1 for p in pol if p['o'])
                 sdat = sum(1 for p in pol if p['d'])
@@ -464,6 +474,7 @@ def main():
         'zdroje': {zid: {'ok': s['ok'] > 0, 'pocet': s['pocet'], **({'chyba': s['chyby'][0][:200]} if s['chyby'] else {})}
                    for zid, s in stav.items()},
         'cors': sorted(cors),         # kanály, které prohlížeč smí číst přímo (živé načtení na stránce)
+        'presmerovani': dict(sorted(presmerovani.items())),
         'historie': historie,
     }
     hranice_nove = ted - NOVE_HODIN * 3600

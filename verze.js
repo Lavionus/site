@@ -1,5 +1,5 @@
 /* Vygenerováno: node tools/verze.mjs – neupravovat ručně. Stránka: [verze, datum poslední změny] */
-var VERZE_WEBU = 'v832';
+var VERZE_WEBU = 'v834';
 var VERZE_STRANEK = {"obsah/AI_prednaska.html":[8,"2026-11-13"],
 "obsah/AI_prednaska2.html":[1,"2026-11-13"],
 "obsah/AI_prednaska3.html":[1,"2026-11-13"],
@@ -482,7 +482,7 @@ var VERZE_STRANEK = {"obsah/AI_prednaska.html":[8,"2026-11-13"],
 "obsah/stitky_panely.html":[1,"2026-10-19"],
 "obsah/stojany.html":[1,"2026-11-18"],
 "obsah/storyboard.html":[5,"2026-10-13"],
-"obsah/stret_vozidel.html":[1,"2026-11-18"],
+"obsah/stret_vozidel.html":[2,"2026-11-18"],
 "obsah/strihy.html":[2,"2026-10-13"],
 "obsah/stychy.html":[2,"2026-10-13"],
 "obsah/sudoku.html":[13,"2026-11-09"],
@@ -589,4 +589,4 @@ var VERZE_STRANEK = {"obsah/AI_prednaska.html":[8,"2026-11-13"],
 "obsah/zeme_v_kostce.html":[2,"2026-11-18"],
 "obsah/ziva_zeme.html":[3,"2026-10-13"],
 "obsah/zivly.html":[2,"2026-10-13"],
-"obsah/zpravy.html":[1,"2026-11-18"]};
+"obsah/zpravy.html":[2,"2026-11-18"]};

@@ -37,6 +37,7 @@
     { k: 'stopa', l: 'Brzdná stopa před střetem (m, 0 = žádná)', step: 0.1, min: 0 },
     { k: 'stopaTol', l: '± stopa (m)', tol: true, step: 0.1, min: 0, kdyz: v => v.stopa > 0 },
     { k: 'tn', l: 'Náběh brzd tₙ (s)', tol: true, step: 0.05, min: 0, kdyz: v => v.stopa > 0 },
+    { k: 'limit', l: 'Nejvyšší dovolená rychlost (km/h, 0 = nezadáno)', step: 10, min: 0 },
     { k: 'znamaV', l: 'Známá rychlost před střetem', typ: 'chk' },
     { k: 'znamaOd', l: 'od (km/h)', tol: true, step: 1, min: 0, kdyz: v => v.znamaV },
     { k: 'znamaDo', l: 'do (km/h)', tol: true, step: 1, min: 0, kdyz: v => v.znamaV },
@@ -45,6 +46,8 @@
     { k: 'phiTol', l: '± φ (°)', tol: true, step: 0.5, min: 0 },
     { k: 'd', l: 'Délka dojezdu d (m)', step: 0.1, min: 0 },
     { k: 'dTol', l: '± d (m)', tol: true, step: 0.1, min: 0 },
+    { k: 'Kx', l: 'nebo konečná poloha x (m)', tol: true, typ: 'K' },
+    { k: 'Ky', l: 'konečná poloha y (m)', tol: true, typ: 'K' },
     { k: 'kola', l: 'Stav kol při dojezdu', typ: 'select', moznosti: () => Object.entries(J.KOLA).map(([k, m]) => [k, m.nazev]) },
     { k: 'podilMin', l: 'podíl μ od', tol: true, step: 0.05, min: 0, kdyz: v => v.kola === 'castecne' },
     { k: 'podilMax', l: 'podíl μ do', tol: true, step: 0.05, min: 0, kdyz: v => v.kola === 'castecne' },
@@ -59,10 +62,14 @@
     if (r.typ === 'text') return `<input class="vstup" ${a} maxlength="30" value="${esc(v[r.k])}" data-i18n="ne">`;
     if (r.typ === 'select') return `<select class="vstup" ${a}>${r.moznosti().map(([k, t]) => `<option value="${k}"${v[r.k] === k ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
     if (r.typ === 'chk') return `<label class="chk"><input type="checkbox" ${a}${v[r.k] ? ' checked' : ''}> ano</label>`;
+    if (r.typ === 'K') return `<input class="vstup" type="number" step="0.1" ${a} value="${hodnotaK(i, r.k)}">`;
     if (r.typ === 'info') { const f = J.rozsahF(P, v); return `<span data-info="f${i}">${c(f[0], 2)} – ${c(f[1], 2)}</span>`; }
     const hodnota = v[r.k] == null ? '' : v[r.k];
     return `<input class="vstup" type="number" step="${r.step || 'any'}"${r.min != null ? ` min="${r.min}"` : ''} ${a} value="${hodnota}"${r.prazdne ? ` placeholder="${Math.round(v.phi)}"` : ''}>`;
   }
+
+  // konečná poloha v souřadnicích plánu (měření od pevného bodu) ↔ úhel a délka dojezdu
+  const hodnotaK = (i, k) => { const K = J.konecnaPoloha(P, i); return Math.round((k === 'Kx' ? K.x : K.y) * 100) / 100; };
 
   function vykresliVstupy() {
     const povrchy = J.POVRCHY.map(q => `<option value="${q.id}"${P.povrch === q.id ? ' selected' : ''}>${esc(q.nazev)} (μ ${c(q.min, 2)}–${c(q.max, 2)})</option>`).join('')
@@ -94,7 +101,7 @@
       </div>
       <div class="oddil"><h2>Vozidla</h2>
         <table class="vst"><thead><tr><th></th><th class="hlavA">● A</th><th class="hlavB">● B</th></tr></thead><tbody>${radky}</tbody></table>
-        <p class="tip">Řádky „±“ jsou meze nejistoty: skutečná hodnota může ležet kdekoli mezi nimi. Dojezd se měří od bodu střetu ke konečné poloze těžiště.</p>
+        <p class="tip">Řádky „±“ jsou meze nejistoty: skutečná hodnota může ležet kdekoli mezi nimi. Dojezd se měří od bodu střetu ke konečné poloze těžiště – buď úhlem a délkou, nebo souřadnicemi x, y v metrech od téhož počátku jako bod střetu.</p>
       </div>
       <div class="oddil"><h2>Nejistota (Monte Carlo)</h2>
         <div class="radek2">
@@ -141,6 +148,11 @@
     if (k === 'natoceni' && el.value === '') { v.natoceni = null; return prepocti(); }
     const x = cislo(el);
     if (x == null) return;
+    if (k === 'Kx' || k === 'Ky') {
+      const K = J.konecnaPoloha(P, i), dx = (k === 'Kx' ? x : K.x) - P.S.x, dy = (k === 'Ky' ? x : K.y) - P.S.y;
+      v.d = Math.round(Math.hypot(dx, dy) * 100) / 100; v.phi = Math.round(J.uhelVektoru(dx, dy) * 100) / 100;
+      return prepocti();
+    }
     if (el.min !== '' && x < +el.min) return;
     v[k] = x;
     if (k === 'stopa' && e.type === 'change') vykresliVstupy();
@@ -153,6 +165,7 @@
     const nastav = (sel, x) => { const el = p.querySelector(sel); if (el && document.activeElement !== el) el.value = x; };
     nastav('[data-g=Sx]', P.S.x); nastav('[data-g=Sy]', P.S.y);
     [0, 1].forEach(i => ['theta', 'phi', 'd'].forEach(k => nastav(`[data-v="${i}"][data-k="${k}"]`, P.vozidla[i][k])));
+    [0, 1].forEach(i => ['Kx', 'Ky'].forEach(k => nastav(`[data-v="${i}"][data-k="${k}"]`, hodnotaK(i, k))));
     [0, 1].forEach(i => { const el = p.querySelector(`[data-info=f${i}]`); if (el) { const f = J.rozsahF(P, P.vozidla[i]); el.textContent = `${c(f[0], 2)} – ${c(f[1], 2)}`; } });
   }
 
@@ -171,8 +184,35 @@
   }
   function naplanujUlozeni() {
     clearTimeout(casUlozeni);
-    casUlozeni = setTimeout(() => pis(KLIC_AKT, P), 400);
+    casUlozeni = setTimeout(() => { if (taz) return naplanujUlozeni(); pis(KLIC_AKT, P); zaznamenej(); }, 400);
   }
+
+  /* ================= Zpět / Znovu ================= */
+  // snímky projektu (JSON); změna se zapíše až po 400 ms klidu, takže tažení nebo psaní čísla = jeden krok
+  const H = { zpet: [], znovu: [], posledni: null };
+  function zaznamenej() {
+    const s = JSON.stringify(P);
+    if (H.posledni != null && s !== H.posledni) {
+      H.zpet.push(H.posledni); if (H.zpet.length > 100) H.zpet.shift();
+      H.znovu.length = 0;
+    }
+    H.posledni = s;
+    obnovTlacitkaHistorie();
+  }
+  function obnovTlacitkaHistorie() {
+    $('tlZpet').disabled = !H.zpet.length; $('tlZnovu').disabled = !H.znovu.length;
+  }
+  function krokHistorie(odkud, kam) {
+    clearTimeout(casUlozeni); zaznamenej();
+    if (!odkud.length) return;
+    kam.push(H.posledni);
+    P = J.migruj(JSON.parse(odkud.pop()));
+    H.posledni = JSON.stringify(P);
+    V.cit = null; pis(KLIC_AKT, P);
+    vykresliVstupy(); prepocti();
+    obnovTlacitkaHistorie();
+  }
+  const zpet = () => krokHistorie(H.zpet, H.znovu), znovu = () => krokHistorie(H.znovu, H.zpet);
   const citlivost = () => V.cit || (V.cit = J.citlivost(P));
 
   /* ================= souhrn pod náčrtem ================= */
@@ -221,6 +261,7 @@
           <small>Skutečné f: A ${c(pr.f[0], 2)}, B ${c(pr.f[1], 2)}.</small> <small>Skutečný dojezd: A ${c(pr.d[0], 1)} m, B ${c(pr.d[1], 1)} m.</small>
           ${v0 ? `<small>Skutečná rychlost na začátku brzdné stopy: ${v0}.</small>` : ''}</div>`;
       }
+      h += htmlLimit();
       h += `<div class="oddil"><h2>Energie a ráz</h2><table class="vys"><tbody>
         <tr><td>Kinetická energie před střetem</td><td class="c">${c(x.Epred / 1000)} kJ</td></tr>
         <tr><td>Kinetická energie po střetu</td><td class="c">${c(x.Epo / 1000)} kJ</td></tr>
@@ -235,6 +276,25 @@
     h += `<div class="oddil"><h2>Kontroly plausibility</h2><ul class="kontroly">${V.kontroly.map(k => `<li class="${k.uroven}">${esc(k.text)}</li>`).join('')}</ul></div>
       <div class="varovani"><b>Orientační výpočet.</b> Model nepočítá deformační energii, rotaci vozidel ani sekundární nárazy. Znalecký posudek z dopravní nehody je jiná úroveň práce. <a href="#" data-metoda>📐 Metoda a meze</a></div>`;
     $('panelVysledky').innerHTML = h;
+  }
+
+  // věty o překročení dovolené rychlosti (výsledky i protokol)
+  function vetyLimit() {
+    const x = V.x, L = V.mc.limit || [];
+    return [0, 1].filter(i => L[i]).map(i => {
+      const pozn = x.v0[i] != null ? 'rychlost na začátku brzdné stopy' : 'rychlost před střetem';
+      const odhad = kmh(x.v0[i] != null && Number.isFinite(x.v0[i]) ? x.v0[i] : x.v[i]);
+      const pct = Math.round(L[i].podil * 100);
+      const uroven = L[i].podil >= 0.975 ? 'chyba' : L[i].podil > 0.025 ? 'pozor' : 'ok';
+      const zaver = uroven === 'chyba' ? 'překročena ve všech věrohodných kombinacích vstupů' : uroven === 'ok' ? 'nepřekročena v žádné věrohodné kombinaci vstupů' : 'z měření nelze rozhodnout';
+      return { uroven, text: `${nz(i)}: limit ${c(L[i].limit)} km/h – ${zaver} (${pozn} odhadem ${c(odhad)} km/h, nad limitem ${pct} % z ${c(L[i].n)} kombinací).` };
+    });
+  }
+  function htmlLimit() {
+    const vety = vetyLimit();
+    if (!vety.length) return '';
+    return `<div class="oddil"><h2>Nejvyšší dovolená rychlost</h2><ul class="kontroly">${vety.map(k => `<li class="${k.uroven}">${esc(k.text)}</li>`).join('')}</ul>
+      <p class="tip">Podíl kombinací vstupů nad limitem, rovnoměrně v zadaných mezích – není to pravděpodobnost v právním smyslu. Rozhodující je, zda limit leží mimo 95% interval: celý interval nad limitem = překročení prokázané výpočtem, interval přes limit = nerozhodnuto.</p></div>`;
   }
 
   /* ================= SVG pomocníci ================= */
@@ -519,10 +579,12 @@
 
   /* ================= projekty, soubory ================= */
   function nastavProjekt(p) {
+    clearTimeout(casUlozeni); zaznamenej();   // rozdělaná změna = vlastní krok, nový projekt = další krok
     P = p; V.cit = null;
     pis(KLIC_AKT, P);
     vykresliVstupy();
     prepocti();
+    zaznamenej();
   }
   function otevriUkazku(klic) {
     nastavProjekt(J.vytvorUkazku(klic));
@@ -587,6 +649,7 @@
       ${vr('Úhel příjezdu θ', v => `${c(v.theta)}° ± ${c(v.thetaTol, 1)}°`)}
       ${vr('Místo poškození', v => esc((J.MISTA[v.misto] || {}).nazev))}
       ${vr('Brzdná stopa před střetem', v => v.stopa > 0 ? `${c(v.stopa, 1)} m ± ${c(v.stopaTol, 1)}, tₙ ${c(v.tn, 2)} s` : '–')}
+      ${vr('Nejvyšší dovolená rychlost', v => v.limit > 0 ? `${c(v.limit)} km/h` : '–')}
       ${vr('Známá rychlost', v => v.znamaV ? `${c(v.znamaOd)} – ${c(v.znamaDo)} km/h` : '–')}
       ${vr('Úhel dojezdu φ', v => `${c(v.phi)}° ± ${c(v.phiTol, 1)}°`)}
       ${vr('Délka dojezdu d', v => `${c(v.d, 1)} m ± ${c(v.dTol, 1)}`)}
@@ -601,6 +664,7 @@
         <tr><td>Směr síly (hodiny / od přídě)</td><td class="c">${x.hodiny[0]} h / ${c(x.hodinyUhel[0])}°</td><td></td><td class="c">${x.hodiny[1]} h / ${c(x.hodinyUhel[1])}°</td><td></td></tr>
         </tbody></table>
         <p><span>Kinetická energie před střetem ${c(x.Epred / 1000)} kJ, po střetu ${c(x.Epo / 1000)} kJ, ztráta ${c(x.ztrata / 1000)} kJ (${iv('ztrata')} kJ).</span> <span>Restituce podél síly ${c(x.restituce, 2)}.</span> <span>Platných kombinací Monte Carlo: ${c(V.mc.platnych)} z ${c(V.mc.n)}.</span></p>
+        ${vetyLimit().map(k => `<p>${esc(k.text)}</p>`).join('')}
         ${P.ukazka ? `<p>Známá pravda ukázky (rychlost před střetem): A ${c(P.ukazka.pravda.v[0], 1)} km/h, B ${c(P.ukazka.pravda.v[1], 1)} km/h.</p>` : ''}`
         : `<p><b>Výpočet nemá řešení:</b> ${esc(x.text)}</p>`}
       <h2>4. Kontroly plausibility</h2>
@@ -622,7 +686,7 @@
 
   /* ================= příkazy ================= */
   const PRIKAZY = {
-    novy: async () => { if (await Dialog.potvrd('Začít nový střet? Neuložené změny aktuálního projektu se ztratí (uložené projekty zůstanou).')) { nastavProjekt(J.novyProjekt()); prepniZalozku('vstupy'); } },
+    novy: async () => { if (await Dialog.potvrd('Začít nový střet? Aktuální projekt jde vrátit tlačítkem ↶ Zpět (uložené projekty zůstanou).')) { nastavProjekt(J.novyProjekt()); prepniZalozku('vstupy'); } },
     ulozit: ulozDoProhlizece,
     projekty: () => { seznamProjektu(); $('dlgProjekty').showModal(); },
     exportJson: () => stahni(`stret_${bezpecne(P.nazev)}.json`, JSON.stringify(P, null, 1), 'application/json'),
@@ -631,7 +695,8 @@
     galerie: () => $('dlgGalerie').showModal(),
     ukazka: el => otevriUkazku(el.dataset.klic),
     napoveda: () => $('dlgNapoveda').showModal(),
-    zkratky: () => $('dlgZkratky').showModal()
+    zkratky: () => $('dlgZkratky').showModal(),
+    zpet, znovu
   };
   $('dlgProtokol').addEventListener('close', () => {
     const d = $('dlgProtokol');
@@ -691,8 +756,13 @@
   new ResizeObserver(() => { if (!taz) vykresliPohled(); }).observe($('pohled'));
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { zavriNabidky(); return; }
-    if ((e.target.closest && e.target.closest('input,textarea,select,dialog')) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest && e.target.closest('input,textarea,select,dialog')) return;
     const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'z' || k === 'y')) {
+      e.preventDefault();
+      return k === 'y' || e.shiftKey ? znovu() : zpet();
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     const pohledy = { 1: 'nacrt', 2: 'hybnost', 3: 'mc', 4: 'citlivost' };
     if (pohledy[k]) prepniPohled(pohledy[k]);
     else if (k === 'g') PRIKAZY.galerie();
@@ -711,7 +781,8 @@
   P = start || J.novyProjekt();
   vykresliVstupy();
   prepocti();
+  zaznamenej();
   prepniZalozku(nast.zalozka === 'vysledky' ? 'vysledky' : 'vstupy');
 
-  window.STRET_APP = { projekt: () => P, vysledek: () => V, PRIKAZY, otevriUkazku, prepniPohled, prepniZalozku, htmlProtokol, nastavProjekt };
+  window.STRET_APP = { projekt: () => P, vysledek: () => V, historie: () => ({ zpet: H.zpet.length, znovu: H.znovu.length }), PRIKAZY, otevriUkazku, prepniPohled, prepniZalozku, htmlProtokol, nastavProjekt };
 })();
