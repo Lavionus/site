@@ -309,9 +309,10 @@
         }
         // háček užší než rameno: šířka plynule přejde z ramene na zadanou
         if (o.hacek && !o.hacek.chybi && o.hacek.rameno === jm && uzsiHacek()) pridej.push(hacek3D(s));
-        // jamka v ose y od y0 do y1, kapkovitá směrem nahoru při tisku (horní rameno +z, dolní se tiskne převrácené)
+        // jamka v ose y od y0 do y1, kapkovitá (p.diry ≠ 'kruh') směrem nahoru při tisku (horní rameno +z, dolní se tiskne převrácené)
         const jamka = (x, y0, y1, r) => {
           const nahoru = s > 0 ? 1 : -1, val = k(k(k(M.cylinder(y1 - y0, r, r, SEG(r))).rotate([-90, 0, 0])).translate([x, y0, 0]));
+          if (p.diry === 'kruh') return val;
           return k(M.hull([val, box(x - 0.01, x + 0.01, y0, y1, nahoru * r * Math.SQRT2 - 0.01, nahoru * r * Math.SQRT2 + 0.01)]));
         };
         for (const v of [o.vinuta, o.tpu]) if (v && !v.chybi) {
@@ -334,7 +335,7 @@
             const y0 = s > 0 ? yo - g.h : -yo - 1, h = g.h + 1, nahoru = s > 0 ? 1 : -1;
             const val = k(k(k(M.cylinder(h, g.r, g.r, SEG(g.r))).rotate([-90, 0, 0])).translate([g.x, y0, 0]));
             const spicka = box(g.x - 0.01, g.x + 0.01, y0, y0 + h, nahoru * g.r * Math.SQRT2 - 0.01, nahoru * g.r * Math.SQRT2 + 0.01);
-            odeber.push(k(M.hull([val, spicka])));
+            odeber.push(p.diry === 'kruh' ? val : k(M.hull([val, spicka])));
           }
         }
         if (o.oblouk && !o.oblouk.chybi && s === o.oblouk.c && stav === 'tisk') { const [z0, z1] = pasmoOblouku(); pridej.push(vytah(oblouk2D('tisk'), z0, z1)); }

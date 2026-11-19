@@ -155,4 +155,5 @@ I18N.pridej('en', {
   'příruba {id}': 'flange {id}',
   'na trubku {od}': 'over pipe {od}',
   'Šoupěte': 'Blast gate',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal holes have an overhanging roof – print with supports or choose teardrop (👁 View → 💧 Teardrop holes).',
 });

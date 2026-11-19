@@ -867,4 +867,5 @@ I18N.pridej('en', {
   'díl': 'part',
   'díly': 'parts',
   'dílů': 'parts',
+  'Kruhové vodorovné díry (jamky pružiny, kapsa magnetu) mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení).': 'Round horizontal holes (spring seats, magnet pocket) have an overhanging ceiling – print with supports or choose teardrop (👁 View).',
 });

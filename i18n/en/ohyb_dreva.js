@@ -505,4 +505,7 @@ I18N.pridej('en', {
   'pas {nazev}': 'R/t strap {nazev}',
   'bez {nazev}': 'R/t without {nazev}',
   'tlak {nazev}': 'pressure {nazev}',
+  'Díry jako kapka (vypnuto = kruh)': 'Holes as teardrops (off = round)',
+  'Tiskne se naplocho (profil na podložce) – líc formy je svislá stěna bez převisů. PETG (houževnatější, snese lepidlo i teplo) nebo PLA; 4+ perimetry, výplň ≥ 40 %. Díl delší než plocha se rozdělí, spoje drží ocelové kolíky ve vodorovných otvorech (kapka = tisk bez podpor).': 'Prints flat (profile on the bed) – the form face is a vertical wall without overhangs. PETG (tougher, withstands glue and heat) or PLA; 4+ perimeters, infill ≥ 40 %. A part longer than the bed is split; the joints are held by steel pins in horizontal holes (teardrop = prints without supports).',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrops.',
 });

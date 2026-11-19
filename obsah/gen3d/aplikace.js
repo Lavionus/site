@@ -19,6 +19,8 @@
      cilPole: cesta => element,               // kam skočit z hlášení (jinak [data-p], [data-volba], [data-seg] podle cesty)
      textVychozi: 'Vrátit …?', hlasitOpravyTvaru: true, zpozdeniUlozeni: 0, plneUloziste: e => …,
      staryOdkaz: hash => objekt | null,         // starší formát odkazu stránky (#n=…)
+     diry: true,                              // 19. 11. 2026: stránka má vodorovné díry → v Zobrazení přepínač #tKapky (K):
+                                              //   p.diry = 'kapka' (tisk bez podpor) | 'kruh'; normalizuj ho musí znát (VYCHOZI + VYCTY)
    })
    app.p, app.zmen(f, slouceni), app.nahrad(q), app.naplnFormular(), app.prepocitej()
    app.hlaseni(H, {chybaStavby, boxy}), app.jdiNaPole(cesta), app.prepinac(id, f, vychozi)
@@ -99,6 +101,7 @@
       clearTimeout(casovac); casovac = setTimeout(() => cfg.prepocitej(), cfg.zpozdeni);
     }
     function po() {
+      if (tlKapky) tlKapky.setAttribute('aria-pressed', String(p.diry !== 'kruh'));
       if ($('btnZpet')) $('btnZpet').disabled = !zpet.length;
       if ($('btnZnovu')) $('btnZnovu').disabled = !znovu.length;
       uloz();
@@ -258,6 +261,19 @@
       });
     }
 
+    /* ---------- vodorovné díry: kapka / kruh (p.diry) ---------- */
+    let tlKapky = null;
+    const kotvaKapky = cfg.diry && ($('tPrevisy') || $('tTisk') || $('tHrany'));
+    if (kotvaKapky) {
+      tlKapky = document.createElement('button');
+      tlKapky.type = 'button'; tlKapky.className = 'pol'; tlKapky.id = 'tKapky'; tlKapky.setAttribute('role', 'menuitemcheckbox');
+      tlKapky.innerHTML = '💧 Díry jako kapka <span class="pozn">K · vypnuto = kruh</span>';
+      tlKapky.title = 'Vodorovné díry ve tvaru kapky (špička nahoru) se tisknou bez podpor; kruhové jsou přesnější, ale jejich strop převisá.';
+      kotvaKapky.after(tlKapky);
+      tlKapky.addEventListener('click', () => zmen(q => { q.diry = q.diry === 'kruh' ? 'kapka' : 'kruh'; }));
+    }
+    const zkratky = Object.assign(tlKapky ? { k: 'tKapky' } : {}, cfg.zkratky);
+
     /* ---------- soubory, sdílení ---------- */
     const jmeno = pripona => G3D.jmenoSouboru(p.nazev, (typeof cfg.soubor === 'function' ? cfg.soubor(p) : cfg.soubor) || cfg.typ, pripona);
     const ulozProjekt = q => (cfg.ulozProjekt ? cfg.ulozProjekt(q) : G3D.projektJson(cfg.typ, q));
@@ -338,7 +354,7 @@
       const cd = /^(Digit|Numpad)(\d)$/.exec(e.code || ''), i = cd ? Number(cd[2]) : Number(k);   // i česká klávesnice (+ěščř)
       if (i >= 1 && i <= POHLEDY.length && cfg.pohled) { cfg.pohled(POHLEDY[i - 1]); return; }
       const kc = /^Key([A-Z])$/.exec(e.code || ''), pismeno = kc ? kc[1].toLowerCase() : k;   // písmena i na jiném rozložení
-      const cil = cfg.zkratky && (cfg.zkratky[k] || cfg.zkratky[pismeno]);
+      const cil = zkratky[k] || zkratky[pismeno];
       const el = cil && $(cil);
       const skryty = el && el.closest('[hidden]');   // zavřená nabídka nevadí, skrytá část stránky ano
       if (el && !el.disabled && (!skryty || skryty.classList.contains('nabidka'))) el.click();

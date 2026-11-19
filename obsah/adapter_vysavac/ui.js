@@ -30,8 +30,15 @@
     exportStl: () => exportVse('stl'),
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(model.tisk), app.p.nazev || 'Adaptér'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka' },
+    diry: true,
+    cilPole: c => (c === 'osa.typ' ? $('paletaOsy') : null),
     zmenaTematu: () => prepocitej(),
   });
+
+  document.querySelectorAll('#paletaOsy button').forEach(b => b.addEventListener('click', () => {
+    app.zmen(q => { q.osa.typ = b.dataset.tvarOsy; });
+    app.naplnFormular();
+  }));
 
   function ulozMoje() {
     try { localStorage.setItem(KLIC_ROZMERY, JSON.stringify(moje)); } catch (e) { Dialog.chyba('Rozměr se nepodařilo uložit – úložiště prohlížeče je plné nebo zakázané.'); }
@@ -105,6 +112,7 @@
       if (d.sterbina) vid = p.sterbina.zap;
       el.hidden = !vid;
     });
+    document.querySelectorAll('#paletaOsy button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tvarOsy === p.osa.typ)));
     for (const X of ['A', 'B']) {
       const e = p[X], sel = $('db' + X), x = K.zdrojKonce(e);
       sel.value = x ? e.zdroj : 'vlastni';

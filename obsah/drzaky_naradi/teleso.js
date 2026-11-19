@@ -240,7 +240,7 @@
   function drzakManifold(M, CS, k, G, font, N) {
     const zMin = Math.min(...G.profil.map((q) => q[1])) - 1, zMax = G.zHorni + 1;
     let t = vytahniX(M, CS, k, G.profil, 0, G.sirka);
-    const ubrat = [], bok = G.orientace === 'bok';
+    const ubrat = [], bok = G.orientace === 'bok' && G.diry !== 'kruh';   // G.diry 'kruh' → i na boku kruhový otvor
     for (const q of G.vyrezy) {
       const z1 = (q.z0 != null ? q.z0 : G.zHorni) + 1, z0 = q.skrz ? zMin : (q.z0 != null ? q.z0 : G.zHorni) - q.hloubka;
       if (q.tvar === 'kruh') {

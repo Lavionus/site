@@ -23,6 +23,8 @@
     exportStl: () => exportVse('stl'),
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(dilyKTisku()), app.p.nazev || 'Botka'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka', v: 'tVreteno' },
+    diry: true,
+    cilPole: c => (c === 'komora.tvar' ? $('paletaTvaru') : null),
     zmenaTematu: () => prepocitej(),
   });
 
@@ -34,11 +36,16 @@
     document.querySelectorAll('[data-upnuti],[data-uchyceni],[data-tvar],[data-kartac],[data-umisteni]').forEach(el => {
       el.hidden = !Object.keys(hodnoty).every(k => !el.dataset[k] || seznam(el.dataset[k]).includes(hodnoty[k]));
     });
+    document.querySelectorAll('#paletaTvaru button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tvarKomory === p.komora.tvar)));
     document.querySelectorAll('#predVreten button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.d) === p.vreteno.prumer)));
     const h = BOTKA.HADICE.find(x => x.prumer === p.vyvod.prumer && x.usazeni === p.vyvod.usazeni);
     $('f_had').value = h ? h.id : '';
   }
   $('f_material').innerHTML = Object.entries(BOTKA.MATERIALY).map(([k, m]) => `<option value="${k}">${m.nazev}</option>`).join('');
+  document.querySelectorAll('#paletaTvaru button').forEach(b => b.addEventListener('click', () => {
+    app.zmen(q => { q.komora.tvar = b.dataset.tvarKomory; });
+    app.naplnFormular();
+  }));
   for (const d of BOTKA.VRETENA) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'tl'; b.dataset.d = d; b.textContent = `Ø ${d}`;
     b.addEventListener('click', () => { app.zmen(q => { q.vreteno.prumer = d; }); app.naplnFormular(); });
@@ -89,7 +96,9 @@
     TrubkyGui.souhrn('sKartac', p.kartac.typ === 'pasek' ? `lišta ${fmt(p.kartac.pasek)} mm · ${fmt(o.obvodKartace, 0)} mm` : `TPU · ${fmt(o.Lv, 0)} mm lamely`, true);
     TrubkyGui.souhrn('sVyvod', `Ø ${fmt(v.prumer)} ${v.usazeni === 'zasun' ? 'zasunout' : 'navléknout'} · ${v.umisteni === 'deska' ? 'z desky' : 'z boku'} ${fmt(v.sklon)}°`, true);
     $('napObjimka').textContent = p.objimka.upnuti === 'sroub'
-      ? `Prstenec je rozříznutý štěrbinou až k okraji desky; šroub ${p.objimka.sroub} × ${o.delkaSroubu} prochází kapkovitým otvorem, matice se vkládá do kapsy shora. Deska je ${fmt(o.zpb, 1)} mm nad čelem vřetene.`
+      ? (p.diry === 'kruh'
+        ? `Prstenec je rozříznutý štěrbinou až k okraji desky; šroub ${p.objimka.sroub} × ${o.delkaSroubu} prochází kruhovým otvorem (strop tisknout s podporou), matice se vkládá do kapsy shora. Deska je ${fmt(o.zpb, 1)} mm nad čelem vřetene.`
+        : `Prstenec je rozříznutý štěrbinou až k okraji desky; šroub ${p.objimka.sroub} × ${o.delkaSroubu} prochází kapkovitým otvorem, matice se vkládá do kapsy shora. Deska je ${fmt(o.zpb, 1)} mm nad čelem vřetene.`)
       : `Čtyři štěrbiny shora a drážka ${fmt(p.objimka.sirkaSpony)} mm pro hadicovou sponu nebo stahovací pásku. Deska je ${fmt(o.zpb, 1)} mm nad čelem vřetene.`;
     $('napUchyceni').textContent = p.uchyceni.typ === 'magnety'
       ? `Kapsy Ø ${fmt(2 * o.mR, 2)} × ${fmt(o.mH, 1)} mm v desce (zespodu) i v přírubě komory (shora). ${p.uchyceni.montaz === 'lepeni' ? 'Magnety zalepit' : 'Magnety zalisovat'}, v desce a v komoře s opačnou polaritou.`

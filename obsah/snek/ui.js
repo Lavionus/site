@@ -23,6 +23,7 @@
     nahodny: q => SNEK.nahodny(q),
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(dilyKTisku()), app.p.nazev || 'Šnekový převod'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka' },
+    diry: true,
     zmenaTematu: () => prepocitej(),
   });
 
@@ -67,9 +68,14 @@
     document.querySelectorAll('[data-rezimy]').forEach(el => { el.hidden = !seznam(el.dataset.rezimy).includes(stavZobr.rezim); });
   }
 
+  document.querySelectorAll('#paletaDruhu button').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.druh !== app.p.kolo.druh) app.zmen(q => { q.kolo.druh = b.dataset.druh; });
+  }));
+
   /* ---------- přepočet ---------- */
   function prepocitej() {
     p = app.p;
+    document.querySelectorAll('#paletaDruhu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.druh === p.kolo.druh)));
     nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
     let H = SNEK.kontroly(p);
     model = null;
@@ -168,7 +174,7 @@
     const g = G3D.dlazdice;
     let h = g('Kolo', p.kolo.pulky ? '2 půlky naplocho' : 'naplocho', p.kolo.pulky ? `${p.kolo.kolicku} kolíčky Ø ${fmt(p.tisk.kolicek, 2)}` : o.glob ? `hrdlo seříznuté na ${fmt(p.tisk.uhel, 0)}°` : 'válcové');
     h += g('Šnek', o.pulkySnek ? 'na boku, 2 půlky' : 'nastojato', o.pulkySnek ? 'kolíčky + hřídel' : `převis boků ${fmt(90 - p.zaber.uhel, 0)}° na ${fmt(o.hz, 1)} mm`);
-    if (p.skrin.zapnuto) h += g('Držák', 'deskou dolů', 'díry ložisek šneku jsou kapky – bez podpor');
+    if (p.skrin.zapnuto) h += g('Držák', 'deskou dolů', p.diry === 'kruh' ? 'díry ložisek šneku kruhové – strop s podporami' : 'díry ložisek šneku jsou kapky – bez podpor');
     $('vTisk').innerHTML = h;
   }
   function kusovnik(o) {

@@ -24,7 +24,13 @@
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(dilyKTisku()), app.p.nazev || 'Příchytka'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka', o: 'tOkoli' },
     zmenaTematu: () => prepocitej(),
+    diry: true,
   });
+  document.querySelectorAll('#paletaDruhu [data-druh-dl]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.druhDl === app.p.druh) return;
+    app.zmen(q => { q.druh = b.dataset.druhDl; });
+    app.naplnFormular();
+  }));
 
   /* ---------- výběry ---------- */
   $('f_material').innerHTML = Object.entries(PRICH.MATERIALY).map(([k, m]) => `<option value="${k}">${m.nazev}</option>`).join('');
@@ -55,6 +61,7 @@
     for (const o of $('f_uch').options) o.textContent = o.textContent.replace(/ – nejde u tohoto druhu$/, '') + (PRICH.POVOLENA[p.druh].includes(o.value) ? '' : ' – nejde u tohoto druhu');
     const cs = Object.entries(CLEAT.SYSTEMY).find(([, v]) => v.s.tl === p.cleat.tl && v.s.vyska === p.cleat.vyska && v.s.uhel === p.cleat.uhel && v.s.vule === p.cleat.vule);
     $('f_csys').value = cs ? cs[0] : '';
+    document.querySelectorAll('#paletaDruhu [data-druh-dl]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.druhDl === p.druh)));
     $('napDruh').textContent = {
       klip: 'Trubka se do oblouku zacvakne zepředu. Obepnutí určuje, jak pevně drží a jak moc se oblouk při nasazení ohne.',
       omega: 'Oblouk přes trubku se dvěma přírubami na šrouby – drží pevně, trubku přitlačí ke zdi.',
@@ -63,7 +70,7 @@
       hadice: 'Sedlo s poloměrem, přes který se hadice nebo kabel navine bez zalomení; lem ji drží na sedle.',
     }[p.druh];
     $('napUch').textContent = {
-      sroub: 'Vruty do hmoždinek; díry v plastu jsou kapkovité (tisk na boku), zápustná hlava má kužel 90°.',
+      sroub: p.diry === 'kruh' ? 'Vruty do hmoždinek; díry v plastu jsou kruhové (strop převisá – tiskněte s podporami), zápustná hlava má kužel 90°.' : 'Vruty do hmoždinek; díry v plastu jsou kapkovité (tisk na boku), zápustná hlava má kužel 90°.',
       paska: 'Oboustranná montážní páska na celou plochu základny – na hladký, odmaštěný povrch.',
       drazka: 'Pero nebo zobáčky v drážce profilu drží příchytku ve směru; šroub do T-matice ji přitáhne.',
       cleat: 'Zámek nahoře se zavěsí za lištu s úkosem – příchytku lze kdykoli přesunout.',

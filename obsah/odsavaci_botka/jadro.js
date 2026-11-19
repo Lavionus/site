@@ -68,6 +68,7 @@
     vyvod: { umisteni: 'deska', prumer: 35, usazeni: 'zasun', delka: 30, stena: 2.4, vule: 0.3, kuzel: 1, doraz: 2, natoceni: 0, sklon: 60, tecny: 'osa' },
     tisk: { material: 'PETG', vrstva: 0.2, uhel: 45, kalibrace: false, krokKalibrace: 0.1 },
     proud: { prutok: 160, propustnost: 30, mezera: 0 },
+    diry: 'kapka',                                                          // vodorovný otvor šroubu objímky: 'kapka' (bez podpor) | 'kruh'
   };
   /** Meze číselných polí [min, max, celé?]. */
   const MEZE = {
@@ -89,7 +90,7 @@
     'objimka.upnuti': Object.keys(NAZVY.upnuti), 'objimka.sroub': Object.keys(SROUBY), 'komora.tvar': Object.keys(NAZVY.tvar),
     'uchyceni.typ': Object.keys(NAZVY.uchyceni), 'uchyceni.montaz': Object.keys(NAZVY.montaz), 'kartac.typ': Object.keys(NAZVY.kartac),
     'vyvod.umisteni': Object.keys(NAZVY.umisteni), 'vyvod.usazeni': Object.keys(NAZVY.usazeni), 'vyvod.tecny': Object.keys(NAZVY.tecny),
-    'tisk.material': Object.keys(MATERIALY),
+    'tisk.material': Object.keys(MATERIALY), diry: ['kapka', 'kruh'],
   };
 
   /** Předvolby: jen odchylky od výchozího projektu (tisk a proudění zůstávají uživatelovy). */
@@ -394,6 +395,7 @@
     }
     if (o.lipVnitrni < o.Rb + 2) chyba(['komora.posun', rozmerKomory, 'komora.sirka'], `Vřeteno Ø ${fmt(p.vreteno.prumer)} se nevejde do otvoru v liště kartáče – zvětšete komoru nebo upravte posun.`);
     else if (o.lipVnitrni < o.Rb + 6) var_(['komora.posun', 'komora.sirka'], `Mezi vřetenem a lištou kartáče zbývá jen ${fmt(o.lipVnitrni - p.vreteno.prumer / 2, 1)} mm – třísky se tam ucpou.`);
+    if (ob.upnuti === 'sroub' && p.diry === 'kruh') info(['diry'], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     if (k.tvar === 'oval' && k.delka < k.sirka + 1) info(['komora.delka'], 'U oválu je délka menší než šířka – počítá se s délkou o 1 mm větší než šířka.');
     if (k.tvar === 'obdelnik' && k.polomer < 5) info(['komora.polomer'], 'Ostré rohy komory zachytávají prach – poloměr rohu aspoň 5 mm.');
     if (o.chyby.some(c => c.druh === 'vyska')) return H;
@@ -518,11 +520,15 @@
         const s = o.sroub, U = o.ucho;
         plneO.push(natoc(kvadr(o.Rb + 0.8, -(o.sw / 2 + U.wn), o.zpt, U.r1, o.sw / 2 + U.wh, o.zTop), psiC));
         odebO.push(natoc(kvadr(0, -o.sw / 2, o.zpb - 1, 4000, o.sw / 2, o.zTop + 1), psiC));
-        // kapkový otvor šroubu (vodorovně, špička nahoru) přes obě uši
-        const rh = s.otvor / 2, kapka = [];
-        kapka.push([rh * Math.SQRT1_2, rh * Math.SQRT1_2], [0, rh * Math.SQRT2]);
-        for (let i = 0; i <= 24; i++) { const a = Math.PI * 3 / 4 + i / 24 * Math.PI * 3 / 2; kapka.push([rh * Math.cos(a), rh * Math.sin(a)]); }
-        kapka.pop();
+        // otvor šroubu (vodorovně) přes obě uši: kapka se špičkou nahoru (bez podpor), nebo kruh (p.diry = 'kruh')
+        const rh = s.otvor / 2;
+        let kapka = [];
+        if (p.diry === 'kruh') kapka = G.obrysDiry(rh, 32, false);
+        else {
+          kapka.push([rh * Math.SQRT1_2, rh * Math.SQRT1_2], [0, rh * Math.SQRT2]);
+          for (let i = 0; i <= 24; i++) { const a = Math.PI * 3 / 4 + i / 24 * Math.PI * 3 / 2; kapka.push([rh * Math.cos(a), rh * Math.sin(a)]); }
+          kapka.pop();
+        }
         const delka = 2 * (U.wh + U.wn + o.sw) + 2;
         const otvor = k(k(k(k(new CS([kapka], 'Positive')).extrude(delka)).translate([0, 0, -delka / 2])).rotate([90, 0, 0]));
         odebO.push(natoc(k(otvor.translate([o.rS, 0, o.zS])), psiC));

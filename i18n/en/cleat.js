@@ -1059,4 +1059,6 @@ I18N.pridej('en', {
   'Zobrazit výkres': 'Show drawing',
   'záložka Výkres': 'Drawing tab',
   'nápověda. Výkres (SVG, PDF k tisku 1:1) je v nabídce 📐 Výkres, Soubor → 🧊 Otevřít v Modeláři předá díl k dalším úpravám.': 'help. The drawing (SVG, PDF for 1:1 printing) is in the 📐 Drawing menu, File → 🧊 Open in Modeller passes the part on for further editing.',
+  'Otvory jen tam, kde záda nenesou – mimo zámek, kořen háku a opěru dole. Ušetří plast a čas tisku u širokých zad a desek. Při tisku nastojato mají šestiúhelníky střechu 45° a kruhy tvar kapky (bez podpor); 👁 Zobrazení → 💧 Díry jako kapka je přepne na kruh (strop převisá).': 'Holes only where the back plate carries no load – away from the lip, the hook root and the bottom bearing area. Saves plastic and print time on wide back plates and plates. When printed upright, hexagons get a 45° roof and circles a teardrop shape (no supports); 👁 View → 💧 Teardrop holes switches them to circles (the ceiling overhangs).',
+  'vypnuto = kruh · kruhy odlehčení nastojato': 'off = circle · upright lightening circles',
 });

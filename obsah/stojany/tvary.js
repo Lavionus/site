@@ -17,7 +17,7 @@
   const BARVY = ['#E0A040', '#5BB37A', '#C8607A', '#8A6FD1', '#3FB6C2', '#D07A3A', '#9DA23C', '#6C8EBF'];
 
   /* ---------------- nástroje nad manifoldem ---------------- */
-  function nastroje(w, k) {
+  function nastroje(w, k, diry = 'kapka') {
     const { Manifold: M, CrossSection: CS } = w;
     const poly = body => k(new CS([body], 'NonZero'));
     const polys = seznam => (seznam.length ? k(new CS(seznam, 'NonZero')) : null);   // prázdný seznam → null
@@ -50,8 +50,14 @@
       const spod = k(cs.extrude(h - c)), vrch = k(k(k(cs.offset(-c, 'Round', 2, 48)).extrude(0.01)).translate([0, 0, h - 0.01]));
       return k(M.hull([spod, vrch]));
     }
-    /** Kapka: kruh (opsaný mnohoúhelník) se špičkou ke +b – otvor ve stěně se tiskne bez podpor. */
-    const kapka = r => k(CS.hull([k(CS.circle(r / Math.cos(Math.PI / segmenty(r)), segmenty(r))), poly([[-0.01, r * S2], [0.01, r * S2], [0, r * S2 - 0.02]])]));
+    /** Kapka: kruh (opsaný mnohoúhelník) se špičkou ke +b – otvor ve stěně se tiskne bez podpor.
+        diry = 'kruh' → jen kruh stejného Ø (strop převisá); pocet.dir počítá vodorovné díry pro Kontrolu. */
+    const pocet = { dir: 0 };
+    const kapka = r => {
+      pocet.dir++;
+      const c = k(CS.circle(r / Math.cos(Math.PI / segmenty(r)), segmenty(r)));
+      return diry === 'kruh' ? c : k(CS.hull([c, poly([[-0.01, r * S2], [0.01, r * S2], [0, r * S2 - 0.02]])]));
+    };
     /** 2D tvar (a, b) vysunutý o h podél jednotkové osy, b míří k „nahoru“ (kolmé na osu), začátek v bodě P. */
     function podelOsy(cs, h, osa, nahoru, P) {
       const a = [nahoru[1] * osa[2] - nahoru[2] * osa[1], nahoru[2] * osa[0] - nahoru[0] * osa[2], nahoru[0] * osa[1] - nahoru[1] * osa[0]];
@@ -159,7 +165,7 @@
       const d = otvoryVzoru(oblast, o.druh, o.bunka, o.zebro, o.druh === 'okna' ? 40 : Math.max(8, 0.15 * o.bunka * o.bunka), nastojato);
       return d ? k(cs.subtract(d)) : cs;
     }
-    return { M, CS, k, poly, polys, obdelnik, kruh, kvadr, valec, zaoblObd, zaobli, vytahni, otocZ, orizni, deska, kapka, podelOsy, vzor, otvoryVzoru, odlehci2D };
+    return { M, CS, k, poly, polys, obdelnik, kruh, kvadr, valec, zaoblObd, zaobli, vytahni, otocZ, orizni, deska, kapka, pocet, podelOsy, vzor, otvoryVzoru, odlehci2D };
   }
 
   /* ---------------- moduly (místní rámec) → {telo, odecist?, poloha, osa?, zasuvka?, oddelit?} ---------------- */
@@ -482,7 +488,7 @@
   function postav(w, p) {
     const t0 = Date.now();
     const smaz = [], k = x => { smaz.push(x); return x; };
-    const H = nastroje(w, k);
+    const H = nastroje(w, k, p.diry);
     try {
       const pod = p.podstava, maPodstavu = pod.tvar !== 'zadna', z0 = maPodstavu ? pod.tloustka : 0;
       const nazevSestavy = (p.nazev || 'Stojan').trim() || 'Stojan';
@@ -560,6 +566,7 @@
             bbox: [bb.min[0], bb.min[1], bb.max[0], bb.max[1]], rozmer: [bb.max[0] - bb.min[0], bb.max[1] - bb.min[1]], vyska: bb.max[2] };
         }),
       };
+      if (p.diry === 'kruh' && H.pocet.dir) problemy.push({ uroven: 'info', pole: [], text: 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).' });
       return { dily, nahled, rozvrh, problemy, cas: Date.now() - t0 };
     } finally {
       for (const x of smaz) { try { x.delete(); } catch (e) { /* už uvolněno */ } }

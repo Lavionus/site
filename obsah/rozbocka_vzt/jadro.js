@@ -37,6 +37,7 @@
       zebro: true, drazka: 0, sirka: 0, tvar: 'kruh', tesneni: 0, odsazeni: 0, otvoru: 1, zavesu: 2 },
     tisk: { orientace: 'vyvody', previs: 45, material: 1.24 },
     podpory: { zapnout: false, mezera: 0.2, roztec: 3 },      // odlomitelné sloupky pod převisy
+    diry: 'kapka',              // vodorovné otvory (patky, lišta, závěsy): 'kapka' (špička nahoru, bez podpor) | 'kruh'
   };
   const MEZE = {
     'vstup.od': [0, 400], 'vstup.id': [0, 400], 'vstup.delka': [3, 300],
@@ -54,7 +55,7 @@
   const VOLBY = { 'dil': ['rozbocka', 'spojka_vstup', 'spojka_vyvod'], 'vstup.spoj': ['do', 'na'], 'vyvody.spoj': ['do', 'na'], 'tisk.orientace': ['vyvody', 'vstup'],
     // příčné (zeď ⟂ osa): ouška, příruba; podélné (rozbočka podél zdi / stropu): patky, lišta, závěsy
     'uchyty.typ': ['zadne', 'ouska', 'priruba', 'patky', 'lista', 'zavesy'], 'uchyty.tvar': ['kruh', 'ctverec'],
-    'uchyty.hlava': ['zadna', 'kuzel', 'valec', 'matice'], 'zpevneni.typ': ['sousede', 'stred', 'oboje', 'deska'] };
+    'uchyty.hlava': ['zadna', 'kuzel', 'valec', 'matice'], 'zpevneni.typ': ['sousede', 'stred', 'oboje', 'deska'], 'diry': ['kapka', 'kruh'] };
 
   const kopie = o => JSON.parse(JSON.stringify(o));
   const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
@@ -507,6 +508,8 @@
         const re = Math.max(u.otvor + 1.2, u.sirka / 2, hlavaRozmery(u).r + 1.2), sH = rozsahSmer(o, p, [Math.cos(fi), Math.sin(fi)], zA, zMax) + u.odstup + re;
         if (zMax - re - sH * STRMEJI < zA + re) h('chyba', 'Závěsná oka se na délku rozbočky nevejdou (ploutev s náběhem 45° je delší než úsek pro ni) – zmenšete odstup nebo otvor, nebo posuňte polohu blíž ke vstupu.', 'uchyty.odstup', 'uchyty.poloha');
       }
+      if (p.diry === 'kruh' && ['patky', 'lista', 'zavesy'].includes(u.typ))
+        h('info', 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
       if ((u.typ === 'ouska' || u.typ === 'priruba') && u.poloha + u.tl > o.L * 0.6) h('varovani', `Úchyty jsou daleko v přechodu (${fmt(u.poloha)} mm z ${fmt(o.L)} mm) – kanály se tam rozbíhají a úchyt vyjde velký.`, 'uchyty.poloha');
     }
     const zp = p.zpevneni;
@@ -814,7 +817,7 @@
         plne.push(rot(k(k(ploutev.extrude(tl)).transform([1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, tl / 2, 0, 0, 1])), fi));
         // otvor napříč ploutví (podél y)
         const rk = hr / 2 / Math.cos(Math.PI / 48), valecY = (r, z) => k(k(k(Mf.cylinder(tl + 2, r, r, 48)).rotate([90, 0, 0])).translate([sH, tl / 2 + 1, z]));
-        duty.push(rot(hull([valecY(rk, zc), valecY(0.05, zc - rk * Math.SQRT2)]), fi));      // kapka – špička nahoru v tisku
+        duty.push(rot(p.diry === 'kruh' ? valecY(rk, zc) : hull([valecY(rk, zc), valecY(0.05, zc - rk * Math.SQRT2)]), fi));      // kapka – špička nahoru v tisku
         oka.push(zc);
       }
       return { fi, sH, oka, zavesy: true };
@@ -824,9 +827,10 @@
     /** otvor kolmo ke zdi (podél x) v desce x ∈ [−X − tl, −X] a zahloubení pro hlavu na straně těla (x = −X) */
     function otvorDoZdi(X, y, z, fi, kam) {
       const podelX = (m, yy, zz) => k(k(m.rotate([0, 90, 0])).translate([0, yy, zz]));    // tvar stavěný podél z → podél x
-      // kapkovitý otvor (špička k −z = nahoru v tisku vývody dolů) – strop otvoru se tiskne bez podpor
+      // kapkovitý otvor (špička k −z = nahoru v tisku vývody dolů) – strop otvoru se tiskne bez podpor; p.diry = 'kruh' → válec
       const rk = hr / 2 / Math.cos(Math.PI / 48);
-      kam(rot(hull([podelX(kuzel(-X - tl - 1, -X + 1, hr / 2, hr / 2, 0, 0, true), y, z), podelX(kuzel(-X - tl - 1, -X + 1, 0.05, 0.05, 0, 0), y, z - rk * Math.SQRT2)]), fi));
+      if (p.diry === 'kruh') kam(rot(podelX(kuzel(-X - tl - 1, -X + 1, hr / 2, hr / 2, 0, 0, true), y, z), fi));
+      else kam(rot(hull([podelX(kuzel(-X - tl - 1, -X + 1, hr / 2, hr / 2, 0, 0, true), y, z), podelX(kuzel(-X - tl - 1, -X + 1, 0.05, 0.05, 0, 0), y, z - rk * Math.SQRT2)]), fi));
       if (u.hlava !== 'zadna') {
         const m = u.hlava === 'kuzel' ? kuzel(-(hl.r - hr / 2), 0.01, hr / 2, hl.r, 0, 0, true)
           : u.hlava === 'valec' ? kuzel(-hl.h, 0.01, hl.r, hl.r, 0, 0, true)

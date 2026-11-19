@@ -561,4 +561,7 @@ I18N.pridej('en', {
   '3D se nepodařilo spočítat': '3D could not be calculated',
   'Počítám díly…': 'Calculating parts…',
   'Režim nemá žádné díly k tisku.': 'This mode has no parts to print.',
+  'Samostatný stojánek: tiskne se na boku, otvory jsou kruhové.': 'Freestanding stand: printed on its side, holes are round.',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrops (👁 View → 💧 Teardrop holes).',
+  'profil leží na podložce a otvory mají tvar kapky se střechou 45°, takže se tisknou čistě (👁 Zobrazení → 💧 Díry jako kapka; vypnuto = kruhové otvory, jejich strop převisá a potřebuje podpory). Popisky jsou vyryté 0,6 mm do horních ploch.': 'the profile lies on the bed and the holes are teardrop-shaped with a 45° roof, so they print cleanly (👁 View → 💧 Teardrop holes; off = round holes, whose ceiling overhangs and needs supports). Labels are engraved 0.6 mm into the top faces.',
 });

@@ -476,6 +476,7 @@
     const Rb = otv.d / 2, Rw = Rb + Math.max(2.5, +J.stena || 4);
     const LgMin = (Rw * c + 2) / a;                   // spodní roh čelní plochy vedení musí být nad rubem
     const Lg = Math.max(Lg0, LgMin);
+    if (J.kapka === false && !otv.pouzdro) info.push('Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.');
     if (Lg > Lg0 + 1e-6) info.push(`Vedení prodlouženo na ${cz(Lg)} mm, aby čelní plocha (kolmá na osu) ležela nad rubem.`);
     const G = P2(vstup + Lg);                         // střed horní (čelní) plochy vedení – o ni se opírá kroužek
     const kStupne = vstup + Lg - sS;              // stupeň vrtáku → spodek kroužku

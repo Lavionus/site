@@ -33,7 +33,7 @@
       h += '<ul><li><b>Výstup osy na čele</b> se volí ve středu tloušťky protikusu (u rámů v rovině) – vrut pak má v protikusu nejvíc materiálu na obě strany.</li>'
         + '<li><b>Délka vrutu</b> je z tabulky podle tloušťky (typické hodnoty, upravte podle svých vrutů). Stránka spočítá, kde musí sedět hlava (stupeň vrtáku), aby hrot zůstal aspoň o rezervu pod protější plochou.</li>'
         + '<li><b>Kroužek</b> na stupňovitém vrtáku se opírá o horní plochu vedení, která je kolmá na osu. Vzdálenost od stupně ke kroužku = vedení + vzdálenost od rubu ke dnu kapsy. Měrka (blok se slepým otvorem) ji přenese bez měření.</li>'
-        + '<li><b>Tisk přípravku na boku</b>: profil leží na podložce, vedení je vodorovné – otvor se tiskne kapkovitě (špička nahoru, bez převisu) nebo se do něj vlepí kovové pouzdro.</li></ul>';
+        + '<li><b>Tisk přípravku na boku</b>: profil leží na podložce, vedení je vodorovné – otvor se tiskne kapkovitě (špička nahoru, bez převisu; volba „💧 Díry jako kapka“), kruhový s podporami, nebo se do něj vlepí kovové pouzdro.</li></ul>';
       return h;
     }
     if (rezim === 'centr') {

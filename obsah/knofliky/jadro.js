@@ -53,6 +53,7 @@
     },
     vule: { hridel: 0.15, sroub: 0.4, matice: 0.2, kompenzace: 0.1 },
     tisk: { poloha: 'auto', mostek: 'mustkova', vrstva: 0.2, uhel: 45, material: 'PLA', kusu: 1 },
+    diry: 'kapka',   // vodorovný otvor stavěcího šroubu: 'kapka' (tisk bez podpor) | 'kruh'
   };
   /** Meze číselných polí [min, max, celé?]. */
   const MEZE = {
@@ -69,7 +70,7 @@
     'tisk.vrstva': [0.05, 0.5], 'tisk.uhel': [20, 75], 'tisk.kusu': [1, 30, 1],
   };
   const VYCTY = {
-    typ: Object.keys(TYPY),
+    typ: Object.keys(TYPY), diry: ['kapka', 'kruh'],
     'telo.hranaTyp': ['zaobleni', 'srazeni'],
     'knopka.tvar': ['hrib', 'valec', 'cocka'],
     'uchop.typ': Object.keys(NAZVY.uchop),
@@ -423,7 +424,11 @@
       else if (stena < 1.2) hl('varovani', `Stěna za maticí stavěcího šroubu jen ${fmt(stena, 2)} mm.`, 'telo.prumer');
       if (s.zs + s.ds / 2 > Math.min(u.hloubka, o.Ztop) - 0.3) hl('chyba', 'Stavěcí šroub leží nad koncem hřídele – prodlužte hloubku hřídele.', 'upevneni.hloubka');
       if (s.horni > o.Ztop - 0.8) hl('chyba', 'Drážka pro matici stavěcího šroubu je vyšší než knoflík.', ['telo.vyska', 'upevneni.hloubka']);
-      hl('info', `Stavěcí šroub ${u.stavaci} (červík) délky ≥ ${fmt(Math.ceil(s.xn + s.m.H / 2 - rH + 2))} mm, otvor je kapkovitý (tiskne se bez podpor), matici zasuňte zespodu.`, 'upevneni.stavaci');
+      const dlStav = fmt(Math.ceil(s.xn + s.m.H / 2 - rH + 2));
+      if (p.diry === 'kruh') hl('info', `Stavěcí šroub ${u.stavaci} (červík) délky ≥ ${dlStav} mm, otvor je kruhový, matici zasuňte zespodu.`, 'upevneni.stavaci');
+      else hl('info', `Stavěcí šroub ${u.stavaci} (červík) délky ≥ ${dlStav} mm, otvor je kapkovitý (tiskne se bez podpor), matici zasuňte zespodu.`, 'upevneni.stavaci');
+      if (p.diry === 'kruh') hl('info', 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.', null,
+        { text: 'díry jako kapka', pole: 'diry', hodnota: 'kapka' });
       if (rohX - s.m.H - rH < 0.5) hl('varovani', 'Matice stavěcího šroubu je velmi blízko otvoru hřídele.', 'upevneni.hridel');
     }
 
@@ -617,8 +622,8 @@
         if (u.vybrani > 0) odebrat.push(vysun(kruhDira(u.vybrani / 2 + p.vule.kompenzace / 2), -1, u.vybraniHloubka));
         if (o.stavaci) {
           const s = o.stavaci, rs = s.ds / 2;
-          // kapkovitý otvor (špička nahoru 45°) – vodorovná díra bez podpor; v rovině (y, z), vysunutý podél +X
-          const kapka = k(CS.hull([kruhDira(rs), poly([[-0.01, rs * Math.SQRT2], [0.01, rs * Math.SQRT2], [0, rs * Math.SQRT2 - 0.02]])]));
+          // kapkovitý otvor (špička nahoru 45°) – vodorovná díra bez podpor, nebo kruh (p.diry); v rovině (y, z), vysunutý podél +X
+          const kapka = p.diry === 'kruh' ? kruhDira(rs) : k(CS.hull([kruhDira(rs), poly([[-0.01, rs * Math.SQRT2], [0.01, rs * Math.SQRT2], [0, rs * Math.SQRT2 - 0.02]])]));
           const delka = Math.max(R, p.sukne.pouzit && p.typ === 'potenciometr' ? p.sukne.prumer / 2 : 0) + 2;
           odebrat.push(k(k(kapka.extrude(delka)).transform([0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, s.zs, 1])));
           // drážka pro matici: otevřená dole, ploché strany matice ke stěnám ±Y

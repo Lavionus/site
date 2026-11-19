@@ -85,7 +85,7 @@
   };
 
   const VYCHOZI = {
-    verze: 1, nazev: 'Ventilátor 120 → hadice 100', druh: 'prechod',
+    verze: 1, nazev: 'Ventilátor 120 → hadice 100', druh: 'prechod', diry: 'kapka',
     vent: { A: 120, roztec: 105, dira: 4.3, tl: 25, otvor: 115, roh: 4.5, strana: 'vytlak', upevneni: 'samorez', sroub: 'M4', Qmax: 120, pmax: 30, krivka: 'primka' },
     deska: { tl: 4, mrizka: false },
     prechod: { tvar: 'ctverec', profil: 'plynuly', delka: 0, stena: 2 },
@@ -112,7 +112,7 @@
     'tisk.vrstva': [0.05, 0.5], 'tisk.uhel': [20, 75], 'tisk.krok': [0.05, 0.5], 'tisk.podlozka': [80, 600],
   };
   const VYCTY = {
-    druh: Object.keys(NAZVY.druh), 'vent.strana': Object.keys(NAZVY.strana), 'vent.upevneni': Object.keys(NAZVY.upevneni),
+    druh: Object.keys(NAZVY.druh), diry: ['kapka', 'kruh'], 'vent.strana': Object.keys(NAZVY.strana), 'vent.upevneni': Object.keys(NAZVY.upevneni),
     'vent.sroub': Object.keys(SROUBY), 'vent.krivka': Object.keys(NAZVY.krivka),
     'prechod.tvar': Object.keys(NAZVY.tvar), 'prechod.profil': Object.keys(NAZVY.profil), 'vystup.typ': Object.keys(NAZVY.vystup),
     'filtr.typ': Object.keys(FILTRY), 'mrizka.vzor': Object.keys(NAZVY.vzor), 'mrizka.uchyceni': Object.keys(NAZVY.uchyceni),
@@ -364,6 +364,7 @@
     'prechod.delka': h => `přechod ${fmt(h, 1)} mm`, 'deska.tl': h => `deska ${fmt(h, 1)} mm`, 'vystup.limec': h => `límec ${fmt(h, 1)} mm`,
     'mrizka.zebro': h => `žebro ${fmt(h, 1)} mm`, 'vystup.delka': h => `hrdlo ${fmt(h, 1)} mm`, 'mrizka.roztec': h => `rozteč ${fmt(h, 1)} mm`,
     'jamka.presah': h => `přesah ${fmt(h, 2)} mm`, 'filtr.tl': h => `filtr ${fmt(h, 1)} mm`,
+    diry: h => (h === 'kapka' ? 'díry jako kapka' : 'díry jako kruh'),
   };
   const textOpravy = zmeny => Object.entries(zmeny).map(([c, h]) => (POPISKY[c] ? POPISKY[c](h) : `${c} ${h}`)).join(', ');
 
@@ -427,6 +428,7 @@
     // stojánek
     if (o.stojan) {
       if (o.zc - o.Rb * Math.SQRT2 < -0.01 || o.zc + o.Rb > o.zL0 + 0.01) chyba(['stojan.cep'], 'Čep stojánku se nevejde na bok skříně.', opr('stojan.cep', 10));
+      if (p.diry === 'kruh') info(['diry'], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.');
       if (Math.abs(p.stojan.naklon) > 60) info(['stojan.naklon'], 'Velký náklon – zkontrolujte v náhledu, že sání nenarazí do stojánku.');
     }
     // proudění: pracovní bod
@@ -614,6 +616,8 @@
       return k(oblast.subtract(k(CS.union(zebra))));
     }
     const kapka = (r, nahoru, cu, cv) => SOUPE.kapka(r, nahoru, cu, cv);
+    // vodorovná díra (p.diry): kapka hrotem nahoru (tisk bez podpor), nebo kruh stejného jmenovitého Ø
+    const dira = (r, cu, cv) => (p.diry === 'kruh' ? G.obrysDiry(r, Math.max(24, segmenty(r)), false).map(([u, w]) => [cu + u, cv + w]) : kapka(r, true, cu, cv));
     /** Řez tělesem rovinou y = 0 → mnohoúhelníky v (x, z) pro výkres. */
     const rezY = m => k(k(m.rotate([90, 0, 0])).slice(0)).toPolygons().map(pl => pl.map(([x, y]) => [x, -y]));
 
@@ -698,12 +702,12 @@
           plne.push(otoc(j.ven, nU)); odeb.push(otoc(j.dut, nU), valec(o.kh.rc, o.zL1 - 0.3, o.zS, 0, 0, nU));
         }
       }
-      // čepy stojánku (kapka hrotem dolů, slepá díra kapkou nahoru)
+      // čepy stojánku (kapka hrotem dolů, slepá díra kapkou nahoru / kruhem podle p.diry)
       if (o.stojan) for (const sg of [1, -1]) {
         const x0 = sg > 0 ? o.SA.a - 0.5 : -o.SA.a - o.Lb, x1 = sg > 0 ? o.SA.a + o.Lb : -o.SA.a + 0.5;
         plne.push(podelX(kapka(o.Rb, false, 0, o.zc), x0, x1));
         const h0 = sg > 0 ? o.SA.a + o.Lb - o.vrtani : -o.SA.a - o.Lb - 1, h1 = sg > 0 ? o.SA.a + o.Lb + 1 : -o.SA.a - o.Lb + o.vrtani;
-        odeb.push(podelX(kapka(o.Ss.pilot / 2, true, 0, o.zc), h0, h1));
+        odeb.push(podelX(dira(o.Ss.pilot / 2, 0, o.zc), h0, h1));
       }
       const telo = rozdil(sjednot(plne), odeb);
       const jmTela = p.druh === 'odsavac' ? 'Skříň odsávače' : 'Přechod';
@@ -741,7 +745,7 @@
         obrysStojny.push([-o.wu / 2 - 8, 0], [o.wu / 2 + 8, 0]);
         for (const sg of [1, -1]) {
           const x0 = sg > 0 ? o.Xu : -Xo;
-          stojna.push(rozdil(podelX(obrysStojny, x0, x0 + o.tu), [podelX(kapka(o.Ss.d / 2 + 0.25, true, 0, zp), x0 - 1, x0 + o.tu + 1)]));
+          stojna.push(rozdil(podelX(obrysStojny, x0, x0 + o.tu), [podelX(dira(o.Ss.d / 2 + 0.25, 0, zp), x0 - 1, x0 + o.tu + 1)]));
         }
         stojan = sjednot([zakl, ...stojna]);
         dily.push(sit(k, stojan, 'stojan', 'Stojánek', '#7A5BAF'));
@@ -771,7 +775,13 @@
       if (stojan && naklon) prunik.stojanNaklon = k(k(posun(stojan, 0, 0, o.zc - o.Hp)).intersect(sjednot([natoc(telo), natoc(fan)]))).volume();
       if (volby.kalibrace) kalibraceVzorku();
       const rez = vsechno.filter(x => x[1] !== 'ventilator').map(([m, jm]) => ({ jmeno: jm, polys: rezY(m) }));
-      return { dily, sestava, kalibrace, o, prunik, vzor2d, rez, cas: Date.now() - t0 };
+      // převis stropu kruhových děr (horní oblouk ±45° → šířka r·√2 × délka díry, 2 strany) – Kontrola pak nabídne kapku
+      const previsDiry = {};
+      if (p.diry === 'kruh' && o.stojan) {
+        previsDiry.telo = 2 * (o.Ss.pilot / 2) * Math.SQRT2 * o.vrtani;
+        previsDiry.stojan = 2 * (o.Ss.d / 2 + 0.25) * Math.SQRT2 * o.tu;
+      }
+      return { dily, sestava, kalibrace, o, prunik, vzor2d, rez, previsDiry, cas: Date.now() - t0 };
 
       /* ---- kalibrační vzorek: tři kousky lícování s vůlí −krok, 0, +krok (počet zářezů = pořadí) ---- */
       function kalibraceVzorku() {
@@ -840,7 +850,9 @@
     for (const d of model.dily.concat(model.kalibrace)) {
       if (d.teles > 1) H.push({ uroven: 'chyba', pole: null, text: `${d.nazev}: díl se rozpadl na ${d.teles} tělesa – některá část není spojená.` });
       const r = G.rozborTisku(d, p.tisk.uhel);
-      if (r.previs > 5) H.push({ uroven: 'varovani', pole: ['tisk.uhel', 'prechod.delka'], text: `${d.nazev}: převisy nad ${fmt(p.tisk.uhel)}° od svislice ${fmt(r.previs, 0)} mm² – v tom místě může potřebovat podpory.` });
+      const pd = (model.previsDiry || {})[d.jmeno] || 0;
+      if (r.previs > 5 && pd > 0 && r.previs <= 1.3 * pd + 5) H.push({ uroven: 'varovani', pole: ['diry'], text: `${d.nazev}: strop kruhových vodorovných děr převisá (${fmt(r.previs, 0)} mm²) – tiskněte s podporami nebo zvolte kapku.`, oprava: { text: 'díry jako kapka', zmeny: { diry: 'kapka' } } });
+      else if (r.previs > 5) H.push({ uroven: 'varovani', pole: ['tisk.uhel', 'prechod.delka'], text: `${d.nazev}: převisy nad ${fmt(p.tisk.uhel)}° od svislice ${fmt(r.previs, 0)} mm² – v tom místě může potřebovat podpory.` });
       if (r.most > 1) H.push({ uroven: 'info', pole: null, text: `${d.nazev}: tiskárna přemostí ${fmt(r.most, 0)} mm² vodorovného stropu (štěrbina zásuvky, kapsy).` });
     }
     return H;

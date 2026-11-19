@@ -17,7 +17,7 @@
   /* ---------- stav (historie, ukládání, projekt, sdílení a klávesy zajišťuje G3D.aplikace) ---------- */
   let p, wasm = null, model = null, chybaStavby = null, chybaJadra = null, bezWebgl = false, oPosl = null, skicar = null;
   const app = G3D.aplikace({
-    typ: 'kolicky', nazev: 'Kolíčky', klic: 'webapp_kolicky', soubor: 'kolicek', formular: false,
+    typ: 'kolicky', nazev: 'Kolíčky', klic: 'webapp_kolicky', soubor: 'kolicek', formular: false, diry: true,
     normalizuj: K.normalizuj, vychozi: () => K.zPredvolby(0), hlasitOpravyUlozeneho: true, limitHistorie: 150,
     ulozProjekt: K.ulozProjekt, nactiProjekt: K.nactiProjekt, vezmi: K.vezmi, poloz: K.poloz,
     popis: q => `${q.nazev || 'Kolíček'} – ${K.popis(q)}`,

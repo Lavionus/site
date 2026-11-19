@@ -486,4 +486,7 @@ I18N.pridej('en', {
   'přípravek A (samostředicí U)': 'jig A (self-centring U)',
   'spoj po složení (řez osou prvního prvku)': 'assembled joint (section through the axis of the first fastener)',
   '{n} díly': '{n} parts',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrops.',
+  'profil leží na podložce, vedení je vodorovné – otvor se tiskne kapkovitě (špička nahoru, bez převisu; volba „💧 Díry jako kapka“), kruhový s podporami, nebo se do něj vlepí kovové pouzdro.': 'the profile lies on the bed, the guide is horizontal – the hole is printed teardrop-shaped (point up, no overhang; option “💧 Holes as teardrops”), round with supports, or a metal bushing is glued in.',
+  'Díry jako kapka (vypnuto = kruh)': 'Holes as teardrops (off = round)',
 });

@@ -547,7 +547,9 @@
       // šestiúhelník vrcholem nahoru ve směru tisku (na boku = podél x, nastojato = podél z) – otvor bez převisu
       // kruh nastojato = kapka se špičkou nahoru (strop otvoru bez převisu)
       // nastojato: šestiúhelník se střechou 45° (pravidelný by měl strop jen 30° od vodorovné) a kruh jako kapka
-      const hx = sest && naBoku ? s / Math.cos(Math.PI / 6) : s, hz = sest && !naBoku ? s * 1.6 : !sest && !naBoku ? s / 2 + s / 2 * Math.SQRT2 : s;
+      // (p.diry === 'kruh' → nastojato obyčejný kruh, strop převisá)
+      const kapky = !sest && !naBoku && p.diry !== 'kruh';
+      const hx = sest && naBoku ? s / Math.cos(Math.PI / 6) : s, hz = sest && !naBoku ? s * 1.6 : kapky ? s / 2 + s / 2 * Math.SQRT2 : s;
       const hore = Math.min(o.zaves ? o.zOcas : o.zL(gw), H, zadaTop) - m, dole = Math.max(zBot, o.patka > 0 ? zBot + o.patka : zBot) + m;
       const nx = Math.floor((o.W - 2 * m + wt) / (hx + wt)), nz = Math.floor((hore - dole + wt) / (hz + wt));
       if (nx < 1 || nz < 1) return;
@@ -559,7 +561,7 @@
           const r = s / 2 / Math.cos(Math.PI / 6);
           if (naBoku) odeber.push(k(k(k(M.cylinder(o.b + 2, r, r, 6)).rotate([-90, 0, 0])).translate([x, yZ - 1, z])));   // vrchol podél x (= nahoru při tisku)
           else { const h1 = s * 0.3; odeber.push(naY(poly([[x - s / 2, z - h1], [x, z - h1 - s / 2], [x + s / 2, z - h1], [x + s / 2, z + h1], [x, z + h1 + s / 2], [x - s / 2, z + h1]]), yZ - 1, y0 + 1)); }
-        } else if (naBoku) odeber.push(valecY(x, z, s / 2, s / 2, yZ - 1, y0 + 1));
+        } else if (!kapky) odeber.push(valecY(x, z, s / 2, s / 2, yZ - 1, y0 + 1));
         else odeber.push(naY(k(CS.hull([kruh(x, z - hz / 2 + s / 2, s / 2), kruh(x, z - hz / 2 + s / 2 + s / 2 * Math.SQRT2, 0.05)])), yZ - 1, y0 + 1));
         odlehcenych++;
       }

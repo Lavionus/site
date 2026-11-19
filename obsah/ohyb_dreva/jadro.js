@@ -76,7 +76,7 @@
       dreviny: DREVINY.map((d) => Object.assign({}, d)),
       materialy: MATERIALY_KERF.map((d) => Object.assign({}, d)),
       tisk: { papir: 'a4', papirW: 210, papirH: 297, okraj: 8, prekryv: 15, kalibX: 100, kalibY: 100 },
-      stl: { stul: 220, sirkaTisk: 0, kolikD: 4, vuleKoliku: 0.25, oznaceni: true, dilStl: 'P' },
+      stl: { stul: 220, sirkaTisk: 0, kolikD: 4, vuleKoliku: 0.25, oznaceni: true, kapka: true, dilStl: 'P' },
     };
   }
 

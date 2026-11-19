@@ -44,28 +44,11 @@
     padding: 7px 10px;
   }
 
-  /* ── menu: všechna videa / seriály ── */
-  .menu {
-    display: flex; gap: 6px; flex-wrap: wrap;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-  .menu button {
-    border: 1px solid transparent; border-bottom: 0;
-    border-radius: 8px 8px 0 0;
-    background: transparent;
-    padding: 8px 14px;
-    margin-bottom: -1px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .menu button:hover { background: var(--bg-hover); border-color: transparent; }
-  .menu button.aktivni {
-    background: var(--bg);
-    border-color: var(--border);
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .menu .pocitadlo { font-size: .8rem; color: var(--text-faint); font-weight: 400; }
+  /* ── nadpis s návratem na seznam seriálů ── */
+  .hlavicka { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 6px; }
+  .hlavicka h1 { margin: 0; }
+  .hlavicka #btnDomu { padding: 6px 12px; }
+  .podnadpis { margin-bottom: 16px; }
 
   /* ── ovládací lišta ── */
   .lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
@@ -91,6 +74,8 @@
     display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: center;
   }
   .serial-hlava .ikona-serialu { font-size: 2.6rem; line-height: 1; }
+  .serial-hlava img.ikona-serialu { width: 160px; max-width: 32vw; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; flex: none; }
+  .plakat.s-obrazkem { background-size: cover !important; background-position: center !important; }
   .serial-hlava .texty { flex: 1 1 260px; min-width: 0; }
   .serial-hlava h2 { margin: 0 0 4px; font-size: 1.35rem; }
   .serial-hlava p { margin: 0 0 8px; color: var(--text-muted); }
@@ -276,17 +261,16 @@
     .okno-pata .vpravo { margin-left: 0; }
     .prekryv { padding: 0; }
     .okno { border-radius: 0; border: 0; height: 100%; }
-    .menu { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
-    .menu button { padding: 7px 10px; flex: 0 0 auto; }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>📼 Videotéka</h1>
+  <div class="hlavicka">
+    <h1>📼 Videotéka</h1>
+    <button id="btnDomu" type="button" title="Zpět na začátek stránky – seznam seriálů">⌂ Seznam seriálů</button>
+  </div>
   <p class="podnadpis">Seriály a videa – přehrávač si pamatuje, kde jsi skončil.</p>
-
-  <nav class="menu" id="menu" aria-label="Seriály a sbírky"></nav>
 
   <div class="lista">
     <input type="search" id="hledat" placeholder="Hledat podle názvu, štítku nebo čísla…" autocomplete="off">
@@ -534,34 +518,6 @@
     return vysledek.sort(podle);
   }
 
-  function vykresliMenu() {
-    const box = $('menu');
-    box.textContent = '';
-    const vse = vsechnaVidea();
-    const ser = serialy();
-    const volna = vse.filter(v => !v.serial).length;
-    const tl = (ikona, text, pocet, pohled, titulek) => {
-      const b = el('button', pohled === stav.pohled ? 'aktivni' : '');
-      b.type = 'button';
-      b.append(el('span', '', ikona), el('span', '', text));
-      if (pocet) b.appendChild(el('span', 'pocitadlo', pocet));
-      if (titulek) b.title = titulek;
-      b.onclick = () => prepniPohled(pohled);
-      box.appendChild(b);
-    };
-    tl('📼', 'Všechna videa', String(vse.length), '');
-    const poradi = Object.keys(window.NAHNOJI_SERIALY || {});
-    const nazvy = [...ser.keys()].sort((a, b) =>
-      ((poradi.indexOf(a) + 1) || 1e9) - ((poradi.indexOf(b) + 1) || 1e9) || a.localeCompare(b, 'cs'));
-    for (const n of nazvy) {
-      const dily = ser.get(n);
-      const videno = dily.filter(jeVideno).length;
-      tl(infoSerialu(n).ikona || '📺', n, videno ? `${videno}/${dily.length}` : String(dily.length), 's:' + n,
-        `${dily.length} dílů, zhlédnuto ${videno}`);
-    }
-    if (ser.size && volna) tl('🎞️', 'Ostatní videa', String(volna), 'ostatni');
-  }
-
   // V seriálu místo štítků výběr řady – u dlouhých seriálů (Simpsonovi 35 řad)
   // se nevykreslují stovky karet najednou.
   function vykresliRady(dily) {
@@ -605,7 +561,11 @@
     if (!nazev) return;
     const info = infoSerialu(nazev);
     const h = el('div', 'serial-hlava');
-    h.appendChild(el('div', 'ikona-serialu', info.ikona || '📺'));
+    if (info.obrazek) {
+      const img = el('img', 'ikona-serialu');
+      img.src = info.obrazek; img.alt = ''; img.loading = 'lazy';
+      h.appendChild(img);
+    } else h.appendChild(el('div', 'ikona-serialu', info.ikona || '📺'));
     const t = el('div', 'texty');
     t.appendChild(el('h2', '', nazev));
     if (info.popis) t.appendChild(el('p', '', info.popis));
@@ -689,8 +649,14 @@
     const k = el('button', 'karta');
     k.type = 'button';
     const plakat = el('div', 'plakat');
-    plakat.style.background = barvy(dily[0].id + 7);
-    plakat.appendChild(el('span', 'velka-ikona', info.ikona || '📺'));
+    if (info.obrazek) {
+      // Vlastní ilustrace (lokální Stable Diffusion), ne plakát seriálu.
+      plakat.classList.add('s-obrazkem');
+      plakat.style.background = `url("${info.obrazek}"), ${barvy(dily[0].id + 7)}`;
+    } else {
+      plakat.style.background = barvy(dily[0].id + 7);
+      plakat.appendChild(el('span', 'velka-ikona', info.ikona || '📺'));
+    }
     const videno = dily.filter(jeVideno).length;
     plakat.appendChild(el('span', 'stitek-roh epizoda', `${dily.length} dílů`));
     if (videno) plakat.appendChild(el('span', 'stitek-roh videno', `✓ ${videno}/${dily.length}`));
@@ -708,7 +674,6 @@
     const ser = serialy();
     if (stav.pohled.startsWith('s:') && !ser.has(stav.pohled.slice(2))) stav.pohled = '';
     if (stav.pohled === 'ostatni' && !ser.size) stav.pohled = '';
-    vykresliMenu();
 
     const jeSerial = stav.pohled.startsWith('s:');
     const nazevSerialu = jeSerial ? stav.pohled.slice(2) : '';
@@ -784,6 +749,8 @@
       box.appendChild(m);
     }
   }
+
+  $('btnDomu').onclick = () => prepniPohled('');
 
   function prepniPohled(pohled) {
     stav.pohled = pohled;

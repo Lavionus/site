@@ -50,7 +50,7 @@
   // hlášení o přizpůsobení čepu platí jen do další změny
   document.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.p && e.target.id !== 'f_cd') hlaseniPrepnuti = null; }, true);
   const app = G3D.aplikace({
-    typ: 'krabicka_pant', nazev: 'Krabička s víčkem', klic: 'webapp_krabicka_pant', soubor: 'krabicka', zive: true,
+    typ: 'krabicka_pant', nazev: 'Krabička s víčkem', klic: 'webapp_krabicka_pant', soubor: 'krabicka', zive: true, diry: true,
     normalizuj, vychozi: () => KPANT.normalizuj(KPANT.VYCHOZI).p,
     ulozProjekt: KPANT.ulozProjekt, nactiProjekt: KPANT.nactiProjekt,
     popis: q => `${q.nazev || 'Krabička'} – ${q.vnitrni.delka} × ${q.vnitrni.sirka} × ${q.vnitrni.vyska} mm`,
@@ -98,7 +98,7 @@
   function prizpusobPlastu(q) {
     if (q.cep.prumer >= 2.5) return;
     q.cep.prumer = 3;
-    const rd = q.cep.prumer / 2 + q.cep.vule, potreba = Math.ceil((2 * (rd * (q.cep.slza ? Math.SQRT2 : 1) + 1.2)) * 5) / 5;
+    const rd = q.cep.prumer / 2 + q.cep.vule, potreba = Math.ceil((2 * (rd * (q.diry !== 'kruh' ? Math.SQRT2 : 1) + 1.2)) * 5) / 5;
     if (q.pant.prumer < potreba) q.pant.prumer = potreba;
     q.cep.hlavaD = Math.max(q.cep.hlavaD, q.cep.prumer + 2);
     hlaseniPrepnuti = `Pro tištěný čep zvětšen průměr čepu na 3 mm` + (q.pant.prumer === potreba ? ` a článku na ${fmt(potreba)} mm.` : '.');

@@ -78,7 +78,7 @@
     N('pripravek.krouzekV', 'Kroužek: výška', { min: 4, max: 30, step: 0.5, kdy: NE_CENTR }),
     N('pripravek.krouzekStena', 'Kroužek: stěna', { min: 2, max: 15, step: 0.5, kdy: NE_CENTR }),
     N('pripravek.sroubek', 'Stavěcí šroub M', { min: 2, max: 6, step: 0.5, kdy: NE_CENTR }),
-    CHK('pripravek.kapka', 'Kapkovitý otvor vedení (tisk na boku)', { kdy: (S) => S.rezim === 'kapsa' }),
+    CHK('pripravek.kapka', '💧 Díry jako kapka (vypnuto = kruh)', { kdy: (S) => S.rezim === 'kapsa' }),
     CHK('pripravek.oznaceni', 'Vyrýt označení dílu', { kdy: NE_CENTR }),
   ];
   const POLE_PRAVIDLA = [

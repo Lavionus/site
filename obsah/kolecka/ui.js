@@ -23,12 +23,15 @@
     exportStl: () => exportVse('stl'),
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(), app.p.nazev || 'Kolečko'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka' },
+    diry: true,
     zmenaTematu: () => prepocitej(),
   });
 
   /* ---------- nabídky formuláře ---------- */
   const moznosti = (sel, obj) => { sel.innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(''); };
-  moznosti($('f_profil'), KOLA.NAZVY.profil);
+  document.querySelectorAll('#paletaProfilu button').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.dlazdice !== app.p.kolo.profil) app.zmen(q => { q.kolo.profil = b.dataset.dlazdice; });
+  }));
   moznosti($('f_utyp'), KOLA.NAZVY.ulozeni);
   moznosti($('f_deleni'), KOLA.NAZVY.deleni);
   moznosti($('f_spoj'), KOLA.NAZVY.spoj);
@@ -98,6 +101,7 @@
   /* ---------- přepočet ---------- */
   function prepocitej() {
     p = app.p;
+    document.querySelectorAll('#paletaProfilu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dlazdice === p.kolo.profil)));
     nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
     let H = KOLA.kontroly(p);
     o = KOLA.odvozene(p);
@@ -158,7 +162,7 @@
       r.push(['Osazení (otvor)', `Ø ${fmt(2 * o.rr, 1)}`, `opírá vnější kroužek, ${fmt(p.ulozeni.osazeni, 1)} mm`]);
     } else r.push([p.ulozeni.typ === 'hridel' ? 'Otvor s ploškou' : 'Otvor na osu', `Ø ${fmt(2 * o.rb, 2)}`, p.ulozeni.typ === 'hridel' ? `přes plošku ${fmt(o.plocha, 2)}` : `osa Ø ${fmt(p.ulozeni.osa)}`]);
     if (o.prof.rDno && o.prof.rDno < o.R - 0.05) r.push(['Dno profilu', `Ø ${fmt(2 * o.prof.rDno, 2)}`, o.prof.h ? `hloubka ${fmt(o.prof.h, 2)}` : '']);
-    if (p.drzak.typ === 'vidlice' || p.drzak.typ === 'otocna') r.push(['Díra osy ve vidlici', `Ø ${fmt(2 * o.rOsa, 2)}`, 'kapkovitá (tisk deskou dolů)']);
+    if (p.drzak.typ === 'vidlice' || p.drzak.typ === 'otocna') r.push(['Díra osy ve vidlici', `Ø ${fmt(2 * o.rOsa, 2)}`, p.diry === 'kruh' ? 'kruhová – strop s podporami' : 'kapkovitá (tisk deskou dolů)']);
     if (p.excentr.pouzit) r.push(['Díra pro čep excentru', `Ø ${fmt(p.excentr.prumer + 0.3, 2)}`, `čep Ø ${fmt(p.excentr.prumer, 1)}, e ${fmt(p.excentr.e, 2)}`]);
     if (o.prof.behoun) r.push(['Běhoun TPU – vnitřní', `Ø ${fmt(2 * (o.prof.Rc - p.kolo.tpuPresah / 2), 2)}`, `kanál jádra Ø ${fmt(2 * o.prof.Rc, 2)}`]);
     $('tabRozmery').innerHTML = '<tr><th>Lícovaný prvek</th><th class="c">Rozměr</th><th>Pozn.</th></tr>' + r.map(x => `<tr><td>${esc(x[0])}</td><td class="c">${x[1]}</td><td>${esc(x[2])}</td></tr>`).join('');

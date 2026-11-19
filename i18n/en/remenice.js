@@ -334,4 +334,7 @@ I18N.pridej('en', {
   'díl': 'part',
   'díly': 'parts',
   'dílů': 'parts',
+  'Osa svisle, náboj na podložce (tak jsou díly v exportu). Výška vrstvy 0,1–0,15 mm, tryska 0,4 mm, 100% výplň nebo 4+ perimetry. Materiál PETG nebo ASA (PLA měkne u horkého motoru, nad ~50 °C). Horní příruba s úkosem 45° nepotřebuje podpory, kapsa na matici je otevřená zespodu a otvor šroubu má tvar kapky – obojí se tiskne bez podpor (kruhový otvor přepnete v 👁 Zobrazení → 💧 Díry jako kapka, klávesa K; pak potřebuje podpory). Malé řemenice (pod 20 zubů) tiskněte pomalu a s chlazením.': 'Axis vertical, hub on the bed (as the parts are exported). Layer height 0.1–0.15 mm, 0.4 mm nozzle, 100% infill or 4+ perimeters. PETG or ASA (PLA softens near a hot motor, above ~50 °C). A top flange with a 45° chamfer needs no supports; the nut trap is open from below and the screw hole is teardrop-shaped – both print without supports (switch to a round hole in 👁 View → 💧 Teardrop holes, key K; it then needs supports). Print small pulleys (under 20 teeth) slowly and with cooling.',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrop.',
+  'díry jako kapka': 'teardrop holes',
 });

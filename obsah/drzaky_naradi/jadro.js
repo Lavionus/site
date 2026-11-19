@@ -567,8 +567,9 @@
    * profil YZ (polygon proti směru hodin), šířka v X, výřezy svisle shora skrz/na hloubku, popisky na horní ploše.
    * Orientace tisku: 'hlavou' (horní plocha na podložce, žádné převisy) nebo 'bok' (profil v rovině podložky, výřezy jako kapky).
    * výřez: {x, y, tvar:'kruh'|'obd'|'otevreny', d | w (X) × hl (Y), z0 (horní plocha výřezu), hloubka, popis}
+   * diry: 'kapka' (výchozí, kruhové výřezy na boku jako kapky bez podpor) | 'kruh' (přesný kruh, strop převisá) → G.diry
    */
-  function drzak(d0, L0, nast) {
+  function drzak(d0, L0, nast, diry = 'kapka') {
     const L = lista(L0), N = Object.assign({}, VYCHOZI_NAST_STENA, nast || {}), druh = DRUHY[d0.druh] ? d0.druh : 'dlata';
     const P = Object.assign({}, DRUHY[druh].vychozi, d0.p || {});
     const c = omez(cislo(N.vuleHak, 0.8), 0.2, 3), pb = Math.max(3, cislo(N.zada, 5)), v = Math.max(0, cislo(N.vuleNastroje, 0.6));
@@ -689,10 +690,12 @@
       for (let i = 0; i < k; i++) casti.push([hrany[i], hrany[i + 1]]);
       varovani.push(`Držák je širší (${cz(sirka, 0)} mm) než tisková plocha – STL rozdělen na ${k} díly; díly se na liště jen přiloží k sobě.`);
     } else casti.push([0, sirka]);
-    if (druh === 'vrtaky' && P.naListu === false) varovani.push('Samostatný stojánek: tiskne se na boku, otvory jsou ve tvaru kapky (bez podpor).');
+    const kruhy = diry === 'kruh' ? 'kruh' : 'kapka', bocni = orientace === 'bok' && vyrezy.some((q) => q.tvar === 'kruh');
+    if (druh === 'vrtaky' && P.naListu === false) varovani.push(kruhy === 'kapka' ? 'Samostatný stojánek: tiskne se na boku, otvory jsou ve tvaru kapky (bez podpor).' : 'Samostatný stojánek: tiskne se na boku, otvory jsou kruhové.');
+    if (bocni && kruhy === 'kruh') varovani.push('Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     const Lzat = druh === 'kladivo' ? 'kladivo do 1 kg' : druh === 'sverky' ? 'svěrky do ~1 kg/ks' : 'ruční nářadí';
     return {
-      druh, nazev: DRUHY[druh].nazev + (d0.nazev ? ' – ' + d0.nazev : ''), P, profil, sirka, hloubka, vyrezy, popisky, orientace, tisk, casti, varovani,
+      druh, nazev: DRUHY[druh].nazev + (d0.nazev ? ' – ' + d0.nazev : ''), P, profil, sirka, hloubka, vyrezy, popisky, orientace, diry: kruhy, tisk, casti, varovani,
       zHorni: zTop, zSpodni: r2(Math.min(...zs)), yP, yZ, c, pb, tlPolice, zatizeni: Lzat, naListu: druh !== 'vrtaky' || P.naListu !== false,
     };
   }
@@ -779,7 +782,7 @@
   /* ---------------- projekt ---------------- */
   function vychoziProjekt() {
     return {
-      verze: 1, rezim: 'podlozka', nazev: '',
+      verze: 1, rezim: 'podlozka', nazev: '', diry: 'kapka',   // diry: vodorovné díry držáků tištěných na boku – 'kapka' | 'kruh'
       gf: {
         podlozka: JSON.parse(JSON.stringify(VYCHOZI_PODLOZKA)),
         krabicky: [
@@ -828,6 +831,7 @@
     dopln(S, vychoziProjekt());
     if (!S.gf.podlozka.zasuvka) S.gf.podlozka.zasuvka = { W: 400, H: 300, vule: 1, zarovnani: 'stred' };
     if (!REZIMY.includes(S.rezim)) S.rezim = 'podlozka';
+    if (S.diry !== 'kruh') S.diry = 'kapka';
     return S;
   }
 

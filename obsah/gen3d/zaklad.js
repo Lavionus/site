@@ -15,6 +15,9 @@
    G3D.odhadTisku(objem, hustota, {dilu})  – {g, metru, minut} (hrubý odhad, plný díl)
    G3D.jmenoSouboru(nazev, nahradni, pripona)
    G3D.zakoduj(p) / G3D.dekoduj(t)         – stav do odkazu (deflate-raw + base64url, async)
+   G3D.obrysDiry(r, n, kapka)              – obrys vodorovné díry [[x,y]…] proti směru hodinových ručiček:
+                                             kruh (n úseček), nebo kapka se špičkou k +y (strop 45°, tisk bez podpor);
+                                             volba stránky p.diry = 'kapka' | 'kruh' (G3D.aplikace({diry: true}))
    ============================================================ */
 (function () {
   'use strict';
@@ -172,11 +175,20 @@
     return JSON.parse(new TextDecoder().decode(json));
   }
 
+  /** Obrys díry: kruh o poloměru r (n úseček, opsaný – nejužší místo ≥ r), nebo kapka se špičkou v (0, r·√2). */
+  function obrysDiry(r, n = 32, kapka = true) {
+    const ro = r / Math.cos(Math.PI / n);
+    if (!kapka) return Array.from({ length: n }, (_, i) => { const a = 2 * Math.PI * i / n; return [ro * Math.cos(a), ro * Math.sin(a)]; });
+    const b = [[0, r * Math.SQRT2]], m = Math.max(3, Math.round(n * 3 / 4));   // oblouk 135° → 405° (spodní ¾ kruhu)
+    for (let i = 0; i <= m; i++) { const a = Math.PI * 3 / 4 + Math.PI * 3 / 2 * i / m; b.push([ro * Math.cos(a), ro * Math.sin(a)]); }
+    return b;
+  }
+
   const BARVY_TRID = [[0.25, 0.48, 0.84], [0.85, 0.66, 0.2], [0.86, 0.22, 0.2], [0.25, 0.48, 0.84], [0.66, 0.68, 0.72]];
   const API = {
     BARVY_TRID,
     kopie, vezmi, poloz, slij, ctiCislo, fmt, normalizuj, projektJson, nactiProjektJson,
-    obal, tiskoveRozlozeni, tridyPrevisu, rozborTisku, odhadTisku, jmenoSouboru, zakoduj, dekoduj,
+    obal, tiskoveRozlozeni, tridyPrevisu, rozborTisku, odhadTisku, jmenoSouboru, zakoduj, dekoduj, obrysDiry,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else window.G3D = Object.assign(window.G3D || {}, API);

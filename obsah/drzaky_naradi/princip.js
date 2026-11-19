@@ -46,7 +46,7 @@ Ochranné brýle a chrániče sluchu. Kdo nemá stolní pilu s klínem, nechte s
 <h3>Držáky z 3D tisku</h3>
 <p>Držáky s policí (dláta, pilníky, šroubováky, pily, svěrky, kladivo) se tisknou <b>horní plochou na podložku</b>: hák, klín pod policí i drážky
 jsou pak bez převisů a bez podpor. Stupňovitý stojánek na vrtáky se tiskne <b>na boku</b> – profil leží na podložce a otvory mají tvar kapky
-se střechou 45°, takže se tisknou čistě. Popisky jsou vyryté 0,6 mm do horních ploch.</p>
+se střechou 45°, takže se tisknou čistě (👁 Zobrazení → 💧 Díry jako kapka; vypnuto = kruhové otvory, jejich strop převisá a potřebuje podpory). Popisky jsou vyryté 0,6 mm do horních ploch.</p>
 <ul>
 <li>Materiál: <b>PETG</b> (PLA pod trvalým zatížením pomalu teče – creep); 4 perimetry, výplň ≥ 30 %, vrstva 0,2–0,28 mm.</li>
 <li>Vůle háku (typicky 0,8 mm) zajistí, že držák jde nasadit i na lištu s nerovným řezem. Vůle nástroje 0,6 mm na šířce / průměru.</li>

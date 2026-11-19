@@ -400,4 +400,8 @@ I18N.pridej('en', {
   'převis – potřebuje podporu': 'overhang – needs support',
   'převisy,': 'overhangs,',
   'pravítka,': 'rulers,',
+  'po tisku propíchnout). Vodorovný otvor stavěcího šroubu je kapkovitý; jako kruh ho přepnete v 👁 Zobrazení (💧 Díry jako kapka, klávesa K) – kruh pak potřebuje podpory.': 'pierce after printing). The horizontal set screw hole is teardrop-shaped; switch it to round in 👁 View (💧 Teardrop holes, key K) – a round hole then needs supports.',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrop.',
+  'díry jako kapka': 'teardrop holes',
+  'Stavěcí šroub {stavaci} (červík) délky ≥ {dlStav} mm, otvor je kruhový, matici zasuňte zespodu.': 'Set screw {stavaci} (grub screw) of length ≥ {dlStav} mm, the hole is round, slide the nut in from below.',
 });

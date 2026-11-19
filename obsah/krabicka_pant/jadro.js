@@ -24,7 +24,7 @@
     // panty vzadu: počet samostatných pantů, délka jednoho (0 = automaticky), zarážka = úhel dorazu (0 = bez)
     pant: { pocet: 1, delka: 0, clanku: 5, prumer: 6.4, mezera: 0.4, odstup: 0.4, zarazka: 0 },
     // čep společný pro pant i zapínání: kovový (drát, hřebík) nebo tištěný jako samostatný díl
-    cep: { druh: 'kov', prumer: 2, vule: 0.2, tesnyKonec: true, vuleTesna: 0, slza: true,
+    cep: { druh: 'kov', prumer: 2, vule: 0.2, tesnyKonec: true, vuleTesna: 0,
       hlavaD: 4.5, hlavaH: 1.2, zplosteni: 0.4 },
     // chlopně na kloubu u hrany víka: počet vpředu (0 = bez) a na každém boku
     // dolad: posun vnitřní plochy chlopně ke stěně (+ = větší záběr), treni: chlopeň na čepu s malou vůlí drží polohu
@@ -35,6 +35,8 @@
     text: { obsah: '', velikost: 10, hloubka: 0.6, pismo: 'libsans' },
     // odhad tisku: výplň, materiál, průměrný objemový průtok tiskárny
     tisk: { vypln: 15, material: 'PLA', prutok: 6 },
+    // vodorovné otvory pro čep: 'kapka' (slzička se špičkou 45° nahoru při tisku, bez podpor) | 'kruh'; dřív cep.slza true/false
+    diry: 'kapka',
   };
 
   const ROZSAHY = {
@@ -89,6 +91,8 @@
       }
     };
     slij(p, vstup || {});
+    if (vstup && vstup.diry == null && vstup.cep && vstup.cep.slza === false) p.diry = 'kruh';   // starší projekty a odkazy
+    if (!['kapka', 'kruh'].includes(p.diry)) p.diry = 'kapka';
     p.nazev = String(p.nazev || VYCHOZI.nazev).slice(0, 120);
     for (const [c, [mn, mx]] of Object.entries(ROZSAHY)) {
       const puv = vezmi(p, c), vych = vezmi(VYCHOZI, c);
@@ -102,7 +106,7 @@
     if (p.pant.clanku % 2 === 0) { p.pant.clanku += 1; hlaseni.push(`pant.clanku: sudý počet zvýšen na ${p.pant.clanku} (krajní články patří krabičce)`); }
     if (p.pant.zarazka > 0 && p.pant.zarazka < 90) { hlaseni.push(`pant.zarazka: ${fmt(p.pant.zarazka)}° je méně než 90°, použito 90°`); p.pant.zarazka = 90; }
     if (!['kov', 'plast'].includes(p.cep.druh)) { hlaseni.push(`cep.druh: neznámý druh „${p.cep.druh}“, použit kovový`); p.cep.druh = 'kov'; }
-    for (const k of ['tesnyKonec', 'slza']) p.cep[k] = !!p.cep[k];
+    p.cep.tesnyKonec = !!p.cep.tesnyKonec;
     p.viko.osazeni = !!p.viko.osazeni;
     p.zapinani.treni = !!p.zapinani.treni;
     if (p.zapinani.dolad > p.zapinani.odstup - 0.1) {
@@ -273,7 +277,8 @@
     for (const u of o.upravy) add('info', u.text, u.pole, u.oprava);
     const { Rk } = o.pant, c = o.cep;
     // slzičkový otvor má špičku ve vzdálenosti r·√2 od osy
-    const krat = p.cep.slza ? Math.SQRT2 : 1;
+    const krat = p.diry !== 'kruh' ? Math.SQRT2 : 1;
+    if (p.diry === 'kruh') add('info', 'Kruhové vodorovné díry pro čep mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     const stenaKloubu = Rk - Math.max(c.rd, c.rt) * krat;
     const prumerKloubu = zaokr(nahoru(2 * (Math.max(c.rd, c.rt) * krat + 1.2), 0.2));
     if (stenaKloubu < 0.8) add('chyba', `Stěna článku kolem čepu je jen ${fmt(stenaKloubu, 2)} mm – zvětšete průměr článku nebo zmenšete čep.`,

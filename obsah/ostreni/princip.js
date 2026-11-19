@@ -77,7 +77,7 @@ ${schemaDuty()}
 <h3>Výroba přípravků (3D tisk)</h3>
 <ol>
 <li>Zkontrolujte vůli tisku: vytiskněte nejdřív svěrku a změřte otvory – šroub M6 má projít volně, šestihran hlavy zapadnout bez násilí. Podle toho upravte „vůli tisku“.</li>
-<li>Tělo vozíku tiskněte <b>ložem dolů</b> (lože na podložce = rovná referenční plocha). PETG, 4 perimetry, výplň ≥ 40 %, bez podpěr. Otvor osy má tvar kapky, aby se tiskl bez převisu.</li>
+<li>Tělo vozíku tiskněte <b>ložem dolů</b> (lože na podložce = rovná referenční plocha). PETG, 4 perimetry, výplň ≥ 40 %, bez podpěr. Otvor osy má tvar kapky, aby se tiskl bez převisu (volba „💧 Díry jako kapka“; vypnuto = kruh s podpěrami).</li>
 <li>Vložte šrouby M6 hlavou do kapes ve spodku těla, nasaďte svěrku, podložky a křídlové matice. Ložisko 608 (nebo kolečko) vložte do drážky s podložkami M8 po stranách a stáhněte osou M8 se samojistnou maticí – jen tak, aby se váleček volně otáčel bez vůle.</li>
 <li>Posuvkou změřte skutečnou výšku lože H a průměr válečku a ověřte jedním měřením úhlu (digitální úhloměr). Odchylku zadejte do kalibrace – měrka a tabulky se přepočítají.</li>
 <li>Měrku vyložení a úhlovou měrku tiskněte z PLA naplocho; první vrstva bez „sloní nohy“ (jinak se zkreslí hrany zářezů a stupňů).</li>

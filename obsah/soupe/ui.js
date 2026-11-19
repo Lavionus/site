@@ -23,6 +23,8 @@
     exportStl: () => exportVse('stl'),
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(dilyKTisku()), app.p.nazev || 'Soupe'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka', o: 'tOtevreno', w: 'btnVykres' },
+    diry: true,
+    cilPole: c => (c === 'druh' ? $('paletaDruhu') : null),
     zmenaTematu: () => prepocitej(),
   });
 
@@ -53,9 +55,12 @@
       ? 'Otočný disk na osmihranné hřídeli; těleso se tiskne nastojato. Kratší a ovládá se pákou, otevřená klapka ale trochu brzdí proud.'
       : 'Posuvné šoupátko mezi dvěma polovinami tělesa; vše se tiskne naplocho. Otevřené šoupě skoro nebrzdí a zavřené dobře těsní.';
     $('napTisk').textContent = klapka()
-      ? 'Těleso klapky se tiskne nastojato (hrdlem 1 dolů) – díry pro hřídel mají tvar kapky a náboje zespodu 45°, nic nepotřebuje podporu. Disk a páka naplocho, hřídel naležato. Doporučeno PETG nebo ASA, 3–4 perimetry. Kalibrační destička ověří vůli hřídele: vyberte díru, ve které se hřídel točí lehce a neviklá.'
+      ? (p.diry === 'kruh'
+        ? 'Těleso klapky se tiskne nastojato (hrdlem 1 dolů) – díry pro hřídel jsou kruhové a jejich strop převisá: tiskněte s podporou uvnitř díry, nebo v 👁 Zobrazení zapněte 💧 Díry jako kapka. Náboje mají zespodu 45°. Disk a páka naplocho, hřídel naležato. Doporučeno PETG nebo ASA, 3–4 perimetry. Kalibrační destička ověří vůli hřídele: vyberte díru, ve které se hřídel točí lehce a neviklá.'
+        : 'Těleso klapky se tiskne nastojato (hrdlem 1 dolů) – díry pro hřídel mají tvar kapky a náboje zespodu 45°, nic nepotřebuje podporu. Disk a páka naplocho, hřídel naležato. Doporučeno PETG nebo ASA, 3–4 perimetry. Kalibrační destička ověří vůli hřídele: vyberte díru, ve které se hřídel točí lehce a neviklá.')
       : 'Poloviny se tisknou vnitřní plochou dolů (hrdlo nahoru), lišty a šoupátko naplocho – bez podpor. Doporučeno PETG nebo ASA, 3 perimetry. Šoupátko a lišty tiskněte stejnou výškou vrstvy – jejich tloušťky určují vůli. Kalibrační vzorek: proužek šoupátka zkuste v tunýlcích 1–5 a vůli toho, kterým jde lehce a neklepe, zapište do pole Vůle.';
-    document.querySelectorAll('[data-druh]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.druh === p.druh)));
+    document.querySelectorAll('.nabidka [data-druh]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.druh === p.druh)));
+    document.querySelectorAll('#paletaDruhu [data-druh]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.druh === p.druh)));
     const db = document.querySelectorAll('.db-trubek');
     db.forEach(s => { s.value = ''; });
   }

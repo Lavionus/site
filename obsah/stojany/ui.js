@@ -171,6 +171,7 @@
   /* ---------- aplikace ---------- */
   const app = G3D.aplikace({
     typ: 'stojany', nazev: 'Stojany', klic: 'webapp_stojany', soubor: 'stojan',
+    diry: true,   // 👁 Zobrazení → 💧 Díry jako kapka (K)
     normalizuj: STOJ.normalizuj, vychozi: () => STOJ.predvolba('kombi'),
     ulozProjekt: STOJ.ulozProjekt, nactiProjekt: STOJ.nactiProjekt, popis: STOJ.popis,
     predNaplnenim: () => predNaplnenim(),

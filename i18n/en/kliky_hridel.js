@@ -519,4 +519,13 @@ I18N.pridej('en', {
   'slepý': 'blind',
   'otáčka = {n} mm · rozteč rysek {n2} mm': 'revolution = {n} mm · line spacing {n2} mm',
   'stěna náboje {n} mm': 'hub wall {n} mm',
+  'Druh kliky': 'Crank type',
+  'Rameno s otočným držadlem': 'Arm with a rotating handle',
+  'Klika': 'Crank',
+  'Ruční kolo s loukotěmi': 'Handwheel with spokes',
+  'Hvězdicová / křídlová rukojeť': 'Star / wing knob',
+  'Hvězdice': 'Star knob',
+  'Držadlo se sklopí na pantu': 'The handle folds on a hinge',
+  'čelem dolů a čepem nahoru, kroužek stupnice naplocho. Vodorovné otvory mají kapkový tvar (volba 💧 v Zobrazení; kruhové potřebují podpory), kapsy matic se zasouvají z boku – nic nepotřebuje podpory. Doporučeno PETG, ASA nebo PA, 4–5 perimetrů a 40–60 % výplně (náboj a čep raději 100 %).': 'front face down and pin up, the dial ring flat. Horizontal holes are teardrop shaped (💧 option in View; round ones need supports), nut pockets slide in from the side – nothing needs supports. PETG, ASA or PA recommended, 4–5 perimeters and 40–60 % infill (hub and pin preferably 100 %).',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrop (👁 View → 💧 Holes as teardrops).',
 });

@@ -48,10 +48,10 @@
       if (ot.pero) c = k(c.add(k(k(CS.square([ot.pero.x, ot.pero.b], false)).translate([0, -ot.pero.b / 2]))));
       return { cs: c, ot };
     }
-    /** Šroub M3 v náboji: vodorovný otvor ve tvaru kapky (špička nahoru = tiskne se bez podpor). */
+    /** Šroub M3 v náboji: vodorovný otvor ve tvaru kapky (špička nahoru = tiskne se bez podpor), nebo kruh (p.diry === 'kruh'). */
     function sroubM3(delka, zs, uhel) {
       const r = p.naboj.otvorSroubu / 2;
-      const kapka = k(CS.hull([kruh(r), k(k(CS.square([0.02, 0.02], true)).translate([0, r * Math.SQRT2]))]));
+      const kapka = p.diry === 'kruh' ? kruh(r) : k(CS.hull([kruh(r), k(k(CS.square([0.02, 0.02], true)).translate([0, r * Math.SQRT2]))]));
       // lokální (u, v, n) → (y, z, x): profil v rovině YZ, vysunutí ve směru +X
       const m = k(k(k(kapka.extrude(delka)).transform([0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1])).translate([0, 0, zs]));
       return k(m.rotate([0, 0, uhel]));

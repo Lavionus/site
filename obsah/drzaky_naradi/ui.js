@@ -44,6 +44,7 @@
 
   const app = G3D.aplikace({
     typ: 'drzaky_naradi', nazev: 'Držáky nářadí', klic: KLIC, soubor: 'drzaky_naradi',
+    diry: true,   // 👁 Zobrazení → 💧 Díry jako kapka (K): otvory stojánku na vrtáky tištěného na boku
     normalizuj: (q) => ({ p: DN.normalizujProjekt(q), hlaseni: [] }),
     vychozi: () => DN.normalizujProjekt(Object.assign(DN.vychoziProjekt(), { rezim: S ? S.rezim : 'podlozka' })),
     // projekt JSON ve stejném tvaru jako dřív (Export JSON)
@@ -433,7 +434,7 @@
     } else if (skupina() === 'stena') {
       const L = DN.lista(S.stena.lista), R = DN.rezPlan(L), Sw = DN.rozvrzeniSteny(L, S.stena.drzaky, S.stena.nast);
       chyby = Sw.chyby;
-      const d = drz(), G = d ? DN.drzak(d, L, S.stena.nast) : null;
+      const d = drz(), G = d ? DN.drzak(d, L, S.stena.nast, S.diry) : null;
       if (S.rezim === 'lista') {
         vy.className = 'vykresy dva';
         vy.innerHTML = '<div class="cela" style="grid-column:1/-1"><h3>Rozvržení stěny (zepředu)</h3><div class="papir" id="v1"></div></div><div><h3>Řezný plán – deska 1</h3><div class="papir" id="v2"></div></div><div><h3>Profil lišty</h3><div class="papir" id="v3"></div></div>';
@@ -534,7 +535,7 @@
   }
   const sitPodlozky = (w, dil) => zCache('p' + dil + JSON.stringify(S.gf.podlozka), () => DNT.podlozka(w, S.gf.podlozka, dil || null));
   const sitKrabicky = (w, f, k) => zCache('k' + JSON.stringify(k), () => DNT.krabicka(w, k, f));
-  const sitDrzaku = (w, f, d, tisk) => { const G = DN.drzak(d, S.stena.lista, S.stena.nast); return zCache('d' + (tisk ? 't' : '') + JSON.stringify([d, S.stena.lista.t, S.stena.lista.h, S.stena.lista.uhel, S.stena.nast]), () => DNT.drzak(w, G, f, { tisk, nast: S.stena.nast })); };
+  const sitDrzaku = (w, f, d, tisk) => { const G = DN.drzak(d, S.stena.lista, S.stena.nast, S.diry); return zCache('d' + (tisk ? 't' : '') + JSON.stringify([d, S.stena.lista.t, S.stena.lista.h, S.stena.lista.uhel, S.stena.nast, S.diry]), () => DNT.drzak(w, G, f, { tisk, nast: S.stena.nast })); };
   const sitListy = (w) => { const L = DN.lista(S.stena.lista); return zCache('l' + JSON.stringify([L.t, L.h, L.uhel, L.delka]), () => DNT.listaSit(w, L, L.delka)); };
   const sitKoncovky = (w) => { const L = DN.lista(S.stena.lista); return zCache('c' + JSON.stringify([L.t, L.h, L.uhel]), () => DNT.koncovka(w, L)); };
   const sitHaku = (w, h, mont) => zCache('h' + (mont ? 'm' : '') + JSON.stringify(h), () => DNT.hak(w, h, { namontovany: mont }));
@@ -628,7 +629,7 @@
       for (const d of P.deleni.dily) out.push({ id: 'podl_' + d.id, nazev: `Podložka díl ${d.id} (${cz(d.w, 0)}×${cz(d.h, 0)})`, sit: (w) => doPocatku(sitPodlozky(w, d.id)) });
       S.gf.krabicky.forEach((k, i) => out.push({ id: 'krab_' + i, nazev: `Krabička ${i + 1}: ${k.n}×${k.m}×${k.u}${k.vlozka ? ' s kapsami' : ''}`, sit: (w, f) => doPocatku(sitKrabicky(w, f, k)) }));
     } else if (g === 'stena') {
-      S.stena.drzaky.forEach((d, i) => out.push({ id: 'drzak_' + i, nazev: `Držák ${i + 1}: ${DN.drzak(d, S.stena.lista, S.stena.nast).nazev}`, sit: (w, f) => sitDrzaku(w, f, d, true) }));
+      S.stena.drzaky.forEach((d, i) => out.push({ id: 'drzak_' + i, nazev: `Držák ${i + 1}: ${DN.drzak(d, S.stena.lista, S.stena.nast, S.diry).nazev}`, sit: (w, f) => sitDrzaku(w, f, d, true) }));
       out.push({ id: 'koncovka', nazev: 'Koncovka lišty (2 ks na řadu)', sit: (w) => sitKoncovky(w) });
     } else S.peg.haky.forEach((h, i) => out.push({ id: 'hak_' + i, nazev: `Háček ${i + 1}: ${h.typ === 'J' ? 'J' : 'rovný'} ${cz(cislo(h.delka, 60), 0)} (${h.ks || 1} ks)`, sit: (w) => sitHaku(w, h, false) }));
     return out;
@@ -708,9 +709,9 @@
     const L = DN.lista(S.stena.lista), R = DN.rezPlan(L), Sw = DN.rozvrzeniSteny(L, S.stena.drzaky, S.stena.nast);
     const v = [{ scena: DNV.scenaStena(Sw), meritko: 'fit', nazev: 'Rozvržení stěny' }];
     R.desky.forEach((_, i) => v.push({ scena: DNV.scenaRezPlan(R, i), meritko: 'fit', nazev: `Řezný plán – deska ${i + 1}/${R.desky.length}` }));
-    const G0 = drz() ? DN.drzak(drz(), L, S.stena.nast) : null;
+    const G0 = drz() ? DN.drzak(drz(), L, S.stena.nast, S.diry) : null;
     v.push({ scena: DNV.scenaProfilListy(L, G0), meritko: 1, nazev: 'Profil lišty 1:1 – šablona pro nastavení úhlu pily' });
-    S.stena.drzaky.forEach((d, i) => { const G = DN.drzak(d, L, S.stena.nast); v.push({ scena: DNV.scenaDrzak(G), meritko: 1, nazev: `Držák ${i + 1}: ${G.nazev}` }); });
+    S.stena.drzaky.forEach((d, i) => { const G = DN.drzak(d, L, S.stena.nast, S.diry); v.push({ scena: DNV.scenaDrzak(G), meritko: 1, nazev: `Držák ${i + 1}: ${G.nazev}` }); });
     S.peg.haky.forEach((h, i) => v.push({ scena: DNV.scenaHak(DN.hak(h)), meritko: 1, nazev: `Pegboard háček ${i + 1}` }));
     return v;
   }

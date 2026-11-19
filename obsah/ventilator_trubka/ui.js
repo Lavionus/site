@@ -24,6 +24,7 @@
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(dilyKTisku()), app.p.nazev || 'Ventilátor'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka', v: 'tVentilator' },
     zmenaTematu: () => prepocitej(),
+    diry: true,
   });
 
   /* ---------- formulář ---------- */
@@ -44,6 +45,8 @@
     const t = VENTT.TRUBKY.find(x => x.spoj === p.vystup.typ && (x.spoj === 'na' ? x.od === p.vystup.od && x.id === p.vystup.id : x.id === p.vystup.id));
     $('f_trub').value = t ? t.kod : '';
     document.querySelectorAll('#seznamDruhu [data-druh-vol]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.druhVol === p.druh)));
+    document.querySelectorAll('#paletaDruhu [data-druh-dl]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.druhDl === p.druh)));
+    $('napDiryCep').textContent = p.diry === 'kruh' ? 'díry pro čepy jsou kruhové – strop převisá, tiskněte s podporami' : 'díry pro čepy jsou kapkovité';
   }
   $('f_material').innerHTML = Object.entries(VENTT.MATERIALY).map(([k, m]) => `<option value="${k}">${m.nazev}</option>`).join('');
   $('datumVent').textContent = VENTT.DATUM_VENT;
@@ -226,10 +229,12 @@
 
   /* ---------- nabídky, export ---------- */
   TrubkyGui.pripoj({ klic: 'webapp_ventilator_trubka_gui', pohled: j => nahled.pohled(j) });
+  const zvolDruh = k => { app.zmen(q => { q.druh = k; if (k === 'odsavac') q.vent.strana = 'sani'; }); app.naplnFormular(); };
+  document.querySelectorAll('#paletaDruhu [data-druh-dl]').forEach(b => b.addEventListener('click', () => zvolDruh(b.dataset.druhDl)));
   for (const [k, n] of Object.entries(VENTT.NAZVY.druh)) {
     const b = document.createElement('button'); b.className = 'pol'; b.setAttribute('role', 'menuitemradio'); b.dataset.druhVol = k;
     b.textContent = n.charAt(0).toUpperCase() + n.slice(1);
-    b.addEventListener('click', () => { app.zmen(q => { q.druh = k; if (k === 'odsavac') q.vent.strana = 'sani'; }); app.naplnFormular(); });
+    b.addEventListener('click', () => zvolDruh(k));
     $('seznamDruhu').appendChild(b);
   }
   for (const v of VENTT.PREDVOLBY) {

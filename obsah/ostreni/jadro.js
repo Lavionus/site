@@ -96,9 +96,12 @@
       hoblik: { loze: 45, orientace: 'dolu', zadni: 0, pravitko: 0.5, pravitkoVzd: 50 },
       camber: { typ: 'hrubovaci', sirka: 50, prohnuti: 0.4 },
       uhlomer: { jednostranne: '15, 20, 25, 30, 35, 40, 45', oboustranne: '15, 20, 25', hloubka: 10 },
-      tisk: { vt: 0.25, stul: 220, oznaceni: true, papir: 'a4', papirW: 210, papirH: 297, okraj: 8, kalibX: 100, kalibY: 100 },
+      tisk: { vt: 0.25, stul: 220, oznaceni: true, kapka: true, papir: 'a4', papirW: 210, papirH: 297, okraj: 8, kalibX: 100, kalibY: 100 },
     };
   }
+  /** směr špičky kapky vodorovné díry, nebo null = kruh (P.tisk.kapka === false) */
+  const slza = (P, d) => (P.tisk && P.tisk.kapka === false ? null : d);
+  const KRUH_INFO = 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.';
   function slouc(P, u) {
     if (!u || typeof u !== 'object') return P;
     for (const k of Object.keys(P)) {
@@ -264,7 +267,7 @@
     const dily = [];
     const mT = [];
     mT.push({ t: 'box', a: [-(r + 1.5), -ws / 2, -(r + 6)], b: [r + 1.5, ws / 2, zs] });          // drážka válečku
-    mT.push({ t: 'val', osa: 'y', c: [0, -B / 2 - 1, 0], r: osaOtvor / 2, h: B + 2, slza: [0, 0, -1] }); // osa (kapka: tiskem dolů = −z)
+    mT.push({ t: 'val', osa: 'y', c: [0, -B / 2 - 1, 0], r: osaOtvor / 2, h: B + 2, slza: slza(P, [0, 0, -1]) }); // osa (kapka: tiskem dolů = −z)
     for (const y of [-ys, ys]) {
       mT.push({ t: 'val', osa: 'z', c: [xs, y, zTop - 1], r: M6.otvor / 2, h: H - zTop + 2 });
       mT.push({ t: 'hex', osa: 'z', c: [xs, y, Math.min(zDna(x0p), zf) - 10], af: afp, h: zTop - Math.min(zDna(x0p), zf) + 10, vrcholy: 'y' });
@@ -278,7 +281,7 @@
       if (sir < a - xr - 4 && v0 > zDna(u0 + sir) + 1.5 && v0 > 1) mT.push(...textPrim(txt, hT, 'xz', u0, v0, -B / 2, 0.6, 1).prim);
     }
     dily.push({ id: 'telo', nazev: 'Tělo vozíku', kusu: 1, material: 'PETG (nebo PLA+), 4 perimetry, výplň 40 %',
-      tisk: 'ložem dolů (lože na podložce = rovná referenční plocha), bez podpěr; otvor osy má tvar kapky',
+      tisk: slza(P, 1) ? 'ložem dolů (lože na podložce = rovná referenční plocha), bez podpěr; otvor osy má tvar kapky' : 'ložem dolů (lože na podložce = rovná referenční plocha); kruhový otvor osy potřebuje podpěry',
       rotTisk: [180, 0, 0],
       plus: [{ t: 'prof', osa: 'y', pts: profil, od: -B / 2, do: B / 2 }], minus: mT,
       koty: [
@@ -324,6 +327,7 @@
       { pol: 'Tlačná pružina Ø7–8 × 15 mm', ks: 2, pozn: 'volitelně pod svěrku – zvedá ji při výměně nože' },
     ].filter((q) => q.ks > 0);
     if (delkaUpinaciV > delkaUpinaci) kusovnik.push({ pol: `Šroub M6 × ${delkaUpinaciV} (pro svěrku s V-drážkou)`, ks: 2, pozn: 'vyšší svěrka potřebuje delší šrouby' });
+    if (!slza(P, 1)) varovani.push(KRUH_INFO);
     return { r, D, wr, pocet, H, a, xs, ys, lc, tc, tcV, B, xr, zf, zTop, rh, ws, zs, tb, afp, osaOtvor, sevreni, zuziti, profil, zDna, kolo,
       g, s, dily, kusovnik, kontroly, varovani, uhelMax: uMax * DEG };
   }
@@ -491,7 +495,7 @@
     const celoA = { t: 'box', a: [-weA, -Bw / 2, 0], b: [0, Bw / 2, tb + hw] };
     const celoB = { t: 'box', a: [xB0, -Bw / 2, 0], b: [xB0 + weB, Bw / 2, tb + hwB] };
     const zAx = tb + za;
-    const otvorB = { t: 'val', osa: 'x', c: [xB0 - 1, 0, zAx], r: M6.otvor / 2, h: weB + 2, slza: [0, 0, 1] };
+    const otvorB = { t: 'val', osa: 'x', c: [xB0 - 1, 0, zAx], r: M6.otvor / 2, h: weB + 2, slza: slza(P, [0, 0, 1]) };
     const kapsa = { t: 'box', a: [xB0 + weB / 2 - (M6.matice + 2 * vt) / 2, -(M6.af / Math.cos(30 * RAD) + 2 * vt) / 2, zAx - M6.af / 2 - vt], b: [xB0 + weB / 2 + (M6.matice + 2 * vt) / 2, (M6.af / Math.cos(30 * RAD) + 2 * vt) / 2, tb + hwB + 1] };
     const diry = (x) => [-1, 1].map((sy) => [{ t: 'val', osa: 'z', c: [x, sy * Wi / 4, -1], r: 2.25, h: tb + 2 }, { t: 'kuzel', c: [x, sy * Wi / 4, tb - 2.2], r0: 2.25, r1: 4.5, h: 2.25 }]).flat();
     const vyrez = Math.min(Wi * 0.5, 24);
@@ -529,6 +533,7 @@
     if (!jeden) kusovnik.push({ pol: `Podkladová deska (překližka 12–18 mm) ${Math.ceil(celkem + 20)} × ${Math.ceil(Bw + 20)}`, ks: 1, pozn: 'čelisti přišroubovat' }, { pol: 'Vrut se zápustnou hlavou 4 × 20', ks: 4, pozn: '' });
     else kusovnik.push({ pol: 'Vrut se zápustnou hlavou 4 × 20', ks: 4, pozn: 'volitelně – přišroubování na desku' });
     if (sklo) kusovnik.push({ pol: `Plavené sklo ${fmtCislo(Lk)} × ${fmtCislo(Wk)} × ${fmtCislo(Tk)} mm, zabroušené hrany`, ks: 1, pozn: 'sklenářství; rovinnost plaveného skla stačí' }, { pol: 'Brusný papír za mokra (P400 – P2500), pruhy', ks: 1, pozn: `šířka ${fmtCislo(Wk)} mm, délka ${Math.ceil(Lk + 2 * Tk + 10)} mm (přes čela)` });
+    if (!slza(P, 1)) varovani.push(KRUH_INFO);
     return { jeden, Lk, Wk, Tk, Wi, Bw, celkem, xB0, hw, hwB, za, dily, kontroly, varovani, kusovnik, sklo };
   }
 
@@ -609,7 +614,7 @@
       const y0 = sy > 0 ? yIn : -yOut, y1 = sy > 0 ? yOut : -yIn;
       plusZ.push({ t: 'prof', osa: 'y', pts: lic, od: y0, do: y1 });
       minusZ.push({ t: 'prof', osa: 'y', pts: drazka, od: y0 - 1, do: y1 + 1 });
-      minusZ.push({ t: 'val', osa: 'y', c: [0, y0 - 1, 0], r: otv, h: tch + 2, slza: [0, 0, 1] });
+      minusZ.push({ t: 'val', osa: 'y', c: [0, y0 - 1, 0], r: otv, h: tch + 2, slza: slza(P, [0, 0, 1]) });
       // stupnice na vnějším líci: rysky po 5°, delší po 10°
       const plocha = sy > 0 ? yOut : -yOut, sm = sy > 0 ? -1 : 1;
       for (let b = 0; b <= bMax; b += 5) {
@@ -625,7 +630,7 @@
     // podélné drážky v patce pro přisunutí (M6)
     for (const sy of [-1, 1]) minusZ.push({ t: 'deska', pts: ccw(kruhBody(Ra * 0.35, sy * (yIn - 9), otv, 90, 270, 8).concat(kruhBody(Ra + 6, sy * (yIn - 9), otv, -90, 90, 8))), od: -zh - 1, do: -zh + tf + 1 });
     dily.push({ id: 'operaZaklad', nazev: 'Opěrka – základ s bočnicemi a stupnicí', kusu: 1, material: 'PETG / ASA (jiskry!), výplň 40 %, 4 perimetry',
-      tisk: 'patkou dolů; otvory čepu jsou kapky, oblouková drážka tvoří krátký most', rotTisk: [0, 0, 0],
+      tisk: slza(P, 1) ? 'patkou dolů; otvory čepu jsou kapky, oblouková drážka tvoří krátký most' : 'patkou dolů; otvory čepu jsou kruhy (s podpěrami), oblouková drážka tvoří krátký most', rotTisk: [0, 0, 0],
       plus: plusZ, minus: minusZ,
       koty: [{ p: 'bok', a: [0, -zh], b: [0, 0], txt: 'čep ' + fmtCislo(zh), str: 'l', o: -18 }, { p: 'bok', a: [0, 0], b: [Ra, 0], txt: 'R ' + fmtCislo(Ra), str: 'h', o: 8 },
         { p: 'shora', a: [Ra + 17, -yOut], b: [Ra + 17, yOut], txt: fmtCislo(2 * yOut), str: 'p', o: Ra + 25 }] });
@@ -637,13 +642,13 @@
       const y0 = sy > 0 ? Wp / 2 - tfl : -Wp / 2, y1 = sy > 0 ? Wp / 2 : -Wp / 2 + tfl;
       plusD.push({ t: 'prof', osa: 'y', pts: bok, od: y0, do: y1 });
       for (const x of [0, Ra]) {
-        minusD.push({ t: 'val', osa: 'y', c: [x, y0 - 1, 0], r: otv, h: tfl + 2, slza: [0, 0, -1] });
+        minusD.push({ t: 'val', osa: 'y', c: [x, y0 - 1, 0], r: otv, h: tfl + 2, slza: slza(P, [0, 0, -1]) });
         const yk = sy > 0 ? Wp / 2 - tfl - 1 : -Wp / 2 + tfl - M6.matice - 0.6;
         minusD.push({ t: 'hex', osa: 'y', c: [x, yk, 0], af: afp, h: M6.matice + 1.6, vrcholy: 'z' });
       }
     }
     dily.push({ id: 'operaDeska', nazev: 'Opěrka – sklopná deska', kusu: 1, material: 'PETG / ASA, výplň 50 %; čelo doporučeno oplechovat',
-      tisk: 'horní (opěrnou) plochou dolů – je rovná; boky nahoru, otvory kapky', rotTisk: [180, 0, 0],
+      tisk: slza(P, 1) ? 'horní (opěrnou) plochou dolů – je rovná; boky nahoru, otvory kapky' : 'horní (opěrnou) plochou dolů – je rovná; boky nahoru, otvory kruhy (s podpěrami)', rotTisk: [180, 0, 0],
       plus: plusD, minus: minusD,
       koty: [{ p: 'bok', a: [-fe, e], b: [Lp - fe, e], txt: fmtCislo(Lp), str: 'h', o: e + 7 }, { p: 'bok', a: [-fe, e], b: [0, e], txt: fmtCislo(fe), str: 'h', o: e + 14 },
         { p: 'bok', a: [0, 0], b: [0, e], txt: 'e ' + fmtCislo(e), str: 'l', o: -fe - 7 }, { p: 'shora', a: [Lp - fe, -Wp / 2], b: [Lp - fe, Wp / 2], txt: fmtCislo(Wp), str: 'p', o: Lp - fe + 8 }] });
@@ -669,6 +674,7 @@
       { pol: 'Šroub M6 + matice / vrut do podkladu', ks: 2, pozn: 'drážky v patce – přisunutí ke kotouči' },
       { pol: `Plech ocel/hliník 1,5–2 mm, ${Wp} × ${Lp} mm`, ks: 1, pozn: 'doporučeno nalepit na opěrnou plochu (jiskry, opotřebení)' },
     ];
+    if (!slza(P, 1)) varovani.push(KRUH_INFO);
     return { Wp, zh, Ra, Lp, e, fe, tp, bMin, bMax, yIn, yOut, lic, drazka, dily, kontroly, varovani, kusovnik, nast, tabulka, uhlyTab, D, Dmin, g, hz, t, theta: th };
   }
 

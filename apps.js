@@ -3411,6 +3411,34 @@ const KATALOG_SEKCE = [
         "popis": "Navrhne kliku, ruční kolo, rukojeť nebo páku na hřídel se stupnicí",
         "stav": "vyvoj",
         "tagy": ["klika", "ruční kolo", "rukojeť", "páka", "hřídel", "náboj", "stupnice", "posuv", "soustruh", "frézka", "naviják", "ventil", "pero", "stavěcí šroub", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/sita.html",
+        "nazev": "🧇 Síta a mřížky",
+        "popis": "Navrhne síta, sítka do odtoku a trychtýře i třídicí věž pro 3D tisk",
+        "stav": "vyvoj",
+        "tagy": ["síto", "sítko", "mřížka", "prosévání", "kompost", "písek", "mouka", "čaj", "odtok", "vpusť", "šachta", "trychtýř", "cedník", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/trychtyre.html",
+        "nazev": "🫗 Trychtýře a násypky na míru",
+        "popis": "Navrhne trychtýř přesně na hrdlo láhve, kanystru, sklenice nebo nádrže",
+        "stav": "vyvoj",
+        "tagy": ["trychtýř", "násypka", "nálevka", "hrdlo", "PET", "kanystr", "zavařování", "nádrž", "olej", "granulát", "odvzdušnění", "průtok", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/foto_uchyty.html",
+        "nazev": "🎥 Úchyty kamer a fotoaparátů",
+        "popis": "Složí úchyt kamery z článků: prsty, závit 1/4″, patka, klouby",
+        "stav": "vyvoj",
+        "tagy": ["úchyt kamery", "akční kamera", "držák kamery", "GoPro kompatibilní", "LEGO kompatibilní", "kostky", "stavebnice", "Technic", "prsty M5", "stativový závit", "1/4 palce", "3/8 palce", "studená patka", "kulový kloub", "objímka na řídítka", "přísavka", "magnetický držák", "držák telefonu", "klip na batoh", "adaptér", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/sluchatka.html",
+        "nazev": "👂 Nástavce na sluchátka a špunty",
+        "popis": "Bláznivé ozdoby do uší: prst, červ, paprička na pecky i špunty",
+        "stav": "vyvoj",
+        "tagy": ["sluchátka", "pecky", "špunty do uší", "ušní špička", "TPU", "ozdoba", "prst", "červ", "paprička", "chapadlo", "jednorožec", "mrkev", "kost", "kaktus", "ulita", "srdce", "svíčka", "tykadla", "legrace", "3D tisk", "STL", "3MF", "generátor"]
       }
     ]
   },

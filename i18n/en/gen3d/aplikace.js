@@ -23,4 +23,7 @@ I18N.pridej('en', {
   '{n} chyba': { one: '{n} error', other: '{n} errors' },
   '{n} chyby': { one: '{n} error', other: '{n} errors' },
   '{n} chyb': { one: '{n} error', other: '{n} errors' },
+  'Díry jako kapka': 'Teardrop holes',
+  'K · vypnuto = kruh': 'K · off = round',
+  'Vodorovné díry ve tvaru kapky (špička nahoru) se tisknou bez podpor; kruhové jsou přesnější, ale jejich strop převisá.': 'Horizontal teardrop holes (point up) print without supports; round holes are more accurate but their top overhangs.',
 });

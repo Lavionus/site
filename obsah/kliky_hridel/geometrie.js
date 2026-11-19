@@ -30,8 +30,8 @@
       return k(k(e.transform([1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1])).translate([0, L / 2, 0]));
     }
     const kruh2 = (r, x = 0, y = 0) => k(k(CS.circle(r, segmenty(r))).translate([x, y]));
-    /** Kapka: kruh se špičkou nahoru (+v) – vodorovný otvor bez převisu nad 45°. */
-    const kapka = r => k(CS.hull([kruh2(r), k(k(CS.square([0.02, 0.02], true)).translate([0, r * Math.SQRT2]))]));
+    /** Kapka: kruh se špičkou nahoru (+v) – vodorovný otvor bez převisu nad 45°; p.diry = 'kruh' → jen kruh. */
+    const kapka = r => p.diry === 'kruh' ? kruh2(r) : k(CS.hull([kruh2(r), k(k(CS.square([0.02, 0.02], true)).translate([0, r * Math.SQRT2]))]));
     /** Šestihran přes plošky s, plošky nahoře a dole (v rovině u, v). */
     const hex2 = s => { const R = s / Math.sqrt(3), b = []; for (let i = 0; i < 6; i++) b.push([R * Math.cos(i * Math.PI / 3), R * Math.sin(i * Math.PI / 3)]); return k(new CS([b])); };
     const osm2 = (ap, x = 0, y = 0) => { const R = ap / Math.cos(Math.PI / 8), b = []; for (let i = 0; i < 8; i++) { const a = Math.PI / 8 + i * Math.PI / 4; b.push([x + R * Math.cos(a), y + R * Math.sin(a)]); } return k(new CS([b])); };

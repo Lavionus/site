@@ -12,6 +12,7 @@
   $('platno').querySelector('canvas').setAttribute('aria-label', '3D náhled držáku – tažením otáčíte, kolečkem přibližujete, pravým tlačítkem posouváte');
   const app = G3D.aplikace({
     typ: 'cleat', nazev: 'Držáky na French cleat', klic: 'webapp_cleat', soubor: 'cleat',
+    diry: true,   // 👁 Zobrazení → 💧 Díry jako kapka (kruhy odlehčení nastojato); K patří kótám
     normalizuj: U.normalizuj, vychozi: () => U.zPredvolby(0), hlasitOpravyUlozeneho: true,
     ulozProjekt: U.ulozProjekt, nactiProjekt: U.nactiProjekt, vezmi: U.vezmi, poloz: U.poloz,
     popis: q => `${q.nazev || 'Držák'} – ${U.popis(q)}`,
@@ -25,7 +26,7 @@
     png: () => nahled.png(), pohled: j => nahled.pohled(j),
     exportStl: () => exportStl(app.p.tisk.kusu),
     doModelare: () => { const k = kusy(1); return k ? { data: KRAB.soubor3mf(k, app.p.nazev || 'Držák'), pripona: '.3mf' } : null; },
-    zkratky: { m: 'tTisk', d: 'tDuchove', v: 'tPrevisy', p: 'tPrevisy', h: 'tHrany' },   // R, K, L, N a číslice podle e.code níž
+    zkratky: { m: 'tTisk', d: 'tDuchove', v: 'tPrevisy', p: 'tPrevisy', h: 'tHrany', k: '' },   // R, K (kóty), L, N a číslice podle e.code níž; '' = K nepřepíná kapky
     zmenaTematu: () => app.prepocitej(),
     hlaseniNavic: (li, x) => {
       // stejné pole může být ve víc oddílech – skok na to viditelné
@@ -37,6 +38,7 @@
       }
     },
   });
+  { const pz = $('tKapky') && $('tKapky').querySelector('.pozn'); if (pz) pz.textContent = 'vypnuto = kruh · kruhy odlehčení nastojato'; }   // K tu patří kótám
   const zmen = (f, sl) => app.zmen(f, sl), nahrad = q => app.nahrad(q), naplnFormular = () => app.naplnFormular();
 
   /* ---------- formulář ---------- */

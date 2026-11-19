@@ -244,6 +244,7 @@
     moduly: [],
     odlehceni: { druh: 'okna', bunka: 16, zebro: 4, stena: 5 },
     tisk: { poloha: 'auto', uhel: 45, material: 'PLA', kusu: 1 },
+    diry: 'kapka',   // vodorovné díry (vruty, lůžko nabíječky): 'kapka' (bez podpor) | 'kruh'
   };
   const MEZE = {
     'podstava.sirka': [30, 400], 'podstava.hloubka': [30, 400], 'podstava.prumer': [30, 400], 'podstava.okraj': [0, 80], 'podstava.rohy': [0, 200],
@@ -257,6 +258,7 @@
     'podstava.odlehceni': ['zadne', 'skrz', 'kapsy'], 'podstava.vzor': ['vostina', 'kosoctverce', 'kruhy'],
     'odlehceni.druh': Object.keys(NAZVY.odlehceni),
     'tisk.poloha': ['auto', 'stoji', 'bok'], 'tisk.material': Object.keys(MATERIALY),
+    diry: ['kapka', 'kruh'],
   };
   const PODSTAVA_ODDILY = [
     ['Tvar podstavy', [V('tvar', 'Tvar', Object.entries(NAZVY.podstava)),

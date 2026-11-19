@@ -481,4 +481,5 @@ I18N.pridej('en', {
   'nápověda. Soubor → 🔗 Sdílet odkazem uloží celé nastavení do adresy; varianty délky přechodu jsou v nabídce ✨ Předvolby.': 'help. File → 🔗 Share link saves all settings in the URL; transition length variants are in the ✨ Presets menu.',
   'Projekt nejde načíst: soubor není platný JSON.': 'The project cannot be loaded: the file is not valid JSON.',
   'Projekt nejde načíst: soubor není projekt rozbočky VZT (chybí "format": "webapp_rozbocka_vzt").': 'The project cannot be loaded: the file is not a duct splitter project (missing "format": "webapp_rozbocka_vzt").',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrop (👁 View → 💧 Teardrop holes).',
 });

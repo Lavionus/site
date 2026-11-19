@@ -493,4 +493,9 @@ I18N.pridej('en', {
   'Šoupě · otevřeno': 'Gate · open',
   'Šoupě · zavřeno': 'Gate · closed',
   'Ztráta při {n} m³/h: {n2} Pa': 'Loss at {n} m³/h: {n2} Pa',
+  'Druh a hrdla': 'Type and sockets',
+  'Těleso se tiskne nastojato (díry pro hřídel mají tvar kapky, aby nepotřebovaly podporu; v 👁 Zobrazení je jde přepnout na kruh –': 'The body is printed upright (the shaft holes are teardrop-shaped so they need no support; in 👁 View you can switch them to round –',
+  'pak potřebují podporu), disk naplocho, osmihranná hřídel naležato. Disk se vloží do tělesa nastojato, hřídel se prostrčí tělesem i diskem a na konec se nasadí páka (zalepit). Kolíky na čele náboje dělají dorazy: páka napříč = zavřeno, podél potrubí = otevřeno.': 'then they need support), the disc flat, the octagonal shaft lying down. The disc is inserted into the body upright, the shaft is pushed through the body and the disc, and the lever is fitted on the end (glue it). Pins on the hub face act as stops: lever across = closed, along the pipe = open.',
+  'díry kapka/kruh,': 'teardrop/round holes,',
+  'Těleso klapky se tiskne nastojato (hrdlem 1 dolů) – díry pro hřídel jsou kruhové a jejich strop převisá: tiskněte s podporou uvnitř díry, nebo v 👁 Zobrazení zapněte 💧 Díry jako kapka. Náboje mají zespodu 45°. Disk a páka naplocho, hřídel naležato. Doporučeno PETG nebo ASA, 3–4 perimetry. Kalibrační destička ověří vůli hřídele: vyberte díru, ve které se hřídel točí lehce a neviklá.': 'The damper body is printed upright (socket 1 down) – the shaft holes are round and their roof overhangs: print with support inside the hole, or turn on 💧 Teardrop holes in 👁 View. The hubs have 45° undersides. Disc and lever flat, shaft lying down. PETG or ASA recommended, 3–4 perimeters. The calibration plate checks the shaft clearance: pick the hole in which the shaft turns easily without wobbling.',
 });

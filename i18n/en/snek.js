@@ -449,4 +449,12 @@ I18N.pridej('en', {
   'ANO': 'YES',
   'nastojato': 'upright',
   '{n} mm · čepy Ø {n2}': '{n} mm · journals Ø {n2}',
+  'Druh šnekového kola': 'Worm wheel type',
+  'Zub obepíná šnek – styk po čáře, unese víc': 'The tooth wraps around the worm – line contact, carries more',
+  'Globoidní kolo': 'Globoid wheel',
+  'Šikmé evolventní zuby – nejsnazší tisk, bodový styk': 'Helical involute teeth – easiest to print, point contact',
+  'Válcové kolo': 'Cylindrical wheel',
+  'od osy kola. Ložisko kola sedí v kapse shora v desce, ložiska šneku v kapsách z vnitřní strany stojin (díry jsou „kapky“ s hrotem nahoru – tisk bez podpor; v 👁 Zobrazení lze přepnout na kruhové). Křidélka mají díry pro šrouby M4.': 'from the wheel axis. The wheel bearing sits in a pocket in the top of the plate, the worm bearings in pockets on the inner side of the uprights (the holes are teardrops pointing up – printed without supports; can be switched to round in 👁 View). The flanges have holes for M4 screws.',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrop (👁 View → 💧 Holes as teardrops).',
+  'díry ložisek šneku kruhové – strop s podporami': 'worm bearing holes round – ceiling needs supports',
 });

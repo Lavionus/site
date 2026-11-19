@@ -68,6 +68,7 @@
     kalibrace: { konec: 'A', krok: 0.1, kusu: 5, vyska: 12 },
     tisk: { material: 'PETG', uhel: 45, vrstva: 0.2, sad: 1 },
     proud: { prutok: 80, podtlak: 4, drsnost: 0.05 },        // m³/h, kPa v místě adaptéru, mm
+    diry: 'kapka',                                            // konce sacích štěrbin (vodorovné otvory): 'kapka' = zahrocené 45° | 'kruh' = zaoblené
   };
   const MEZE = {
     stena: [0.8, 6], 'prechod.delka': [0, 300],
@@ -88,7 +89,7 @@
   const VYCTY = {
     'A.typ': ['vnejsi', 'vnitrni'], 'B.typ': ['vnejsi', 'vnitrni'], 'A.spoj': Object.keys(NAZVY.spoj), 'B.spoj': Object.keys(NAZVY.spoj),
     'A.spojka': Object.keys(NAZVY.spojka), 'B.spojka': Object.keys(NAZVY.spojka), 'osa.typ': Object.keys(NAZVY.osa),
-    'kalibrace.konec': ['A', 'B'], 'tisk.material': Object.keys(MATERIALY),
+    'kalibrace.konec': ['A', 'B'], 'tisk.material': Object.keys(MATERIALY), diry: ['kapka', 'kruh'],
   };
 
   /** Předvolby: jen odchylky od výchozího projektu (tisk zůstává uživatelův). */
@@ -491,7 +492,7 @@
     const rMin = Math.min(...body.map(b => b[1])), rMax = Math.max(...body.map(b => b[1]));
     const dp = treni + zmeny + ohyb;
     const vMin = v(rMax), vMax = v(rMin), Re = vMax * 2 * rMin / 1000 / NU;
-    const sb = p.sterbina, As = sb.zap ? sb.pocet * (sb.sirka * sb.vyska - sb.sirka * sb.sirka / 2) : 0;
+    const sb = p.sterbina, As = sb.zap ? sb.pocet * (sb.sirka * sb.vyska - sb.sirka * sb.sirka * (p.diry === 'kruh' ? 1 - Math.PI / 4 : 0.5)) : 0;
     const Qb = As > 0 ? 0.62 * As * 1e-6 * Math.sqrt(2 * p.proud.podtlak * 1000 / RHO) * 3600 : 0;
     return { Q, dp, treni, zmeny, ohyb, vMin, vMax, Re, dMin: 2 * rMin, dMax: 2 * rMax, delka: body.length ? body[body.length - 1][0] : 0, As, Qb, body,
       vA: v(body[0][1]), vB: v(body[body.length - 1][1]), podil: dp / (p.proud.podtlak * 1000) * 100,
@@ -566,7 +567,10 @@
     if (sb.zap) {
       const sektor = (sb.pocet - 1) * deg((sb.sirka + 2.5) / nv.vo) + deg(sb.sirka / nv.vo);
       if (sektor > 100) chyba(['sterbina.pocet', 'sterbina.sirka'], `Štěrbiny zabírají ${fmt(sektor, 0)}° obvodu – objímka je zakryje jen do 100°. Zmenšete počet nebo šířku štěrbin.`, opr('sterbina.pocet', Math.max(1, Math.floor((100 - deg(sb.sirka / nv.vo)) / deg((sb.sirka + 2.5) / nv.vo)) + 1)));
-      if (sb.vyska < sb.sirka + 2) chyba(['sterbina.vyska'], 'Štěrbina musí být aspoň o 2 mm vyšší než široká – konce jsou zahrocené 45° kvůli tisku bez podpor.', opr('sterbina.vyska', Math.ceil(sb.sirka + 4)));
+      if (p.diry === 'kruh') {
+        if (sb.vyska < sb.sirka + 0.5) chyba(['sterbina.vyska'], 'Štěrbina musí být vyšší než široká – konce jsou zaoblené půlkruhem.', opr('sterbina.vyska', Math.ceil(sb.sirka + 2)));
+        info(['diry'], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka); u štěrbin jde o zaoblený horní konec.');
+      } else if (sb.vyska < sb.sirka + 2) chyba(['sterbina.vyska'], 'Štěrbina musí být aspoň o 2 mm vyšší než široká – konce jsou zahrocené 45° kvůli tisku bez podpor.', opr('sterbina.vyska', Math.ceil(sb.sirka + 4)));
     }
     if (t < 1.2) var_(['stena'], `Stěna ${fmt(t, 1)} mm je tenká – aspoň 3 dráhy trysky (1,2 mm), lépe 2 mm.`, opr('stena', 1.6));
     const a = p.A, b = p.B;
@@ -702,7 +706,11 @@
           const sb = p.sterbina, F = ramec(n.cesta, n.krk.sc), krok = deg((sb.sirka + 2.5) / n.krk.vo);
           for (let j = 0; j < sb.pocet; j++) {
             const fi = (j - (sb.pocet - 1) / 2) * krok, a = sb.sirka / 2, h = sb.vyska / 2, b = [];
-            for (const x of [n.krk.ri - 0.5, n.krk.vo + 2]) b.push([x, 0, -h], [x, a, -h + a], [x, a, h - a], [x, 0, h], [x, -a, h - a], [x, -a, -h + a]);
+            // konce štěrbiny: zahrocené 45° (kapka, tisk bez podpor), nebo půlkruh (p.diry = 'kruh', strop převisá)
+            for (const x of [n.krk.ri - 0.5, n.krk.vo + 2]) {
+              if (p.diry === 'kruh') for (let i = 0; i <= 16; i++) { const u = Math.PI * i / 16, cy = a * Math.cos(u), cz = a * Math.sin(u); b.push([x, cy, h - a + cz], [x, cy, -h + a - cz]); }
+              else b.push([x, 0, -h], [x, a, -h + a], [x, a, h - a], [x, 0, h], [x, -a, h - a], [x, -a, -h + a]);
+            }
             pr.odeb.push(doRamu(otocZ(obalka(b), fi), F));
           }
         }

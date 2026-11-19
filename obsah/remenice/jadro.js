@@ -66,6 +66,7 @@
     kladka: { lozisko: '625', pocet: 1, prumer: 20, vule: 0.1, osazeni: true },
     napinak: { typ: 'rameno', delka: 30, sirka: 12, tloustka: 5, cep: 5.3, osa: 5.2, zdvih: 15, nalitek: 1 },
     tisk: { material: 'PLA', jemnost: 0.25 },
+    diry: 'kapka',   // vodorovné otvory stavěcích šroubů: 'kapka' (tisk bez podpor) | 'kruh'
   };
 
   const ROZSAHY = {
@@ -83,7 +84,7 @@
   const VYBERY = {
     profil: Object.keys(PROFILY), 'priruby.typ': ['obe', 'jedna', 'zadna'], 'otvor.typ': ['hladky', 'd', 'pero'],
     'pohon.rezim': ['C', 'L'], 'kladka.lozisko': Object.keys(LOZISKA), 'napinak.typ': ['rameno', 'drazka'],
-    'tisk.material': Object.keys(MATERIALY),
+    'tisk.material': Object.keys(MATERIALY), diry: ['kapka', 'kruh'],
   };
   const CELA = new Set(['z1', 'pohon.z2', 'naboj.sroubu', 'kladka.pocet']);
 
@@ -307,6 +308,9 @@
     let oz1 = null, oz2 = null;
     if (d.r1 || d.r2) oz1 = kontrolaRemenice(p.z1, p.otvor.prumer, 'z1', 'otvor.prumer', 'Řemenice 1');
     if (d.r2) oz2 = kontrolaRemenice(p.pohon.z2, p.pohon.otvor2, 'pohon.z2', 'pohon.otvor2', 'Řemenice 2');
+    if ((d.r1 || d.r2) && p.naboj.pouzit && p.naboj.sroubu > 0 && p.diry === 'kruh')
+      add('info', 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.', [],
+        { text: 'díry jako kapka', pole: 'diry', hodnota: 'kapka' });
     if (d.r1 || d.r2 || d.kladka) {
       const pr = p.priruby;
       if (pr.typ === 'zadna') add('info', 'Bez přírub řemen vede jen zarovnání os – na hnané i hnací řemenici je dobré mít aspoň jednu přírubu.', ['priruby.typ']);

@@ -479,4 +479,10 @@ I18N.pridej('en', {
   'purpurová ~{n} °C': 'purple ~{n} °C',
   'modrá ~{n} °C': 'blue ~{n} °C',
   'Úhel je na jednu stranu.': 'The angle is per side.',
+  'Díry jako kapka (vypnuto = kruh)': 'Holes as teardrops (off = round)',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrops.',
+  'lože na podložce = rovná referenční plocha). PETG, 4 perimetry, výplň ≥ 40 %, bez podpěr. Otvor osy má tvar kapky, aby se tiskl bez převisu (volba „💧 Díry jako kapka“; vypnuto = kruh s podpěrami).': 'bed on the plate = flat reference surface). PETG, 4 perimeters, infill ≥ 40 %, no supports. The axle hole is teardrop-shaped so it prints without overhang (option “💧 Holes as teardrops”; off = round with supports).',
+  'ložem dolů (lože na podložce = rovná referenční plocha); kruhový otvor osy potřebuje podpěry': 'bed down (bed on the plate = flat reference surface); the round axle hole needs supports',
+  'patkou dolů; otvory čepu jsou kruhy (s podpěrami), oblouková drážka tvoří krátký most': 'foot down; pivot holes are round (with supports), the arc slot forms a short bridge',
+  'horní (opěrnou) plochou dolů – je rovná; boky nahoru, otvory kruhy (s podpěrami)': 'top (rest) face down – it is flat; sides up, round holes (with supports)',
 });

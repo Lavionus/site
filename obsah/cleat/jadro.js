@@ -45,6 +45,7 @@
   const ZKOUSKY = { vule: 'zkušební zámky s různou vůlí', merka: 'měrka profilu lišty' };
   const HRANY = { zkosene: 'zkosené', oble: 'zaoblené' };
   const ODLEHCENI = { zadne: 'bez odlehčení', sestiuhelniky: 'šestiúhelníky', kruhy: 'kruhy' };
+  const DIRY = { kapka: 'kapka (bez podpor)', kruh: 'kruh' };   // vodorovné díry (kruhy odlehčení nastojato), přepínač 💧 v Zobrazení
   const KOLEJNICE = { rybina: 'rybina (širší nahoře)', T: 'T profil' };
   const TVARY_SVORKY = { klip: 'klip na tyč / násadu / trubku', v: 'V-drážky na zaseknutí hadru' };
   const OSY_KLIPU = { svisle: 'tyč svisle (koště, násada)', vodorovne: 'tyč vodorovně podél zdi' };
@@ -83,6 +84,7 @@
   const VYCHOZI = {
     nazev: 'Hák na French cleat',
     typ: 'hak',
+    diry: 'kapka',
     system: { tl: 18, vyska: 80, uhel: 45, vule: 0.5, mezera: 1, mezeraZa: 25, druh: 'drevo' },
     zada: { sirka: 40, tl: 6, nad: 12, vyska: 70, opera: 'lista', patka: 10, sraz: 0.6, hrany: 'zkosene', spicka: 1.5, zaobleni: 0, rohy: 0, zamek: 'plochy', ocas: 25, pojistka: false,
       odlehceni: 'zadne', velOdlehceni: 10, zub: false, zubSirka: 3, zubHloubka: 2 },
@@ -234,6 +236,9 @@
   const vyber = (h, tab, vych) => (Object.prototype.hasOwnProperty.call(tab, h) ? h : vych);
   const omez = (x, a, b) => Math.min(b, Math.max(a, x));
 
+  /** Otvory odlehčení zad leží při tisku vodorovně v rovině podložky (díl na boku) – jinak (nastojato) je kruh vodorovná díra. */
+  const odlehceniNaBoku = p => p.typ === 'hak' || p.typ === 'police' || (p.typ === 'deska' && !p.deska.kolejnice) || (p.typ === 'svorka' && p.svorka.tvar === 'klip' && p.svorka.osa === 'vodorovne');
+
   /** Doplní chybějící hodnoty, omezí rozsahy. Vrací {p, hlaseni: [texty o úpravách]}. */
   function normalizuj(vstup) {
     const p = kopie(VYCHOZI), hl = [];
@@ -271,6 +276,7 @@
     p.zkouska.vule = String(p.zkouska.vule == null ? '' : p.zkouska.vule).slice(0, 120);
     p.zada.hrany = vyber(p.zada.hrany, HRANY, 'zkosene');
     p.zada.odlehceni = vyber(p.zada.odlehceni, ODLEHCENI, 'zadne');
+    p.diry = vyber(p.diry, DIRY, 'kapka');
     p.zada.zub = !!p.zada.zub;
     p.deska.kolTvar = vyber(p.deska.kolTvar, KOLEJNICE, 'rybina');
     p.tisk.material = vyber(p.tisk.material, MATERIALY, 'PETG');
@@ -852,6 +858,8 @@
     if (o.zub) pridej('info', `Zub pod zámkem: do lišty uřízněte zářez ${fmt(z.zubSirka + 0.6)} mm široký a ${fmt(z.zubHloubka + 0.3)} mm hluboký kolmo do úkosu (pilka, pilník) – držák pak nesjede do strany. Tištěná lišta má volbu Zářezy.`, 'zada.zub');
     if (z.zub && z.zubHloubka > o.T * 0.4) pridej('varovani', 'Zub je hlubší než 40 % tloušťky lišty – zářez lištu oslabí.', 'zada.zubHloubka');
     if (z.odlehceni !== 'zadne' && (p.typ === 'kapsa' || (p.typ === 'svorka' && p.svorka.tvar === 'v'))) pridej('info', 'Odlehčení zad se u kapes a V-drážek nedělá (záda jsou zadní stěnou).', 'zada.odlehceni');
+    if (p.diry === 'kruh' && z.odlehceni === 'kruhy' && p.typ !== 'kapsa' && !(p.typ === 'svorka' && p.svorka.tvar === 'v') && !odlehceniNaBoku(p))
+      pridej('info', 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).', 'zada.odlehceni');
     if (z.hrany === 'oble' && z.sraz < 0.4) pridej('info', 'Zaoblené hrany potřebují poloměr (pole Zkosení / zaoblení) aspoň 0,5 mm.', 'zada.sraz');
 
     if (p.typ === 'hak') {
@@ -1250,7 +1258,7 @@
 
   const API = {
     VERZE_FORMATU, TYPY, ZUBY, HRANY, ODLEHCENI, KOLEJNICE, ZKOUSKY, DRUHY_LISTY_DILU, SYSTEMY, DRUHY_LISTY, ZAMKY, TVARY_HAKU, TVARY_SVORKY, OSY_KLIPU, OPERY, VZPERY, DRUHY_OTVORU, TVARY_KAPSY, DNA, OTVORY_DESKY,
-    kusu, SPOJE_LISTY, SPOJE_DESKY, VRUTY, SROUBY, DELKY_VRUTU, MATICE, ZAPUSTNA_M, PEVNOST, BEZPECNOST, MATERIALY, VYCHOZI, ROZSAHY, PREDVOLBY,
+    kusu, odlehceniNaBoku, DIRY, SPOJE_LISTY, SPOJE_DESKY, VRUTY, SROUBY, DELKY_VRUTU, MATICE, ZAPUSTNA_M, PEVNOST, BEZPECNOST, MATERIALY, VYCHOZI, ROZSAHY, PREDVOLBY,
     kopie, cislo, fmt, vezmi, poloz, normalizuj, zPredvolby, nahodny, zesil, mapaPevnosti, jeDrzak, zubBody, nastavSystem, rozloz, seznam, otvor, odvozene, kontroly, pevnost, kontrolyPevnosti,
     kusovnik, ulozProjekt, nactiProjekt, popis, rozborTisku, kontrolyTisku, previsy, spodekTisku, osaNahoru, NA_BOKU, profilovy,
     tiskovaPoloha, potrebujePodpory: SP.potrebujePodpory, odhadTisku: SP.odhadTisku,

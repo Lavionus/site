@@ -40,6 +40,7 @@
     const r = p.rozhrani, a = K.autoRozhrani(p.krouzek.vnejsi + p.krouzek.korekce);
     const sys = K.SYSTEMY.find(s => (s.auto ? Object.assign({}, s, a) : s).typ === r.typ && ['priruba', 'tlPriruby', 'krk', 'roztec', 'pocet', 'sroub'].every(k => { const h = (s.auto ? a : s)[k]; return h === undefined || h === r[k]; }));
     $('f_sys').value = sys ? sys.id : '';
+    document.querySelectorAll('#paletaUchyceni [data-uchyceni-dl]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.uchyceniDl === r.typ)));
     const h = K.HADICE.find(x => x.prumer === p.vyvod.prumer && x.usazeni === p.vyvod.usazeni);
     $('f_had').value = h ? h.id : '';
   }
@@ -61,6 +62,11 @@
     app.zmen(q => { for (const k of ['typ', 'priruba', 'tlPriruby', 'pocet', 'roztec', 'sroub', 'krk']) if (h[k] !== undefined) q.rozhrani[k] = h[k]; });
     app.naplnFormular();
   });
+  document.querySelectorAll('#paletaUchyceni [data-uchyceni-dl]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.uchyceniDl === app.p.rozhrani.typ) return;
+    app.zmen(q => { q.rozhrani.typ = b.dataset.uchyceniDl; });
+    app.naplnFormular();
+  }));
   $('btnAuto').addEventListener('click', () => {
     const h = K.autoRozhrani(app.p.krouzek.vnejsi + app.p.krouzek.korekce);
     app.zmen(q => Object.assign(q.rozhrani, h)); app.naplnFormular();

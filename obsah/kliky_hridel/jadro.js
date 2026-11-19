@@ -90,7 +90,7 @@
   };
 
   const VYCHOZI = {
-    verze: 1, nazev: 'Klika posuvu',
+    verze: 1, nazev: 'Klika posuvu', diry: 'kapka',
     druh: 'klika',
     hridel: { tvar: 'pero', prumer: 12, ploska: 9, zavit: 'M8', zavitTyp: 'matice', vule: 0.2, pruchozi: true, celo: 2 },
     naboj: { prumer: 30, delka: 34, jisteni: 'stavec', sroub: 'M4', vuleMatice: 0.3 },
@@ -117,7 +117,7 @@
     'mech.moment': [0, 1000], 'mech.sila': [1, 1000], 'mech.silaMax': [1, 3000], 'mech.otacky': [1, 1000],
   };
   const VYCTY = {
-    druh: Object.keys(NAZVY.druh), 'hridel.tvar': Object.keys(NAZVY.tvar), 'hridel.zavit': Object.keys(ZAVITY), 'hridel.zavitTyp': Object.keys(NAZVY.zavitTyp),
+    diry: ['kapka', 'kruh'], druh: Object.keys(NAZVY.druh), 'hridel.tvar': Object.keys(NAZVY.tvar), 'hridel.zavit': Object.keys(ZAVITY), 'hridel.zavitTyp': Object.keys(NAZVY.zavitTyp),
     'naboj.jisteni': Object.keys(NAZVY.jisteni), 'naboj.sroub': Object.keys(SROUBY),
     'drzadlo.tvar': Object.keys(NAZVY.tvarDrzadla), 'drzadlo.uchyceni': Object.keys(NAZVY.uchyceni), 'drzadlo.sroub': Object.keys(SROUBY), 'drzadlo.pant': Object.keys(SROUBY),
     'stupnice.typ': Object.keys(NAZVY.stupnice), 'stupnice.cisla': Object.keys(NAZVY.cisla), 'tisk.material': Object.keys(MATERIALY),
@@ -498,6 +498,8 @@
     }
     if (p.druh !== 'kolo' && p.druh !== 'hvezda' && o.t < 4) var_(['rameno.tloustka'], `Rameno ${fmt(o.t)} mm je tenké.`, opr('rameno.tloustka', 6));
     // tisk
+    const vodorovne = p.druh === 'sklopna' || n.jisteni !== 'zadne' || (st.typ === 'krouzek' && st.jisteni);
+    if (p.diry === 'kruh' && vodorovne) info([], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     if (p.tisk.uhel < 45) info(['tisk.uhel'], `Díly jsou navržené na převis 45° (sražení, kapkové otvory). Při ${fmt(p.tisk.uhel)}° budou na některých místech potřebovat podpory.`);
     if (p.tisk.material === 'PLA') info(['tisk.material'], 'PLA je křehké a na slunci a u teplého stroje měkne – na kliky raději PETG, ASA nebo PA.');
     // ergonomie a pevnost

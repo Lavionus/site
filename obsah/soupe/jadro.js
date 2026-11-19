@@ -86,6 +86,7 @@
     klapka: { disk: 3, hridel: 8, vuleHridele: 0.2, vuleDisku: 0.6, paka: 70, dorazy: true },
     tisk: { vrstva: 0.2, uhel: 45, material: 'PETG', kalibrace: false, podlozka: 250, podlozkaY: 210 },
     proud: { prutok: 600, drsnost: 0.1, podtlak: 1500 },
+    diry: 'kapka',                                  // vodorovné díry pro hřídel klapky: 'kapka' (bez podpor) | 'kruh'
   };
   const MEZE = {
     'tvar.stena': [0.8, 8], 'tvar.vule': [-1, 3], 'tvar.doraz': [0, 15],
@@ -105,7 +106,7 @@
   const VYCTY = {
     druh: Object.keys(NAZVY.druh), 'k1.spoj': Object.keys(NAZVY.spoj), 'k2.spoj': Object.keys(NAZVY.spoj),
     'teleso.sroub': Object.keys(SROUBY), 'tesneni.typ': Object.keys(NAZVY.tesneni), 'spinac.typ': Object.keys(NAZVY.spinac),
-    'tisk.material': Object.keys(MATERIALY),
+    'tisk.material': Object.keys(MATERIALY), diry: ['kapka', 'kruh'],
   };
 
   /** Předvolby: jen odchylky od výchozího projektu (tisk zůstává uživatelův). */
@@ -402,6 +403,7 @@
     if (K.vuleDisku > 2) var_(['klapka.vuleDisku'], `Vůle disku ${fmt(K.vuleDisku, 2)} mm – zavřená klapka bude hodně netěsnit.`, opr('klapka.vuleDisku', 0.6));
     if (K.vuleHridele < 0.1) info(['klapka.vuleHridele'], 'Malá vůle hřídele – klapka půjde ztuha, ale bude držet polohu třením.');
     if (K.hridel < 0.06 * 2 * o.Rk) info(['klapka.hridel'], `Hřídel ${fmt(K.hridel)} mm je na průchod Ø ${fmt(2 * o.Rk, 0)} tenká – může se zkroutit.`);
+    if (p.diry === 'kruh') info(['diry'], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     if (!K.dorazy) info(['klapka.dorazy'], 'Bez dorazů drží klapka polohu jen třením v hřídeli.');
     else info(['klapka.dorazy'], 'Dorazy vymezí polohy zavřeno (páka napříč) a otevřeno (páka podél potrubí); polohu mezi nimi drží tření.');
     void mat; void var_; void opr; void H;
@@ -691,7 +693,7 @@
         const cy = o.rPin * Math.cos(rad(u)), cz = o.rPin * Math.sin(rad(u)), d = o.pin;
         plne.push(hranolX([[cy + d, cz], [cy, cz + d], [cy - d, cz], [cy, cz - d]], o.xf - 0.5, o.xf + o.tp * 0.8));
       }
-      const odeb = [otoc(dut, N), hr1.dut, hr2.dut, hranolX(kapka(o.rl, true), -o.xf - 1, o.xf + 1)];
+      const odeb = [otoc(dut, N), hr1.dut, hr2.dut, hranolX(diraHridele(o.rl), -o.xf - 1, o.xf + 1)];
       odeb.push(...otvoryPriruby(h1, p.k1, -L2, -1), ...otvoryPriruby(h2, p.k2, L2, 1));
       const teleso = k(M.difference([k(M.union(plne)), ...odeb]));
       // disk (tisková poloha: naplocho, osa hřídele podél X ve výšce zc)
@@ -723,14 +725,19 @@
       };
       return { dily: [dt, dd, dh, dp], tisk: [dt, dd, dh, dp], kalibrace, sestava };
     }
-    /** Kalibrace klapky: stojící destička s 5 dírami kapkou (vůle −2…+2 × 0,05 mm) + kousek hřídele. */
+    /** Vodorovná díra pro hřídel: kapka hrotem nahoru (tisk bez podpor), nebo kruh (p.diry = 'kruh', strop převisá). */
+    function diraHridele(r, cu = 0, cv = 0) {
+      if (p.diry !== 'kruh') return kapka(r, true, cu, cv);
+      return G.obrysDiry(r, Math.max(32, segmenty(r)), false).map(([u, v]) => [cu + u, cv + v]);
+    }
+    /** Kalibrace klapky: stojící destička s 5 dírami kapkou (nebo kruhem podle p.diry) (vůle −2…+2 × 0,05 mm) + kousek hřídele. */
     function kalibraceKlapky() {
       const K = p.klapka, krok = 0.05, rr = i => K.hridel / 2 / C8 + K.vuleHridele + (i - 2) * krok, rmax = rr(4);
       const roz = 2 * rmax + 5, W = 5 * roz + 4, Hh = rmax * (1 + S2) + 9, zc = rmax + 4;
       const odeb = [];
       for (let i = 0; i < 5; i++) {
         const x = -W / 2 + 2 + roz / 2 + i * roz;
-        odeb.push(hranolY(kapka(rr(i), true, x, zc), -1, 7));
+        odeb.push(hranolY(diraHridele(rr(i), x, zc), -1, 7));
         for (let j = 0; j <= i; j++) odeb.push(k(k(M.cube([1, 8, 1.2])).translate([x - (i * 1.6) / 2 + 1.6 * j - 0.5, -1, Hh - 0.8])));
       }
       const desticka = k(M.difference([k(k(M.cube([W, 6, Hh])).translate([-W / 2, 0, 0])), ...odeb]));

@@ -45,7 +45,7 @@
   const stavZobr = { tisk: true };
   const nahled = KNOF_NAHLED.vytvorNahled($('platno'));
   const app = G3D.aplikace({
-    typ: 'remenice', nazev: 'Řemenice', klic: 'webapp_remenice', soubor: 'remenice',
+    typ: 'remenice', nazev: 'Řemenice', klic: 'webapp_remenice', soubor: 'remenice', diry: true,
     normalizuj: R.normalizuj, vychozi: () => R.normalizuj({}).p,
     ulozProjekt: R.ulozProjekt, nactiProjekt: R.nactiProjekt, vezmi: R.vezmi, poloz: R.poloz,
     hlasitOpravyUlozeneho: true,

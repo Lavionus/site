@@ -121,7 +121,9 @@
     hacek: { zapnuty: false, rameno: 'horni', tvar: 'hacek', prumer: 22, delka: 6, tloustka: 4, smer: 'ven', uhel: 0, zahnuti: 30, zatizeni: 1, hloubka: 0, sirka: 0, prechod: 0, zarovnani: 'podlozka', otvor: 0 },
     skica: { zapnuta: false, hladka: true, soumerna: true, horni: [], dolni: [] },
     tisk: { material: 'PETG', vypln: 100, kusu: 1, latka: 1.5 },
+    diry: 'kapka',   // vodorovné jamky a kapsa magnetu: 'kapka' (špička nahoru, bez podpor) | 'kruh'
   };
+  const VYCTY = { diry: ['kapka', 'kruh'] };
   const ROZSAHY = {
     'telo.delka': [30, 160], 'telo.sirka': [4, 30], 'telo.tloustka': [2.5, 20], 'telo.spicka': [0.8, 12], 'telo.cep': [10, 120],
     'telo.celist': [3, 70], 'telo.mezeraCep': [0, 8], 'telo.rozevreni': [0, 40], 'telo.zaobleni': [0, 4],
@@ -237,6 +239,7 @@
     if (!['ven', 'dovnitr'].includes(p.hacek.smer)) p.hacek.smer = 'ven';
     if (!['podlozka', 'stred'].includes(p.hacek.zarovnani)) p.hacek.zarovnani = 'podlozka';
     if (!MATERIALY[p.tisk.material]) p.tisk.material = 'PETG';
+    if (!VYCTY.diry.includes(p.diry)) p.diry = 'kapka';
     p.nazev = String(p.nazev == null ? '' : p.nazev).slice(0, 120);
     for (const k of ['vroubky', 'odlehceni']) p.telo[k] = !!p.telo[k];
     p.celisti.snura = !!p.celisti.snura; p.hacek.zapnuty = !!p.hacek.zapnuty;
@@ -1077,6 +1080,8 @@
     // oprava k poslednímu hlášení: {zmeny: {cesta: hodnota}} nebo {akce: 'navrh'}
     const oprav = (text, zmeny, akce) => { H[H.length - 1].oprava = { text, zmeny, akce }; };
     for (const ch of o.chybySkici) pridej('chyba', ch, 'skica.zapnuta');
+    if (p.diry === 'kruh' && (o.magnet || (o.vinuta && !o.vinuta.chybi) || (o.tpu && !o.tpu.chybi)))
+      pridej('info', 'Kruhové vodorovné díry (jamky pružiny, kapsa magnetu) mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení).');
     if (o.xp <= o.Lc + 2) pridej('chyba', `Čep (${fmt(o.xp)} mm od špičky) musí ležet za čelistí (${fmt(o.Lc)} mm) – zkraťte čelist nebo posuňte čep.`, 'telo.cep', 'telo.celist');
     if (o.xp > o.L - 8) pridej('chyba', `Čep je ${fmt(Math.max(0, o.L - o.xp))} mm od konce – na rukojeť nezbývá místo.`, 'telo.cep', 'telo.delka');
     const pomer = (o.L - o.xp) / Math.max(1, o.xp);
@@ -1472,7 +1477,7 @@
   const tridaBezpecnosti = k => (k >= 2 ? 'ok' : k >= 1.2 ? 'mez' : 'chyba');
 
   const API = {
-    VERZE_FORMATU, DATUM_DAT, RAD, DRUHY, KOVOVE, TLACNE, KONCE, SDILENA_PLOCHA, TVARY_OCEK, osaOcka, poddajnostOcka, konzola, zuzena, TVARY, PROFILY_CELISTI, CEPY, HACKY, MATERIALY, VYCHOZI, ROZSAHY, PREDVOLBY, E_OCEL, SIGMA_DRAT,
+    VERZE_FORMATU, DATUM_DAT, RAD, DRUHY, KOVOVE, TLACNE, KONCE, SDILENA_PLOCHA, TVARY_OCEK, osaOcka, poddajnostOcka, konzola, zuzena, TVARY, PROFILY_CELISTI, CEPY, HACKY, MATERIALY, VYCHOZI, VYCTY, ROZSAHY, PREDVOLBY, E_OCEL, SIGMA_DRAT,
     kopie, cislo, fmt, vezmi, poloz, V, previsy, potrebujePodpory, odhadTisku,
     normalizuj, zPredvolby, odvozene, kontroly, kusovnik, nahodnyKolicek, navrhniPruzinu, navrhniKroky, porovnejPruziny, prepniDruh, PROSTOR, popis, ulozProjekt, nactiProjekt, tridaBezpecnosti,
     plocha2, ccw, zrcadliY, prusecikyX, uvnitr2, vzdalObrys, krizi, rotace, hladkyObrys, zjednodus, obrysNaSkicu, parametrickyObrys, hladce,

@@ -59,7 +59,7 @@
   };
 
   const VYCHOZI = {
-    verze: 1, nazev: 'Šnekový převod',
+    verze: 1, nazev: 'Šnekový převod', diry: 'kapka',
     zaber: { modul: 1.5, chodu: 1, zubu: 30, q: 10, uhel: 20, smer: 'pravy', vule: 0.15, hlavova: 0.25, roztec: 0 },
     kolo: {
       druh: 'globoidni', sirka: 0, pulky: false, kolicku: 3,
@@ -83,7 +83,7 @@
   };
   const DIRY = ['kruh', 'D', 'sestihran', 'pero', 'zavit'];
   const VYCTY = {
-    'zaber.smer': ['pravy', 'levy'], 'kolo.druh': ['globoidni', 'valcove'], 'kolo.sroub': ['M3', 'M4', 'M5'],
+    diry: ['kapka', 'kruh'], 'zaber.smer': ['pravy', 'levy'], 'kolo.druh': ['globoidni', 'valcove'], 'kolo.sroub': ['M3', 'M4', 'M5'],
     'kolo.dira.typ': DIRY, 'kolo.dira.zavit': Object.keys(ZAVITY), 'snek.dira.typ': DIRY.slice(0, 4), 'snek.dira.zavit': Object.keys(ZAVITY),
     'snek.ulozeni': ['cepy', 'dira'], 'snek.poloha': ['auto', 'nastojato', 'pulky'],
     'skrin.loziskoSnek': Object.keys(LOZISKA), 'skrin.loziskoKolo': Object.keys(LOZISKA),
@@ -301,8 +301,8 @@
     const poly = body => k(new CS([plocha(body) < 0 ? body.slice().reverse() : body], 'NonZero'));
     const vysun = (cs, za, zb) => k(k(cs.extrude(zb - za)).translate([0, 0, za]));
     const otoc = (profil, r) => k(poly(profil).revolve(segmenty(r)));
-    /** Kapka (díra s hrotem 45° nahoru) v rovině XY – po otočení vodorovná díra bez převisu. */
-    const kapka = (r, x = 0, y = 0) => k(k(CS.hull([kruhDira(r), poly([[-0.01, r * Math.SQRT2], [0.01, r * Math.SQRT2], [0, r * Math.SQRT2 - 0.02]])])).translate([x, y]));
+    /** Kapka (díra s hrotem 45° nahoru) v rovině XY – po otočení vodorovná díra bez převisu; p.diry = 'kruh' → kruhová díra. */
+    const kapka = (r, x = 0, y = 0) => p.diry === 'kruh' ? kruhDira(r, x, y) : k(k(CS.hull([kruhDira(r), poly([[-0.01, r * Math.SQRT2], [0.01, r * Math.SQRT2], [0, r * Math.SQRT2 - 0.02]])])).translate([x, y]));
     /** Vodorovná díra v ose X: řez v rovině YZ (y, z), od x0 do x1. */
     const vodorovneX = (cs, x0, x1) => k(k(cs.extrude(x1 - x0)).transform(mat([0, 1, 0], [0, 0, 1], [1, 0, 0], [x0, 0, 0])));
     /** Díra hřídele jako 2D řez (střed v počátku). */
@@ -595,6 +595,8 @@
       if (Math.abs(p.kolo.dira.prumer - g.LK.d) > 0.01 && p.kolo.dira.typ !== 'zavit') info(['kolo.dira.prumer', 'skrin.loziskoKolo'], `Hřídel kola Ø ${fmt(p.kolo.dira.prumer)} vs. díra ložiska ${p.skrin.loziskoKolo} Ø ${g.LK.d} – hřídel s osazením, nebo jiné ložisko.`);
       if (g.okno) info(['skrin.mezera'], 'Šnek sahá pod horní plochu desky – deska má pod ním okno.');
     }
+    const vodorovne = p.skrin.zapnuto || (!p.kolo.pulky && o.naboj > 0 && p.kolo.stavaci && p.kolo.dira.typ !== 'zavit');
+    if (p.diry === 'kruh' && vodorovne) info([], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     return H;
   }
   /** Celková délka šneku (čepy + kužely + závit) – i bez stavby. */

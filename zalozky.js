@@ -7,7 +7,8 @@
    starší se „uspí“ (kolik a kdy, nastaví ⚙️ Nastavení) (iframe se zahodí, po kliknutí se stránka
    načte znovu – jako šetřič paměti v Chrome). Otevřené zůstávají jen
    připnuté záložky – nepřipnutá se při přechodu jinam zavře (kromě
-   hrající a neuložené). Záložka, ve které hraje zvuk, se neuspí nikdy. Stránka, která
+   hrající a neuložené). Výjimka: odskok na připnutou – nepřipnutá počká
+   a zavře se, až se z připnuté půjde jinam než zpět na ni. Záložka, ve které hraje zvuk, se neuspí nikdy. Stránka, která
    hlásí neuložené změny (beforeunload), se neuspí a před zavřením
    se rozcestník zeptá.
 
@@ -63,6 +64,7 @@ const Zalozky = (function () {
   const zavrene = [];          // { page, pin, index }
   let pasEl, prehledBtn, pocetEl;
   let zameritRam = false;      // po kliknutí na záložku / zkratce dát fokus stránce
+  let odskok = null;           // nepřipnutá, ze které se odskočilo na připnutou – čeká na návrat
 
   // stejná stránka může být ve dvou záložkách (odkaz uvnitř stránky) – přednost má aktivní
   const najdi = page => (aktivni && zaklad(aktivni.page) === zaklad(page) ? aktivni
@@ -356,12 +358,17 @@ const Zalozky = (function () {
     let k = najdi(page);
     if (!k) k = pridej(page);
     if (k !== aktivni) {
-      const stara = aktivni;
+      const stara = aktivni, cekala = odskok;
       aktivni = k;
+      odskok = null;
       // otevřené zůstávají jen připnuté – nepřipnutá se odchodem zavře (vrátí ji „Nedávno zavřené“ / Alt+Shift+T);
-      // hrající nebo s neuloženými změnami zůstane, ať nic nezmizí
+      // hrající nebo s neuloženými změnami zůstane, ať nic nezmizí.
+      // Odskok na připnutou (i domovskou) ji ale nechá čekat: zavře se, až se z připnuté půjde jinam než zpět.
+      const zavritelna = x => !x.pin && !x.domu && !hrajeZvuk(x) && !neulozeno(x);
+      if (cekala && cekala !== k && karty.includes(cekala) && zavritelna(cekala)) odeber(cekala);
       if (stara && karty.includes(stara)) {
-        if (!stara.pin && !stara.domu && !hrajeZvuk(stara) && !neulozeno(stara)) odeber(stara);
+        if (!stara.pin && !stara.domu && (k.pin || k.domu)) { odskok = stara; skryj(stara); }
+        else if (zavritelna(stara)) odeber(stara);
         else skryj(stara);
       }
     }

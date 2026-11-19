@@ -11,7 +11,7 @@
   const nahled = KNOF_NAHLED.vytvorNahled($('platno'));
 
   const app = G3D.aplikace({
-    typ: 'knofliky', nazev: 'Knoflíky', klic: 'webapp_knofliky', soubor: 'knoflik',
+    typ: 'knofliky', nazev: 'Knoflíky', klic: 'webapp_knofliky', soubor: 'knoflik', diry: true,
     normalizuj: KNOF.normalizuj, vychozi: () => KNOF.predvolba('pot_d'),
     ulozProjekt: KNOF.ulozProjekt, nactiProjekt: KNOF.nactiProjekt, popis: KNOF.popis,
     vezmi: KNOF.vezmi, poloz: KNOF.poloz,

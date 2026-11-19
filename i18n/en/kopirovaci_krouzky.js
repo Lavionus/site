@@ -477,4 +477,7 @@ I18N.pridej('en', {
   'Trubka Ø 60 – k rozbočce VZT': 'Ø 60 pipe – to the duct splitter',
   'Měkká hadice Ø 25 navlečená': 'Soft Ø 25 hose slipped on',
   'Odsávačka – hadice Ø 100 navlečená': 'Dust extractor – Ø 100 hose slipped on',
+  'Druh kroužku – uchycení do patky': 'Guide type – mounting to the base',
+  'Příruba na zápustné šrouby': 'Flange with countersunk screws',
+  'Krk se závitem a matice': 'Threaded neck and nut',
 });

@@ -385,4 +385,6 @@ I18N.pridej('en', {
   'V orientaci „{nazev}“ vedou vrstvy napříč hákem nebo zámkem – praskne mezi vrstvami. Tiskněte na boku.': 'In the “{nazev}” orientation the layers run across the hook or lip – it will crack between layers. Print on its side.',
   'tisknout na boku': 'print on its side',
   'Svislý klip se tiskne nastojato – kroužek má vrstvy napříč osou tyče, pruží dobře. Na nacvakávání je nejlepší PETG nebo PA.': 'A vertical clip prints upright – the ring\'s layers run across the rod axis, so it flexes well. PETG or PA is best for snap-on clips.',
+  'kapka (bez podpor)': 'teardrop (no supports)',
+  'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal holes have an overhanging ceiling – print with supports or choose teardrops (👁 View → 💧 Teardrop holes).',
 });

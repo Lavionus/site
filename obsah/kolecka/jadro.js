@@ -52,7 +52,7 @@
   };
 
   const VYCHOZI = {
-    verze: 1, nazev: 'Kolečko vozíku',
+    verze: 1, nazev: 'Kolečko vozíku', diry: 'kapka',
     kolo: {
       prumer: 50, sirka: 18, profil: 'korunka', srazeni: 0.8, korunka: 0.3,
       uhel: 90, hloubka: 3, spicka: 1, trubka: 20, vuleU: 0.5, oring: 2.62, oringu: 1, tpu: 3, tpuPresah: 0.6, lem: 1.5,
@@ -85,7 +85,7 @@
     'mech.hmotnost': [0, 5000], 'mech.kol': [1, 16, 1], 'mech.rychlost': [0, 20], 'mech.raz': [1, 4], 'mech.zivot': [0, 1e6],
   };
   const VYCTY = {
-    'kolo.profil': Object.keys(NAZVY.profil), 'kolo.deleni': Object.keys(NAZVY.deleni), 'kolo.spoj': Object.keys(NAZVY.spoj),
+    diry: ['kapka', 'kruh'], 'kolo.profil': Object.keys(NAZVY.profil), 'kolo.deleni': Object.keys(NAZVY.deleni), 'kolo.spoj': Object.keys(NAZVY.spoj),
     'kolo.sroub': ['M3', 'M4', 'M5'],
     'ulozeni.typ': Object.keys(NAZVY.ulozeni), 'ulozeni.lozisko': LOZISKA.map(l => l.o).concat('vlastni'),
     'drzak.typ': Object.keys(NAZVY.drzak), 'drzak.cep': ['M5', 'M6', 'M8', 'M10'],
@@ -407,6 +407,7 @@
     }
     if (k.odlehceni && o.deleni === 'pulky') info(['kolo.odlehceni'], 'Odlehčení se dělá jen u celého kola (vybrání z horního čela).');
     if (k.odlehceni && o.deleni === 'cele' && !o.odlehceni) info(['kolo.odlehceni', 'kolo.disk'], 'Na odlehčení není místo – kolo je malé nebo disk široký jako kolo.');
+    if (p.diry === 'kruh' && (dz.typ === 'vidlice' || dz.typ === 'otocna')) info([], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).');
     if (p.tisk.uhel < 45) info(['tisk.uhel'], `Díly jsou navržené na převis 45° (sražení, výztuhy, kapkovité díry). Při ${fmt(p.tisk.uhel)}° může tisk potřebovat podpory – ukáže je tisková poloha.`);
     if (p.tisk.material === 'TPU') var_(['tisk.material'], 'Celé kolo z TPU se prohýbá a ložisko v něm nedrží – na měkký běhoun zvolte profil „nalisovaný běhoun z TPU“ a jádro z PETG.', { zmeny: { 'tisk.material': 'PETG' } });
     if (p.tisk.material === 'PLA') info(['tisk.material'], 'PLA pod trvalým zatížením teče (kolo se „zploští“ a ložisko povolí) – na kolečka je lepší PETG, PC nebo nylon.');
@@ -629,11 +630,15 @@
         const plne = [noha(o.xi), noha(-o.xo)];
         const odebD = [];
         // díry osy kapkovité se špičkou dolů (−z) – vidlice se tiskne vzhůru nohama, špička pak míří nahoru.
-        // Průřez v (u = −z, v = y): špička ve směru +u.
+        // Průřez v (u = −z, v = y): špička ve směru +u. p.diry = 'kruh' → kruhová díra (strop převisá).
+        const kruhova = p.diry === 'kruh';
         const diraK = (r, yc, zc, x0, x1) => {
           const b = []; const n = 32;
-          for (let i = 0; i <= n; i++) { const a = rad(45 + 270 * i / n); b.push([-zc + r * Math.cos(a), yc + r * Math.sin(a)]); }
-          b.push([-zc + r * Math.SQRT2, yc]);
+          if (kruhova) for (let i = 0; i < n; i++) { const a = 2 * Math.PI * i / n; b.push([-zc + r * Math.cos(a), yc + r * Math.sin(a)]); }
+          else {
+            for (let i = 0; i <= n; i++) { const a = rad(45 + 270 * i / n); b.push([-zc + r * Math.cos(a), yc + r * Math.sin(a)]); }
+            b.push([-zc + r * Math.SQRT2, yc]);
+          }
           return km(km(km(km(new CS([b], 'NonZero')).extrude(x1 - x0)).rotate([0, 90, 0])).translate([x0, 0, 0]));
         };
         if (ex.pouzit) {

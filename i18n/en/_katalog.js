@@ -1279,6 +1279,14 @@ I18N.pridej('en', {
   "Náhradní kolečka a pojezdy s ložisky, vidlicí nebo úchytem pro 3D tisk": "Replacement wheels and rollers with bearings, forks or brackets to print",
   "Kliky a ruční kola na hřídel": "Shaft Cranks and Handwheels",
   "Navrhne kliku, ruční kolo, rukojeť nebo páku na hřídel se stupnicí": "Designs a crank, handwheel, knob or lever for a shaft, with a dial",
+  "Síta a mřížky": "Sieves and Grates",
+  "Navrhne síta, sítka do odtoku a trychtýře i třídicí věž pro 3D tisk": "Designs sieves, drain and funnel strainers and sorting towers for 3D printing",
+  "Trychtýře a násypky na míru": "Custom Funnels and Hoppers",
+  "Navrhne trychtýř přesně na hrdlo láhve, kanystru, sklenice nebo nádrže": "Designs a funnel to fit a bottle, jerrycan, jar or tank neck exactly",
+  "Úchyty kamer a fotoaparátů": "Camera and Photo Mounts",
+  "Složí úchyt kamery z článků: prsty, závit 1/4″, patka, klouby": "Builds a camera mount from links: fingers, 1/4″ thread, shoe, joints",
+  "Nástavce na sluchátka a špunty": "Earbud Toppers and Earplugs",
+  "Bláznivé ozdoby do uší: prst, červ, paprička na pecky i špunty": "Crazy ear decorations – finger, worm, chili – for earbuds and earplugs",
 });
 
 I18N.pridejTagy('en', {
@@ -1888,4 +1896,8 @@ I18N.pridejTagy('en', {
   "obsah/snek.html": ["worm", "worm wheel", "worm gear", "gearbox", "gearing", "throated", "self-locking", "reduction", "bearing", "608", "625", "drawing", "3d printing", "stl", "3mf", "generator"],
   "obsah/kolecka.html": ["wheel", "castor", "caster", "roller", "pulley", "bearing", "608", "625", "v-slot", "fork", "swivel caster", "drawer", "shower door", "sliding gate", "cart", "tpu", "eccentric spacer", "hertz", "3d printing", "stl", "3mf", "generator"],
   "obsah/kliky_hridel.html": ["crank", "handwheel", "knob", "lever", "shaft", "hub", "dial", "feed", "lathe", "mill", "winch", "valve", "key", "set screw", "3d printing", "stl", "3mf", "generator"],
+  "obsah/sita.html": ["sieve", "strainer", "sifter", "grate", "mesh", "compost", "sand", "flour", "tea", "drain", "floor gully", "manhole", "funnel", "colander", "3d printing", "stl", "3mf", "generator"],
+  "obsah/trychtyre.html": ["funnel", "hopper", "neck", "pet bottle", "jerrycan", "canning", "fuel tank", "oil", "pellets", "venting", "flow", "3d printing", "stl", "3mf", "generator"],
+  "obsah/foto_uchyty.html": ["camera mount", "action camera", "camera holder", "gopro compatible", "lego compatible", "bricks", "building blocks", "technic", "m5 fingers", "tripod thread", "1/4 inch", "3/8 inch", "cold shoe", "ball joint", "handlebar mount", "suction cup", "magnetic mount", "phone holder", "backpack clip", "adapter", "3d printing", "stl", "3mf", "generator"],
+  "obsah/sluchatka.html": ["earbuds", "earphones", "earplugs", "ear tip", "tpu", "decoration", "finger", "worm", "chili pepper", "tentacle", "unicorn", "carrot", "bone", "cactus", "snail shell", "heart", "candle", "antennae", "fun", "3d printing", "stl", "3mf", "generator"],
 });

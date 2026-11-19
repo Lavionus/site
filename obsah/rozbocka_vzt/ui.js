@@ -12,7 +12,7 @@
   let p, wasm = null, model = null, chybaStavby = null, o = null;   // wasm = jádro připravené (ve workeru nebo zde)
   const FORMAT = 'webapp_rozbocka_vzt';
   const app = G3D.aplikace({
-    typ: 'rozbocka_vzt', nazev: 'Rozbočky VZT', klic: 'webapp_rozbocka_vzt',
+    typ: 'rozbocka_vzt', nazev: 'Rozbočky VZT', klic: 'webapp_rozbocka_vzt', diry: true,
     get soubor() { return G3D.jmenoSouboru(R.popis(app.p), 'rozbocka', ''); },   // bez názvu soubor podle popisu dílu
     normalizuj: q => ({ p: R.normalizuj(q), hlaseni: [] }), vychozi: () => R.normalizuj({}),
     vezmi: R.cti, poloz: R.poloz,

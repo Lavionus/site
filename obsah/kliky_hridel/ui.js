@@ -23,13 +23,16 @@
     exportStl: () => exportVse('stl'),
     doModelare: () => (lzeExport() ? { data: KRAB.soubor3mf(kusy(dilyKTisku()), app.p.nazev || 'Klika'), pripona: '.3mf' } : null),
     zkratky: { r: 'tRez', h: 'tHrany', m: 'tTisk', p: 'tPrevisy', l: 'tPravitka' },
+    diry: true,
     zmenaTematu: () => prepocitej(),
   });
 
   /* ---------- výběry ---------- */
   const moznosti = (sel, obj, popis) => { $(sel).innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${esc(popis(v, k))}</option>`).join(''); };
   moznosti('f_tvar', KLH.NAZVY.tvar, v => v);
-  moznosti('f_druh', KLH.NAZVY.druh, v => v);
+  document.querySelectorAll('#paletaDruhu button').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.dlazdice !== app.p.druh) app.zmen(q => { q.druh = b.dataset.dlazdice; });
+  }));
   moznosti('f_hz', KLH.ZAVITY, v => v.nazev);
   for (const id of ['f_ns', 'f_ds', 'f_dp']) moznosti(id, KLH.SROUBY, (v, k) => k);
   moznosti('f_material', KLH.MATERIALY, v => v.nazev);
@@ -92,6 +95,7 @@
   /* ---------- přepočet ---------- */
   function prepocitej() {
     p = app.p;
+    document.querySelectorAll('#paletaDruhu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dlazdice === p.druh)));
     nahled.barvy(css('--border-strong'), css('--border'), css('--text'));
     let H = KLH.kontroly(p);
     const o = KLH.odvozene(p);

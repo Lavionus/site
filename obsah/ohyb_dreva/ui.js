@@ -88,7 +88,7 @@
   ];
   const sekceM = (m) => (m === 'zarezy' ? 'kerf' : m === 'para' ? 'para' : 'lam');
   const TISK_POLE = ['papir', 'okraj', 'prekryv', 'papirW', 'papirH', 'kalibX', 'kalibY'];
-  const STL_POLE = ['sirkaTisk', 'stul', 'kolikD', 'vuleKoliku', 'oznaceni'];
+  const STL_POLE = ['sirkaTisk', 'stul', 'kolikD', 'vuleKoliku', 'oznaceni', 'kapka'];
 
   /* ---------- stav ---------- */
   function slouc(P, u) {

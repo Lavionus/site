@@ -2,7 +2,7 @@
    Ohýbání dřeva – STL malých forem pro 3D tisk (manifold-3d z obsah/lib/manifold, Apache-2.0; modul WASM parametrem).
    Profil dílu formy (obrys + otvory) se vytáhne do výšky = šířka formy; tiskne se naplocho (profil na podložce),
    takže líc formy je svislá stěna bez převisů. Díl delší než tisková plocha se rozřízne svislými řezy na části;
-   v řezu jsou vodorovné otvory tvaru kapky (bez převisu) pro ocelové kolíky.
+   v řezu jsou vodorovné otvory pro ocelové kolíky – tvaru kapky (bez převisu), nebo kruh (nast.kapka === false).
    - forma(w, dil, nast) → {poz, idx, objem, rod, casti, kolikuOtvoru, varovani, rozmery}
    - stlBinarni(poz, idx, nazev)
    ============================================================ */
@@ -75,7 +75,7 @@
       const kapka = [];
       for (let i = 0; i < 28; i++) { const a = 2 * Math.PI * i / 28; kapka.push([rKol * Math.cos(a), rKol * Math.sin(a)]); }
       // tečny ke špičce ve výšce r·√2 (45°)
-      const spicka = (y, z) => { const b = kapka.filter((p) => !(p[1] > rKol * 0.70710678)); return b.concat([[0, rKol * 1.41421356]]).map((p) => [p[0] + y, p[1] + z]); };
+      const spicka = (y, z) => { if (N.kapka === false) return kapka.map((p) => [p[0] + y, p[1] + z]); const i = kapka.findIndex((p) => p[1] > rKol * 0.70710678), b = kapka.filter((p) => !(p[1] > rKol * 0.70710678)); b.splice(i, 0, [0, rKol * 1.41421356]); return b.map((p) => [p[0] + y, p[1] + z]); };
       let kolikuOtvoru = 0;
       for (const x of xr) {
         const us = useky(dil, x, rKol + 3).filter((u) => u[1] - u[0] >= 0);
@@ -125,6 +125,7 @@
         posun += (bb.max[1] - bb.min[1]) + 8;
       }
       if (casti.length > 1) varovani.push(`Díl ${dil.id} je delší než tisková plocha ${stul} mm – rozdělen na ${casti.length} části, spoje s ${kolikuOtvoru} otvory pro ocelové kolíky Ø${+N.kolikD || 4} × ${2 * Lk} mm.`);
+      if (kolikuOtvoru && N.kapka === false) varovani.push('Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.');
       return sit(vse, { casti: casti.length, kolikuOtvoru, varovani, rozmery });
     } finally { for (const x of smaz) { try { x.delete(); } catch (e) { /* uvolněno */ } } }
   }

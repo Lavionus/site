@@ -26,7 +26,7 @@
     const mnoho = body => k(new CS([body], 'NonZero'));
     /* slzičkový otvor: kružnice se špičkou 45° ve směru uhel (rad) – tiskne se bez podpěr */
     const slza = (u, v, r, uhel) => {
-      if (!p.cep.slza) return kruh(u, v, r);
+      if (p.diry === 'kruh') return kruh(u, v, r);
       const n = segKruh(r), body = [[u + r * Math.SQRT2 * Math.cos(uhel), v + r * Math.SQRT2 * Math.sin(uhel)]];
       for (let i = 0; i <= n; i++) {
         const a = uhel + Math.PI / 4 + (3 * Math.PI / 2) * i / n;

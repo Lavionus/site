@@ -8,7 +8,7 @@
    v = od zdi (zeď v = 0, u French cleatu je v = 0 zeď za lištou), průřez se vytáhne o šířku příchytky b
    ve směru w = osa trubky. To je zároveň TISKOVÁ POLOHA: díl leží na boku, celý profil je v rovině vrstev,
    takže se oblouk klipu při zacvaknutí ohýbá podél vláken (naležato by ohyb nesly spoje vrstev) a nic nepřevisá.
-   Díry pro šrouby jsou v tisku vodorovné – mají tvar kapky se špičkou nahoru (45°).
+   Díry pro šrouby jsou v tisku vodorovné – mají tvar kapky se špičkou nahoru (45°), nebo kruhu (p.diry === 'kruh').
    Držák hadice se staví rovnou v montážní poloze (X podél zdi, Y nahoru, Z od zdi) a tiskne se nastojato
    (spodek sedla a desky na podložce), ohyb sedla tak leží ve vrstvách.
    Sestava (náhled): X = od zdi (zeď je svislá rovina x = 0), Y = podél trubky / zdi, Z = nahoru. */
@@ -66,7 +66,7 @@
 
   const VYCHOZI = {
     verze: 1, nazev: 'Příchytka trubky',
-    druh: 'klip',
+    druh: 'klip', diry: 'kapka',                          // diry: vodorovné díry kapka (tisk bez podpor) | kruh
     trubka: { D: 16, vule: 0, sirka: 12 },                 // vůle na poloměr: + volně, − sevře
     klip: { stena: 2.2, obepnuti: 230, nabeh: 35, delkaNabehu: 2.5, patky: false },
     omega: { stena: 2.4, priruba: 0 },
@@ -97,7 +97,7 @@
     'tisk.vrstva': [0.05, 0.5], 'tisk.uhel': [20, 75], 'tisk.sad': [1, 50, 1], 'tisk.podlozka': [80, 600], 'tisk.krokKalibrace': [0.05, 1],
   };
   const VYCTY = {
-    druh: Object.keys(NAZVY.druh), 'zakl.uchyceni': Object.keys(NAZVY.uchyceni),
+    druh: Object.keys(NAZVY.druh), diry: ['kapka', 'kruh'], 'zakl.uchyceni': Object.keys(NAZVY.uchyceni),
     'sroub.vrut': Object.keys(CL.VRUTY).map(Number), 'sroub.hlava': Object.keys(NAZVY.hlava), 'sroub.podklad': Object.keys(PODKLADY),
     'drazka.profil': Object.keys(SP.PROFILY), 'drazka.smer': Object.keys(NAZVY.smer), 'drazka.zpusob': Object.keys(NAZVY.zpusob),
     'objimka.sroub': ['M3', 'M4', 'M5', 'M6'], 'objimka.stojna': Object.keys(NAZVY.stojna), 'objimka.tyc': ['M6', 'M8'],
@@ -455,9 +455,13 @@
     kontrolyUchyceni(p, o, H, chyba, var_, info, opr, mat);
     kontrolyMechaniky(p, o, chyba, var_, opr);
     // tisková poloha
+    const kr = p.diry === 'kruh';
     info(null, p.druh === 'objimka'
-      ? 'Tisková poloha: obě poloviny na boku – průřez objímky leží v rovině vrstev, oblouk a uši se při stažení ohýbají podél vláken. Díry pro šrouby jsou vodorovné, proto mají tvar kapky (špička nahoru), kapsa matice stojí na hraně.'
-      : 'Tisková poloha: na boku – celý průřez příchytky leží v rovině vrstev, takže se oblouk při zacvaknutí a zatížení ohýbá podél vláken. Naležato (zády na podložce) by ohyb nesly spoje vrstev – mez přetvoření je asi poloviční a klip by praskl mezi vrstvami. Díry jsou v tisku vodorovné, proto mají tvar kapky se špičkou nahoru.');
+      ? (kr ? 'Tisková poloha: obě poloviny na boku – průřez objímky leží v rovině vrstev, oblouk a uši se při stažení ohýbají podél vláken. Díry pro šrouby jsou vodorovné a kruhové, kapsa matice má plochý strop.'
+        : 'Tisková poloha: obě poloviny na boku – průřez objímky leží v rovině vrstev, oblouk a uši se při stažení ohýbají podél vláken. Díry pro šrouby jsou vodorovné, proto mají tvar kapky (špička nahoru), kapsa matice stojí na hraně.')
+      : (kr ? 'Tisková poloha: na boku – celý průřez příchytky leží v rovině vrstev, takže se oblouk při zacvaknutí a zatížení ohýbá podél vláken. Naležato (zády na podložce) by ohyb nesly spoje vrstev – mez přetvoření je asi poloviční a klip by praskl mezi vrstvami. Díry jsou v tisku vodorovné a kruhové.'
+        : 'Tisková poloha: na boku – celý průřez příchytky leží v rovině vrstev, takže se oblouk při zacvaknutí a zatížení ohýbá podél vláken. Naležato (zády na podložce) by ohyb nesly spoje vrstev – mez přetvoření je asi poloviční a klip by praskl mezi vrstvami. Díry jsou v tisku vodorovné, proto mají tvar kapky se špičkou nahoru.'));
+    if (kr && (o.diry.length || o.tyc)) info(['diry'], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.');
     if (p.tisk.material === 'PLA' && (p.druh === 'klip' || p.druh === 'rada')) info(['tisk.material'], 'PLA je na zaklapávací klip tuhé a křehké a na slunci nebo u teplé vody měkne – lepší je PETG, PP nebo nylon.');
     return dokonci(H);
   }
@@ -541,7 +545,8 @@
       if (s.hz > 0 && o.tb < s.hz + 1) chyba(['zakl.tl', 'sroub.hlava'], `Deska ${fmt(o.tb, 1)} mm je na zápustnou hlavu vrutu ${fmt(v.d)} tenká (kužel ${fmt(s.hz, 1)} mm + 1 mm pod ním).`, opr({ 'zakl.tl': Math.ceil((s.hz + 1.2) * 2) / 2 }));
       info(['sroub.vrut'], `Vrut ${fmt(v.d)} mm → hmoždinka Ø ${fmt(v.hmozdinka)} mm (díra v plastu Ø ${fmt(v.otvor, 1)}, hlava Ø ${fmt(v.hlava)}).`);
     }
-    if (s && o.b < s.ro * (1 + Math.SQRT2) + 2.4 && p.druh !== 'objimka' && p.druh !== 'hadice') chyba(['trubka.sirka'], `Díra pro šroub (kapka ${fmt(s.ro * (1 + Math.SQRT2), 1)} mm) by příchytku širokou ${fmt(o.b)} mm přeřízla.`, opr({ 'trubka.sirka': Math.ceil(2 * s.rh + 3) }));
+    const vyskaDiry = s ? (p.diry === 'kruh' ? 2 * s.ro : s.ro * (1 + Math.SQRT2)) : 0;
+    if (s && o.b < vyskaDiry + 2.4 && p.druh !== 'objimka' && p.druh !== 'hadice') chyba(['trubka.sirka'], p.diry === 'kruh' ? `Díra pro šroub (kruh Ø ${fmt(vyskaDiry, 1)} mm) by příchytku širokou ${fmt(o.b)} mm přeřízla.` : `Díra pro šroub (kapka ${fmt(vyskaDiry, 1)} mm) by příchytku širokou ${fmt(o.b)} mm přeřízla.`, opr({ 'trubka.sirka': Math.ceil(2 * s.rh + 3) }));
     else if (s && o.b < 2 * s.rh + 2 && p.druh !== 'objimka' && p.druh !== 'hadice') var_(['trubka.sirka'], `Šířka příchytky ${fmt(o.b)} mm je menší než hlava šroubu (Ø ${fmt(2 * s.rh, 1)}) – hlava přečnívá.`, opr({ 'trubka.sirka': Math.ceil(2 * s.rh + 3) }));
     if (s && o.tb < 2) var_(['zakl.tl'], 'Základna pod šroubem je tenká – hlava ji protrhne.', opr({ 'zakl.tl': 3 }));
     if (u === 'drazka') {
@@ -583,7 +588,8 @@
     if (h.lem < p.trubka.D * 0.4) var_(['hadice.lem'], `Lem ${fmt(h.lem)} mm je na hadici Ø ${fmt(p.trubka.D)} nízký – hadice z držáku spadne.`, opr({ 'hadice.lem': Math.ceil(p.trubka.D * 0.5) }));
     kontrolyUchyceni(p, o, H, chyba, var_, info, opr, mat);
     if (p.zakl.uchyceni === 'drazka' && p.drazka.zpusob === 'zaklapnuti') chyba(['drazka.zpusob'], 'Držák hadice je na zaklapnutí moc těžký – použijte T-matice.', opr({ 'drazka.zpusob': 'tmatice' }));
-    info(null, 'Tisková poloha: nastojato, spodek sedla a desky na podložce. Sedlo nese hadici jako konzola od zdi – ohyb tak leží ve vrstvách. Dutina uvnitř sedla má střechu 45° a tiskne se bez podpor; díry pro vruty jsou kapkovité.');
+    info(null, p.diry === 'kruh' ? 'Tisková poloha: nastojato, spodek sedla a desky na podložce. Sedlo nese hadici jako konzola od zdi – ohyb tak leží ve vrstvách. Dutina uvnitř sedla má střechu 45° a tiskne se bez podpor; díry pro vruty jsou kruhové.' : 'Tisková poloha: nastojato, spodek sedla a desky na podložce. Sedlo nese hadici jako konzola od zdi – ohyb tak leží ve vrstvách. Dutina uvnitř sedla má střechu 45° a tiskne se bez podpor; díry pro vruty jsou kapkovité.');
+    if (p.diry === 'kruh' && o.diry.length) info(['diry'], 'Kruhové vodorovné díry mají převislý strop – tiskněte s podporami nebo zvolte kapku.');
   }
   const POPISKY = {
     'zakl.uchyceni': h => `uchycení: ${NAZVY.uchyceni[h]}`, 'klip.obepnuti': h => `obepnutí ${fmt(h, 0)}°`, 'klip.patky': () => 'díry na patkách',
@@ -614,16 +620,17 @@
   }
 
   /* ---------------- stavba těles ---------------- */
-  /** Kapka (díra s 45° špičkou ve směru +b): body (a, b) kolem počátku. */
-  function kapka(r, n = 24) {
+  /** Kapka (díra s 45° špičkou ve směru +b): body (a, b) kolem počátku; kruh = kruhová díra (p.diry === 'kruh'). */
+  function kapka(r, n = 24, kruh = false) {
+    if (kruh) return G.obrysDiry(r, 32, false);
     // oblouk 270° od 45° (vpravo nahoře) přes spodek ke 135°, špička nahoře v (0, r√2)
     const b = [];
     for (let i = 0; i <= n; i++) { const a = rad(45) - rad(270) * i / n; b.push([r * Math.cos(a), r * Math.sin(a)]); }
     b.push([0, r * Math.SQRT2]);
     return b;
   }
-  /** Šestihran matice s vodorovnou osou (v tisku): plochou nahoru a nad ní střecha 45° (+b) – bez převisu. */
-  const sestiuhelnik = (s, v) => { const R = s / Math.sqrt(3) + v, b = []; for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; b.push([R * Math.cos(a), R * Math.sin(a)]); } b.push([0, R * Math.sqrt(3) / 2 + R / 2]); return b; };
+  /** Šestihran matice s vodorovnou osou (v tisku): plochou nahoru a nad ní střecha 45° (+b) – bez převisu (strecha = false: plochý strop). */
+  const sestiuhelnik = (s, v, strecha = true) => { const R = s / Math.sqrt(3) + v, b = []; for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; b.push([R * Math.cos(a), R * Math.sin(a)]); } if (strecha) b.push([0, R * Math.sqrt(3) / 2 + R / 2]); return b; };
 
   function postav(w, p, volby = {}) {
     const t0 = Date.now(), o = odvozene(p);
@@ -663,6 +670,7 @@
 
   /** Klip, omega, objímka, řada: průřez (u, v) vytažený o b ve směru w (= tisková poloha). */
   function postavProfil(M, CS, k, poly, kruh, obd, sjednot, hranol, seg, o, p) {
+    const kruhD = p.diry === 'kruh', dira = r => kapka(r, 24, kruhD);   // vodorovné díry: kapka / kruh
     const b = o.b, t = o.t, vz0 = o.vz0, Z = o.zakladna;
     const uzavri = (cs, f) => k(k(cs.offset(f, 'Round', 2, 24)).offset(-f, 'Round', 2, 24));
     const dily = [];
@@ -729,11 +737,11 @@
     /* ---- vytažení a 3D úpravy (rám: x = u, y = v, z = w) ---- */
     const f3 = (uu, ww) => (a, c, s) => [uu + a, s, ww + c];   // průřez díry (a napříč, c = nahoru v tisku), s = v
     const diraM = d => {
-      const kp = kapka(d.ro), l = [hranol([[kp, d.vBot], [kp, d.vTop + (d.hz > 0 ? 0 : 0.01)]], f3(d.u, d.w))];
+      const kp = dira(d.ro), l = [hranol([[kp, d.vBot], [kp, d.vTop + (d.hz > 0 ? 0 : 0.01)]], f3(d.u, d.w))];
       if (d.hz > 0) {
-        const kh = kapka(d.rh), kk = kapka(d.ro);
-        l.push(hranol([[kk, d.vTop - (d.rh - d.ro)], [kh, d.vTop], [kapka(d.rh), d.vTop + 3]], f3(d.u, d.w)));
-      } else l.push(hranol([[kapka(d.rh), d.vTop], [kapka(d.rh), d.vTop + 30]], f3(d.u, d.w)));
+        const kh = dira(d.rh), kk = dira(d.ro);
+        l.push(hranol([[kk, d.vTop - (d.rh - d.ro)], [kh, d.vTop], [dira(d.rh), d.vTop + 3]], f3(d.u, d.w)));
+      } else l.push(hranol([[dira(d.rh), d.vTop], [dira(d.rh), d.vTop + 30]], f3(d.u, d.w)));
       return l;
     };
     let telo = k(hlavni.extrude(b));
@@ -769,8 +777,8 @@
     // objímka na tyč: díra pro tyč + kapsa matice ze spodku sloupku
     if (o.tyc) {
       const r = o.kruhy[0], ty = o.tyc;
-      minus.push(hranol([[kapka(ty.d / 2 + 0.25), -1], [kapka(ty.d / 2 + 0.25), r.vc - r.R - 1.5]], f3(0, b / 2)));
-      minus.push(hranol([[sestiuhelnik(ty.s, 0.2), -1], [sestiuhelnik(ty.s, 0.2), ty.m + 0.4]], f3(0, b / 2)));
+      minus.push(hranol([[dira(ty.d / 2 + 0.25), -1], [dira(ty.d / 2 + 0.25), r.vc - r.R - 1.5]], f3(0, b / 2)));
+      minus.push(hranol([[sestiuhelnik(ty.s, 0.2, !kruhD), -1], [sestiuhelnik(ty.s, 0.2, !kruhD), ty.m + 0.4]], f3(0, b / 2)));
       if (b < ty.s * 1.155 + 3) o.uzkaTyc = true;
     }
     for (const d of o.diry) minus.push(...diraM(d));
@@ -784,16 +792,16 @@
       const r = o.kruhy[0], uc = o.ucho, g2 = p.objimka.mezera / 2;
       const odeb = [];
       for (const sg of [1, -1]) {
-        odeb.push(hranol([[kapka(uc.ro), r.vc - 1], [kapka(uc.ro), r.vc + g2 + uc.heH + 1]], f3(sg * uc.uS, b / 2)));
-        odeb.push(hranol([[kapka(uc.rh), r.vc + g2 + uc.heH], [kapka(uc.rh), r.vc + g2 + uc.heH + 30]], f3(sg * uc.uS, b / 2)));
+        odeb.push(hranol([[dira(uc.ro), r.vc - 1], [dira(uc.ro), r.vc + g2 + uc.heH + 1]], f3(sg * uc.uS, b / 2)));
+        odeb.push(hranol([[dira(uc.rh), r.vc + g2 + uc.heH], [dira(uc.rh), r.vc + g2 + uc.heH + 30]], f3(sg * uc.uS, b / 2)));
       }
       hm = k(M.difference([hm, ...odeb]));
       dily.push({ m: hm, jmeno: 'horni', nazev: 'Objímka – horní díl', barva: '#E88A2E', prevod: prevodProfil(b), prurez: polygony(druhy) });
       // díry v uchu spodního dílu + kapsy matic zespodu ucha
       const odeb2 = [];
       for (const sg of [1, -1]) {
-        odeb2.push(hranol([[kapka(uc.ro), r.vc - g2 - uc.he - 1], [kapka(uc.ro), r.vc + 1]], f3(sg * uc.uS, b / 2)));
-        odeb2.push(hranol([[sestiuhelnik(uc.s, 0.2), r.vc - g2 - uc.he - 1], [sestiuhelnik(uc.s, 0.2), r.vc - g2 - uc.he + uc.m + 0.4]], f3(sg * uc.uS, b / 2)));
+        odeb2.push(hranol([[dira(uc.ro), r.vc - g2 - uc.he - 1], [dira(uc.ro), r.vc + 1]], f3(sg * uc.uS, b / 2)));
+        odeb2.push(hranol([[sestiuhelnik(uc.s, 0.2, !kruhD), r.vc - g2 - uc.he - 1], [sestiuhelnik(uc.s, 0.2, !kruhD), r.vc - g2 - uc.he + uc.m + 0.4]], f3(sg * uc.uS, b / 2)));
       }
       dily[0].m = k(M.difference([dily[0].m, ...odeb2]));
     }
@@ -836,6 +844,7 @@
 
   /** Držák hadice v montážní poloze: X podél zdi, Y nahoru (sedlo od y = 0), Z od zdi. */
   function postavHadici(M, CS, k, poly, kruh, obd, hranol, o, p) {
+    const dira = r => kapka(r, 24, p.diry === 'kruh');
     const r = o.hadice, h = p.hadice, z0 = r.zDesky[0], z1 = r.zDesky[1], zS = r.zSedla[1];
     const usec = R => k(kruh(R, 0, r.yc).intersect(obd(-R - 1, R + 1, 0, R + r.yc + 1)));
     const deska = k(k(M.cube([r.sirkaDesky, r.vyskaDesky, z1 - z0])).translate([-r.sirkaDesky / 2, 0, z0]));
@@ -860,9 +869,9 @@
     for (const d of o.diry) {
       // díra podél Z, špička kapky nahoru (+Y) – v tisku je nahoru
       const f = (a, c, z) => [d.x + a, d.y + c, z];
-      minus.push(hranol([[kapka(d.ro), zDira0], [kapka(d.ro), z1 + 0.01]], f));
-      if (d.hz > 0) minus.push(hranol([[kapka(d.ro), z1 - (d.rh - d.ro)], [kapka(d.rh), z1], [kapka(d.rh), z1 + 3]], f));
-      else minus.push(hranol([[kapka(d.rh), z1], [kapka(d.rh), z1 + 40]], f));
+      minus.push(hranol([[dira(d.ro), zDira0], [dira(d.ro), z1 + 0.01]], f));
+      if (d.hz > 0) minus.push(hranol([[dira(d.ro), z1 - (d.rh - d.ro)], [dira(d.rh), z1], [dira(d.rh), z1 + 3]], f));
+      else minus.push(hranol([[dira(d.rh), z1], [dira(d.rh), z1 + 40]], f));
     }
     if (minus.length) telo = k(M.difference([telo, ...minus]));
     const dily = [{ m: telo, jmeno: 'hlavni', nazev: 'Držák hadice', barva: '#2F5FA8', prevod: { tisk: (x, y, z) => [x, -z, y], sestava: (x, y, z) => [z, x, y] } }];

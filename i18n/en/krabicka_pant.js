@@ -484,4 +484,5 @@ I18N.pridej('en', {
   '{n} chyby': '{n} errors',
   '{n} chyb': '{n} errors',
   '{n} varování': '{n} warnings',
+  'Kruhové vodorovné díry pro čep mají převislý strop – tiskněte s podporami nebo zvolte kapku (👁 Zobrazení → 💧 Díry jako kapka).': 'Round horizontal pin holes have an overhanging ceiling – print with supports or choose teardrop (👁 View → 💧 Teardrop holes).',
 });
