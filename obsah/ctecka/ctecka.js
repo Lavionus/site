@@ -47,13 +47,18 @@
       }
     }
   }
+  // Po studeném startu prohlížeče (obnovená karta, síť ještě nenaběhla) fetch umí viset donekonečna –
+  // bez chyby by se neukázala ani hláška „Zkusit znovu“ a kapitola zůstala prázdná. Proto limit na pokus.
   const stahniText = url => sOpakovanim(async () => {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const t = await r.text();
-    if (!t.trim()) throw new Error('prázdná odpověď');
-    return t;
-  });
+    const ac = new AbortController(), t0 = setTimeout(() => ac.abort(), 8000);
+    try {
+      const r = await fetch(url, { signal: ac.signal });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const t = await r.text();
+      if (!t.trim()) throw new Error('prázdná odpověď');
+      return t;
+    } finally { clearTimeout(t0); }
+  }, 3);
   // až bude zase síť (událost online) nebo se tablet probudí (návrat do karty), zkusit to samo znovu
   function znovuAz(fn) {
     const zkus = () => {

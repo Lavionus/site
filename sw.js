@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v840';
+const CACHE = PREFIX + 'v851';
 const JADRO = [
   './',
   './index.html',
@@ -453,7 +453,9 @@ self.addEventListener('fetch', e => {
       const zCache = () => cache.match(klicK, { ignoreSearch: true });
       // pomalá síť: po 5 s raději uložená verze (pokud je), síť ji mezitím obnoví
       const limit = new Promise(ok => setTimeout(ok, 5000)).then(zCache);
-      return Promise.race([zeSite.catch(zCache), limit.then(c => c || zeSite)])
+      // ani bez cache nečekat na visící síť donekonečna (studený start prohlížeče) – čtečka to zkusí znovu
+      const konec = new Promise(ok => setTimeout(ok, 15000)).then(() => new Response('', { status: 504 }));
+      return Promise.race([zeSite.catch(zCache), limit.then(c => c || Promise.race([zeSite, konec]))])
         .then(r => r || zeSite)
         .catch(() => new Response('', { status: 503 }));
     }));

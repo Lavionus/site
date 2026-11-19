@@ -5,8 +5,9 @@
    (rozehraná hra, rozdělaný výkres, hrající hudba). Aby paměť
    nerostla, drží se naživu jen pár naposledy použitých záložek;
    starší se „uspí“ (kolik a kdy, nastaví ⚙️ Nastavení) (iframe se zahodí, po kliknutí se stránka
-   načte znovu – jako šetřič paměti v Chrome). Připnutá záložka
-   a záložka, ve které hraje zvuk, se neuspí nikdy. Stránka, která
+   načte znovu – jako šetřič paměti v Chrome). Otevřené zůstávají jen
+   připnuté záložky – nepřipnutá se při přechodu jinam zavře (kromě
+   hrající a neuložené). Záložka, ve které hraje zvuk, se neuspí nikdy. Stránka, která
    hlásí neuložené změny (beforeunload), se neuspí a před zavřením
    se rozcestník zeptá.
 
@@ -33,7 +34,7 @@ const Zalozky = (function () {
 
   const KLIC = 'webapp_zalozky';
   /* Uspávání se nastavuje v ⚙️ Nastavení (obsah/nastaveni.html, stejné výchozí hodnoty):
-     zivych = nepřipnuté stránky v paměti včetně aktivní, poMin = po kolika minutách
+     zivych = stránky v paměti včetně aktivní, poMin = po kolika minutách
      skrytí se záložka uspí (0 = nikdy). Výchozí je úsporné: aktivní + jedna předchozí. */
   const KLIC_USPAVANI = 'webapp_zalozky_uspavani';
   const USPAVANI_VYCHOZI = { zivych: 2, poMin: 5 };
@@ -73,12 +74,13 @@ const Zalozky = (function () {
   }
   function uloz() {
     const data = {
-      karty: karty.filter(k => !k.domu).map(k => {
+      // pamatují se jen připnuté (nepřipnuté se zavírají)
+      karty: karty.filter(k => k.pin && !k.domu).map(k => {
         // sdílený odkaz s celým stavem v adrese by mohl být obří – stačí stránka
         const page = k.page.length > 1500 ? zaklad(k.page) : k.page;
-        return k.pin ? { page, pin: true } : { page };
+        return { page, pin: true };
       }),
-      aktivni: aktivni && !aktivni.domu ? zaklad(aktivni.page) : null,
+      aktivni: aktivni && aktivni.pin && !aktivni.domu ? zaklad(aktivni.page) : null,
     };
     try { localStorage.setItem(KLIC, JSON.stringify(data)); } catch { /* bez úložiště */ }
   }
@@ -94,7 +96,7 @@ const Zalozky = (function () {
 
   function titulekKarty(k) {
     const casti = [t(popis(k).nazev)];
-    if (k.pin && !k.domu) casti.push(t('📌 připnutá – neuspí se'));
+    if (k.pin && !k.domu) casti.push(t('📌 připnutá – zůstane otevřená'));
     if (!k.iframe && !k.domu) casti.push(t('💤 uspaná – po kliknutí se znovu načte'));
     if (k.zvuk) casti.push(t('🔊 hraje zvuk'));
     return casti.join('\n');
@@ -225,7 +227,8 @@ const Zalozky = (function () {
     const f = document.createElement('iframe');
     f.title = t('Aktivní aplikace');
     f.setAttribute('allow', POVOLENI);
-    f.addEventListener('load', () => napoj(k, f));
+    f.classList.add('nacita');
+    f.addEventListener('load', () => { f.classList.remove('nacita'); napoj(k, f); });
     f.src = page;
     k.iframe = f;
     k.nacita = true;
@@ -355,12 +358,17 @@ const Zalozky = (function () {
     if (k !== aktivni) {
       const stara = aktivni;
       aktivni = k;
-      if (stara && karty.includes(stara)) skryj(stara);
+      // otevřené zůstávají jen připnuté – nepřipnutá se odchodem zavře (vrátí ji „Nedávno zavřené“ / Alt+Shift+T);
+      // hrající nebo s neuloženými změnami zůstane, ať nic nezmizí
+      if (stara && karty.includes(stara)) {
+        if (!stara.pin && !stara.domu && !hrajeZvuk(stara) && !neulozeno(stara)) odeber(stara);
+        else skryj(stara);
+      }
     }
     k.posledni = Date.now();
     k.skrytoOd = 0;
     if (!k.iframe) vytvorRam(k, page);
-    else if (k.page !== page) { k.nacita = true; k.iframe.src = page; }
+    else if (k.page !== page) { k.nacita = true; k.iframe.classList.add('nacita'); k.iframe.src = page; }
     k.page = page;
     k.iframe.hidden = false;
     k.iframe.name = 'okno';
@@ -409,10 +417,10 @@ const Zalozky = (function () {
     return k;
   }
 
-  // drží v paměti jen uspavani.zivych naposledy použitých nepřipnutých stránek;
+  // drží v paměti jen uspavani.zivych naposledy použitých stránek (i připnutých);
   // ty, které uspat nejde (zvuk, neuložené změny), ubírají z limitu jako první
   function uspiPrebytecne() {
-    const zive = karty.filter(k => k.iframe && !k.pin && !k.domu && k !== aktivni)
+    const zive = karty.filter(k => k.iframe && !k.domu && k !== aktivni)
       .sort((a, b) => (b.posledni || 0) - (a.posledni || 0));
     const nejde = zive.filter(k => hrajeZvuk(k) || neulozeno(k));
     let volno = uspavani.zivych - 1 - nejde.length;
@@ -545,7 +553,7 @@ const Zalozky = (function () {
     const i = karty.indexOf(k);
     const polozky = [];
     const pridejPol = (text, akce, zkratka) => polozky.push({ text, akce, zkratka });
-    if (!k.domu) pridejPol(k.pin ? '📌 Odepnout' : '📌 Připnout (neuspí se)', () => pripni(k), 'Alt+Shift+P');
+    if (!k.domu) pridejPol(k.pin ? '📌 Odepnout' : '📌 Připnout (zůstane otevřená)', () => pripni(k), 'Alt+Shift+P');
     pridejPol('↻ Načíst znovu', () => nactiZnovu(k));
     if (k.iframe && k !== aktivni && !k.domu) pridejPol('💤 Uspat (uvolnit paměť)', () => {
       if (!uspi(k) && window.Dialog) Dialog.info(t('Stránku nejde uspat – hraje zvuk nebo má neuložené změny.'));
@@ -616,9 +624,9 @@ const Zalozky = (function () {
     const uspat = document.createElement('button');
     uspat.type = 'button';
     uspat.textContent = t('💤 Uspat ostatní');
-    uspat.title = t('Uvolnit paměť – skryté záložky se po kliknutí znovu načtou (kromě připnutých a hrajících)');
+    uspat.title = t('Uvolnit paměť – skryté záložky se po kliknutí znovu načtou (kromě hrajících)');
     uspat.addEventListener('click', () => {
-      const n = karty.filter(k => k !== aktivni && !k.pin && uspi(k)).length;
+      const n = karty.filter(k => k !== aktivni && uspi(k)).length;
       if (window.Dialog) Dialog.info(t('Uspáno záložek: {počet}', { 'počet': n }));
       vykresliPrehled();
     });
@@ -690,7 +698,7 @@ const Zalozky = (function () {
           e.stopPropagation();
           await zavrit();
           vykresliPrehled();
-          prehledFiltr.focus();
+          zamerFiltr();
         });
         r.appendChild(x);
       }
@@ -752,6 +760,9 @@ const Zalozky = (function () {
     oznacVyber();
   }
 
+  // na dotykovém displeji by fokus vysunul klávesnici (a její resize přehled zase zavřel)
+  const zamerFiltr = () => { if (matchMedia('(hover: hover)').matches) prehledFiltr.focus(); };
+
   function otevriPrehled() {
     if (prehled && !prehled.hidden) { zavriVyskakovaci(); return; }
     zavriVyskakovaci();
@@ -760,7 +771,7 @@ const Zalozky = (function () {
     prehledFiltr.value = '';
     vyber = Math.max(0, karty.indexOf(aktivni));
     vykresliPrehled();
-    prehledFiltr.focus();
+    zamerFiltr();
   }
 
   function zavriVyskakovaci() {
@@ -837,7 +848,11 @@ const Zalozky = (function () {
       if (prehled && !prehled.hidden && !prehled.contains(e.target) && !prehledBtn.contains(e.target)) zavriVyskakovaci();
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && (nabidka || !prehled.hidden)) zavriVyskakovaci(); });
-    window.addEventListener('resize', () => { zavriVyskakovaci(); ukazAktivni(); });
+    window.addEventListener('resize', () => {
+      // vysunutá klávesnice při psaní do filtru mění výšku okna – přehled nechat otevřený
+      if (document.activeElement !== prehledFiltr) zavriVyskakovaci();
+      ukazAktivni();
+    });
     // změna v ⚙️ Nastavení (jiný dokument → událost storage) platí hned
     window.addEventListener('storage', e => {
       if (e.key !== KLIC_USPAVANI) return;
@@ -851,7 +866,7 @@ const Zalozky = (function () {
       karty.forEach(k => {
         const z = hrajeZvuk(k);
         if (z !== !!k.zvuk) { k.zvuk = z; obnovKartu(k); }
-        if (k.iframe && k !== aktivni && !k.pin && !k.domu && !z && k.skrytoOd && uspavani.poMin > 0
+        if (k.iframe && k !== aktivni && !k.domu && !z && k.skrytoOd && uspavani.poMin > 0
           && ted - k.skrytoOd > uspavani.poMin * 60e3) uspi(k);
       });
     }, 3000);

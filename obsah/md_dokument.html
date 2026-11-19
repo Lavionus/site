@@ -207,6 +207,14 @@ h1{font-size:1rem;font-weight:600;white-space:nowrap}
 .hledani{display:flex;align-items:center;gap:4px}
 .hledani input{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:.8rem;width:170px}
 .hledani .pocet{font-size:.74rem;color:var(--text-faint);min-width:42px;text-align:center}
+.hledani{position:relative}
+.vsude{position:absolute;top:calc(100% + 4px);right:0;z-index:60;min-width:240px;max-width:min(360px,calc(100vw - 32px));max-height:50vh;overflow:auto;
+  background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:8px;box-shadow:var(--shadow);padding:4px}
+.vsude button{display:flex;gap:8px;width:100%;text-align:left;background:none;border:0;color:var(--text);padding:6px 8px;border-radius:5px;cursor:pointer;font-size:.8rem}
+.vsude button:hover{background:var(--bg-hover)}
+.vsude .jm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vsude .n{color:var(--text-faint)}
+.vsude .tip{padding:6px 8px;font-size:.76rem;color:var(--text-faint)}
 
 /* panel vzhledu */
 .vzhled{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
@@ -233,6 +241,9 @@ textarea:focus{outline:none}
 .osnova a{display:block;padding:3px 10px;font-size:.8rem;color:var(--text-muted);text-decoration:none;border-left:2px solid transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .osnova a:hover{background:var(--bg-hover);color:var(--text)}
 .osnova a.tady{color:var(--accent);border-left-color:var(--accent);background:var(--accent-soft)}
+/* postup čtení: pruh pod aktivní kapitolou + kolik zbývá */
+.osnova a.tady{background-image:linear-gradient(var(--accent),var(--accent));background-size:var(--p,0%) 2px;background-repeat:no-repeat;background-position:left bottom}
+.osnova-zbyva{flex:none;padding:4px 10px;font-size:.72rem;color:var(--text-faint);border-bottom:1px solid var(--border)}
 .osnova a[data-uroven="2"]{padding-left:22px}
 .osnova a[data-uroven="3"]{padding-left:34px}
 .osnova a[data-uroven="4"]{padding-left:46px}
@@ -486,6 +497,25 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   .tisk-priloha li{margin:.4em 0}
   .tisk-kotva{font-style:italic;color:#555}
 }
+/* velký dokument: hlava editoru s tlačítkem „Uložit a překreslit“ */
+.panel > h2.hlava-editoru{display:flex;align-items:center;gap:8px}
+.hlava-editoru span{flex:1}
+.prekreslit{text-transform:none;letter-spacing:0;font-size:.74rem;margin:-4px 0;padding:2px 9px;border-radius:5px;border:1px solid var(--accent);
+  background:var(--accent);color:var(--on-accent,#fff);cursor:pointer;font-weight:600}
+.prekreslit:hover{background:var(--accent-hover)}
+/* načítání velkého dokumentu: pruh běží na kompozitoru (transform),
+   takže se hýbe, i když hlavní vlákno zrovna převádí a rozvrhuje text */
+.nacitani{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.28);cursor:progress}
+.nacitani .okno{background:var(--bg-panel);color:var(--text);border:1px solid var(--border-strong);
+  border-radius:10px;box-shadow:var(--shadow);padding:16px 20px;width:min(380px,calc(100vw - 32px))}
+.nacitani .co{font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nacitani .faze{color:var(--text-muted);font-size:13px;margin-bottom:10px}
+.nacitani .draha{height:6px;border-radius:3px;background:var(--bg-control);overflow:hidden}
+.nacitani .bezec{height:100%;width:40%;border-radius:3px;background:var(--accent);
+  animation:nacitaniBeh 1.1s ease-in-out infinite;will-change:transform}
+@keyframes nacitaniBeh{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@media (prefers-reduced-motion:reduce){.nacitani .bezec{animation-duration:2.5s}}
 </style>
 </head>
 <body>
@@ -564,7 +594,9 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
         <span class="pocet" id="pocetNalezu">0/0</span>
         <button class="ikona" id="predchoziBtn" title="Předchozí nález (Shift+Enter)">▲</button>
         <button class="ikona" id="dalsiBtn" title="Další nález (Enter)">▼</button>
+        <button class="ikona" id="vsudeBtn" aria-pressed="false" title="Hledat i v ostatních otevřených záložkách">⧉</button>
         <button class="ikona" id="zavriHledaniBtn" title="Zavřít hledání (Esc)">✕</button>
+        <div class="vsude" id="vsude" hidden></div>
       </div>
     </div>
     <span class="statistika" id="statistika"></span>
@@ -664,15 +696,19 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   </div>
 </header>
 
+<div class="nacitani" id="nacitani" hidden role="status" aria-live="polite"><div class="okno">
+  <div class="co" id="nacitaniCo"></div><div class="faze" id="nacitaniFaze">Načítám…</div>
+  <div class="draha"><div class="bezec"></div></div></div></div>
 <div class="stav"><span id="stav">Soubor .md můžeš přetáhnout kamkoli na stránku.</span><span class="stari" id="stari"></span></div>
 
 <main class="plocha">
   <aside class="osnova" id="osnovaPanel" hidden>
     <div class="osnova-hlava"><span>Obsah</span><input type="search" id="osnovaFiltr" placeholder="filtr…" autocomplete="off"><button class="ikona mala" id="osnovaZamek" aria-pressed="true" title="Obsah se posouvá s místem v textu – klik uvolní">🔒</button></div>
+    <div class="osnova-zbyva" id="zbyva" hidden></div>
     <nav id="osnova"></nav>
   </aside>
   <section class="panel panel-editor">
-    <h2>Markdown vstup</h2>
+    <h2 class="hlava-editoru"><span>Markdown vstup</span><button type="button" class="prekreslit" id="prekreslitBtn" hidden title="Velký dokument se při psaní nepřekresluje – tímhle se text uloží a náhled překreslí (Ctrl+Enter)">💾 Uložit a překreslit</button></h2>
     <textarea id="vstup" placeholder="# Nadpis&#10;&#10;Napiš **markdown**…" spellcheck="false"></textarea>
   </section>
   <div class="delic" id="delic1" role="separator" aria-orientation="vertical" tabindex="0" title="Táhni pro změnu šířky panelů (dvojklik = půl na půl)"></div>
@@ -1225,11 +1261,62 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     '---\n\nHotovo — stačí kliknout na tlačítko se stažením.\n';
 
   let html = '';
-  function prevod() {
-    html = marked.parse($('vstup').value || '');
+  /* MD_POSLEDNI = naposledy převedený text a jeho HTML (druhý náhled ho
+     nepřevádí znovu), MD_TOKENY = bloky od workeru (čtečka nemusí text
+     znovu rozebírat kvůli řádkům zdroje). */
+  function vykresli(text, h, tokeny) {
+    html = h;
+    window.MD_POSLEDNI = { text: text, html: h };
+    window.MD_TOKENY = tokeny ? { text: text, tokeny: tokeny } : null;
     $('nahled').innerHTML = html;
     document.dispatchEvent(new CustomEvent('md-vykresleno'));
   }
+  function prevod() {
+    const text = $('vstup').value || '';
+    vykresli(text, marked.parse(text));
+  }
+
+  /* Velký dokument (od PRAH_VELKY znaků): psaní náhled nepřekresluje
+     (každé překreslení trvá i vteřinu) – překreslí ho až tlačítko
+     „Uložit a překreslit“ ve čtečce níž (událost md-ceka). Převod jde
+     do workeru, aby stránka během něj nestála; bez workeru (samostatná
+     verze má marked vložený přímo ve stránce) se převádí jako dřív. */
+  const PRAH_VELKY = 150 * 1024;
+  window.MD_PRAH_VELKY = PRAH_VELKY;
+  let prevodnik = null, poradiPrevodu = 0;
+  function dejPrevodnik() {
+    if (prevodnik !== null) return prevodnik;
+    prevodnik = false;
+    const skript = document.querySelector('script[src$="marked.min.js"]');
+    if (!skript || typeof Worker !== 'function') return prevodnik;
+    const kod = 'importScripts(' + JSON.stringify(skript.src) + ');' +
+      'onmessage=e=>{try{const t=marked.lexer(e.data.text),b=t.map(k=>({type:k.type,raw:k.raw}));' +
+      'postMessage({id:e.data.id,html:marked.parser(t),tokeny:b})}catch(x){postMessage({id:e.data.id,chyba:String(x)})}}';
+    try {
+      prevodnik = new Worker(URL.createObjectURL(new Blob([kod], { type: 'text/javascript' })));
+      prevodnik.addEventListener('error', () => { prevodnik = false; });
+    } catch { prevodnik = false; }
+    return prevodnik;
+  }
+  window.MD_PREVED = function () {
+    const text = $('vstup').value || '';
+    const w = text.length >= PRAH_VELKY && dejPrevodnik();
+    if (!w) { prevod(); return Promise.resolve(); }
+    const id = ++poradiPrevodu;
+    return new Promise(hotovo => {
+      const konec = e => {
+        if (e.type === 'message' && e.data.id !== id) return;
+        w.removeEventListener('message', konec);
+        w.removeEventListener('error', konec);
+        if (e.type !== 'message' || e.data.chyba || $('vstup').value !== text) prevod();
+        else vykresli(text, e.data.html, e.data.tokeny);
+        hotovo();
+      };
+      w.addEventListener('message', konec);
+      w.addEventListener('error', konec);
+      w.postMessage({ id: id, text: text });
+    });
+  };
   function stav(t) { $('stav').textContent = t; }
   /* Typy souborů pro dialog „Uložit jako“. */
   const TYPY_SOUBORU = {
@@ -1291,7 +1378,10 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     }
   }
 
-  $('vstup').addEventListener('input', prevod);
+  $('vstup').addEventListener('input', e => {
+    if (e.isTrusted && $('vstup').value.length >= PRAH_VELKY) { document.dispatchEvent(new CustomEvent('md-ceka')); return; }
+    prevod();
+  });
   $('docxBtn').onclick = () => exportuj('docx');
   $('odtBtn').onclick = () => exportuj('odt');
   $('docBtn').onclick = () => exportuj('doc');
@@ -1349,6 +1439,24 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   /* Přes file:// nebo při zakázaném úložišti localStorage vyhodí výjimku. */
   function precti(klic) { try { return localStorage.getItem(klic); } catch { return null; } }
   function zapis(klic, hodnota) { try { localStorage.setItem(klic, hodnota); } catch { /* jen se nezapamatuje */ } }
+  /* Text dokumentu a zkontrolovaný text: velký jde do IndexedDB (localStorage
+     má 5 MB na celý web), v localStorage po něm zůstane jen značka. */
+  const ZNACKA_IDB = '\u0000idb', MEZ_LOCAL = 100000;
+  function zapisText(klic, hodnota) {
+    const bylVIdb = precti(klic) === ZNACKA_IDB;
+    if (hodnota.length <= MEZ_LOCAL) {
+      zapis(klic, hodnota);
+      if (bylVIdb) idb('readwrite', s => s.delete('ls:' + klic)).catch(() => {});
+      return Promise.resolve();
+    }
+    return idb('readwrite', s => s.put(hodnota, 'ls:' + klic)).then(() => zapis(klic, ZNACKA_IDB), () => {});
+  }
+  async function prectiText(klic) {
+    const v = precti(klic);
+    if (v !== ZNACKA_IDB) return v;
+    const t = await idb('readonly', s => s.get('ls:' + klic)).catch(() => null);
+    return typeof t === 'string' ? t : null;
+  }
 
   let nast = Object.assign({}, VYCHOZI);
   try {
@@ -1505,9 +1613,27 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       };
       nav.appendChild(a);
     });
+    spocitejSlova();
     filtrujOsnovu();
     posledniAktivni = -1;
     zvyrazniVOsnove();
+  }
+
+  /* Slova v každé kapitole (od nadpisu k dalšímu nadpisu) – pro „zbývá ~N min“. */
+  let slovaKapitol = [], slovaPred = 0;
+  function spocitejSlova() {
+    slovaKapitol = kotvy.map(() => 0);
+    slovaPred = 0;
+    const telo = nahled.querySelector('.telo');
+    if (!telo) return;
+    const poradi = new Map(kotvy.map((h, i) => [h, i]));
+    let i = -1;
+    for (const el of telo.children) {
+      if (el.classList.contains('jen-tisk')) continue;
+      if (poradi.has(el)) { i = poradi.get(el); continue; }
+      const n = (el.textContent.match(/\S+/g) || []).length;
+      if (i < 0) slovaPred += n; else slovaKapitol[i] += n;
+    }
   }
 
   function filtrujOsnovu() {
@@ -1527,6 +1653,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     const nav = $('osnova');
     const odkazy = nav.querySelectorAll('a');
     odkazy.forEach((a, i) => a.classList.toggle('tady', i === aktivni));
+    ukazPostup(aktivni, hranice, odkazy[aktivni]);
     // Zamčená osnova drží aktivní nadpis uprostřed. Posouvá se jen při změně
     // kapitoly, aby nebojovala s tím, kdo osnovou zrovna listuje ručně.
     if (aktivni === posledniAktivni) return;
@@ -1535,6 +1662,52 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     if (nast.osnovaSleduje !== false && a && !a.hidden && nav.offsetParent) {
       nav.scrollTop = a.offsetTop - nav.clientHeight / 2 + a.offsetHeight / 2;
     }
+  }
+
+  /* Kolik z aktivní kapitoly je přečteno (podle polohy mezi jejím a dalším
+     nadpisem) a kolik minut čtení zbývá do konce dokumentu (200 slov/min). */
+  function ukazPostup(aktivni, hranice, odkaz) {
+    const h = kotvy[aktivni];
+    if (!h || !h.offsetParent) { $('zbyva').hidden = true; return; }
+    const od = h.getBoundingClientRect().top;
+    let dalsi = kotvy.slice(aktivni + 1).find(k => k.offsetParent);
+    const po = dalsi ? dalsi.getBoundingClientRect().top
+      : nahled.getBoundingClientRect().top + nahled.scrollHeight - nahled.scrollTop;
+    const konec = nahled.scrollTop + nahled.clientHeight >= nahled.scrollHeight - 4;
+    const podil = konec ? 1 : Math.min(1, Math.max(0, (hranice - od) / Math.max(1, po - od)));
+    if (odkaz) odkaz.style.setProperty('--p', Math.round(podil * 100) + '%');
+    let zbyva = slovaKapitol[aktivni] * (1 - podil);
+    for (let i = aktivni + 1; i < slovaKapitol.length; i++) zbyva += slovaKapitol[i];
+    const min = Math.round(zbyva / 200);
+    $('zbyva').hidden = false;
+    const kapitola = 'Kapitola ' + Math.round(podil * 100) + ' %';
+    const zbytek = min < 1 ? 'do konce méně než minuta' : 'do konce ~' + min + ' min';
+    $('zbyva').textContent = kapitola + ' · ' + zbytek;
+  }
+
+  /* Místo čtení podle nadpisu (text + kolikátý se stejným textem + odstup):
+     přežije i změnu textu, kdy uložené pixely už neplatí. */
+  const textNadpisu = h => h.dataset.text || h.textContent;
+  function kotvaPozice() {
+    const nahore = nahled.getBoundingClientRect().top;
+    let h = null;
+    for (const k of kotvy) {
+      if (!k.offsetParent) continue;
+      if (k.getBoundingClientRect().top <= nahore + 4) h = k; else break;
+    }
+    if (!h) return { text: '', poradi: 0, posun: Math.round(nahled.scrollTop) };
+    const text = textNadpisu(h);
+    return { text: text, poradi: kotvy.filter(k => textNadpisu(k) === text).indexOf(h),
+             posun: Math.round(nahore - h.getBoundingClientRect().top) };
+  }
+  function obnovKotvu(k) {
+    if (!k) return false;
+    if (!k.text) { posunNa(nahled, k.posun); return true; }
+    const stejne = kotvy.filter(h => textNadpisu(h) === k.text);
+    const h = stejne[Math.min(k.poradi, stejne.length - 1)];
+    if (!h || !h.offsetParent) return false;
+    posunNa(nahled, nahled.scrollTop + h.getBoundingClientRect().top - nahled.getBoundingClientRect().top + k.posun);
+    return true;
   }
 
   /* ---------- sbalitelné oddíly ---------- */
@@ -1721,7 +1894,51 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     zrusZvyrazneni();
     nalezy = oznacNalezy(nahled, $('dotaz').value);
     if (nalezy.length) skoc(0); else $('pocetNalezu').textContent = '0/0';
+    naplanujVsude();
   }
+
+  /* Hledání v ostatních záložkách: jejich text je ve snímku v IndexedDB.
+     Počítá se ve zdrojovém Markdownu, takže počet může o pár nálezů
+     nesedět s náhledem (značky, adresy odkazů). Klik přepne na záložku. */
+  let hledatVsude = false, casovacVsude = 0, poradiVsude = 0;
+  function naplanujVsude() {
+    clearTimeout(casovacVsude);
+    if (!hledatVsude || $('hledani').hidden) { $('vsude').hidden = true; return; }
+    casovacVsude = setTimeout(hledejVsude, 250);
+  }
+  async function hledejVsude() {
+    const dotaz = $('dotaz').value, id = ++poradiVsude, box = $('vsude');
+    const jine = karty.seznam.filter(k => k.id !== karty.aktivni);
+    let radky;
+    if (dotaz.length < 2) radky = '<div class="tip">Napiš aspoň 2 znaky.</div>';
+    else if (!jine.length) radky = '<div class="tip">Jiné záložky nejsou otevřené.</div>';
+    else {
+      const jehla = dotaz.toLowerCase(), vysledky = [];
+      for (const k of jine) {
+        const sn = await idb('readonly', st => st.get('karta:' + k.id)).catch(() => null);
+        if (id !== poradiVsude) return;
+        const t = (sn && sn.text || '').toLowerCase();
+        let n = 0;
+        for (let i = t.indexOf(jehla); i >= 0; i = t.indexOf(jehla, i + jehla.length)) n++;
+        if (n) vysledky.push('<button type="button" data-karta="' + esc(k.id) + '"><span class="jm">' + esc(k.dokument) + '</span><span class="n">' + n + '×</span></button>');
+      }
+      radky = vysledky.length ? vysledky.join('') : '<div class="tip">V ostatních záložkách nic.</div>';
+    }
+    box.innerHTML = '<div class="tip">Tento dokument: ' + nalezy.length + '×</div>' + radky;
+    box.hidden = false;
+  }
+  $('vsudeBtn').onclick = () => {
+    hledatVsude = !hledatVsude;
+    $('vsudeBtn').setAttribute('aria-pressed', String(hledatVsude));
+    naplanujVsude();
+    $('dotaz').focus();
+  };
+  $('vsude').addEventListener('click', async e => {
+    const b = e.target.closest('[data-karta]');
+    if (!b) return;
+    const dotaz = $('dotaz').value;
+    if (await prepniNa(b.dataset.karta)) { $('dotaz').value = dotaz; hledej(); }
+  });
 
   /* Obalí výskyty dotazu v kontejneru do <mark class="nalez"> a vrátí je. */
   function oznacNalezy(kde, dotaz) {
@@ -1759,6 +1976,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
 
   function otevriHledani(otevrit) {
     $('hledani').hidden = !otevrit;
+    if (!otevrit) $('vsude').hidden = true;
     $('hledatBtn').setAttribute('aria-pressed', String(otevrit));
     if (otevrit) { $('dotaz').focus(); $('dotaz').select(); }
     else zrusZvyrazneni();
@@ -1791,26 +2009,35 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   let casovacUlozeni = 0;
   function ulozText() {
     clearTimeout(casovacUlozeni);
-    casovacUlozeni = setTimeout(() => zapis(KLIC_TEXT, $('vstup').value), 600);
+    casovacUlozeni = setTimeout(ulozTextHned, 600);
   }
+  // po načtení souboru a přepnutí záložky hned – rychlé obnovení stránky by jinak vrátilo starší text
+  function ulozTextHned() {
+    clearTimeout(casovacUlozeni);
+    casovacUlozeni = 0;
+    return zapisText(KLIC_TEXT, $('vstup').value);
+  }
+
+  // zavření stránky dřív, než uběhla prodleva → uložit hned
+  window.addEventListener('pagehide', () => {
+    if (casovacUlozeni && !cekaNaPrekresleni) ulozTextHned();
+  });
 
   let casovacPozice = 0;
   function ulozPozici() {
     clearTimeout(casovacPozice);
     casovacPozice = setTimeout(() => {
-      zapis(KLIC_POZICE, JSON.stringify({ otisk: otisk($('vstup').value), y: Math.round(nahled.scrollTop) }));
+      zapis(KLIC_POZICE, JSON.stringify({ otisk: otisk($('vstup').value), y: Math.round(nahled.scrollTop), kotva: kotvaPozice() }));
     }, 400);
   }
 
   function obnovPozici() {
     let ulozeno;
     try { ulozeno = JSON.parse(precti(KLIC_POZICE) || 'null'); } catch { return; }
-    if (!ulozeno || ulozeno.otisk !== otisk($('vstup').value) || !ulozeno.y) return;
-    // scroll-behavior:smooth by skok animoval přes celý dokument
-    const puvodni = nahled.style.scrollBehavior;
-    nahled.style.scrollBehavior = 'auto';
-    nahled.scrollTop = ulozeno.y;
-    nahled.style.scrollBehavior = puvodni;
+    if (!ulozeno || !ulozeno.y) return;
+    // týž text → přesně na pixel; změněný → k témuž nadpisu (posunNa vypne plynulý posun)
+    if (ulozeno.otisk === otisk($('vstup').value)) posunNa(nahled, ulozeno.y);
+    else if (!obnovKotvu(ulozeno.kotva)) return;
     $('stav').textContent = 'Pokračuješ tam, kde jsi minule skončil(a).';
   }
 
@@ -1830,7 +2057,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     const telo = nahled.querySelector('.telo');
     if (!telo) return;
     let tokeny;
-    try { tokeny = marked.lexer($('vstup').value); } catch { return; }
+    const text = $('vstup').value, hotove = window.MD_TOKENY;
+    try { tokeny = hotove && hotove.text === text ? hotove.tokeny : marked.lexer(text); } catch { return; }
     const deti = blokyV(nahled);
     let radek = 1, i = 0;
     tokeny.forEach(tok => {
@@ -2023,6 +2251,23 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     $('soubor').click();
   }
 
+  /* Velký dokument se převádí a vykresluje synchronně a stránka mezitím
+     nereaguje – proto předem okno s pruhem. Dva snímky počkají, než se
+     okno opravdu vykreslí; pak už pruh běží sám (animace transformu). */
+  const PRAH_NACITANI = window.MD_PRAH_VELKY;
+  const dvaSnimky = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const kB = n => n >= 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1024)) + ' kB';
+  async function sNacitanim(nazev, velikost, prace) {
+    if (velikost < PRAH_NACITANI || !$('nacitani').hidden) return prace(async () => {});
+    $('nacitaniCo').textContent = nazev + ' (' + kB(velikost) + ')';
+    $('nacitaniFaze').textContent = 'Načítám…';
+    $('nacitani').hidden = false;
+    await dvaSnimky();
+    try {
+      return await prace(async faze => { $('nacitaniFaze').textContent = faze; await dvaSnimky(); });
+    } finally { $('nacitani').hidden = true; }
+  }
+
   /* znovu = týž dokument: zkontrolovaný text i poznámky zůstanou, rozdíly
      proti souboru se ukážou jako změny. Jinak nový dokument. */
   async function nactiSoubor(f, h, znovu) {
@@ -2039,29 +2284,37 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       } else if (v.value.trim() || meta.dokument !== 'dokument.md') { if (!(await novaKarta(f.name))) return; }
     } else if (v.value !== p.md && meta.otisk && otisk(v.value) !== meta.otisk &&
         !(await Dialog.potvrd('Text tady má úpravy, které v souboru nejsou. Znovunačtení je přepíše. Pokračovat?', { ok: 'Přepsat' }))) return;
-    souborHandle = h;
-    ulozHandle(h);
-    if (!znovu) {
-      meta.dokument = f.name;
-      nastavZaklad(p.md);
-    }
-    meta.otisk = otisk(p.md);
-    meta.zmeneno = f.lastModified || 0;
-    ulozMeta();
-    $('nazevSouboru').value = f.name.replace(/\.[^.]*$/, '') || 'dokument';
-    if (p.balik) prevezmiBalik(p.balik);
-    cekajiciStare = p.stare.length ? p.stare : null;
-    v.value = p.md;
-    v.dispatchEvent(new Event('input'));
-    if (znovu) {
-      $('stav').textContent = 'Znovu načteno: ' + f.name + (meta.zmeneno ? ' (soubor z ' + casSouboru(meta.zmeneno) + ')' : '') + (useky.length
-        ? ' – ' + useky.length + ' změn proti zkontrolovanému textu (Δ Změny).' : ' – beze změn proti zkontrolovanému textu.');
-      if (useky.length) pouzijZmeny(true);
-    } else {
-      $('stav').textContent = 'Načteno: ' + f.name + (meta.zmeneno ? ' (soubor z ' + casSouboru(meta.zmeneno) + ')' : '');
-      pouzijRezim('cteni');
-      pouzijOsnovu(nast.osnova);
-    }
+    // místo čtení podle nadpisu: po načtení změněného souboru zůstaneš u téže kapitoly
+    const kotva = meta.dokument === f.name ? kotvaPozice() : null;
+    await sNacitanim(f.name, surovy.length, async faze => {
+      souborHandle = h;
+      ulozHandle(h);
+      if (!znovu) {
+        meta.dokument = f.name;
+        nastavZaklad(p.md);
+      }
+      meta.otisk = otisk(p.md);
+      meta.zmeneno = f.lastModified || 0;
+      ulozMeta();
+      $('nazevSouboru').value = f.name.replace(/\.[^.]*$/, '') || 'dokument';
+      if (p.balik) prevezmiBalik(p.balik);
+      cekajiciStare = p.stare.length ? p.stare : null;
+      await faze('Převádím a vykresluji dokument…');
+      v.value = p.md;
+      POLOHY.delete(v);
+      await window.MD_PREVED();
+      await ulozTextHned();
+      if (znovu) {
+        $('stav').textContent = 'Znovu načteno: ' + f.name + (meta.zmeneno ? ' (soubor z ' + casSouboru(meta.zmeneno) + ')' : '') + (useky.length
+          ? ' – ' + useky.length + ' změn proti zkontrolovanému textu (Δ Změny).' : ' – beze změn proti zkontrolovanému textu.');
+        if (useky.length) pouzijZmeny(true);
+      } else {
+        $('stav').textContent = 'Načteno: ' + f.name + (meta.zmeneno ? ' (soubor z ' + casSouboru(meta.zmeneno) + ')' : '');
+        pouzijRezim('cteni');
+        pouzijOsnovu(nast.osnova);
+      }
+      if (kotva) obnovKotvu(kotva);
+    });
   }
 
   /* ============================================================
@@ -2380,11 +2633,11 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
      přestane hlásit), ↶ vrátí v dokumentu text základu.
      ============================================================ */
   const KLIC_ZAKLAD = 'webapp_md_dokument_zaklad';
-  let zaklad = precti(KLIC_ZAKLAD);            // null = ještě nebyl – nastaví se při startu
+  let zaklad = precti(KLIC_ZAKLAD);            // null = ještě nebyl – nastaví se při startu (velký dočte start z IndexedDB)
   let useky = [];
   function nastavZaklad(t) {
     zaklad = t;
-    zapis(KLIC_ZAKLAD, t);
+    zapisText(KLIC_ZAKLAD, t);
   }
 
   function pouzijZmeny(zapnuto) {
@@ -2583,7 +2836,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
       posledni2 = md;
       const telo = document.createElement('div');
       telo.className = 'telo';
-      telo.innerHTML = marked.parse(md);
+      const posl = window.MD_POSLEDNI;
+      telo.innerHTML = posl && posl.text === md ? posl.html : marked.parse(md);
       nahled2.textContent = '';
       nahled2.appendChild(telo);
       srovnejMezery(nahled2);
@@ -2828,6 +3082,8 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   }
 
   document.addEventListener('md-vykresleno', () => {
+    cekaNaPrekresleni = false;
+    $('prekreslitBtn').hidden = true;
     zrusZvyrazneni();
     obalTelo();
     srovnejMezery(nahled);
@@ -2849,6 +3105,28 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     vykresliDruhy();
     if (nast.rezim === 'split') naplanujSync('nahled');
   });
+
+  /* ---------- velký dokument: ruční uložení a překreslení ---------- */
+  let cekaNaPrekresleni = false;
+  document.addEventListener('md-ceka', () => {
+    if (!cekaNaPrekresleni) $('stav').textContent = 'Velký dokument – náhled se při psaní nepřekresluje. Ulož úpravy tlačítkem 💾 Uložit a překreslit (Ctrl+Enter).';
+    cekaNaPrekresleni = true;
+    $('prekreslitBtn').hidden = false;
+  });
+  async function ulozAPrekresli() {
+    if (!cekaNaPrekresleni) return;
+    const y = nahled.scrollTop;
+    await sNacitanim(meta.dokument, $('vstup').value.length, () => window.MD_PREVED());
+    await ulozTextHned();
+    posunNa(nahled, y);
+    $('stav').textContent = 'Uloženo a překresleno.';
+  }
+  $('prekreslitBtn').onclick = ulozAPrekresli;
+  $('vstup').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && cekaNaPrekresleni) { e.preventDefault(); ulozAPrekresli(); }
+  });
+  // neuložené úpravy velkého dokumentu by zavřením stránky zmizely
+  window.addEventListener('beforeunload', e => { if (cekaNaPrekresleni) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- ovládání ---------- */
   document.querySelectorAll('.rezimy [data-rezim]').forEach(b =>
@@ -3105,8 +3383,12 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
     $('nazevSouboru').value = sn.nazev || meta.dokument.replace(/\.[^.]*$/, '') || 'dokument';
     cekajiciStare = null;
     kod2Spinavy = false;
-    $('vstup').value = sn.text;
-    $('vstup').dispatchEvent(new Event('input'));
+    await sNacitanim(k.dokument, (sn.text || '').length, async () => {
+      $('vstup').value = sn.text;
+      POLOHY.delete($('vstup'));
+      await window.MD_PREVED();
+      await ulozTextHned();
+    });
     posunNa(nahled, sn.y || 0);
     vykresliKarty();
   }
@@ -3340,32 +3622,37 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
   setInterval(ukazStari, 60000);
   vykresliKarty();
 
-  // Rozečtený text z minule (jinak ukázka, kterou vložil převodník výš).
-  // Poznámky starší verze stránky se z něj vyjmou; zkontrolovaný text
-  // se napoprvé rovná dokumentu – změny se počítají až od teď.
-  const ulozenyText = precti(KLIC_TEXT);
-  const bezOdkazu = t => t.replace(/\]\([^)\s]*\)/g, ']()');
-  const obnoveno = ulozenyText !== null && (kartyZMinula && karty.seznam.length > 1 || meta.dokument !== 'dokument.md' || !!ulozenyText.trim()) &&
-    bezOdkazu(ulozenyText) !== bezOdkazu($('vstup').value);
-  const start = pripravText(obnoveno ? ulozenyText : $('vstup').value);
-  if (start.balik) prevezmiBalik(start.balik);
-  if (start.stare.length) cekajiciStare = start.stare;
-  if (zaklad !== null && !obnoveno && bezOdkazu(zaklad) === bezOdkazu(start.md)) nastavZaklad(start.md);   // stará ukázka
-  if (zaklad === null) nastavZaklad(start.md);
-  else if (start.stare.length) nastavZaklad(pripravText(zaklad).md);
-  if (start.md !== $('vstup').value) {
-    $('vstup').value = start.md;
-    $('vstup').dispatchEvent(new Event('input'));
-  } else {
-    document.dispatchEvent(new CustomEvent('md-vykresleno'));
-  }
-  // žádný dokument (první spuštění, nebo zbyla jen prázdná nepojmenovaná záložka) → ukázka funkcí
-  if (karty.seznam.length === 1 && meta.dokument === 'dokument.md' && !useky.length && (!obnoveno || !$('vstup').value.trim())) {
-    naplnDemo();
-  } else if (obnoveno) {
-    if (!cekajiciStare) $('stav').textContent = 'Obnoven text z minula – další dokument otevřeš v nové záložce (📁 Soubor).';
-    obnovPozici();
-  }
+  // velký text a zkontrolovaný text se dočtou z IndexedDB – proto async
+  (async () => {
+    // Rozečtený text z minule (jinak ukázka, kterou vložil převodník výš).
+    // Poznámky starší verze stránky se z něj vyjmou; zkontrolovaný text
+    // se napoprvé rovná dokumentu – změny se počítají až od teď.
+    if (zaklad === ZNACKA_IDB) zaklad = await prectiText(KLIC_ZAKLAD);
+    const ulozenyText = await prectiText(KLIC_TEXT);
+    const bezOdkazu = t => t.replace(/\]\([^)\s]*\)/g, ']()');
+    const obnoveno = ulozenyText !== null && (kartyZMinula && karty.seznam.length > 1 || meta.dokument !== 'dokument.md' || !!ulozenyText.trim()) &&
+      bezOdkazu(ulozenyText) !== bezOdkazu($('vstup').value);
+    const start = pripravText(obnoveno ? ulozenyText : $('vstup').value);
+    if (start.balik) prevezmiBalik(start.balik);
+    if (start.stare.length) cekajiciStare = start.stare;
+    if (zaklad !== null && !obnoveno && bezOdkazu(zaklad) === bezOdkazu(start.md)) nastavZaklad(start.md);   // stará ukázka
+    if (zaklad === null) nastavZaklad(start.md);
+    else if (start.stare.length) nastavZaklad(pripravText(zaklad).md);
+    if (start.md !== $('vstup').value) {
+      $('vstup').value = start.md;
+      POLOHY.delete($('vstup'));
+      await sNacitanim(meta.dokument, start.md.length, () => window.MD_PREVED());
+    } else {
+      document.dispatchEvent(new CustomEvent('md-vykresleno'));
+    }
+    // žádný dokument (první spuštění, nebo zbyla jen prázdná nepojmenovaná záložka) → ukázka funkcí
+    if (karty.seznam.length === 1 && meta.dokument === 'dokument.md' && !useky.length && (!obnoveno || !$('vstup').value.trim())) {
+      naplnDemo();
+    } else if (obnoveno) {
+      if (!cekajiciStare) $('stav').textContent = 'Obnoven text z minula – další dokument otevřeš v nové záložce (📁 Soubor).';
+      obnovPozici();
+    }
+  })();
 })();
 </script>
 </body>

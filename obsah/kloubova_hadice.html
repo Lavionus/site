@@ -20,6 +20,8 @@
   <script src="krabicky/jadro.js"></script>
   <script src="ibc/geometrie.js"></script>
   <script src="kloubova_hadice/jadro.js"></script>
+  <script src="kloubova_hadice/mechanika.js"></script>
+  <script src="kloubova_hadice/vykres.js"></script>
   <script src="knofliky/nahled.js"></script>
   <script src="../tvary.js"></script>
   <style>
@@ -110,6 +112,27 @@
     .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
     .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     @media (max-width: 600px) { .karta3d { display: none; } }
+    .klouby { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 6px; }
+    .klouby th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-align: left; padding: 2px 4px; }
+    .klouby td { padding: 2px 4px; }
+    .klouby input { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; color: var(--text); padding: 3px 6px; font-size: 0.82rem; }
+    .klouby tr.pretizeny td:first-child { color: var(--danger); font-weight: 700; }
+    .klouby-box { max-height: 240px; overflow: auto; }
+    .graf { position: relative; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 9px; margin-top: 6px; }
+    .graf h3 { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin: 0 0 4px; }
+    .graf svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .graf .osa { stroke: var(--border); stroke-width: 1; }
+    .graf .popis-osy { fill: var(--text-faint); font-size: 10px; }
+    .graf .cara { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+    .graf .bod { fill: var(--accent); stroke: var(--bg-elevated); stroke-width: 2; }
+    .graf .mez { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+    .legenda-mom { position: absolute; right: 10px; bottom: 10px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+    .legenda-mom i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #D64541; vertical-align: -1px; margin-right: 4px; }
+    .vykres-dlg { max-width: min(1200px, 96vw); width: 96vw; }
+    .vykres-tl { display: flex; gap: 6px; }
+    .vykres-obsah { padding: 10px; overflow: auto; background: var(--bg-input); }
+    .vykres-obsah svg { display: block; width: 100%; height: auto; max-width: 1150px; margin: 0 auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
   </style>
 </head>
 <body>
@@ -136,6 +159,10 @@
             <button class="pol" data-export="clanek" role="menuitem">⬇ STL – jeden článek <span class="pozn">počet kusů nastavíte ve sliceru</span></button>
             <button class="pol" data-export="tryska" role="menuitem">⬇ STL – jen tryska</button>
             <button class="pol" data-export="kalibrace" role="menuitem">⬇ STL – kalibrační sada <span class="pozn">koule + 5 jamek s různou vůlí</span></button>
+            <button class="pol" id="btnZip" role="menuitem">⬇ ZIP – STL po podložkách <span class="pozn">jeden soubor na podložku tiskárny</span></button>
+            <button class="pol" data-export="sestava" role="menuitem">⬇ STL – sestava v tvaru <span class="pozn">jen pro vizualizaci a návrh stroje</span></button>
+            <hr>
+            <button class="pol" id="btnVykres" role="menuitem">📐 Výkres A4… <span class="pozn">řez článkem, sestava, tabulka · SVG / PDF</span></button>
             <hr>
             <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
             <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
@@ -218,10 +245,39 @@
               <div class="mrizka">
                 <div class="pole"><label for="f_pocet">Počet článků</label><input type="text" inputmode="numeric" class="mm" id="f_pocet" data-p="retez.pocet" title="Na jednu větev"><span class="jedn">ks</span></div>
                 <div class="pole"><label for="f_tvar">Tvar v náhledu</label>
-                  <select id="f_tvar" data-p="retez.tvar" data-typ="text"><option value="rovne">rovně</option><option value="oblouk">oblouk</option><option value="s">esíčko</option><option value="hak">hák</option></select></div>
-                <div class="pole" data-neretez="rovne"><label for="f_ohyb">Ohyb na kloub</label><input type="text" inputmode="text" class="mm" id="f_ohyb" data-p="retez.ohyb" title="Jen pro náhled; omezí ho mezní ohyb kloubu"><span class="jedn">°</span></div>
+                  <select id="f_tvar" data-p="retez.tvar" data-typ="text"><option value="rovne">rovně</option><option value="oblouk">oblouk</option><option value="s">esíčko</option><option value="hak">hák</option><option value="vlastni">vlastní (po kloubech)</option></select></div>
+                <div class="pole" data-neretez="rovne vlastni"><label for="f_ohyb">Ohyb na kloub</label><input type="text" inputmode="text" class="mm" id="f_ohyb" data-p="retez.ohyb" title="Jen pro náhled; omezí ho mezní ohyb kloubu"><span class="jedn">°</span></div>
               </div>
               <p class="napoveda" id="napRetez"></p>
+              <div class="klouby-box" data-retez="vlastni"><table class="klouby" id="tabKlouby"></table></div>
+              <div class="tlacitka"><button type="button" class="tl" id="btnNaVlastni" title="Úhly aktuálního tvaru se přepíšou do tabulky kloubů">✏️ Upravit po kloubech</button></div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="cil">
+            <summary><span class="oddil-nazev">🎯 Cíl trysky – návrh tvaru</span><span class="souhrn" id="sCil"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_cx">Vodorovně od osy</label><input type="text" inputmode="text" class="mm" id="f_cx" data-p="cil.x" title="Kam má mířit ústí trysky – vodorovná vzdálenost od osy patky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_cz">Výška nad patkou</label><input type="text" inputmode="text" class="mm" id="f_cz" data-p="cil.z" title="Výška ústí nad spodkem patky (záporná = pod patku)"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_csm">Směr trysky</label><input type="text" inputmode="decimal" class="mm" id="f_csm" data-p="cil.smer" title="Úhel od svislice nahoru: 90 = vodorovně od patky, 180 = svisle dolů, záporný = zpět k ose patky"><span class="jedn">°</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="f_chs" data-p="cil.hlidatSmer" data-typ="bool"> Hlídat i směr trysky</label>
+              <div class="tlacitka"><button type="button" class="tl" id="btnNavrh">🎯 Navrhnout tvar a počet článků</button></div>
+              <p class="napoveda" id="napCil">Najde nejmenší počet článků a úhly kloubů (v mezích kloubu, bez srážky článků), aby ústí trysky dosáhlo cíle. Výsledek se zapíše jako vlastní tvar.</p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="zmereny">
+            <summary><span class="oddil-nazev">📏 Kloub podle změřeného kusu</span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="m_koule">Koule Ø</label><input type="text" inputmode="decimal" class="mm" id="m_koule"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="m_hrdlo">Hrdlo jamky Ø</label><input type="text" inputmode="decimal" class="mm" id="m_hrdlo" title="Nejužší místo ústí jamky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="m_kanal">Kanál Ø</label><input type="text" inputmode="decimal" class="mm" id="m_kanal"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="m_roztec">Rozteč (složené)</label><input type="text" inputmode="decimal" class="mm" id="m_roztec" title="Délka N složených článků / N"><span class="jedn">mm</span></div>
+              </div>
+              <div class="tlacitka"><button type="button" class="tl" id="btnZmereny">Převzít rozměry</button></div>
+              <p class="napoveda">Pro díly, které mají pasovat ke kupované hadici: posuvkou změřte kouli, nejužší místo hrdla jamky, kanál a rozteč (délku několika složených článků vydělte jejich počtem).
+                Stěna a vůle zůstanou – vůli pak doladí kalibrační sada vytištěná proti kupovanému článku.</p>
             </div>
           </details>
         </div>
@@ -238,23 +294,50 @@
           <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
           <div class="karta3d" id="karta3d" aria-live="polite"></div>
           <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="legenda-mom" id="legMom" hidden><i></i>kloub neudrží tvar</div>
           <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
           <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
         </div>
         <div class="box box-obecne" aria-label="Výsledky, tisk a kontrola">
           <div class="zalozky" role="tablist">
             <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="proudeni" aria-selected="false">🌊 Proudění</button>
+            <button role="tab" data-zalozka="drzeni" aria-selected="false">⚖ Držení tvaru</button>
             <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk</button>
             <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
             <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje hadice</button>
           </div>
           <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vVysledky"></div><div id="kusovnik"></div></div>
+          <div class="zalozka-telo" data-telo="proudeni" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_med">Médium</label><select id="f_med" data-p="proud.medium" data-typ="text"><option value="emulze">emulze (chladicí kapalina)</option><option value="voda">voda</option><option value="olej">olej (VG 32)</option><option value="vzduch">vzduch</option></select></div>
+              <div class="pole"><label for="f_q">Průtok (celý přívod)</label><input type="text" inputmode="decimal" class="mm" id="f_q" data-p="proud.prutok"><span class="jedn" id="jPrutok">l/min</span></div>
+              <div class="pole"><label for="f_drs">Drsnost stěny</label><input type="text" inputmode="decimal" class="mm" id="f_drs" data-p="proud.drsnost" title="Tištěný kanál ≈ 0,05–0,1 mm"><span class="jedn">mm</span></div>
+            </div>
+            <div class="vysledky" id="vProud" style="margin-top:8px"></div>
+            <div class="graf" id="grafProud" hidden></div>
+            <p class="napoveda">Ztráta = tření po délce (Darcy–Weisbach, Swamee–Jain) + klouby (zúžení a rozšíření v jamce, víc při ohybu) + zúžení v patce + výtok z trysky.
+              Hrubý inženýrský odhad – skutečná hadice se liší podle drsnosti tisku a těsnosti kloubů. U odsávání sledujte dopravní rychlost 18–25 m/s, jinak třísky a prach zůstanou v hadici.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="drzeni" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_mk">Mezní moment kloubu</label><input type="text" inputmode="decimal" class="mm" id="f_mk" data-p="mech.moment" title="Z testu se závažím (viz níže); 0 = neměřeno"><span class="jedn">N·mm</span></div>
+            </div>
+            <label class="zaskrt"><input type="checkbox" id="f_napl" data-p="mech.naplnena" data-typ="bool"> Počítat s kapalinou v hadici</label>
+            <div class="vysledky" id="vDrzeni" style="margin-top:8px"></div>
+            <table class="tabulka" id="tabMomenty"></table>
+            <p class="napoveda"><b>Test kloubu se závažím:</b> zacvakněte zkušební kouli do jamky s vybranou vůlí, jamku upevněte tak, aby koule mířila vodorovně,
+              a na její držák zavěste závaží ve vzdálenosti <i>r</i> od středu koule. Zvyšujte závaží, dokud kloub neklesne. Mezní moment = hmotnost (kg) × 9,81 × <i>r</i> (mm).
+              Například 50 g na rameni 30 mm = 0,05 × 9,81 × 30 ≈ 15 N·mm. Momenty pro aktuální tvar se počítají z hmotností dílů a těžišť ze sítě.</p>
+          </div>
           <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
             <div class="mrizka">
               <div class="pole"><label for="f_material">Materiál</label><select id="f_material" data-p="tisk.material" data-typ="text"></select></div>
               <div class="pole"><label for="f_vrstva">Výška vrstvy</label><input type="text" inputmode="decimal" class="mm" id="f_vrstva" data-p="tisk.vrstva"><span class="jedn">mm</span></div>
               <div class="pole"><label for="f_uhel">Největší převis</label><input type="text" inputmode="decimal" class="mm" id="f_uhel" data-p="tisk.uhel" title="Úhel od svislice, který tiskárna zvládne bez podpor"><span class="jedn">°</span></div>
               <div class="pole"><label for="f_sad">Sad na podložku</label><input type="text" inputmode="numeric" class="mm" id="f_sad" data-p="tisk.sad"><span class="jedn">ks</span></div>
+              <div class="pole"><label for="f_podl">Podložka X</label><input type="text" inputmode="decimal" class="mm" id="f_podl" data-p="tisk.podlozka"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_podly">Podložka Y</label><input type="text" inputmode="decimal" class="mm" id="f_podly" data-p="tisk.podlozkaY"><span class="jedn">mm</span></div>
               <div class="pole"><label for="f_krok">Krok vůle v kalibraci</label><input type="text" inputmode="decimal" class="mm" id="f_krok" data-p="tisk.krokKalibrace" title="Jamky sady mají vůli nastavená −2, −1, 0, +1, +2 kroky"><span class="jedn">mm</span></div>
             </div>
             <label class="zaskrt"><input type="checkbox" id="f_kal" data-p="tisk.kalibrace" data-typ="bool"> Přidat kalibrační sadu k exportu všech dílů</label>
@@ -343,10 +426,22 @@
       <b>magnetická patka</b> bez průtoku pro držáky (magnet se zalepí zespodu).</p>
     <p><b>Trysky.</b> Plochá vějířová (štěrbina), kulatá (ústí může být i širší než kanál – sací hubička), sprcha s otvory, sací hubice s obdélníkovým ústím a zátka.
       Tryska se nesmí rozšiřovat pod větším úhlem než 45° – kontrola navrhne potřebnou délku.</p>
+    <p><b>Vlastní tvar a cíl.</b> Tvar <i>vlastní</i> má pro každý kloub úhel ohybu a natočení roviny ohybu (prostorový tvar). Tlačítko <i>Upravit po kloubech</i>
+      převezme aktuální tvar. <b>Cíl trysky</b> najde nejmenší počet článků a úhly, aby ústí trysky dosáhlo zadaného bodu (případně i se zadaným směrem) –
+      v mezích kloubu a bez srážky článků.</p>
+    <p><b>Proudění</b> (záložka 🌊) spočítá rychlost v kanálu a na ústí, Reynoldsovo číslo a tlak potřebný na vstupu pro emulzi, vodu, olej nebo vzduch, s grafem podle průtoku.
+      <b>Držení tvaru</b> (⚖) spočítá moment od vlastní tíhy (i s kapalinou) v každém kloubu; se změřeným mezním momentem kloubu ukáže přetížené klouby červeně a nejdelší vodorovné vyložení.</p>
+    <p><b>Výkres</b> (Soubor → Výkres A4) obsahuje řez článkem s kótami, bokorys sestavy, parametry a kusovník; uloží se jako SVG nebo vytiskne do PDF.
+      <b>ZIP po podložkách</b> rozdělí díly na podložky zadané velikosti. <b>Změřený kus</b> převezme rozměry kloubu z kupované hadice.</p>
     <p><b>Kontroly</b> hlídají kloub (přesah, stěny, ohyb), patku, trysku a převisy; klepnutím na hlášení skočíte na pole, 🔧 nabídne opravu.</p>
     <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha, <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka,
       <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
   </div>
+</dialog>
+<dialog class="napoveda-dlg vykres-dlg" id="vykresDlg">
+  <div class="hlava"><h2>Výkres – článek a sestava</h2>
+    <div class="vykres-tl"><button class="tl" id="btnVykresSvg">⬇ SVG</button><button class="tl" id="btnVykresTisk">🖨 Tisk / PDF</button><button class="tl" id="btnZavritVyk" aria-label="Zavřít">✕</button></div></div>
+  <div class="vykres-obsah" id="vykresObsah" data-i18n="ne"></div>
 </dialog>
 <script src="kloubova_hadice/ui.js"></script>
 </body>

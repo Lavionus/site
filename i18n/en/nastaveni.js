@@ -71,7 +71,7 @@ I18N.pridej('en', {
   'hodině': '1 hour',
   'nikdy – jen podle počtu': 'never – by count only',
   'Skrytá záložka se po této době uspí, i když se do počtu vejde.': 'A hidden tab is put to sleep after this time even if it fits within the count.',
-  'Nikdy se neuspí připnutá záložka 📌, záložka, ve které hraje zvuk 🔊, a stránka s neuloženými změnami. Uspaná stránka přijde o to, co si sama neuloží. Změna platí hned.': 'A pinned tab 📌, a tab playing audio 🔊 and a page with unsaved changes are never put to sleep. A sleeping page loses whatever it does not save itself. Changes apply immediately.',
+  'Otevřené zůstávají jen připnuté záložky 📌 (uspaná zůstane v liště), nepřipnutá se při přechodu jinam zavře. Nikdy se neuspí záložka, ve které hraje zvuk 🔊, a stránka s neuloženými změnami. Uspaná stránka přijde o to, co si sama neuloží. Změna platí hned.': 'Only pinned tabs 📌 stay open (a sleeping one stays in the bar); an unpinned tab closes when you go elsewhere. A tab playing audio 🔊 and a page with unsaved changes are never put to sleep. A sleeping page loses whatever it does not save itself. Changes apply immediately.',
   'Uspávání záložek uloženo.': 'Tab sleep settings saved.',
   'Nastavení nejde uložit – úložiště prohlížeče je plné nebo zablokované.': 'Settings can’t be saved – browser storage is full or blocked.',
 });

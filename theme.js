@@ -9,9 +9,18 @@
    rozcestníku podstránku nikdy nezasáhlo.
    ============================================================ */
 (function () {
+  // <meta name="color-scheme"> platí hned od prvního vykreslení – prohlížeč tak před
+  // načtením CSS nemaluje bílé plátno (záblesk při otevírání stránky v noci)
+  let meta = null;
   function pouzij(tema) {
     if (tema === 'light') document.documentElement.dataset.theme = 'light';
     else delete document.documentElement.dataset.theme;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'color-scheme';
+      (document.head || document.documentElement).appendChild(meta);
+    }
+    meta.content = tema === 'light' ? 'light' : 'dark';
   }
 
   // přes file:// nebo při zablokovaném úložišti getItem vyhodí výjimku
