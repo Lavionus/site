@@ -1267,7 +1267,8 @@
   function vykresliNabKniha() {
     $('nabKniha').innerHTML = '<div class="titulek">Kniha</div>' + knihy.map((k, i) =>
       `<button class="tl prep" data-prikaz="kniha-${i}" aria-pressed="${kniha && k.id === kniha.id}"><span data-i18n="ne">${J.esc(k.nazev)}</span><span class="procento">${Math.floor(pokrokKnihy(k) * 100)} %</span></button>`).join('') +
-      '<hr><button class="tl" data-prikaz="panel-obsah">☰ Obsah knihy <kbd>T</kbd></button><button class="tl" data-prikaz="od-zacatku">⏮ Číst tuto knihu od začátku</button>';
+      '<hr><button class="tl" data-prikaz="panel-obsah">☰ Obsah knihy <kbd>T</kbd></button><button class="tl" data-prikaz="od-zacatku">⏮ Číst tuto knihu od začátku</button>' +
+      (DILO.atlas ? '<hr><button class="tl" data-prikaz="atlas" title="Bestiář, postavy, mapa a časová osa – jen to, co už máte přečtené">🗺 Atlas a bestiář světa</button>' : '');
   }
   function zavriNabidky() {
     document.querySelectorAll('.nabidka:not([hidden])').forEach(n => { n.hidden = true; });
@@ -1289,6 +1290,8 @@
   const PRIKAZY = {
     predchozi: () => posun(-1),
     dalsi: () => posun(1),
+    // atlas díla (DILO.atlas): v rozcestníku jako jeho stránka, jinak přímo
+    atlas: () => { if (window.parent !== window) window.parent.postMessage({ otevri: 'obsah/' + DILO.atlas }, location.origin); else location.href = DILO.atlas; },
     'od-zacatku': () => { const pred = mistoCteni(); otevri(stav.kniha, 0).then(() => poSkoku(pred)); },
     'panel-obsah': () => prepniPanel('obsah'),
     'panel-zalozky': () => prepniPanel('zalozky'),

@@ -41,6 +41,7 @@ const PodzemiGL = (function () {
   uniform vec4 uL[${MAXL}];
   uniform vec2 uKam; uniform float uSvHrace, uDosvit, uVyskaLouce, uUrovni; uniform vec3 uTon; uniform int uMapW;
   uniform vec2 uRozmer; uniform float uTeple;
+  uniform vec3 uDyn; uniform float uCas, uAnim;          // světlo letícího kouzla (x, z, síla); čas; 1 láva, 2 voda
   out vec4 frag;
   float svetlo(vec3 w, int cell) {
     vec2 h = w.xz - uKam;
@@ -57,6 +58,7 @@ const PodzemiGL = (function () {
         s += l.z * 1.15 / (1.0 + 0.55 * (dot(d, d) + dv * dv));
       }
     }
+    if (uDyn.z > 0.0) { vec2 dd = w.xz - uDyn.xy; float dv = w.y - 0.42; s += uDyn.z / (1.0 + 1.1 * (dot(dd, dd) + dv * dv)); }
     return s;
   }
   void main() {
@@ -85,11 +87,18 @@ const PodzemiGL = (function () {
     if (t.a < 0.3) discard;
     if (vBila > 0.5) { frag = vec4(1.0); return; }
     vec3 c;
-    if (t.a > 0.9) c = t.rgb * 1.08;                       // svítí samo (plamen, oči, runy)
+    if (t.a > 0.9) {                                       // svítí samo (plamen, oči, runy); láva pulzuje
+      c = t.rgb * 1.08;
+      if (uAnim > 0.5 && uAnim < 1.5 && typ < 0.5) c *= 0.82 + 0.3 * sin(uCas * 1.7 + vW.x * 2.3 + vW.z * 1.9 + sin(uCas * 0.7 + vW.x));
+    }
     else {
       float s = svetlo(vW, vCell) * vF.w;
       float k = clamp(s - vF.x / (uUrovni - 1.0), 0.0, 1.0);
       c = min(t.rgb * k * uTon, vec3(1.0));
+      if (uAnim > 1.5 && typ < 0.5 && vW.y < 0.01) {      // zatopené jeskyně: na podlaze se třpytí odlesky vody
+        float v = sin(vW.x * 9.0 + uCas * 1.3) * sin(vW.z * 8.0 - uCas * 1.1) + sin((vW.x + vW.z) * 5.0 + uCas * 0.8);
+        c *= 1.0 + 0.09 * v * k;
+      }
     }
     if (uTeple > 0.5) {                                    // teplý styl: měkká křivka, hnědé stíny, viněta
       c = pow(c, vec3(1.2)) * 1.02;
@@ -118,7 +127,7 @@ const PodzemiGL = (function () {
     } catch (e) { console.warn('PodzemiGL:', e.message); return null; }
     gl.useProgram(prog);
     const U = n => gl.getUniformLocation(prog, n);
-    const u = {}; for (const n of ['uEye', 'uDir', 'uPl', 'uAspect', 'uTex', 'uSpr', 'uBunky', 'uL', 'uKam', 'uSvHrace', 'uDosvit', 'uVyskaLouce', 'uUrovni', 'uTon', 'uMapW', 'uRozmer', 'uTeple']) u[n] = U(n);
+    const u = {}; for (const n of ['uEye', 'uDir', 'uPl', 'uAspect', 'uTex', 'uSpr', 'uBunky', 'uL', 'uKam', 'uSvHrace', 'uDosvit', 'uVyskaLouce', 'uUrovni', 'uTon', 'uMapW', 'uRozmer', 'uTeple', 'uDyn', 'uCas', 'uAnim']) u[n] = U(n);
     gl.uniform1i(u.uTex, 0); gl.uniform1i(u.uSpr, 1); gl.uniform1i(u.uBunky, 2);
 
     // dvě sady vrcholů: statická (patro) a dynamická (potvory, dveře, louče) – stejný formát
@@ -216,6 +225,8 @@ const PodzemiGL = (function () {
       gl.uniform1f(u.uSvHrace, o.svHrace); gl.uniform1f(u.uDosvit, o.dosvit); gl.uniform1f(u.uVyskaLouce, o.vyskaLouce);
       gl.uniform1f(u.uUrovni, o.urovni); gl.uniform3f(u.uTon, o.ton[0], o.ton[1], o.ton[2]);
       gl.uniform2f(u.uRozmer, W, H); gl.uniform1f(u.uTeple, o.teple ? 1 : 0);
+      gl.uniform3f(u.uDyn, o.dynSvetlo ? o.dynSvetlo[0] : 0, o.dynSvetlo ? o.dynSvetlo[1] : 0, o.dynSvetlo ? o.dynSvetlo[2] : 0);
+      gl.uniform1f(u.uCas, (o.cas || 0) % 1000); gl.uniform1f(u.uAnim, o.anim || 0);
       if (o.svetla) aktualizujSvetla(o.svetla);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D_ARRAY, texT);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D_ARRAY, texS);

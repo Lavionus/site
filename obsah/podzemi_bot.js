@@ -55,19 +55,38 @@
     const h = s.hrac, o = L.odvozene(s), b = h.batoh;
     const vedle = s.potvory.find(m => Math.abs(m.x - s.x) + Math.abs(m.y - s.y) === 1);
     const honi = s.potvory.some(m => m.stav === 'honi');
-    if (h.volba) {                                // schopnost podle priority
-      const PORADI = ['tuhy', 'bojovnik', 'hbity', 'houzevnaty', 'stastlivec', 'zaklinac', 'mag', 'stitonos', 'zlodej', 'skromny', 'smlouvac', 'lukostrelec'];
+    if (h.body > 0) {                             // body vlastností podle povolání (střídavě dvě priority)
+      const PRIO = { rytir: ['sila', 'vydrz'], barbar: ['sila', 'vydrz'], zlodej: ['obratnost', 'sila'], mag: ['magie', 'vydrz'],
+        knez: ['magie', 'vydrz'], hranicar: ['obratnost', 'vydrz'], nekromant: ['magie', 'vydrz'] }[s.trida || 'rytir'] || ['sila', 'vydrz'];
+      const r = h.rozdeleno || {};
+      return ['bod', (r[PRIO[0]] || 0) <= (r[PRIO[1]] || 0) ? PRIO[0] : PRIO[1]];
+    }
+    if (h.volba) {                                // schopnost podle priority (legendární a mistrovské dřív)
+      const PORADI = ['legenda', 'neuprosny', 'nezlomny', 'druhyDech', 'mistrZbrani', 'krvezizen', 'tanecnik', 'arcimag', 'pyromant', 'vrah', 'basta', 'odstrelovac', 'pokladnik', 'hodovnik', 'kupec',
+        'tuhy', 'bojovnik', 'hbity', 'houzevnaty', 'stastlivec', 'zaklinac', 'mag', 'stitonos', 'zlodej', 'skromny', 'smlouvac', 'lukostrelec'];
       stat.schopnosti = (stat.schopnosti || 0) + 1;
       return ['schopnost', PORADI.find(k => h.volba.includes(k))];
     }
     const lek = b.find(p => p.typ === 'lektvar' && s.zname.includes(p.lektvar) && (p.lektvar === 'leceni' || p.lektvar === 'velkeLeceni'));
+    // stavy: protijed na otravu, obvaz na krvácení, svěcená voda na cokoli
+    const stavy = h.stavy || {};
+    for (const [st, z] of [['otrava', 'protijed'], ['krvaceni', 'obvaz'], ['otrava', 'svecenaVoda'], ['krvaceni', 'svecenaVoda'], ['omrzlina', 'svecenaVoda']]) {
+      const p = stavy[st] > 2 && b.find(q => q.zaklad === z);
+      if (p) return ['pouzij', p.id];
+    }
     // kniha kouzel: hojení dřív než lektvar, útočné kouzlo na potvoru v přímce (s rezervou many na hojení)
-    const umi = k => (h.kouzla || []).includes(k) && h.mana >= L.KOUZLA[k].mana;
+    const umi = k => (h.kouzla || []).includes(k) && h.mana >= L.cenaKouzla(s, k);
+    const umiK = umi;
     if (!SLABY && h.hp < o.maxHp * 0.4 && umi('hojeni')) { stat.mana = (stat.mana || 0) + 1; return ['kouzlo', 'hojeni']; }
     if (h.hp < o.maxHp * 0.35 && lek) { stat.lektvaru++; return ['pouzij', lek.id]; }
+    // lektvar many: v boji, když mana nestačí ani na nejlevnější útočné kouzlo, které umí
+    const lekMana = b.find(p => p.typ === 'lektvar' && p.lektvar === 'mana' && s.zname.includes('mana'));
+    const utocna = ['jiskra', 'led', 'ohen', 'blesk', 'retez', 'meteor', 'svetloKnez'].filter(k => (h.kouzla || []).includes(k));
+    if (!SLABY && honi && !s.spolecnik && umiK('kostlivec')) return ['kouzlo', 'kostlivec'];
+    if (!SLABY && honi && lekMana && utocna.length && h.mana < Math.min(...utocna.map(k => L.cenaKouzla(s, k))) && o.maxMana >= 12) { stat.lektvaru++; return ['pouzij', lekMana.id]; }
     if (!SLABY && honi) {
-      const { m } = L.cilVPrimce(s, 5), rezerva = (h.kouzla || []).includes('hojeni') ? 5 : 0;
-      const utocneK = ['blesk', 'ohen', 'led', 'jiskra'].find(k => umi(k) && h.mana - L.KOUZLA[k].mana >= rezerva);
+      const { m } = L.cilKouzla(s, 5), rezerva = (h.kouzla || []).includes('hojeni') ? 5 : 0;   // kouzla se navedou i šikmo
+      const utocneK = ['meteor', 'retez', 'blesk', 'ohen', 'led', 'svetloKnez', 'jiskra'].find(k => umi(k) && h.mana - L.cenaKouzla(s, k) >= rezerva);
       if (m && utocneK && !L.BESTIAR[m.druh].zbabely) { stat.mana = (stat.mana || 0) + 1; return ['kouzlo', utocneK]; }
     }
     const kouzlo = druh => b.find(q => (q.typ === 'svitek' || q.typ === 'hulka') && L.ZAKLADY[q.zaklad].kouzlo === druh);

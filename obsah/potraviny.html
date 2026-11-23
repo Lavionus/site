@@ -8,7 +8,7 @@
 <link rel="manifest" href="potraviny/manifest.webmanifest">
 <meta name="theme-color" content="#121212">
 <meta name="referrer" content="no-referrer">
-<meta name="denik-verze" content="2026-11-23a">
+<meta name="denik-verze" content="2026-11-23b">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; img-src 'self' data: blob: https://images.openfoodfacts.org; connect-src 'self' blob: data: https://world.openfoodfacts.org; style-src 'self' 'unsafe-inline'; media-src 'self' blob: mediastream:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <link rel="icon" href="potraviny/ikona-192.png" type="image/png">
 <link rel="apple-touch-icon" href="potraviny/ikona-apple-180.png">
@@ -28,8 +28,8 @@
 <script src="potraviny/etiketa.js" defer></script>
 <script src="potraviny/aplikace.js" defer></script>
 <style>
-:root{--c-bil:#3cc2b0;--c-sach:#f0b44c;--c-tuk:#ef7aa8;--c-alk:#c39be6;--c-voda:#4fa3d9;--c-kcal:var(--accent)}
-:root[data-theme="light"]{--c-bil:#0f766e;--c-sach:#a15c07;--c-tuk:#be185d;--c-alk:#7b45a8;--c-voda:#1b6399}
+:root{--c-bil:#3cc2b0;--c-sach:#f0b44c;--c-tuk:#ef7aa8;--c-alk:#c39be6;--c-voda:#4fa3d9;--c-kcal:var(--accent);--c-srdce:#ff5c6c}
+:root[data-theme="light"]{--c-bil:#0f766e;--c-sach:#a15c07;--c-tuk:#be185d;--c-alk:#7b45a8;--c-voda:#1b6399;--c-srdce:#d42a3c}
 /* okraje polí s kontrastem ≥ 3 : 1 (WCAG 1.4.11); červená tlačítka v tmavém tématu ≥ 4,5 : 1 */
 :root{--border-input:#727272}:root[data-theme="light"]{--border-input:#8a939c}
 :root:not([data-theme="light"]) .btn.danger{color:#f79a9a}
@@ -292,8 +292,20 @@ h3{font-size:.95rem;margin:0}
 .vysledek mark{background:var(--accent-soft);color:inherit;border-radius:2px}
 .vysledek .plus{flex:none}
 .srdce{flex:none;color:var(--text-faint);font-size:1.15rem;line-height:1}
-.srdce.je{color:var(--c-tuk,#e0557f)}
-.srdce:hover{color:var(--c-tuk,#e0557f)}
+.srdce.je{color:var(--c-srdce)}
+.srdce:hover{color:var(--c-srdce)}
+.navrh.oblibeny{border-style:solid;border-color:color-mix(in srgb,var(--c-srdce) 45%,var(--border-strong))}
+.oblibene-tip{font-size:.82rem;padding:.4rem .9rem;background:var(--bg-elevated);border-left:3px solid var(--c-srdce);border-radius:0 6px 6px 0;margin-bottom:.4rem;line-height:1.7}
+li.oblibene-tip{list-style:none;margin:0;border-bottom:1px solid var(--border)}
+.oblibene-tip .tip-pol{display:inline-flex;align-items:center;gap:2px;margin-right:.6rem}
+.skupina-vys{list-style:none;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint);padding:.5rem .9rem .2rem;border-bottom:1px solid var(--border)}
+.posun{padding:2px 6px;font-size:.7rem}
+.posun[disabled]{opacity:.25}
+.btn.obvykle{border-color:var(--c-srdce)}
+.tyden-souhrn{margin-bottom:14px;border-left:3px solid var(--accent)}
+.tyden-radky{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.35rem 1rem;padding:.3rem 14px .6rem}
+.tyden-pata{padding:0 14px 12px}
+.tyden-radek{display:grid;grid-template-columns:1.4rem 6.5rem 1fr;gap:.3rem;align-items:baseline;font-size:.86rem}
 .znak{display:inline-block;font-size:.66rem;font-weight:700;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:1px;border:1px solid var(--border-strong);color:var(--text-muted);letter-spacing:.02em}
 .znak.s{border-color:var(--ok);color:var(--ok)}
 .znak.m{border-color:var(--accent);color:var(--accent)}
@@ -755,6 +767,7 @@ body.zprava-otevrena .wrap{display:none}
       <div class="karta" id="planKarta" style="margin-bottom:14px"></div>
       <div class="karta" style="margin-bottom:14px">
         <div class="radek" style="margin-bottom:6px"><h2 style="margin-right:auto">♥ Oblíbené <span class="slabe" id="pocetOblibenych" style="font-size:.85rem;font-weight:400"></span></h2></div>
+        <div id="tipyOblibenych"></div>
         <ul class="seznam" id="seznamOblibenych"></ul>
       </div>
       <div class="mrizka2">
@@ -898,6 +911,15 @@ body.zprava-otevrena .wrap{display:none}
             <label class="prepinac"><input type="checkbox" id="nMikro"> Sledovat vitaminy a minerály</label>
             <label class="prepinac"><input type="checkbox" id="nPohyb"> Energii z pohybu (navíc nad klidový výdej) přičítat k dennímu cíli</label>
             <label class="prepinac"><input type="checkbox" id="nBezHodnot"> <span>Zobrazovat v hledání potraviny bez vyplněných hodnot <span class="slabe">(výrobky z Open Food Facts bez energetické hodnoty; podle čárového kódu se najdou vždy)</span></span></label>
+            <label class="prepinac"><input type="checkbox" id="nCipyOblibenych"> Ukazovat u jídel v deníku oblíbené (♥) k přidání jedním klepnutím</label>
+            <label class="prepinac"><input type="checkbox" id="nTydenSouhrn"> Na začátku týdne ukázat v deníku souhrn minulého týdne</label>
+            <label class="pole siroke" style="margin:4px 0 10px">Panel „Přidat“ otevřít na
+              <select class="vstup" id="nKartaPridani">
+                <option value="nedavne">🕘 Nedávné</option>
+                <option value="oblibene">♥ Oblíbené</option>
+                <option value="caste">⭐ Časté</option>
+                <option value="posledni">naposledy použité kartě</option>
+              </select></label>
             <label class="prepinac"><input type="checkbox" id="nNapoje"> Započítávat nápoje z deníku do pitného režimu</label>
             <label class="pole siroke" style="margin:4px 0 0 26px">Které nápoje
               <select class="vstup" id="nPitny">

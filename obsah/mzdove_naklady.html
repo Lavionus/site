@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mzdové náklady zaměstnavatele</title>
-<meta name="description" content="Kolik zaměstnanec stojí firmu v ČR (2026): odvody SP a ZP, čistá mzda, DPP a DPČ, sleva na pojistném, zákonné pojištění odpovědnosti, roční náklad s dovolenou a nemocí, benefity, náklad na hodinu práce, srovnání s OSVČ a tým.">
+<meta name="description" content="Kolik zaměstnanec stojí firmu v ČR (2026 a 2027): odvody SP a ZP, čistá mzda, DPP a DPČ, sleva na pojistném, zákonné pojištění odpovědnosti, roční náklad s dovolenou a nemocí, benefity, náklad na hodinu práce, srovnání s OSVČ a tým.">
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../dialog.js"></script>
@@ -23,6 +23,7 @@ body{background:var(--bg-deep,var(--bg));color:var(--text);font-family:system-ui
 .lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
 .lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
 .lista .skup-tl{display:flex;align-items:center;gap:2px}
+#selRok{padding-inline:4px 2px}
 .samostatne .lista{padding-right:72px}
 .tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
 .tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
@@ -106,7 +107,10 @@ tr.hl td{font-weight:700;font-size:.95rem;background:var(--accent-soft)}
     <button class="tl" data-pohled="jeden" aria-pressed="true" title="Jeden zaměstnanec">🧮<span class="txt"> Zaměstnanec</span></button>
     <button class="tl" data-pohled="tym" aria-pressed="false" title="Víc zaměstnanců najednou">👥<span class="txt"> Tým</span></button>
     <button class="tl" data-pohled="srovnani" aria-pressed="false" title="Zaměstnanec × DPP × OSVČ">⚖️<span class="txt"> Srovnání</span></button>
-    <button class="tl" data-pohled="parametry" aria-pressed="false" title="Sazby a limity 2026 se zdroji">📜<span class="txt"> Parametry 2026</span></button>
+    <button class="tl" data-pohled="parametry" aria-pressed="false" title="Sazby a limity vybraného roku se zdroji">📜<span class="txt"> Parametry</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Rok"><span class="skup-nazev" aria-hidden="true">Rok</span><div class="skup-tl">
+    <select class="tl vstup" data-f="rok" id="selRok" title="Rok, podle jehož sazeb a limitů se počítá" aria-label="Rok parametrů"></select>
   </div></div>
 </header>
 <div id="nabSoubor" class="nabidka" hidden>
@@ -225,6 +229,7 @@ const uloz = () => { try { localStorage.setItem(J.KLIC, JSON.stringify(data)); }
 if (!data.jednotlivec.rezim) data.jednotlivec.rezim = 'hruba';
 if (data.jednotlivec.castka == null) data.jednotlivec.castka = data.jednotlivec.hruba;
 
+$('selRok').innerHTML = J.ROKY.map(r => `<option value="${r}">${r}</option>`).join('');
 $('selPov').innerHTML = J.POV.map(p => `<option value="${p.sazba}">${p.sazba.toLocaleString('cs-CZ')} ‰ – ${esc(p.nazev)}</option>`).join('');
 
 /* ---------- formulář jednotlivce ---------- */
@@ -333,7 +338,7 @@ function vykresliJeden() {
   ])}</table>
   ${r.strop ? `<p class="pozn">Vyměřovací základ přesáhl strop ${kc(P.sp.maxVZ)} ročně – nad ním se sociální pojištění neplatí.</p>` : ''}
   </div></div>`;
-  h += `<p class="pozn">Parametry ${v.rok} – stav k ${J.STAV_K} (zdroje na kartě 📜 Parametry 2026). Záloha na daň měsíčně; roční zúčtování (sleva na manžela, dary, úroky) se neřeší. Průměrný výdělek je odhad z měsíční mzdy – přesně se počítá z předchozího čtvrtletí. Výpočet je orientační.</p>`;
+  h += `<p class="pozn">Parametry ${v.rok} – stav k ${J.STAV_K} (zdroje na kartě 📜 Parametry). Záloha na daň měsíčně; roční zúčtování (sleva na manžela, dary, úroky) se neřeší. Průměrný výdělek je odhad z měsíční mzdy – přesně se počítá z předchozího čtvrtletí. Výpočet je orientační.</p>`;
   $('vysledekJeden').innerHTML = h;
 }
 
@@ -403,12 +408,12 @@ function vykresliSrovnani() {
 
 /* ---------- vykreslení: parametry ---------- */
 function vykresliParametry() {
-  const P = J.param(2026);
+  const P = J.param(data.firma.rok), o = x => x && x.overit ? ' ⚠' : '';
   const r = (a, b, c) => `<tr><td>${a}</td><td class="c">${b}</td><td>${c}</td></tr>`;
   $('tabParametry').innerHTML = `<p class="pozn" style="margin-top:0">Ručně stárnoucí data – stav k ${J.STAV_K}. Před použitím pro mzdové účetnictví ověřte u ČSSZ, zdravotní pojišťovny a Finanční správy. ⚠ = nepotvrzeno z úředního textu.</p>
-  <div class="tab-obal"><table class="param"><thead><tr><th>Parametr 2026</th><th class="c">Hodnota</th><th>Zdroj</th></tr></thead><tbody>
-  ${r('Průměrná mzda (pro pojistné a limity)', kc(P.prumernaMzda), 'NV 365/2025 Sb.')}
-  ${r('Minimální mzda / hodinová', kc(P.minMzda) + ' / ' + kc2(P.minHod), 'NV o minimální mzdě (2026)')}
+  <div class="tab-obal"><table class="param"><thead><tr><th>Parametr ${P.rok}</th><th class="c">Hodnota</th><th>Zdroj</th></tr></thead><tbody>
+  ${r('Průměrná mzda (pro pojistné a limity)', kc(P.prumernaMzda), P.zdroje.pm)}
+  ${r('Minimální mzda / hodinová', kc(P.minMzda) + ' / ' + kc2(P.minHod), P.zdroje.mm)}
   ${r('Sociální pojištění firma / zaměstnanec', '24,8 % / 7,1 %', 'zákon 589/1992 Sb. (od 2024 zaměstnanec 6,5 + 0,6 %)')}
   ${r('Maximální vyměřovací základ SP', kc(P.sp.maxVZ) + ' ročně', '48× průměrná mzda')}
   ${r('Zdravotní pojištění firma / zaměstnanec', '9 % / 4,5 %', 'zákon 592/1992 Sb., zaokrouhlení nahoru, zaměstnanec 1/3')}
@@ -418,15 +423,15 @@ function vykresliParametry() {
   ${r('Invalidita 1./2. st., 3. st., ZTP/P', kc(P.slevy.invalidita12) + ', ' + kc(P.slevy.invalidita3) + ', ' + kc(P.slevy.ztpp), 'ZDP § 35ba')}
   ${r('Zvýhodnění na 1., 2., 3.+ dítě', P.slevy.deti.map(kc).join(', '), 'ZDP § 35c, ZTP/P dvojnásobek; bonus od příjmu ' + kc(P.slevy.bonusMinPrijem) + ', min. ' + kc(P.slevy.bonusMin))}
   ${r('DPP – účast na pojištění', 'od ' + kc(P.dpp.limit), '25 % průměrné mzdy (u téhož zaměstnavatele se DPP sčítají); max. 300 h ročně')}
-  ${r('DPČ / zaměstnání malého rozsahu', 'od ' + kc(P.dpc.limit), 'zákon 187/2006 Sb.; od 2027 má být 5 000 Kč')}
+  ${r('DPČ / zaměstnání malého rozsahu', 'od ' + kc(P.dpc.limit), 'zákon 187/2006 Sb.' + (P.rok < 2027 ? '; od 2027 5 000 Kč' : ', sdělení MPSV 186/2026 Sb.'))}
   ${r('Srážková daň 15 %', 'DPP pod ' + kc(P.dpp.limit) + ', jinak pod ' + kc(P.dpc.limit), 'ZDP § 6 odst. 4 – jen bez prohlášení; u DPP naposledy za 12/2026')}
   ${r('Sleva na pojistném (zkrácené úvazky)', '5 % z VZ', 'zákon 589/1992 Sb. § 7a: 8–30 h týdně, max. 138 h/měs, VZ ≤ ' + kc(P.slevaUvazek.maxVZ) + ', hodinový výdělek ≤ ' + kc2(P.slevaUvazek.maxHodinova) + '; nutné oznámení ČSSZ ⚠ návrh na zvýšení na 10 % neověřen')}
-  ${r('Stravenkový paušál osvobozený', kc2(P.strava.pausal) + ' / směnu', '70 % horní hranice stravného 5–12 h (185 Kč, vyhl. 573/2025 Sb.); směna nad 11 h dvojnásobek')}
+  ${r('Stravenkový paušál osvobozený', kc2(P.strava.pausal) + ' / směnu' + o(P.strava), '70 % horní hranice stravného 5–12 h (185 Kč, vyhl. 573/2025 Sb.); směna nad 11 h dvojnásobek')}
   ${r('Příspěvek na stravenku – daňově uznatelný', 'max. ' + kc2(P.strava.uznatelnePrispevek), '55 % ceny jídla, nejvýš 55 % ze 70 % horní hranice stravného')}
-  ${r('Volnočasové benefity – osvobozeno', kc2(P.benefity.volnocas) + ' ročně', 'ZDP § 6 odst. 9 písm. d) – polovina průměrné mzdy')}
+  ${r('Volnočasové benefity – osvobozeno', kc2(P.benefity.volnocas) + ' ročně' + o(P.benefity), 'ZDP § 6 odst. 9 písm. d) – polovina průměrné mzdy' + (P.benefity.overit ? '; od 2027 má limit podle zákona 180/2026 Sb. padnout (rekreace zvlášť do 20 000 Kč) – neověřeno' : ''))}
   ${r('Zdravotní benefity – osvobozeno', kc(P.benefity.zdravi) + ' ročně', 'průměrná mzda, samostatný limit')}
   ${r('Penzijní / životní pojištění od firmy', kc(P.benefity.penzijni) + ' ročně', 'ZDP § 6 odst. 9 písm. p) – společný limit')}
-  ${r('Redukční hranice náhrady mzdy (hodinové)', DavkyJadro.hodinoveHranice(2026).map(kc2).join(' / '), 'sdělení MPSV 397/2025 Sb. × 0,175; 90/60/30 %, náhrada 60 % (§ 192 ZP)')}
+  ${r('Redukční hranice náhrady mzdy (hodinové)', DavkyJadro.hodinoveHranice(P.rok).map(kc2).join(' / '), P.zdroje.hranice + ' × 0,175; 90/60/30 %, náhrada 60 % (§ 192 ZP)')}
   </tbody></table></div>
   <h2 style="margin-top:16px">Zákonné pojištění odpovědnosti zaměstnavatele (Kooperativa)</h2>
   <p class="pozn" style="margin-top:0">Vyhláška 125/1993 Sb., příloha 2 – sazba podle převažující činnosti (OKEČ) z úhrnu vyměřovacích základů pro SP za předchozí čtvrtletí. Platí se čtvrtletně předem (31. 1., 30. 4., 31. 7., 31. 10.), minimum 100 Kč za čtvrtletí. Seznam je zkrácený – přesné zařazení podle OKEČ ověřte ve vyhlášce.</p>

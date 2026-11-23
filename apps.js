@@ -60,14 +60,14 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/sazba.html",
         "nazev": "📐 Sazba knihy (PDF k tisku)",
         "popis": "Vysází knihu do PDF k tisku s obálkou, obsahem a spadávkou",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["sazba", "kniha", "pdf", "tisk", "typografie", "a5", "obálka", "obsah", "čísla stran", "záhlaví", "spadávka", "markdown", "paged media", "self-publishing", "brožura", "skriptorium"]
       },
       {
         "soubor": "obsah/predcitac.html",
         "nazev": "🔊 Předčítač (neuronové hlasy)",
         "popis": "Čte text nahlas neuronovými hlasy, i offline a do WAV",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["předčítání", "čtení nahlas", "tts", "text na řeč", "hlas", "piper", "audiokniha", "markdown", "zamčená obrazovka", "ipad", "offline", "wav"]
       },
       {
@@ -404,7 +404,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/majetek.html",
         "nazev": "📦 Evidence domácího majetku",
         "popis": "Soupis věcí v domácnosti se zárukami, účtenkami a QR štítky",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["domácnost", "záruky", "inventář", "QR štítky", "offline", "záloha", "půjčit", "půjčky", "výpůjčky", "půjčené věci", "zapůjčení", "vrácení", "kauce", "komu jsem půjčil"]
       },
       {
@@ -1618,7 +1618,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/zeme_v_kostce.html",
         "nazev": "🌍 Země v kostce pro cestovatele",
         "popis": "Vstup, očkování, zásuvky, tísňová čísla, klima a svátky států",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["zásuvky", "adaptér", "napětí", "tísňová čísla", "měna", "předvolba", "časové pásmo", "strana jízdy", "spropitné", "pitná voda", "dálniční známka", "mýto", "MZV", "státy světa", "cestování", "víza", "očkování", "malárie", "státní svátky", "klima", "fráze", "jet lag", "rozpočet cesty", "silniční pravidla", "velikosti oblečení", "volné táboření", "spaní v autě", "obytňák", "pláže", "houby", "drony", "nudismus", "alkohol na veřejnosti"]
       }
     ]
@@ -1631,14 +1631,14 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/dvere_do_sveta.html",
         "nazev": "🚪 Dveře do světa",
         "popis": "Otevři dveře a podívej se živou kamerou někam na Zemi",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["webkamera", "webkamery", "živě", "live", "kamera", "výhled", "cestování", "svět", "náhodné místo", "příroda", "zvířata", "hory", "moře", "sopky", "polární záře", "přístavy", "lodě", "street view"]
       },
       {
         "soubor": "obsah/ziva_zeme.html",
         "nazev": "🌋 Živá Země",
         "popis": "Zemětřesení, požáry, sopky a poloha ISS právě teď",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["zemětřesení", "požáry", "sopky", "ISS", "mapa", "živá data"]
       },
       {
@@ -1665,7 +1665,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/dalekohled.html",
         "nazev": "🔭 Hvězdářský dalekohled",
         "popis": "Zorné pole okuláru a kamery, plánovač noci a deník pozorování",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["astronomie", "dalekohled", "teleskop", "simulace", "planetárium", "planety", "Měsíc", "Jupiter", "Saturn", "dvojhvězdy", "Messier", "NGC", "galaxie", "mlhoviny", "okulár", "zvětšení", "seeing", "světelné znečištění", "Dobson", "pozorování", "plánovač noci", "pozorovací seznam", "deník pozorování", "astrofotografie", "kamera", "efemeridy", "úkazy", "konjunkce", "vyhledávací mapa", "PDF"]
       },
       {
@@ -1698,7 +1698,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/slunecni_hodiny.html",
         "nazev": "☀️ Sluneční hodiny",
         "popis": "Návrh a tisk šablon slunečních hodin 1:1 pro tvou polohu",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["sluneční hodiny", "gnomon", "rovnice času", "analema", "šablona", "tisk 1:1", "PDF", "DXF", "astronomie", "deklinace stěny", "Canterbury", "kapesní hodiny", "výškové hodiny"]
       },
       {
@@ -2034,7 +2034,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/plakat_utrzky.html",
         "nazev": "📌 Plakát s útržky",
         "popis": "Inzerát na nástěnku s odtrhávacími kontakty, tisk 1:1",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["plakát", "inzerát", "vývěska", "útržky", "nástěnka", "tisk", "PDF", "QR"]
       },
       {
@@ -2062,7 +2062,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/pleteni.html",
         "nazev": "🧶 Pletení a háčkování",
         "popis": "Přepočet vzorku a návodu, přidávání oček, spotřeba příze",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["pletení", "háčkování", "vzorek", "přepočet návodu", "přidávání oček", "ubírání", "spotřeba příze", "klubka", "počítadlo řad", "schéma vzoru", "žakár", "copánky", "jehlice", "háček", "zkratky návodů"]
       },
       {
@@ -2349,7 +2349,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/nahnoji.html",
         "nazev": "📼 Videotéka",
         "popis": "Přehrává seriály a videa a pamatuje si, kde jste skončili",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["video", "videa", "nahnoji", "přehrávač", "galerie", "videotéka", "seriály", "sdílení"]
       },
       {
@@ -2514,7 +2514,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/loziska.html",
         "nazev": "⚙️ Ložiska, O-kroužky a těsnění",
         "popis": "Dekóduje označení ložisek, hledá podle rozměrů, O-kroužky",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["ložiska", "kuličková ložiska", "6204", "608", "2RS", "ZZ", "C3", "O-kroužky", "drážka O-kroužku", "AS568", "gufera", "těsnění", "L10", "uložení", "strojírenství", "3D tisk", "STL"]
       },
       {
@@ -2644,7 +2644,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/rostouci_zidle.html",
         "nazev": "🪑 Rostoucí židle",
         "popis": "Dětská židle s přestavitelným sedákem, roste s dítětem",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["rostoucí židle", "dětská židle", "nábytek", "ergonomie", "EN 1729", "WHO", "drážky", "stabilita", "truhlářství", "šablona 1:1", "PDF", "DXF", "SVG", "CNC", "STL", "řezný plán", "3D"]
       },
       {
@@ -3029,7 +3029,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/nacrt3d.html",
         "nazev": "✏️ Z náčrtu do 3D",
         "popis": "Převede ruční náčrt na papíře nebo obrazovce na 3D model",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["náčrt", "skica", "kresba", "výkres", "kóty", "3d", "3d tisk", "technický výkres", "nárys", "půdorys", "bokorys", "rotační díl", "mřížka", "šablona", "pero", "tablet", "stl"]
       },
       {
@@ -3043,7 +3043,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/povrch3d.html",
         "nazev": "🧱 Struktury a hrany 3D modelu",
         "popis": "Vtlačí do stěn modelu cihly, kámen či nápis a zaoblí nebo srazí hrany",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["3d tisk", "stl", "obj", "3mf", "struktura", "textura", "reliéf", "cihly", "kámen", "dlažba", "prkna", "šupiny", "vroubkování", "slzičkový plech", "výšková mapa", "displacement", "sražení", "fazeta", "zaoblení", "rádius", "hrany", "úprava modelu", "vlastní vzor", "nápis", "logo", "gravírování", "šindel", "palisáda", "bosáž", "měření tloušťky"]
       },
       {
@@ -3135,14 +3135,14 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/krabicka_pant.html",
         "nazev": "🗃️ Krabička s víčkem na pantu",
         "popis": "Navrhne krabičku s víčkem na pantech a přihrádkami k tisku",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["3D tisk", "CAD", "STL", "3MF", "krabička", "víčko", "pant", "čep", "zapínání", "chlopeň", "přihrádky", "organizér", "magnety", "generátor"]
       },
       {
         "soubor": "obsah/drzaky_naradi.html",
         "nazev": "🧰 Držáky nářadí a Gridfinity",
         "popis": "Generuje Gridfinity krabičky a vložky i držáky nářadí na stěnu",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["gridfinity", "3D tisk", "STL", "dílna", "nářadí", "French cleat", "pegboard", "truhlářství", "PDF 1:1", "kusovník"]
       },
       {
@@ -3184,7 +3184,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/tubeRedFlat.html",
         "nazev": "🔧 Redukce se zploštěním",
         "popis": "Navrhne přechod z kruhové trubky na zploštělý či oválný průřez",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["trubky", "redukce", "zploštění", "ovál", "obdélník", "elipsa", "plochá trubka", "vzduchotechnika", "odsávání", "3d tisk", "stl", "3mf", "kónus", "sražení", "límec", "příruba", "šrouby", "těsnění", "hadice", "bajonet", "výkres", "šablona"]
       },
       {
@@ -3255,7 +3255,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/knofliky.html",
         "nazev": "🎛️ Knoflíky a hlavice",
         "popis": "Navrhněte knoflíky na potenciometr a hlavice na šrouby k tisku",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["3D tisk", "STL", "3MF", "knoflík", "potenciometr", "hlavice", "hvězdice", "matice", "šroub", "knopka", "kolečko", "generátor"]
       },
       {
@@ -3290,14 +3290,14 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/spojky.html",
         "nazev": "🔗 Spojky profilů, trubek a latí",
         "popis": "Navrhněte spojky hliníkových profilů, trubek a latí k tisku",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["3D tisk", "STL", "3MF", "spojka", "hliníkový profil", "2020", "3030", "4040", "T-matice", "úhelník", "vzpěra", "skrytý úhelník", "krytka drážky", "lišta", "trubka", "jäkl", "uzel", "kopule", "stan", "latě", "rám"]
       },
       {
         "soubor": "obsah/uhelniky.html",
         "nazev": "📐 Úhelníky a odsávání frézky",
         "popis": "Navrhne úhelník s výztuhami a odsávací klín za frézu k tisku",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["3D tisk", "STL", "3MF", "úhelník", "vingl", "výztuha", "vruty", "zápustná hlava", "dřevo", "nábytek", "odsávání", "frézka", "stolní frézka", "pravítko", "hadice", "vysavač", "generátor"]
       },
       {
@@ -3332,7 +3332,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/cleat.html",
         "nazev": "🪝 Háčky a úchyty na French cleat",
         "popis": "Generuje háky, sedla a držáky nářadí na French cleat lištu",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["3D tisk", "STL", "3MF", "French cleat", "francouzská lišta", "nástěnná lišta", "úkos 45°", "hák", "háček", "heavy duty", "dvojitý hák", "kolík", "sedlo na hadici", "kolébka", "klip na tyč", "držák koštěte", "V-drážka", "držák hadru", "police", "stojánek", "šroubováky", "bity", "sada vrtáků", "kleště", "hřeben na kabely", "kapsa", "kelímky", "zásobník", "montážní deska", "suchý zip", "dílna", "nářadí", "rybina", "generátor"]
       },
       {
@@ -3439,6 +3439,27 @@ const KATALOG_SEKCE = [
         "popis": "Bláznivé ozdoby do uší: prst, červ, paprička na pecky i špunty",
         "stav": "vyvoj",
         "tagy": ["sluchátka", "pecky", "špunty do uší", "ušní špička", "TPU", "ozdoba", "prst", "červ", "paprička", "chapadlo", "jednorožec", "mrkev", "kost", "kaktus", "ulita", "srdce", "svíčka", "tykadla", "legrace", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/civka_filamentu.html",
+        "nazev": "🪀 Držák a adaptér cívky filamentu",
+        "popis": "Redukce otvoru cívky, stojan s ložisky a vodítko filamentu pro tisk",
+        "stav": "vyvoj",
+        "tagy": ["cívka", "filament", "redukce", "adaptér", "držák cívky", "stojan", "ložisko", "608", "sušicí box", "vodítko", "PTFE", "kladka", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/zarazky_dveri.html",
+        "nazev": "🛑 Zarážky a aretace dveří a oken",
+        "popis": "Klín pod dveře, zarážka s magnetem a aretace okna nebo dvířek",
+        "stav": "vyvoj",
+        "tagy": ["zarážka", "dveře", "klín", "magnet", "neodym", "aretace", "okno", "ventilace", "hřeben", "doraz", "šuplík", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/organizer_vrtaku.html",
+        "nazev": "🪛 Organizér vrtáků a bitů",
+        "popis": "Navrhne stojánek, kazetu nebo držák bitů s popisky velikostí",
+        "stav": "vyvoj",
+        "tagy": ["vrtáky", "bity", "závitníky", "ořechy", "organizér", "stojánek", "popisky", "Gridfinity", "French cleat", "dílna", "3D tisk", "STL", "3MF", "generátor"]
       }
     ]
   },
@@ -3807,7 +3828,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/starfall.html",
         "nazev": "🚀 Starfall: Iron Horizon",
         "popis": "Vesmírná střílečka: 15 misí, lodě, zbraně, nekonečný režim",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["shoot-em-up", "střílečka", "vesmír", "tyrian", "pixel art", "bossové", "hangár", "obchod", "kampaň", "arkáda"]
       },
       {
@@ -3935,6 +3956,13 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/magnat.html",
+        "nazev": "🚂 Dopravní magnát",
+        "popis": "Dopravní strategie: tratě, silnice, vlaky a rostoucí města",
+        "stav": "vyvoj",
+        "tagy": ["doprava", "železnice", "vlaky", "tycoon", "budovatelská strategie", "ekonomika", "izometrie", "města", "průmysl", "procedurální mapa", "seed"]
+      },
+      {
         "soubor": "obsah/obleheni.html",
         "nazev": "🏝️ Ostrov v obležení",
         "popis": "Tower defense: braň ostrov před loďmi, letci i příšerami",
@@ -3998,21 +4026,21 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/dron.html",
         "nazev": "🚁 Nad krajinou",
         "popis": "Simulátor letu dronem v 3D krajině: fotomise i závody",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["dron", "simulátor", "let", "fpv", "kvadrokoptéra", "krajina", "3d", "focení", "závody", "letová škola", "vysílačka", "hra"]
       },
       {
         "soubor": "obsah/ostruvek.html",
         "nazev": "🏝️ Ostrůvek (three.js + Blender)",
         "popis": "3D procházka po ostrově, sbírej krystaly na čas",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["ostrov", "skřítek", "krystaly", "3d", "three.js", "blender", "gltf", "low-poly", "demo", "hra"]
       },
       {
         "soubor": "obsah/lukavice.html",
         "nazev": "🚗 Lukavice 3D",
         "popis": "Projdi se nebo projeď autem 3D model skutečné obce",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["lukavice", "ústí nad orlicí", "žamberk", "obec", "vesnice", "3d", "auto", "jízda", "chůze", "procházka", "openstreetmap", "mapa", "terén", "three.js", "hra"]
       }
     ]
@@ -4025,7 +4053,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/gamebook.html",
         "nazev": "⛏️ Hlubina pod Černou horou",
         "popis": "Hledej otce ve starém dole: volby, kostky a souboje",
-        "stav": "vyvoj",
+        "stav": "beta",
         "jen_cs": true,
         "tagy": ["gamebook", "textová hra", "adventura", "příběh", "kostky", "permoník", "důl", "fighting fantasy"]
       },
@@ -4690,7 +4718,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/vazby_analyza.html",
         "nazev": "🕸️ Analýza vazeb",
         "popis": "Graf vazeb mezi osobami, telefony, vozidly a účty",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["vyšetřování", "graf vazeb", "link analysis", "centralita", "nejkratší cesta", "CSV"]
       },
       {
@@ -4746,7 +4774,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/sifry.html",
         "nazev": "🔏 Šifry – kryptologická dílna",
         "popis": "Šifruj, luštěj a analyzuj – Caesar, Vigenère, Enigma a další",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["šifra", "Caesar", "Vigenère", "Enigma", "Morseovka", "frekvenční analýza", "kryptografie", "kryptoanalýza", "luštění", "výzva", "hra", "transpozice", "substituce",
           "afinní", "Beaufort", "Playfair", "Bifid", "ADFGVX", "Hill", "Bacon", "plotová šifra", "Base64", "hash", "SHA-256", "MD5", "HMAC", "AES", "RSA", "teorie čísel", "XOR", "index koincidence", "Kasiski", "CyberChef", "recept",
           "šifrovačky", "zednářská šifra", "pigpen", "A1Z26", "ťukací kód", "Braille", "semafor", "čtyřčtverec", "Trifid", "nihilistická", "Myszkowski", "skytale", "Chaocipher", "luštění bez klíče",
@@ -5114,7 +5142,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/voynich.html",
         "nazev": "📜 Voynichův rukopis",
         "popis": "Snímky, přepisy EVA a statistiky nerozluštěného rukopisu",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["voynich", "rukopis", "manuskript", "šifra", "nerozluštěné", "eva", "přepis", "transliterace", "středověk", "rudolf ii", "hořčický", "kryptologie", "lingvistika", "entropie", "zipf", "kwic", "yale", "beinecke"]
       },
       {
@@ -5155,7 +5183,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/kroniky.html",
         "nazev": "🐉 Kroniky vyhnanství",
         "popis": "Sága o sedmi knihách od středověku po budoucnost, ke čtení i poslechu",
-        "stav": "vyvoj",
+        "stav": "beta",
         "jen_cs": true,
         "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Paměť kamene", "První vyhnanci", "Strážci ticha", "Rozsudek", "Druhý soud", "Chebsko", "Jáchymov", "Yucatán", "středověk", "pravěk", "sci-fi", "drak"]
       },
@@ -5165,7 +5193,15 @@ const KATALOG_SEKCE = [
         "popis": "Samostatné povídky ze světa ságy Kroniky vyhnanství",
         "stav": "vyvoj",
         "jen_cs": true,
-        "tagy": ["kniha", "povídky", "povídka", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "Kroniky vyhnanství", "Von Wölfen geholt", "Odnesli je vlci", "Poslední zima obrů", "Vejce na útesu", "vlkodlak", "obři", "harpyje", "elfové", "Krušnohoří", "třicetiletá válka", "pravěk", "mezolit", "fantasy"]
+        "tagy": ["kniha", "povídky", "povídka", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "Kroniky vyhnanství", "Von Wölfen geholt", "Odnesli je vlci", "Poslední zima obrů", "Vejce na útesu", "Kavyl", "Roh, který pije", "Obchůzka", "Sladká voda", "Pokojní a zdvořilí", "Pro pořádek", "Tři falešné", "vlkodlak", "obři", "harpyje", "kentauři", "jednorožec", "Atlantida", "mor", "elfové", "Krušnohoří", "třicetiletá válka", "pravěk", "mezolit", "fantasy"]
+      },
+      {
+        "soubor": "obsah/kroniky_atlas.html",
+        "nazev": "🗺️ Atlas a bestiář Kronik",
+        "popis": "Populace, postavy, mapa a časová osa ságy bez spoilerů",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["atlas", "bestiář", "Kroniky vyhnanství", "postavy", "mapa", "časová osa", "slovníček", "pojmy", "draci", "elfové", "upíři", "vlkodlaci", "trpaslíci", "jednorožci", "obři", "kentauři", "harpyje", "fantasy", "bez spoilerů", "encyklopedie"]
       },
       {
         "soubor": "obsah/vypisky.html",
@@ -5220,7 +5256,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/AI_prednaska.html",
         "nazev": "🤖 Přednáška: Úvod do AI",
         "popis": "Slidy pro laiky: co je umělá inteligence a jak ji používat",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["AI", "umělá inteligence", "přednáška", "prezentace", "slidy", "ChatGPT", "prompt", "LLM", "pro laiky"]
       },
       {
@@ -5358,14 +5394,14 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/valka_ukrajina.html",
         "nazev": "🇺🇦 Vývoj války na Ukrajině",
         "popis": "Mapy fronty, ztráty a uprchlíci z ověřených otevřených dat",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["ukrajina", "válka", "rusko", "isw", "fronta", "mapa fronty", "okupace", "deepstate", "oryx", "ztráty", "osn", "uprchlíci", "zprávy"]
       },
       {
         "soubor": "obsah/zpravy.html",
         "nazev": "📰 Mozaika zpráv",
         "popis": "Titulky z desítek českých i zahraničních zpravodajských webů",
-        "stav": "vyvoj",
+        "stav": "beta",
         "jen_cs": true,
         "tagy": ["zprávy", "novinky", "zpravodajství", "rss", "agregátor", "titulky", "čtečka zpráv", "idnes", "novinky.cz", "seznam zprávy", "čt24", "irozhlas", "aktuálně", "sport", "technika", "věda", "ekonomika", "témata"]
       },

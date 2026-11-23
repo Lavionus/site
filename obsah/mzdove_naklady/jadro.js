@@ -30,11 +30,32 @@
       dpc: { limit: 4500 },                    // zároveň hranice zaměstnání malého rozsahu (i u pracovního poměru)
       slevaUvazek: { sazba: 0.05, maxVZ: 73450.5, maxHodinova: 563.12, hodinOd: 8, hodinDo: 30, maxHodinMes: 138 },
       strava: { pausal: 129.5, stravne512: 185, uznatelnePrispevek: 71.23 },
-      benefity: { volnocas: 24483.5, zdravi: 48967, penzijni: 50000 }
+      benefity: { volnocas: 24483.5, zdravi: 48967, penzijni: 50000 },
+      zdroje: { pm: 'NV 365/2025 Sb.', mm: 'NV o minimální mzdě (2026)', hranice: 'sdělení MPSV 397/2025 Sb.' }
+    },
+    /* 2027: průměrná mzda NV 177/2026 Sb. (51 663 Kč), minimální mzda sdělení MPSV 171/2026 Sb. (24 900 Kč / 148,30 Kč/h),
+       limit DPP 184/2026 Sb., rozhodný příjem 186/2026 Sb., redukční hranice 185/2026 Sb. Slevy na dani beze změny;
+       nové slevy (student, školkovné – zákon 180/2026 Sb.) se v měsíční záloze nepočítají.
+       ⚠ Stravné 2027 (vyhláška MPSV) ještě nevyšlo – použito 2026. Volnočasové benefity: podle EY zákon 180/2026 Sb.
+       limit ½ PM ruší (rekreace zvlášť do 20 000 Kč) – v textu zákona neověřeno, počítáme dál s ½ PM. */
+    2027: {
+      rok: 2027,
+      prumernaMzda: 51663, minMzda: 24900, minHod: 148.30,
+      sp: { firma: 0.248, zam: 0.071, maxVZ: 2479824 },
+      zp: { sazba: 0.135, minVZ: 24900 },
+      dan: { sazba: 0.15, vyssi: 0.23, hraniceMes: 154989 },
+      slevy: { poplatnik: 2570, invalidita12: 210, invalidita3: 420, ztpp: 1345, deti: [1267, 1860, 2320], bonusMinPrijem: 12450, bonusMin: 50 },
+      dpp: { limit: 12500, maxHodinRok: 300 },
+      dpc: { limit: 5000 },
+      slevaUvazek: { sazba: 0.05, maxVZ: 77494.5, maxHodinova: 594.12, hodinOd: 8, hodinDo: 30, maxHodinMes: 138 },
+      strava: { pausal: 129.5, stravne512: 185, uznatelnePrispevek: 71.23, overit: true },
+      benefity: { volnocas: 25831.5, zdravi: 51663, penzijni: 50000, overit: true },
+      zdroje: { pm: 'NV 177/2026 Sb.', mm: 'sdělení MPSV 171/2026 Sb.', hranice: 'sdělení MPSV 185/2026 Sb.' }
     }
   };
   const ROKY = Object.keys(PARAMETRY).map(Number);
-  const param = rok => PARAMETRY[rok] || PARAMETRY[ROKY[ROKY.length - 1]];
+  const ROK_TED = PARAMETRY[new Date().getFullYear()] ? new Date().getFullYear() : ROKY[ROKY.length - 1];
+  const param = rok => PARAMETRY[rok] || PARAMETRY[ROK_TED];
 
   /* Kategorie zákonného pojištění odpovědnosti (vyhláška 125/1993 Sb., příloha 2 – podle převažující činnosti OKEČ). */
   const POV = [
@@ -80,7 +101,7 @@
 
   /* ---------- vstup ---------- */
   const VYCHOZI = {
-    rok: 2026, typ: 'hpp', hruba: 45000, hodinTydne: 40, plnyTyden: 40,
+    rok: ROK_TED, typ: 'hpp', hruba: 45000, hodinTydne: 40, plnyTyden: 40,
     prohlaseni: true, deti: 0, ztpDeti: 0, invalidita: '0', slevaUvazek: false, zpBezMinima: false,
     strava: 'zadna', stravaKc: 129.5, volnocasRok: 0, zdraviRok: 0, penzijniMes: 0,
     pov: 4.2, dovolenaTydnu: 4, nemocDni: 6
@@ -350,7 +371,7 @@
 
   /* ---------- uložená data ---------- */
   function prazdna() {
-    return { verze: VERZE, jednotlivec: Object.assign({}, VYCHOZI), firma: { pov: 4.2, dovolenaTydnu: 4, nemocDni: 6, strava: 'zadna', stravaKc: 129.5, volnocasRok: 0, zdraviRok: 0, penzijniMes: 0, plnyTyden: 40 },
+    return { verze: VERZE, jednotlivec: Object.assign({}, VYCHOZI), firma: { rok: ROK_TED, pov: 4.2, dovolenaTydnu: 4, nemocDni: 6, strava: 'zadna', stravaKc: 129.5, volnocasRok: 0, zdraviRok: 0, penzijniMes: 0, plnyTyden: 40 },
       tym: [{ nazev: 'Účetní', typ: 'hpp', hruba: 42000, hodinTydne: 40, pocet: 1 }, { nazev: 'Brigádník', typ: 'dpp', hruba: 4000, hodinTydne: 5, pocet: 2, prohlaseni: false }],
       srovnani: { rozpocet: 60000, druh: '60' } };
   }

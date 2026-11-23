@@ -138,6 +138,14 @@
     stupnovity: { nazev: 'Se stupněm', znak: '⛀' },
     disk: { nazev: 'Plochý disk', znak: '⬬' },
     orbit: { nazev: 'Koule s ploškou', znak: '◓' },
+    kapka: { nazev: 'Kapka', znak: '💧' },
+    poupe: { nazev: 'Poupě', znak: '❀' },
+    zvonek: { nazev: 'Oblý zvon', znak: '🛎' },
+    kalich: { nazev: 'Kalich', znak: '⊻' },
+    vejce_ploska: { nazev: 'Vejce s ploškou', znak: '◒' },
+    kuzel: { nazev: 'Kužel', znak: '⏢' },
+    soudek_hladky: { nazev: 'Hladký soudek', znak: '⬯' },
+    kopule: { nazev: 'Kopule', znak: '◠' },
     generator: { nazev: 'Generátor ze semínka', znak: '🎲' },
     vlastni: { nazev: 'Vlastní – skica', znak: '✏️' },
   };
@@ -150,6 +158,12 @@
     stupne: { nazev: 'Stupňovitý', znak: '▙' },
     baluster: { nazev: 'Soudek', znak: '⬮' },
     patka: { nazev: 'Patka s prstencem', znak: '⊥' },
+    fabion: { nazev: 'Oblý náběh', znak: '◟' },
+    prstenec: { nazev: 'Jeden prstenec', znak: '⊖' },
+    limec: { nazev: 'Límec pod hlavou', znak: '⊤' },
+    kuzel_limec: { nazev: 'Kužel s límcem', znak: '⏃' },
+    vaza: { nazev: 'Váza', znak: '⚱' },
+    dva_prstence: { nazev: 'Dva prstence u paty', znak: '≡' },
     generator: { nazev: 'Generátor ze semínka', znak: '🎲' },
     vlastni: { nazev: 'Vlastní – skica', znak: '✏️' },
   };
@@ -710,7 +724,18 @@
     stupnovity: u => (u < 0.55 ? 0.62 + 0.38 * Math.sin(Math.PI / 2 * Math.min(1, u / 0.35)) : 1 - 0.18 * Math.min(1, (u - 0.55) / 0.04)) * zaver(u, 0.04, 0.8, 2.2),
     disk: u => zaver(u, 0.18, 0.72, 2.6),
     orbit: u => { const v = 0.08 + 0.82 * u; return Math.sqrt(Math.max(0, 1 - (2 * v - 1) ** 2)) * zaver(u, 0.02, 0.96, 8); },   // koule seříznutá ploškou
+    // klidné „normální“ tvary příbuzné tulipánu, hrušce, zvonu a vejci
+    kapka: u => (0.36 + 0.64 * Math.min(1, u / 0.62) ** 1.15) * kruhNad(u, 0.62) * zaver(u, 0.04, 1, 2),
+    poupe: u => (0.4 + 0.6 * Math.sin(Math.PI / 2 * Math.min(1, u / 0.6)) ** 1.3) * (u > 0.6 ? Math.max(0, 1 - ((u - 0.6) / 0.4) ** 1.7) ** 0.62 : 1) * zaver(u, 0.04, 1, 2),
+    zvonek: u => (0.4 + 0.6 * Math.min(1, u / 0.68) ** 1.8) * kruhNad(u, 0.68) * zaver(u, 0.05, 1, 2),
+    kalich: u => (0.38 + 0.62 * Math.sin(Math.PI / 2 * Math.min(1, u / 0.85)) ** 1.8) * zaver(u, 0.03, 0.88, 4),
+    vejce_ploska: u => (u < 0.55 ? Math.sqrt(Math.max(0, 1 - ((0.55 - u) / 0.55) ** 2)) : Math.sqrt(Math.max(0, 1 - ((u - 0.55) / 0.45 * 0.8) ** 2))) * zaver(u, 0.02, 0.9, 3),
+    kuzel: u => (0.66 + 0.34 * u) * zaver(u, 0.04, 0.8, 3),
+    soudek_hladky: u => Math.sin(Math.PI * (0.12 + 0.76 * u)) ** 0.9 * zaver(u, 0.04, 0.88, 3),
+    kopule: u => (u < 0.14 ? 0.86 + 0.14 * Math.sin(Math.PI / 2 * u / 0.14) : Math.max(0, 1 - ((u - 0.14) / 0.86) ** 2.2) ** (1 / 2.2)) * zaver(u, 0.03, 1, 2),
   };
+  /** Kruhové zaoblení vršku: nad výškou m čtvrtkruh (v jednotkách u), pod ní 1. */
+  function kruhNad(u, m) { return u <= m ? 1 : Math.sqrt(Math.max(0, 1 - ((u - m) / (1 - m)) ** 2)); }
   /** Uzávěr profilu k pólům: dole za `od` náběh, nahoře od `do` superelipsa s exponentem e (velké e = plochá čelní plocha). */
   function zaver(u, od, ddo, e) {
     const dole = u < od ? Math.sin(Math.PI / 2 * u / od) ** 0.5 : 1;
@@ -807,6 +832,12 @@
       case 'stupne': return { f: u => 1 + 0.3 * m * (1 - hladce(u, 0.26, 0.31)) + 0.15 * m * (1 - hladce(u, 0.56, 0.61)), popis: 'stupně' };
       case 'baluster': return { f: u => 1 + 0.22 * m * Math.sin(Math.PI * u) ** 2, popis: 'soudek' };
       case 'patka': return { f: sl([u => 0.45 * m * Math.exp(-((u / 0.16) ** 2)), perla(0.62, 0.08, 0.14 * m)]), popis: 'patka s prstencem' };
+      case 'fabion': return { f: u => 1 + 0.55 * m * (1 - Math.sqrt(Math.max(0, 1 - Math.max(0, 1 - u / 0.4) ** 2))), popis: 'oblý náběh' };
+      case 'prstenec': return { f: sl([perla(0.5, 0.11, 0.2 * m)]), popis: 'prstenec' };
+      case 'limec': return { f: sl([perla(0.84, 0.09, 0.2 * m)]), popis: 'límec pod hlavou' };
+      case 'kuzel_limec': return { f: sl([u => 0.3 * m * (1 - u), perla(0.8, 0.08, 0.16 * m)]), popis: 'kužel s límcem' };
+      case 'vaza': return { f: u => 1 + 0.32 * m * Math.exp(-(((u - 0.28) / 0.2) ** 2)) * (1 - hladce(u, 0.6, 0.95)), popis: 'váza' };
+      case 'dva_prstence': return { f: sl([perla(0.18, 0.07, 0.15 * m), perla(0.36, 0.07, 0.15 * m)]), popis: '2 prstence' };
       case 'generator': {
         const nah = rng(k.seminko * 11 + 7), mezi = (a, b) => a + (b - a) * nah();
         const casti = [], popis = [];

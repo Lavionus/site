@@ -10,12 +10,15 @@
   const KLIC = 'webapp_davky';
   const STAV_K = '11/2026';
 
-  /* Redukční hranice: sdělení MPSV 397/2025 Sb. (2026) a 436/2024 Sb. (2025). Maximální VZ = 48× průměrná mzda.
+  /* Redukční hranice: sdělení MPSV 185/2026 Sb. (2027), 397/2025 Sb. (2026) a 436/2024 Sb. (2025). Maximální VZ = 48× průměrná mzda.
      Rodičovský příspěvek podle roku narození dítěte (117/1995 Sb. § 30): 2024–2025 vícerčata 525 000 Kč, od 2026 700 000 Kč;
      nejvyšší volba bez stanoveného DVZ 13 000 Kč (2025) / 15 000 Kč (2026). Hodinové hranice pro náhradu mzdy = denní × 0,175. */
   const PARAMETRY = {
     2025: { hranice: [1552, 2328, 4656], maxVZ: 2234736, rodicovsky: { celkem: 350000, vicercata: 525000, bezDvz: 13000 }, zdroj: 'sdělení MPSV 436/2024 Sb.' },
-    2026: { hranice: [1633, 2449, 4897], maxVZ: 2350416, rodicovsky: { celkem: 350000, vicercata: 700000, bezDvz: 15000 }, zdroj: 'sdělení MPSV 397/2025 Sb.' }
+    2026: { hranice: [1633, 2449, 4897], maxVZ: 2350416, rodicovsky: { celkem: 350000, vicercata: 700000, bezDvz: 15000 }, zdroj: 'sdělení MPSV 397/2025 Sb.' },
+    /* 2027: rodičovský 400 000 Kč pro děti narozené od 1. 1. 2027 (zákon 152/2026 Sb.); vícerčata 800 000 a strop
+       bez DVZ podle médií – ⚠ v textu zákona neověřeno, proto overit */
+    2027: { hranice: [1723, 2584, 5167], maxVZ: 2479824, rodicovsky: { celkem: 400000, vicercata: 800000, bezDvz: 15000 }, zdroj: 'sdělení MPSV 185/2026 Sb.', overit: true }
   };
   const ROKY = Object.keys(PARAMETRY).map(Number);
   const SAZBY = { nemocenske: [0.9, 0.6, 0.3], ppm: [1, 0.6, 0.3] };   // ppm = i otcovská a dlouhodobé ošetřovné
@@ -186,13 +189,13 @@
   }
 
   /* Poslední vstupy v localStorage. */
-  const vychozi = () => ({ verze: VERZE, mzda: 40000, osvc: false, hodinDen: 8, rok: ROKY[ROKY.length - 1], dnuUcasti: 365, pohled: 'nemocenska' });
+  const vychozi = () => ({ verze: VERZE, mzda: 40000, osvc: false, hodinDen: 8, rok: PARAMETRY[new Date().getFullYear()] ? new Date().getFullYear() : ROKY[ROKY.length - 1], dnuUcasti: 365, pohled: 'nemocenska' });
   function migruj(d) {
     const v = vychozi();
     if (!d || typeof d !== 'object') return v;
     for (const k of Object.keys(d)) if (k in v || /^(zacatek|narozeni|dnu|vicercata|samozivitel|dlouhodobe|volba)/.test(k)) v[k] = d[k];
     v.verze = VERZE;
-    if (!PARAMETRY[v.rok]) v.rok = ROKY[ROKY.length - 1];
+    if (!PARAMETRY[v.rok]) v.rok = vychozi().rok;
     return v;
   }
 

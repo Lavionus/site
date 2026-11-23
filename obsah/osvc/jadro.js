@@ -48,9 +48,28 @@
       pausalniDan: { mesicne: [9162, 16745, 27139], hraniceZakladni: [1000000, 1500000, 2000000], maxPrijmy: 2000000, ostatniPrijmyMax: 50000, overit: true },
       dpp: { limit: 12000, spZam: 0.071, zpZam: 0.045, spFirma: 0.248, zpFirma: 0.09, slevaMesic: 2570 },
       dpc: { limit: 4500, spZam: 0.071, zpZam: 0.045, spFirma: 0.248, zpFirma: 0.09, slevaMesic: 2570 }
+    },
+    /* 2027: průměrná mzda NV 177/2026 Sb., minimální mzda sdělení MPSV 171/2026 Sb., limit DPP 184/2026 Sb.,
+       rozhodný příjem 186/2026 Sb.; dary zpět na 15 % (zákon 24/2025 Sb. prodloužil 30 % jen do 2026).
+       Nové slevy 2027 (student, školkovné, zákon 180/2026 Sb.) kalkulačka nepočítá. */
+    2027: {
+      rok: 2027,
+      prumernaMzda: 51663,
+      minimalniMzda: 24900,
+      sazbaDan: 0.15, sazbaDanVyssi: 0.23, nasobekHranice: 36,     // 1 859 868 Kč
+      /* rozhodná částka 2,4 × PM = 123 991,20 – zdroje uvádějí 123 991 i 123 992 (⚠ ověřit u ČSSZ) */
+      sp: { sazba: 0.292, podilZakladu: 0.55, minHlavni: 0.35, minVedlejsi: 0.11, maxNasobek: 48, rozhodnaCastkaVedlejsi: 123991, overit: true },
+      zp: { sazba: 0.135, podilZakladu: 0.50, minHlavni: 0.50 },
+      slevy: { poplatnik: 30840, manzel: 24840, invalidita12: 2520, invalidita3: 5040, ztpp: 16140, deti: [15204, 22320, 27840] },
+      nezdanitelne: { penzijniZivotniMax: 48000, daryMaxPodil: 0.15, daryMin: 1000 },
+      /* 1. pásmo 100 + 6 074 + 3 488 = 9 662 (bez přirážky za nepoužívání EET podle 180/2026 Sb.) */
+      pausalniDan: { mesicne: [9662, 16745, 27139], hraniceZakladni: [1000000, 1500000, 2000000], maxPrijmy: 2000000, ostatniPrijmyMax: 50000, overit: true },
+      dpp: { limit: 12500, spZam: 0.071, zpZam: 0.045, spFirma: 0.248, zpFirma: 0.09, slevaMesic: 2570 },
+      dpc: { limit: 5000, spZam: 0.071, zpZam: 0.045, spFirma: 0.248, zpFirma: 0.09, slevaMesic: 2570 }
     }
   };
   const ROKY = Object.keys(PARAMETRY).map(Number);
+  const ROK_TED = PARAMETRY[new Date().getFullYear()] ? new Date().getFullYear() : ROKY[ROKY.length - 1];
 
   const kc = v => Math.max(0, Math.round(Number(v) || 0));
   const ceil = v => Math.ceil(v - 1e-9);
@@ -58,7 +77,7 @@
   /* ---------- vstupy ---------- */
   function normVstup(v) {
     v = v || {};
-    const rok = PARAMETRY[v.rok] ? Number(v.rok) : ROKY[ROKY.length - 1];
+    const rok = PARAMETRY[v.rok] ? Number(v.rok) : ROK_TED;
     const inv = ['0', '12', '3', 'ztpp'].includes(String(v.invalidita)) ? String(v.invalidita) : '0';
     return {
       rok, prijmy: kc(v.prijmy), vydaje: kc(v.vydaje),

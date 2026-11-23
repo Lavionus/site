@@ -81,7 +81,7 @@ I18N.pridej('en', {
   'Výška lemů, které drží běhoun na jádře': 'Height of the flanges that keep the tread on the core',
   'Uložení': 'Saving',
   'Druh': 'Type',
-  'Ložisko': 'Ložisko',
+  'Ložisko': 'Bearing',
   'Počet ložisek': 'Number of bearings',
   '2 (s osazením)': '2 (with shoulder)',
   'Vůle sedla': 'Seat clearance',

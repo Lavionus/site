@@ -89,6 +89,10 @@
     { nazev: 'Tulipán s květem a vrutem', popis: 'tulipánová hlava s laloky, vrut do dřeva se zápustnou hlavou',
       p: { nazev: 'Knob tulipán', knob: { tvar: 'tulipan', prumer: 52, hlava: 44, krcek: 24, pudorys: 'kvet', pocet: 8, hloubka: 1.6 },
         krcek: { tvar: 'patka', delka: 18 }, sroub: { uchyceni: 'vrut', velikost: 'vlastni', prumer: 3.5, odsazeni: 7 } } },
+    { nazev: 'Kapka s límcem', popis: 'kapkovitá hlava, krček s límcem pod hlavou, čtyřhran 8 mm',
+      p: { nazev: 'Knob kapka', knob: { tvar: 'kapka', prumer: 50, hlava: 46, krcek: 22 }, krcek: { tvar: 'limec', delka: 18, mira: 1 } } },
+    { nazev: 'Poupě na váze', popis: 'hlava jako poupě, krček do vázy s oblým náběhem',
+      p: { nazev: 'Knob poupě', knob: { tvar: 'poupe', prumer: 50, hlava: 48, krcek: 22 }, krcek: { tvar: 'vaza', delka: 22, mira: 1 } } },
     { nazev: 'Vlastní skica', popis: 'obrys hlavy tažením bodů',
       p: { nazev: 'Knob skica', knob: { tvar: 'vlastni' } } },
   ];

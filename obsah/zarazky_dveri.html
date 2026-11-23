@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zarážky a aretace dveří a oken – 3D generátor</title>
+  <meta name="description" content="Generátor zarážek a aretací dveří a oken pro 3D tisk: klín pod dveře podle mezery s výpočtem prokluzu (V-drážky, kapsy na nožičky, ražený text), zarážka s neodymovým magnetem na zeď nebo podlahu s protikusem, kapsou na magnet (zalisovaný nebo vložený při pauze tisku) a tlumením, ventilační hřeben okna a doraz nábytkových dvířek. Tisk bez podpor, kalibrační vzorek, výkres a vrtací šablona, export STL a 3MF.">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="gen3d/gui.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
+  <script src="krabicky/jadro.js"></script>
+  <script src="zarazky_dveri/jadro.js"></script>
+  <script src="zarazky_dveri/vykres.js"></script>
+  <script src="knofliky/nahled.js"></script>
+  <script src="lib/jspdf.umd.min.js" defer></script>
+  <script src="../tvary.js"></script>
+  <style>
+    :root { --sloupec: 330px; }
+    button, select, input { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    #platno { position: absolute; inset: 0; }
+    .stav3d { position: absolute; left: 10px; top: 56px; font-size: 0.8rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: calc(100% - 20px); z-index: 2; }
+    .stav3d:empty { display: none; }
+    .stav3d.chyba { color: var(--danger); border-color: var(--danger); }
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    .aplikace input[type="text"], .aplikace select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0;
+    }
+    .aplikace input:focus, .aplikace select:focus { outline: none; border-color: var(--accent); }
+    input.spatne { border-color: var(--danger) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0 10px; align-items: end; }
+    .pole { min-width: 0; position: relative; }
+    .jedn { position: absolute; right: 9px; bottom: 7px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 34px; }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .dlazdice { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 9px; min-width: 0; }
+    .dlazdice .popis { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 2px; }
+    .dlazdice .cislo { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+    .dlazdice .dalsi { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--warn); } .chyba-t { color: var(--danger); }
+    .hlaseni { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; line-height: 1.4; padding: 0; margin: 0; }
+    .hlaseni li { padding: 5px 9px; border-left: 3px solid var(--border-strong); background: var(--bg-elevated); border-radius: 4px; }
+    .hlaseni li.chyba { border-left-color: var(--danger); }
+    .hlaseni li.varovani { border-left-color: var(--warn); }
+    .hlaseni li.info { border-left-color: var(--text-faint); color: var(--text-muted); }
+    .hlaseni li.ok { border-left-color: var(--ok); }
+    .hlaseni li.skok { cursor: pointer; }
+    .hlaseni li.skok:hover, .hlaseni li.skok:focus-visible { background: var(--bg-hover); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+    .hlaseni li .kam { display: block; font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
+    .hlaseni li .oprava { margin-top: 4px; padding: 2px 8px; font-size: 0.74rem; }
+    @keyframes zvyrazni { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-soft); } 100% { box-shadow: none; } }
+    .zvyrazni { animation: zvyrazni 2.4s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .zvyrazni { animation: none; box-shadow: 0 0 0 3px var(--accent); } }
+    .tabulka { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
+    .tabulka th, .tabulka td { text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .tabulka th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; }
+    .tabulka td.c, .tabulka th.c { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+    .tabulka tr.vybrano td { background: var(--accent-soft); }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    .skryty { display: none; }
+    dialog.napoveda-dlg { margin: auto; max-width: min(760px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
+    #canvas-container:active { cursor: grabbing; }
+    .rezimy { position: absolute; left: 10px; top: 10px; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: calc(100% - 20px);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 4px; font-size: 0.78rem; }
+    .rezimy button { border: 1px solid transparent; background: none; color: var(--text-muted); border-radius: 6px; padding: 5px 10px; min-height: 30px; cursor: pointer; font-size: 0.78rem; }
+    .rezimy button:hover { background: var(--bg-hover); color: var(--text); }
+    .rezimy button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+    @media (max-width: 600px) { .stav3d { top: 96px; } }
+    @media (min-width: 1001px) { .stred .box-obecne { flex: 0 0 38%; max-height: 38%; } }
+    .karta3d { position: absolute; right: 10px; top: 56px; z-index: 2; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+      max-width: min(250px, 55%); pointer-events: none; }
+    .karta3d:empty { display: none; }
+    .karta3d b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+    .legenda-rezu { position: absolute; left: 10px; bottom: 10px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+    .legenda-rezu i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #c0504d; vertical-align: -1px; margin-right: 4px; }
+    .box-obecne { max-height: 46%; }
+    .box-out > .box-telo { padding: 0; }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .box-telo .tl, .zalozka-telo .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    @media (max-width: 600px) { .karta3d { display: none; } }
+    .vykres-obsah { padding: 8px; overflow: auto; background: var(--bg-input); border-radius: 6px; }
+    .vykres-obsah svg { display: block; width: 100%; height: auto; max-width: 1150px; margin: 0 auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+    .nab-skupina { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); padding: 6px 9px 2px; }
+    .pozn-data { font-size: 0.7rem; color: var(--text-faint); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Zarážky a aretace dveří a oken"><span aria-hidden="true">🛑</span><span class="jmeno"> Zarážky a aretace</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje zarážky…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – všechny díly <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – všechny díly</button>
+            <button class="pol" id="btnZip" role="menuitem">⬇ ZIP – díly zvlášť <span class="pozn">jeden STL na díl (TPU zvlášť)</span></button>
+            <button class="pol" id="btnKalStl" role="menuitem">⬇ STL – kalibrační vzorek <span class="pozn">kapsa magnetu ± vůle</span></button>
+            <hr>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Přepíše druh, rozměry a materiál (vrstva a podložka zůstanou)</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <hr>
+            <button class="pol" id="tOkoli" role="menuitemcheckbox" aria-pressed="true">🚪 Dveře, zeď a podlaha v sestavě <span class="pozn">O</span></button>
+            <div class="nab-tip">Řez ukáže kapsy magnetů, drážky a zápustné díry uvnitř dílů.</div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku – profil <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu – drážky <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" id="btnVykres" role="menuitem">👁 Zobrazit výkres</button>
+            <button class="pol" id="btnVykresSvg" role="menuitem">⬇ SVG</button>
+            <button class="pol" id="btnVykresPdf" role="menuitem">⬇ PDF <span class="pozn">A4 naležato</span></button>
+            <button class="pol" id="btnSablona" role="menuitem">⬇ Vrtací šablona 1 : 1 <span class="pozn">PDF, tisk 100 %</span></button>
+          </div>
+        </div>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
+
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">◢ Díl</button>
+      <button data-ukaz="obecne" class="aktivni">🛑 Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Montáž ⚙</button>
+    </nav>
+
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxDil" data-box="in" aria-label="Druh a rozměry dílu">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">◢</span><h2>Druh a rozměry</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <div class="typy" id="paletaDruhu" role="group" aria-label="Druh dílu">
+            <button type="button" data-druh-dl="klin" aria-pressed="false"><span aria-hidden="true">◢</span><span>Klín pod dveře</span></button>
+            <button type="button" data-druh-dl="magnet" aria-pressed="false"><span aria-hidden="true">🧲</span><span>Zarážka s magnetem</span></button>
+            <button type="button" data-druh-dl="aretace" aria-pressed="false"><span aria-hidden="true">🪟</span><span>Aretace okna / dveří</span></button>
+          </div>
+          <p class="napoveda" id="napDruh"></p>
+
+          <!-- klín -->
+          <details class="oddil" data-oddil="klin" data-druh="klin" open>
+            <summary><span class="oddil-nazev">Mezera a sklon</span><span class="souhrn" id="sKlin"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_hmin">Mezera pod dveřmi min</label><input type="text" inputmode="decimal" class="mm" id="f_hmin" data-p="klin.hMin" title="Nejmenší mezera, kterou má klín zaklínit"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_hmax">Mezera max</label><input type="text" inputmode="decimal" class="mm" id="f_hmax" data-p="klin.hMax" title="Největší mezera (např. nad prahem nebo kobercem)"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_sklon">Sklon</label><input type="text" inputmode="decimal" class="mm" id="f_sklon" data-p="klin.sklon" title="Menší sklon = delší klín, ale méně klouže"><span class="jedn">°</span></div>
+                <div class="pole"><label for="f_sirka">Šířka</label><input type="text" inputmode="decimal" class="mm" id="f_sirka" data-p="klin.sirka"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_spicka">Tloušťka špičky</label><input type="text" inputmode="decimal" class="mm" id="f_spicka" data-p="klin.spicka" title="Aspoň 1,2 mm, ať se neulomí"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_rez">Rezerva vzadu</label><input type="text" inputmode="decimal" class="mm" id="f_rez" data-p="klin.rezerva" title="O kolik je zadní hrana vyšší než největší mezera"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napKlin"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="spodek" data-druh="klin" open>
+            <summary><span class="oddil-nazev">Spodek a podlaha</span><span class="souhrn" id="sSpodek"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_podlaha">Podlaha</label><select id="f_podlaha" data-p="klin.podlaha" data-typ="text"></select></div>
+                <div class="pole"><label for="f_spodek">Spodek</label><select id="f_spodek" data-p="klin.spodek" data-typ="text">
+                  <option value="drazky">protiskluzové V-drážky</option><option value="kapsy">kapsy na pryžové nožičky</option><option value="hladky">hladký</option></select></div>
+                <div class="pole" data-spodek="drazky"><label for="f_roztec">Rozteč drážek</label><input type="text" inputmode="decimal" class="mm" id="f_roztec" data-p="klin.roztec"><span class="jedn">mm</span></div>
+                <div class="pole" data-spodek="drazky"><label for="f_hlub">Hloubka drážek</label><input type="text" inputmode="decimal" class="mm" id="f_hlub" data-p="klin.hloubka" title="Boky 45° – tisk bez podpor"><span class="jedn">mm</span></div>
+                <div class="pole" data-spodek="kapsy"><label for="f_nd">Nožička Ø</label><input type="text" inputmode="decimal" class="mm" id="f_nd" data-p="klin.nozickaD"><span class="jedn">mm</span></div>
+                <div class="pole" data-spodek="kapsy"><label for="f_nh">Hloubka kapsy</label><input type="text" inputmode="decimal" class="mm" id="f_nh" data-p="klin.nozickaH"><span class="jedn">mm</span></div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="oko" data-druh="klin" open>
+            <summary><span class="oddil-nazev">Očko a text</span><span class="souhrn" id="sOko"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt"><input type="checkbox" id="f_oko" data-p="klin.oko" data-typ="bool"> Očko na zavěšení (háček, šňůrka)</label>
+              <div class="mrizka">
+                <div class="pole" data-oko="1"><label for="f_okod">Díra očka Ø</label><input type="text" inputmode="decimal" class="mm" id="f_okod" data-p="klin.okoD"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_text">Ražený text</label><input type="text" id="f_text" data-p="klin.text" data-typ="text" maxlength="20" title="Prázdné = bez textu"></div>
+                <div class="pole"><label for="f_vt">Výška písma</label><input type="text" inputmode="decimal" class="mm" id="f_vt" data-p="klin.vyskaTextu"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_ht">Hloubka písma</label><input type="text" inputmode="decimal" class="mm" id="f_ht" data-p="klin.hloubkaTextu"><span class="jedn">mm</span></div>
+              </div>
+            </div>
+          </details>
+
+          <!-- magnet -->
+          <details class="oddil" data-oddil="sloupek" data-druh="magnet" open>
+            <summary><span class="oddil-nazev">Zarážka (sloupek)</span><span class="souhrn" id="sSloupek"></span></summary>
+            <div class="oddil-telo">
+              <div class="pole"><label for="f_montaz">Montáž</label><select id="f_montaz" data-p="magnet.montaz" data-typ="text">
+                <option value="stena">na zeď (protikus = terčík na dveřích)</option><option value="podlaha">na podlahu (úhelník s jazykem na dveřích)</option></select></div>
+              <div class="mrizka">
+                <div class="pole"><label for="f_mpr">Sloupek Ø</label><input type="text" inputmode="decimal" class="mm" id="f_mpr" data-p="magnet.prumer"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mvy">Délka / výška</label><input type="text" inputmode="decimal" class="mm" id="f_mvy" data-p="magnet.vyska" title="Od zdi / podlahy po čelo – u nástěnné aspoň o kliku víc než vyčnívá klika"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mpri">Příruba Ø</label><input type="text" inputmode="decimal" class="mm" id="f_mpri" data-p="magnet.priruba" title="0 = automaticky podle vrutů / pásky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mtp">Tloušťka příruby</label><input type="text" inputmode="decimal" class="mm" id="f_mtp" data-p="magnet.tlPriruby"><span class="jedn">mm</span></div>
+              </div>
+              <div class="pole"><label for="f_tlum">Tlumení nárazu</label><select id="f_tlum" data-p="magnet.tlumeni" data-typ="text">
+                <option value="tpu">TPU kroužek (zvláštní díl)</option><option value="oring">O-kroužek v drážce</option><option value="zadne">bez tlumení</option></select></div>
+              <div class="mrizka">
+                <div class="pole" data-tlum="tpu"><label for="f_tput">Stěna kroužku</label><input type="text" inputmode="decimal" class="mm" id="f_tput" data-p="magnet.tpuTl"><span class="jedn">mm</span></div>
+                <div class="pole" data-tlum="tpu"><label for="f_tpuv">Výška kroužku</label><input type="text" inputmode="decimal" class="mm" id="f_tpuv" data-p="magnet.tpuVyska"><span class="jedn">mm</span></div>
+                <div class="pole" data-tlum="tpu" data-montaz="stena"><label for="f_tpup">Přesah před čelo</label><input type="text" inputmode="decimal" class="mm" id="f_tpup" data-p="magnet.tpuPresah" title="O kolik kroužek vyčnívá – dveře narazí na něj, ne na magnet"><span class="jedn">mm</span></div>
+                <div class="pole" data-tlum="oring"><label for="f_ord">Průřez O-kroužku</label><input type="text" inputmode="decimal" class="mm" id="f_ord" data-p="magnet.oringD"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napSloupek"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="kapsa" data-magsekce="1" open>
+            <summary><span class="oddil-nazev">Magnet a kapsa</span><span class="souhrn" id="sKapsa"></span></summary>
+            <div class="oddil-telo">
+              <div class="pole"><label for="f_mrych">Běžný magnet</label><select id="f_mrych"><option value="">– vlastní rozměr –</option></select></div>
+              <div class="mrizka">
+                <div class="pole"><label for="f_md">Magnet Ø</label><input type="text" inputmode="decimal" class="mm" id="f_md" data-p="magnet.magnetD"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mh">Výška magnetu</label><input type="text" inputmode="decimal" class="mm" id="f_mh" data-p="magnet.magnetH"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_mtr">Třída</label><select id="f_mtr" data-p="magnet.trida" data-typ="text"><option>N35</option><option>N42</option><option>N52</option></select></div>
+                <div class="pole"><label for="f_mvu">Vůle na poloměr</label><input type="text" inputmode="text" class="mm" id="f_mvu" data-p="magnet.vule" title="Záporná = lisovat ztuha; ověřte kalibračním vzorkem"><span class="jedn">mm</span></div>
+              </div>
+              <div class="pole" data-druh="magnet"><label for="f_vloz">Vložení magnetu</label><select id="f_vloz" data-p="magnet.vlozeni" data-typ="text">
+                <option value="lisovany">zalisovat po tisku (otevřená kapsa)</option><option value="pauza">vložit při pauze tisku (zakrytá kapsa)</option></select></div>
+              <div class="mrizka" data-vloz="pauza" data-druh="magnet">
+                <div class="pole"><label for="f_kry">Krytí nad magnetem</label><input type="text" inputmode="decimal" class="mm" id="f_kry" data-p="magnet.kryti" title="Tloušťka plastu nad magnetem – každá desetina snižuje sílu"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napKapsa"></p>
+            </div>
+          </details>
+
+          <!-- aretace -->
+          <details class="oddil" data-oddil="aretace" data-druh="aretace" open>
+            <summary><span class="oddil-nazev">Aretace</span><span class="souhrn" id="sAretace"></span></summary>
+            <div class="oddil-telo">
+              <div class="pole"><label for="f_atyp">Typ</label><select id="f_atyp" data-p="aretace.typ" data-typ="text">
+                <option value="hreben">ventilační hřeben (okno, dveře)</option><option value="nabytek">doraz dvířek / šuplíku</option></select></div>
+              <div data-atyp="hreben">
+                <div class="pole"><label for="f_apol">Polohy pootevření (mm, oddělit středníkem)</label><input type="text" id="f_apol" data-p="aretace.polohy" data-typ="text" maxlength="200" title="Např. 0; 25; 50; 80 – 0 = zajištěno zavřené"></div>
+                <div class="mrizka">
+                  <div class="pole"><label for="f_avz">Čep – kolík (zavřeno)</label><input type="text" inputmode="decimal" class="mm" id="f_avz" data-p="aretace.vzdalenost" title="Vzdálenost osy čepu na rámu od osy kolíku na křídle při zavřeném křídle"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_akd">Kolík Ø</label><input type="text" inputmode="decimal" class="mm" id="f_akd" data-p="aretace.kolikD"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_avu">Vůle zářezu</label><input type="text" inputmode="decimal" class="mm" id="f_avu" data-p="aretace.vule" title="Na každou stranu kolíku"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_acd">Čep Ø</label><input type="text" inputmode="decimal" class="mm" id="f_acd" data-p="aretace.cepD"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_avr">Výška ramene</label><input type="text" inputmode="decimal" class="mm" id="f_avr" data-p="aretace.vyskaRamene"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_atr">Tloušťka ramene</label><input type="text" inputmode="decimal" class="mm" id="f_atr" data-p="aretace.tlRamene"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_adi">Distanční kroužek</label><input type="text" inputmode="decimal" class="mm" id="f_adi" data-p="aretace.distanc" title="Zvedne rameno nad patku kolíku"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_aods">Křídlo výš než rám</label><input type="text" inputmode="text" class="mm" id="f_aods" data-p="aretace.odsazeni" title="Výškový rozdíl ploch, na které se patky šroubují (záporné = křídlo níž)"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_anah">Náhled v poloze</label><input type="text" inputmode="numeric" class="mm" id="f_anah" data-p="aretace.nahled" title="Pořadí zářezu, ve kterém náhled ukáže kolík"><span class="jedn">č.</span></div>
+                </div>
+              </div>
+              <div data-atyp="nabytek">
+                <div class="mrizka">
+                  <div class="pole"><label for="f_nvy">Výška dorazu</label><input type="text" inputmode="decimal" class="mm" id="f_nvy" data-p="nabytek.vyska"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_nde">Délka desky</label><input type="text" inputmode="decimal" class="mm" id="f_nde" data-p="nabytek.delka"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_nsi">Šířka</label><input type="text" inputmode="decimal" class="mm" id="f_nsi" data-p="nabytek.sirka"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_ntl">Tloušťka stěny</label><input type="text" inputmode="decimal" class="mm" id="f_ntl" data-p="nabytek.tl"><span class="jedn">mm</span></div>
+                </div>
+                <div class="pole"><label for="f_nnar">Čelo dorazu</label><select id="f_nnar" data-p="nabytek.narazy" data-typ="text">
+                  <option value="kapsa">kapsa na samolepicí nárazník</option><option value="magnet">kapsa na magnet (západka)</option><option value="zadne">bez kapsy</option></select></div>
+                <div class="mrizka" data-nnar="kapsa">
+                  <div class="pole"><label for="f_nnd">Nárazník Ø</label><input type="text" inputmode="decimal" class="mm" id="f_nnd" data-p="nabytek.narazD"><span class="jedn">mm</span></div>
+                  <div class="pole"><label for="f_nnh">Hloubka kapsy</label><input type="text" inputmode="decimal" class="mm" id="f_nnh" data-p="nabytek.narazH"><span class="jedn">mm</span></div>
+                </div>
+                <p class="napoveda" data-nnar="magnet">Rozměr magnetu a vůle kapsy nastavíte v oddílu <i>Magnet a kapsa</i> výše.</p>
+              </div>
+              <p class="napoveda" id="napAretace"></p>
+            </div>
+          </details>
+        </div>
+      </aside>
+      <section class="stred">
+        <div id="canvas-container" aria-label="3D náhled">
+          <div id="platno"></div>
+          <div class="rezimy" role="group" aria-label="Co náhled ukazuje">
+            <button type="button" data-rezim="sestava" aria-pressed="true" title="Díly na místě – u dveří, zdi nebo okna">Sestava</button>
+            <button type="button" data-rezim="tisk" aria-pressed="false" title="Díly na podložce, jak se tisknou (klávesa M)">Tisk</button>
+            <button type="button" data-rezim="kalibrace" aria-pressed="false" title="Kalibrační vzorek kapsy magnetu ± vůle">Kalibrace</button>
+          </div>
+          <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
+          <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
+        </div>
+        <div class="box box-obecne" aria-label="Výsledky, výpočty, tisk a kontrola">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="vypocty" aria-selected="false">⚖ Výpočty</button>
+            <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk</button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">🧾 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje zarážky</button>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vVysledky"></div></div>
+          <div class="zalozka-telo" data-telo="vypocty" role="tabpanel" hidden>
+            <div class="mrizka" data-druh="magnet">
+              <div class="pole"><label for="f_dm">Hmotnost dveří</label><input type="text" inputmode="decimal" class="mm" id="f_dm" data-p="dvere.hmotnost"><span class="jedn">kg</span></div>
+              <div class="pole"><label for="f_ds">Šířka dveří</label><input type="text" inputmode="decimal" class="mm" id="f_ds" data-p="dvere.sirka"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_dv">Výška dveří</label><input type="text" inputmode="decimal" class="mm" id="f_dv" data-p="dvere.vyska"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_dpo">Zarážka od pantu</label><input type="text" inputmode="decimal" class="mm" id="f_dpo" data-p="dvere.poloha" title="Vzdálenost místa nárazu od osy pantů"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_dry">Rychlost kliky</label><input type="text" inputmode="decimal" class="mm" id="f_dry" data-p="dvere.rychlost" title="0,3 = běžné otevření, 1–2 = rozražené průvanem"><span class="jedn">m/s</span></div>
+              <div class="pole"><label for="f_dme">Mezera pod dveřmi</label><input type="text" inputmode="decimal" class="mm" id="f_dme" data-p="dvere.mezera"><span class="jedn">mm</span></div>
+            </div>
+            <div class="mrizka" data-druh="aretace" data-atyp="hreben">
+              <div class="pole"><label for="f_aoz">Kolík od pantů</label><input type="text" inputmode="decimal" class="mm" id="f_aoz" data-p="aretace.odZavesu"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_aks">Šířka křídla</label><input type="text" inputmode="decimal" class="mm" id="f_aks" data-p="aretace.kridloS"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_akv">Výška křídla</label><input type="text" inputmode="decimal" class="mm" id="f_akv" data-p="aretace.kridloV"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_avi">Vítr</label><input type="text" inputmode="decimal" class="mm" id="f_avi" data-p="aretace.vitr" title="10 m/s = čerstvý vítr, 17 m/s = vichřice"><span class="jedn">m/s</span></div>
+            </div>
+            <div class="mrizka" data-druh="aretace" data-atyp="nabytek">
+              <div class="pole"><label for="f_nhm">Účinná hmotnost</label><input type="text" inputmode="decimal" class="mm" id="f_nhm" data-p="nabytek.hmotnost" title="Šuplík = celá hmotnost s náplní; dvířka ≈ třetina hmotnosti"><span class="jedn">kg</span></div>
+              <div class="pole"><label for="f_nry">Rychlost nárazu</label><input type="text" inputmode="decimal" class="mm" id="f_nry" data-p="nabytek.rychlost"><span class="jedn">m/s</span></div>
+            </div>
+            <div class="vysledky" id="vVypocty" style="margin-top:8px"></div>
+            <table class="tabulka" id="tabVypocty"></table>
+            <p class="napoveda" id="napVypocty"></p>
+            <p class="pozn-data">Součinitele tření, únosnosti vrutů a přídržné síly magnetů jsou typické hodnoty (11/2026) – orientačně, ověřte měřením.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_material">Materiál</label><select id="f_material" data-p="tisk.material" data-typ="text"></select></div>
+              <div class="pole"><label for="f_vrstva">Výška vrstvy</label><input type="text" inputmode="decimal" class="mm" id="f_vrstva" data-p="tisk.vrstva" title="Podle ní se počítá výška pauzy pro vložení magnetu"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_uhel">Největší převis</label><input type="text" inputmode="decimal" class="mm" id="f_uhel" data-p="tisk.uhel" title="Úhel od svislice, který tiskárna zvládne bez podpor"><span class="jedn">°</span></div>
+              <div class="pole"><label for="f_sad">Kusů</label><input type="text" inputmode="numeric" class="mm" id="f_sad" data-p="tisk.sad"><span class="jedn">ks</span></div>
+              <div class="pole"><label for="f_podl">Šířka podložky</label><input type="text" inputmode="decimal" class="mm" id="f_podl" data-p="tisk.podlozka"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_krok">Krok vůle v kalibraci</label><input type="text" inputmode="decimal" class="mm" id="f_krok" data-p="tisk.krokKalibrace" title="Kapsy vzorku mají vůli −2, −1, 0, +1, +2 kroky"><span class="jedn">mm</span></div>
+            </div>
+            <label class="zaskrt"><input type="checkbox" id="f_kal" data-p="tisk.kalibrace" data-typ="bool"> Přidat kalibrační vzorek k exportu všech dílů</label>
+            <p class="napoveda" id="napTisk"></p>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden><div id="kusovnik"></div></div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
+            <ul class="hlaseni" id="hlaseni"></ul>
+            <div class="vysledky" id="vSit" style="margin-top:8px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="vykres" role="tabpanel" hidden>
+            <div class="tlacitka" style="margin:0 0 6px"><button type="button" class="tl" id="btnVykresSvg2">⬇ SVG</button><button type="button" class="tl" id="btnVykresPdf2">⬇ PDF</button><button type="button" class="tl" id="btnSablona2">⬇ Vrtací šablona 1 : 1</button></div>
+            <div class="vykres-obsah" id="vykresObsah" data-i18n="ne"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
+        </div>
+      </section>
+
+      <aside class="box box-out" id="boxMontaz" data-box="out" aria-label="Montáž">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Montáž</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <p class="napoveda" data-druh="klin" style="padding:10px 12px">Klín se nepřipevňuje – zasune se pod dveře špičkou napřed a zavěsí za očko. Mezeru pod dveřmi změřte u pantů i u kliky (u kliky bývá větší).</p>
+          <details class="oddil" data-oddil="uchyceni" data-druh="magnet" open>
+            <summary><span class="oddil-nazev">Uchycení zarážky</span><span class="souhrn" id="sUch"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_much">Uchycení</label><select id="f_much" data-p="magnet.uchyceni" data-typ="text"><option value="srouby">vruty se zápustnou hlavou</option><option value="paska">oboustranná páska</option></select></div>
+                <div class="pole" data-uch="srouby"><label for="f_mns">Vrutů v přírubě</label><input type="text" inputmode="numeric" class="mm" id="f_mns" data-p="magnet.pocetSroubu"><span class="jedn">ks</span></div>
+              </div>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="sroub" open>
+            <summary><span class="oddil-nazev">Vruty</span><span class="souhrn" id="sSroub"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_vrut">Vrut</label><select id="f_vrut" data-p="sroub.vrut"></select></div>
+                <div class="pole"><label for="f_hlava">Hlava</label><select id="f_hlava" data-p="sroub.hlava" data-typ="text"><option value="zapustna">zápustná 90°</option><option value="cockova">čočková / půlkulatá</option></select></div>
+                <div class="pole"><label for="f_podk">Podklad</label><select id="f_podk" data-p="sroub.podklad" data-typ="text"></select></div>
+              </div>
+              <p class="napoveda" id="napSroub"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="protikus" data-druh="magnet" open>
+            <summary><span class="oddil-nazev">Protikus na dveře</span><span class="souhrn" id="sProtikus"></span></summary>
+            <div class="oddil-telo">
+              <div class="pole"><label for="f_pk">Do protikusu</label><select id="f_pk" data-p="magnet.protikus" data-typ="text"><option value="podlozka">ocelová podložka</option><option value="magnet">druhý magnet (stejný)</option></select></div>
+              <div class="mrizka">
+                <div class="pole" data-pk="podlozka"><label for="f_pd">Podložka Ø</label><input type="text" inputmode="decimal" class="mm" id="f_pd" data-p="magnet.podlozkaD"><span class="jedn">mm</span></div>
+                <div class="pole" data-pk="podlozka"><label for="f_pt">Tloušťka podložky</label><input type="text" inputmode="decimal" class="mm" id="f_pt" data-p="magnet.podlozkaT" title="Ocel slabší než polovina výšky magnetu sílu sníží"><span class="jedn">mm</span></div>
+                <div class="pole" data-montaz="stena"><label for="f_ptl">Tloušťka terčíku</label><input type="text" inputmode="decimal" class="mm" id="f_ptl" data-p="magnet.protikusTl"><span class="jedn">mm</span></div>
+                <div class="pole" data-montaz="podlaha"><label for="f_psu">Šířka úhelníku</label><input type="text" inputmode="decimal" class="mm" id="f_psu" data-p="magnet.sirkaUhelniku"><span class="jedn">mm</span></div>
+                <div class="pole" data-montaz="podlaha"><label for="f_pme">Mezera nad sloupkem</label><input type="text" inputmode="decimal" class="mm" id="f_pme" data-p="magnet.mezera" title="Vzduch mezi jazykem a čelem sloupku"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napProtikus"></p>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+<dialog class="napoveda-dlg" id="dlgNapoveda">
+  <div class="hlava"><h2>Zarážky a aretace – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p><b>Co to je.</b> Generátor tří druhů dílů: <b>klín pod dveře</b> navržený podle mezery pod dveřmi (nejmenší a největší) a sklonu,
+      <b>zarážka s neodymovým magnetem</b> na zeď nebo na podlahu s protikusem na dveře, a <b>aretace</b> – ventilační hřeben okna či dveří
+      (rameno se zářezy na čepu na rámu, kolík na křídle) nebo doraz nábytkových dvířek a šuplíků.</p>
+    <p><b>Klín.</b> Drží, dokud je tangens sklonu menší než součinitel tření spodku o podlahu. Tvrdý plast (PLA, PETG) klouže už od asi 12°,
+      TPU nebo pryžové nožičky drží i přes 30°. Záložka ⚖ Výpočty ukáže mez pro všechny podlahy. Délka klínu vychází ze sklonu a největší mezery.</p>
+    <p><b>Magnet.</b> Kapsa je buď <i>otevřená</i> (magnet se zalisuje po tisku – vůli odladíte <b>kalibračním vzorkem</b>, Soubor → STL – kalibrační vzorek:
+      5 kapes s vůlí −2…+2 kroky, počet zářezů na hraně = pořadí), nebo <i>zakrytá</i> – tisk se ve spočítané výšce pozastaví (v sliceru „pauza“ / M600 před vrstvou),
+      magnet se vloží a tiskárna ho překryje. Výšku vrstvy pro pauzu najdete v Kontrole a Výsledcích. Přídržná síla je orientační.</p>
+    <p><b>Jak tisknout.</b> Vše bez podpor v automatické tiskové poloze: klín spodkem dolů (V-drážky mají boky 45°), sloupek přírubou dolů, terčík zadní stranou dolů,
+      úhelník jazykem dolů, rameno hřebenu naplocho, patky deskou dolů. Vodorovné díry mají tvar kapky se špičkou nahoru (👁 Zobrazení → 💧 Díry jako kapka, klávesa K).
+      Klín a tlumicí kroužek z TPU, ostatní z PETG nebo ASA (na okně na slunci ne PLA).</p>
+    <p><b>Vruty</b> mají zápustný kužel 90° podle hlav DIN 7997 / ISO 7050 (Ø 3–5); únosnosti hmoždinek jsou typické hodnoty – ověřte u výrobce.
+      <b>Výkres</b> (📐) má hlavní rozměry a polohy děr, <b>vrtací šablona 1 : 1</b> se tiskne bez zvětšení (kontrolní úsečka 50 mm).</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha, <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka, <kbd>O</kbd> okolí,
+      <kbd>K</kbd> kapky, <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
+  </div>
+</dialog>
+<script src="zarazky_dveri/ui.js"></script>
+</body>
+</html>
