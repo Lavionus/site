@@ -14,7 +14,7 @@ Sael to slyšela od Tadeáše. Lada jí to neřekla. Lada s ní od soboty mluvil
 
 Truhlu otevřela v osm.
 
-Nejstarší list vyndala jako první, v obalu z nekyselého papíru, a položila ho na stůl na čisté plátno. Pak sundala z police balík se svazkem ze šestnáctého století. Ten se otevřel sám, u Doroty, jako vždycky. Sael ho zavřela a položila vedle listu.
+Nejstarší list vyndala jako první, v obalu z archivního papíru, a položila ho na stůl na čisté plátno. Pak sundala z police balík se svazkem ze šestnáctého století. Ten se otevřel sám, u Doroty, jako vždycky. Sael ho zavřela a položila vedle listu.
 
 Dlouho stála nad obojím.
 

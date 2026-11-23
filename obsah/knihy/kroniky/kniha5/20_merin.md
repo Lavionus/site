@@ -386,7 +386,7 @@ Ve čtvrtek osmnáctého července v sedm večer zazvonila Sael v Ostrově u dve
 
 Věra jí zavolala v pondělí. Poprvé od dubna. Řekla jen: *Ve čtvrtek. V sedm. Přineste to.* A zavěsila.
 
-V tašce měla Sael obálku z nekyselého papíru, kterou ušila sama, a v ní list Lindnerových z kazety. List třicet jedna. Patřil celé rodině, i Kláře, ale Klára si o něj zatím neřekla. Strojopis, poskakující *e*. Svatba, rok osmdesát devět. Narození dcery, devadesát sedm. Adresa v Ostrově, přepsaná na stroji dvakrát. A pod strojopisem dva řádky modrou propiskou, Liberec a návrat do Varů.
+V tašce měla Sael archivní obálku, kterou ušila sama, a v ní list Lindnerových z kazety. List třicet jedna. Patřil celé rodině, i Kláře, ale Klára si o něj zatím neřekla. Strojopis, poskakující *e*. Svatba, rok osmdesát devět. Narození dcery, devadesát sedm. Adresa v Ostrově, přepsaná na stroji dvakrát. A pod strojopisem dva řádky modrou propiskou, Liberec a návrat do Varů.
 
 Věra otevřela sama. V kuchyni za ní seděl muž, který o všem věděl a na nic se neptal, a díval se na televizi bez zvuku.
 

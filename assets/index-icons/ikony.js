@@ -434,6 +434,7 @@ const KATALOG_IKONY = {
   "obsah/stack-attack.html": "pages/page-stack-attack",
   "obsah/jump_game.html": "pages/page-jump_game",
   "obsah/backwardRide.html": "pages/page-backwardRide",
+  "obsah/blinkr.html": "pages/page-blinkr",
   "obsah/pozirani_bunek.html": "pages/page-pozirani_bunek",
   "obsah/fps_arena.html": "pages/page-fps_arena",
   "obsah/pristani.html": "pages/page-pristani",

@@ -122,7 +122,7 @@ Pak četla poslední.
 
 Šindelářová otevřela krabici.
 
-Kodex ležel v ní na boku, v obalu z nekyselé lepenky, který mu Sael zhotovila v roce dvacet sedm. Šindelářová ho vyndala oběma rukama a položila na klín z pěny. Desky z buku. Kozí kůže, odřená na hranách. Hřbet, ve kterém pořád seděl krystal se sintrem a šupina zlata pod šedým suknem, a nad ním výztuž z japonského papíru, kterou tam dala Sael. Viděla svou práci a viděla, že je dobrá. Nic víc si o tom nedovolila myslet.
+Kodex ležel v ní na boku, v obalu z archivní lepenky, který mu Sael zhotovila v roce dvacet sedm. Šindelářová ho vyndala oběma rukama a položila na klín z pěny. Desky z buku. Kozí kůže, odřená na hranách. Hřbet, ve kterém pořád seděl krystal se sintrem a šupina zlata pod šedým suknem, a nad ním výztuž z japonského papíru, kterou tam dala Sael. Viděla svou práci a viděla, že je dobrá. Nic víc si o tom nedovolila myslet.
 
 Šindelářová kodex otevřela tam, kde měl záložku.
 

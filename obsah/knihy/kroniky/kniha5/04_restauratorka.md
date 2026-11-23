@@ -380,7 +380,7 @@ Na uličce byl mráz a tma. Kostel svatého Mikuláše nad střechami měl rozsv
 
 Hana šla k autu pomalu. U auta se nezastavila. Šla dál, přes náměstí, kolem kašny s rytířem, kolem domů s vikýři. Chtěla jít. Nechtěla sedět.
 
-U archivu se zastavila. Budova byla tmavá, jen v přízemí svítilo okno vrátnice. Někde uvnitř, ve třetím patře, v depozitáři, kam Hana nesměla, ležela v krabici z nekyselé lepenky kniha velká jako dlaň. V ní mapa, která je špatně, a slovo *Tacui* na okraji, bez vysvětlení.
+U archivu se zastavila. Budova byla tmavá, jen v přízemí svítilo okno vrátnice. Někde uvnitř, ve třetím patře, v depozitáři, kam Hana nesměla, ležela v archivní krabici kniha velká jako dlaň. V ní mapa, která je špatně, a slovo *Tacui* na okraji, bez vysvětlení.
 
 Mnich věděl, o čem mlčí. Hana to nevěděla. Teď věděla aspoň jedno: o čem mlčela Sálová. Tři roky. A jak to napsala do protokolu, slovo *pokračuje*, devětkrát pod sebou, s vlastním podpisem.
 

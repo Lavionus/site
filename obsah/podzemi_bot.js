@@ -15,7 +15,7 @@
   function cestaK(s, cx, cy, sTeleporty) {
     const p = s.mapaPatra, m = p.mapa.slice();
     for (const t of s.truhly) m[t.y * p.w + t.x] = 0;          // truhly a překážky jsou zeď
-    for (const d of s.dekorace) if (d.druh !== 'kosti') m[d.y * p.w + d.x] = 0;
+    for (const d of s.dekorace) if (L.stoji(d) && !snadnoRozbit(d)) m[d.y * p.w + d.x] = 0;   // bednu a lebky prostě rozbije
     if (!s.hrac.batoh.some(q => q.typ === 'klic')) for (const i of s.zamcene) m[i] = 0;
     for (const i of s.mrize) m[i] = 0;                                 // mříž
     if (s.teleporty && !sTeleporty) for (const [x, y] of s.teleporty) if (x !== cx || y !== cy) m[y * p.w + x] = 0;
@@ -23,12 +23,28 @@
     m[cy * p.w + cx] = p.mapa[cy * p.w + cx] || 1;
     return L.vzdalenosti(m, p.w, p.h, cx, cy);
   }
+  const snadnoRozbit = d => !!L.ODOLNOST[d.druh] && L.ODOLNOST[d.druh][0] <= 3;
   function krokK(s, dist) {
     const p = s.mapaPatra;
     let best = -1, bd = 1e9;
     for (let k = 0; k < 4; k++) { const i = (s.y + DY[k]) * p.w + s.x + DX[k]; if (dist[i] >= 0 && dist[i] < bd) { bd = dist[i]; best = k; } }
     if (best < 0) return null;
-    return best === s.smer ? 'vpred' : ((best - s.smer + 4) % 4 === 3 ? 'otocL' : 'otocP');
+    const vec = L.dekoraceNa(s, s.x + DX[best], s.y + DY[best]);
+    return best === s.smer ? (vec ? 'utok' : 'vpred') : ((best - s.smer + 4) % 4 === 3 ? 'otocL' : 'otocP');
+  }
+  function volbaPoi(s, d) {
+    const h = s.hrac, o = L.odvozene(s), lze = id => L.moznostiPoi(s, d).some(v => v.id === id && v.lze);
+    const klid = !s.potvory.some(m => m.stav !== 'spi' && Math.abs(m.x - s.x) + Math.abs(m.y - s.y) <= 8);
+    switch (d.druh) {
+      case 'socha': return 'poklek';
+      case 'hrob': return 'ucta';
+      case 'koule': return 'pohled';
+      case 'alchymie': return h.batoh.filter(q => q.typ === 'jidlo').length >= 3 && lze('svar') ? 'svar' : lze('poznej') ? 'poznej' : null;
+      case 'fontana': return h.hp < o.maxHp * 0.8 ? 'napit' : null;
+      case 'taborak': return h.hp < o.maxHp * 0.7 && klid ? 'odpocinek' : null;
+      case 'studna': return lze('prani') && s.zlato >= 300 ? 'prani' : null;
+      default: return null;                          // kostky, houby, zrcadlo: hazard nechá být
+    }
   }
   function rozhodni(s, stat, volby) {
     volby = volby || {};
@@ -45,7 +61,15 @@
       return ['schopnost', PORADI.find(k => h.volba.includes(k))];
     }
     const lek = b.find(p => p.typ === 'lektvar' && s.zname.includes(p.lektvar) && (p.lektvar === 'leceni' || p.lektvar === 'velkeLeceni'));
+    // kniha kouzel: hojení dřív než lektvar, útočné kouzlo na potvoru v přímce (s rezervou many na hojení)
+    const umi = k => (h.kouzla || []).includes(k) && h.mana >= L.KOUZLA[k].mana;
+    if (!SLABY && h.hp < o.maxHp * 0.4 && umi('hojeni')) { stat.mana = (stat.mana || 0) + 1; return ['kouzlo', 'hojeni']; }
     if (h.hp < o.maxHp * 0.35 && lek) { stat.lektvaru++; return ['pouzij', lek.id]; }
+    if (!SLABY && honi) {
+      const { m } = L.cilVPrimce(s, 5), rezerva = (h.kouzla || []).includes('hojeni') ? 5 : 0;
+      const utocneK = ['blesk', 'ohen', 'led', 'jiskra'].find(k => umi(k) && h.mana - L.KOUZLA[k].mana >= rezerva);
+      if (m && utocneK && !L.BESTIAR[m.druh].zbabely) { stat.mana = (stat.mana || 0) + 1; return ['kouzlo', utocneK]; }
+    }
     const kouzlo = druh => b.find(q => (q.typ === 'svitek' || q.typ === 'hulka') && L.ZAKLADY[q.zaklad].kouzlo === druh);
     // nouzový únik lanem: dochází zdraví, není čím se léčit a potvora je u tebe
     const lano = b.find(q => q.zaklad === 'lano');
@@ -132,7 +156,7 @@
     }
     // blízké věci na zemi (jídlo ze skladiště, knihy…)
     if (b.length < L.kapacita(s) - 1 && !SLABY) for (const z of s.zeme) {
-      if ((!z.predmety.length && !z.zlato) || (z.x === s.x && z.y === s.y)) continue;   // co pod sebou nesebral, se nevejde
+      if ((!z.predmety.some(q => !q.polozeno) && !z.zlato) || (z.x === s.x && z.y === s.y)) continue;   // co sám položil, nechá ležet; co pod sebou nesebral, se nevejde
       const dist = cestaK(s, z.x, z.y), tady = dist[s.y * p.w + s.x];
       if (tady < 0 || tady > 10) continue;
       const a = krokK(s, dist);
@@ -183,6 +207,16 @@
         }
         const dist = cestaK(s, s.kovar.x, s.kovar.y), tady = dist[s.y * p.w + s.x];
         if (tady > 0 && tady < 40) { const a = krokK(s, dist); if (a) return [a]; }
+      }
+    }
+    // zajímavé místo (POI): bezpečná volba, jako by ji udělal rozvážný hráč
+    if (CHYTRY && !honi) {
+      const i = s.dekorace.findIndex(d => L.jePoi(d) && !d.pouzito), d = s.dekorace[i];
+      const volba = d && volbaPoi(s, d);
+      if (volba) {
+        const dist = cestaK(s, d.x, d.y), tady = dist[s.y * p.w + s.x];
+        if (tady === 1) { stat.poi = (stat.poi || 0) + 1; return ['poi', { i, volba }]; }
+        if (tady > 1 && tady < 30) { const a = krokK(s, dist); if (a) return [a]; }
       }
     }
     // boss hlídá schody – nejdřív on

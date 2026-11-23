@@ -26,7 +26,7 @@ Restaurátorka přišla v devět dvacet.
 
 Hana ji poznala dřív, než promluvila. Ne podle tváře, ale podle výšky a podle rukou.
 
-Byla vysoká. Vyšší než Hana o hlavu, štíhlá, v šedém vlněném svetru a tmavých kalhotách, s bílými vlasy staženými vzadu do uzlu, který držela dřevěná jehlice. Věk se jí nedal hádat. Šedesát? Sedmdesát? Pleť měla bledou, skoro bez vrásek kolem úst, ale kolem očí jemné a husté jako krakelura na starém laku. Nesla v náručí krabici z nekyselé lepenky a nesla ji tak, jak Kalina nesl maják. Jako by v ní bylo něco živého.
+Byla vysoká. Vyšší než Hana o hlavu, štíhlá, v šedém vlněném svetru a tmavých kalhotách, s bílými vlasy staženými vzadu do uzlu, který držela dřevěná jehlice. Věk se jí nedal hádat. Šedesát? Sedmdesát? Pleť měla bledou, skoro bez vrásek kolem úst, ale kolem očí jemné a husté jako krakelura na starém laku. Nesla v náručí archivní krabici a nesla ji tak, jak Kalina nesl maják. Jako by v ní bylo něco živého.
 
 A ruce. Dlouhé, úzké, s krátce střiženými nehty. Na prostředníku pravé ruky mozol, žlutý a tvrdý jako roh.
 

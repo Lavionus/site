@@ -123,15 +123,54 @@
   /** Platí se za dálnice osobním autem? (text nezačíná „Bez poplatků“ / „Osobní auta bez poplatků“) */
   const placeneSilnice = z => !!z.vineta && !/^(Bez poplatků|Osobní auta (zatím )?bez poplatků)/.test(z.vineta);
 
-  /** Kontrolní seznam před cestou z domova (a) do cíle (b): [{id, text, dulezite, detail}]. */
+  /* názvy kódů z ockovani.js a silnice.js */
+  const OCKOVANI = { hepA: 'hepatitida A', hepB: 'hepatitida B', tyfus: 'břišní tyfus', vzteklina: 'vzteklina', zz: 'žlutá zimnice', je: 'japonská encefalitida',
+    kliste: 'klíšťová encefalitida', meningo: 'meningokok', polio: 'přeočkování proti dětské obrně', cholera: 'cholera' };
+  const VYBAVA = { vesta: 'reflexní vesta', trojuhelnik: 'výstražný trojúhelník', lekarnicka: 'lékárnička', hasicak: 'hasicí přístroj', zarovky: 'náhradní žárovky',
+    alkohol: 'alkohol tester', snehove: 'sněhové řetězy (v zimě)', kolo: 'rezervní kolo / sada', tazne: 'tažné lano', nalepka: 'označení státu (CZ / EU SPZ)' };
+  const VSTUP = { op: 'stačí občanský průkaz', pas: 'cestovní pas, bez víza', eta: 'pas + elektronické povolení předem', evisa: 'pas + e-vízum předem',
+    vop: 'pas + vízum při příjezdu', vizum: 'pas + vízum předem (velvyslanectví)' };
+  /** Seznam očkování pro zemi: [{k, nazev, uroven: 'povinne'|'doporuceno'|'zvazit'}] (z objektu ockovani.js). */
+  function ockovaniZeme(o) {
+    if (!o) return [];
+    const v = [];
+    for (const k of Object.keys(OCKOVANI)) {
+      const x = o[k];
+      if (!x) continue;
+      const uroven = x === 'povinne' ? 'povinne' : k === 'zz' && x === 'prijezd' ? 'prijezd' : ['vzteklina', 'je', 'cholera', 'meningo', 'hepB'].includes(k) ? 'zvazit' : 'doporuceno';
+      v.push({ k, nazev: OCKOVANI[k], uroven });
+    }
+    const poradi = { povinne: 0, doporuceno: 1, prijezd: 2, zvazit: 3 };
+    return v.sort((p, q) => poradi[p.uroven] - poradi[q.uroven]);
+  }
+  /** Potřebuje cesta z a do b pas? (opt.vstup = data vstup.js, platí jen pro domov CZ) */
+  function pasNutny(a, b, opt) {
+    const v = opt && opt.vstup && a.kod === 'CZ' && opt.vstup[b.kod];
+    if (v) return v[0] !== 'op';
+    return !(volnyPohyb(b.kod) && volnyPohyb(a.kod));
+  }
+
+  /** Kontrolní seznam před cestou z domova (a) do cíle (b): [{id, text, dulezite, detail}].
+      opt: {kdy, vstup, ock, sil} – volitelná data vstup.js / ockovani.js / silnice.js (objekty .zeme). */
   function kontrolniSeznam(a, b, opt) {
     opt = opt || {};
     const s = [];
     const pridej = (id, text, dulezite, detail) => s.push({ id, text, dulezite: !!dulezite, detail: detail || '' });
-    pridej('doklad', volnyPohyb(b.kod) && volnyPohyb(a.kod) ? 'Platný občanský průkaz nebo pas' : 'Platný cestovní pas (často 6 měsíců po návratu) a víza podle cestovních doporučení MZV', true);
+    pridej('doklad', pasNutny(a, b, opt) ? 'Platný cestovní pas (často 6 měsíců po návratu) a víza podle cestovních doporučení MZV' : 'Platný občanský průkaz nebo pas', true);
+    const vs = opt.vstup && a.kod === 'CZ' && opt.vstup[b.kod];
+    if (vs && !['op', 'pas'].includes(vs[0])) pridej('vstup-' + vs[0], { eta: 'Elektronické povolení ke vstupu (vyřídit online předem)', evisa: 'E-vízum (vyřídit online předem)', vop: 'Vízum při příjezdu (hotovost, fotografie)', vizum: 'Vízum přes velvyslanectví – vyřídit s předstihem' }[vs[0]], true, vs[1]);
     pridej('pojisteni', volnyPohyb(b.kod) ? 'Cestovní pojištění léčebných výloh + evropský průkaz zdravotního pojištění (EHIC)' : 'Cestovní pojištění léčebných výloh', true);
     if (!vEhp(b.kod)) pridej('drozd', 'Registrace v systému DROZD (MZV)');
-    if (!vEhp(b.kod)) pridej('ockovani', 'Očkování a léky – konzultace v centru cestovní medicíny');
+    const ock = ockovaniZeme(opt.ock && opt.ock[b.kod]).filter(x => x.uroven !== 'prijezd');
+    if (!vEhp(b.kod) || ock.length) pridej('ockovani', 'Očkování a léky – konzultace v centru cestovní medicíny (4–8 týdnů předem)', ock.some(x => x.uroven === 'povinne'), ock.map(x => x.nazev + (x.uroven === 'povinne' ? ' (povinné)' : '')).join(', '));
+    const mal = opt.ock && opt.ock[b.kod] && opt.ock[b.kod].malarie;
+    if (mal) pridej('malarie', 'Malárie – repelent, síť, antimalarika podle lékaře', mal === 'vysoke', mal === 'vysoke' ? 'riziko ve většině země' : 'riziko jen místně');
+    const vyb = opt.sil && opt.sil[b.kod] && opt.sil[b.kod].vybava;
+    if (vyb && vyb.length) pridej('vybava', 'Povinná výbava auta', false, vyb.map(v => VYBAVA[v] || v).join(', '));
+    const pr = opt.prav && opt.prav(b.kod);
+    if (pr && pr.dron && pr.dron[0] === 'ne') pridej('dron', 'Dron nechat doma – v zemi zakázaný', true, pr.dron[1]);
+    else if (pr && pr.dron && pr.dron[0] === 'omezeno') pridej('dron', 'Dron – ověřit registraci a zakázané zóny', false, pr.dron[1]);
+    if (pr && pr.alkohol && pr.alkohol[0] === 'ne') pridej('alkohol', 'Alkohol na veřejnosti (ulice, pláž, park) zakázán', false, pr.alkohol[1]);
     const ad = adapter(a, b);
     if (ad.stav !== 'ne') pridej('adapter', 'Cestovní adaptér pro zásuvky typu', ad.stav === 'ano', ad.doporucene.join(', '));
     const nap = napeti(a, b);
@@ -165,7 +204,7 @@
   /** Kontrolní seznam pro cestu přes víc zemí – sloučený podle id, přísnější varianta vyhrává
       (země mimo EU/EHP se projdou první, takže „pas“ přebije „občanský průkaz“). */
   function kontrolniSeznamTrasy(a, cile, opt) {
-    const poradi = cile.slice().sort((p, q) => volnyPohyb(p.kod) - volnyPohyb(q.kod));
+    const poradi = cile.slice().sort((p, q) => pasNutny(a, q, opt) - pasNutny(a, p, opt));
     const vysl = [], podleId = {};
     for (const b of poradi) {
       for (const p of kontrolniSeznam(a, b, opt)) {
@@ -182,6 +221,7 @@
       if (x.id === 'adapter') { x.detail = sada.map(s => s.typ).join(', '); x.dulezite = cile.some(b => adapter(a, b).stav === 'ano'); }
       else if (x.id === 'mena') x.detail = [...new Set(cile.flatMap(b => b.meny))].join(' / ');
       else if (x.id === 'vineta') x.detail = x.zeme.join(', ');
+      else if (x.id === 'pojisteni' && !/EHIC/.test(x.text) && cile.some(b => volnyPohyb(b.kod))) { x.text += ' + evropský průkaz zdravotního pojištění (EHIC) pro země EU/EHP a Švýcarsko'; x.detail = x.detaily.join(' · '); }
       else x.detail = x.detaily.join(' · ');
       delete x.detaily;
     }
@@ -266,6 +306,52 @@
     return zast;
   }
 
+  /** Dny cesty pro časovou osu: [{den, kody: [kódy zemí toho dne]}] od příjezdu do první zastávky po odjezd z poslední.
+      Den přejezdu (odjezd = příjezd další) patří oběma zemím. Bez termínů → []. */
+  function dnyCesty(zast) {
+    const k = kontrolaZastavek(zast);
+    if (!k.od || !k.do || k.dni > 400) return [];
+    const vysl = [];
+    for (let d = k.od; d <= k.do; d = pridejDny(d, 1)) {
+      const kody = zast.filter(z => z.od && z.od <= d && (z.do ? d <= z.do : d === z.od)).map(z => z.kod);
+      vysl.push({ den: d, kody });
+    }
+    return vysl;
+  }
+  /** Změny posunu od UTC v pásmu mezi dny od..do (letní/zimní čas): [{den, z, na}] v minutách. */
+  function zmenyCasu(pasmo, od, doo) {
+    const v = [];
+    if (!od || !doo) return v;
+    const poledne = d => posunUtc(pasmo, new Date(d + 'T12:00:00Z'));
+    let pred = poledne(od);
+    for (let d = pridejDny(od, 1); d <= doo; d = pridejDny(d, 1)) {
+      const p = poledne(d);
+      if (p !== pred) v.push({ den: d, z: pred, na: p });
+      pred = p;
+    }
+    return v;
+  }
+  /** Plán proti jet lagu pro posun (min, kladný = cíl je na východ). Pravidla: posun do 2 h bez opatření;
+      před cestou posouvat spánek o 1 h denně (nejvýš 3 dny) – na východ dřív, na západ později;
+      přivykání v cíli zhruba 1 den na hodinu na východ, 1 den na 1,5 h na západ. */
+  function jetlag(posun) {
+    if (Math.abs(posun) > 720) posun -= Math.sign(posun) * 1440;   // přes datovou hranici je kratší opačný směr (Samoa +13 h = −11 h)
+    const h = Math.round(Math.abs(posun) / 60);
+    if (h < 3) return null;
+    const smer = posun > 0 ? 'vychod' : 'zapad';
+    return { hodin: h, smer, dnyPred: Math.min(3, h), dnyAdaptace: Math.max(1, Math.round(smer === 'vychod' ? h : h / 1.5)) };
+  }
+  /** Rozpočet cesty: zast [{kod, mena, dni, denne, jedn}] → {polozky: [{kod, mena, castka}], podleMen: {mena: částka}} */
+  function rozpocet(polozky) {
+    const podleMen = {};
+    const v = polozky.map(p => {
+      const castka = Math.max(0, (+p.denne || 0) * Math.max(0, +p.dni || 0) + (+p.jedn || 0));
+      if (castka) podleMen[p.mena] = (podleMen[p.mena] || 0) + castka;
+      return { kod: p.kod, mena: p.mena, castka };
+    });
+    return { polozky: v, podleMen };
+  }
+
   /** Odkaz: „AT.20270701.20270705,SI“ ↔ zastávky (data volitelná). */
   function kodujTrasu(zast) {
     return zast.map(z => [z.kod, (z.od || '').replace(/-/g, ''), (z.do || '').replace(/-/g, '')].join('.').replace(/\.+$/, '')).join(',');
@@ -279,12 +365,32 @@
     }).filter(z => (!zname || zname(z.kod)) && !videno.has(z.kod) && videno.add(z.kod));
   }
 
+  /** Východ a západ slunce (rovnice východu slunce, přesnost ~1–2 min). den 'RRRR-MM-DD', délka na východ kladná.
+      Vrací Date v UTC; polární den/noc → stav 'den'/'noc' a vychod/zapad null. */
+  function slunce(sirka, delka, den) {
+    const R = Math.PI / 180, [y, m, d] = den.split('-').map(Number);
+    const n = Math.round(Date.UTC(y, m - 1, d, 12) / 864e5 + 2440587.5 - 2451545 + 0.0008);
+    const Jh = n - delka / 360;
+    const M = (357.5291 + 0.98560028 * Jh) % 360;
+    const C = 1.9148 * Math.sin(M * R) + 0.02 * Math.sin(2 * M * R) + 0.0003 * Math.sin(3 * M * R);
+    const lam = (M + C + 282.9372) % 360;
+    const Jt = 2451545 + Jh + 0.0053 * Math.sin(M * R) - 0.0069 * Math.sin(2 * lam * R);
+    const dekl = Math.asin(Math.sin(lam * R) * Math.sin(23.4397 * R));
+    const cosW = (Math.sin(-0.833 * R) - Math.sin(sirka * R) * Math.sin(dekl)) / (Math.cos(sirka * R) * Math.cos(dekl));
+    const naDate = J => new Date((J - 2440587.5) * 864e5);
+    if (cosW < -1) return { stav: 'den', vychod: null, zapad: null, poledne: naDate(Jt), delka: 1440 };
+    if (cosW > 1) return { stav: 'noc', vychod: null, zapad: null, poledne: naDate(Jt), delka: 0 };
+    const w = Math.acos(cosW) / R / 360;
+    return { stav: '', vychod: naDate(Jt - w), zapad: naDate(Jt + w), poledne: naDate(Jt), delka: Math.round(w * 2 * 1440) };
+  }
+
   const api = {
     OBLASTI, SPROPITNE, VODA, NEJISTE, EHP, PASUJE, TYPY, POPIS_TYPU, JEDNOTKY,
     rozeberRadek, nactiZeme, adapter, napeti, posunUtc, rozdilCasu, formatRozdil,
     norm, hledej, vEhp, placeneSilnice, kontrolniSeznam,
     sadaAdapteru, kontrolniSeznamTrasy, mistniNaUtc, mistniCas, jednotky, prevedMenu,
-    kontrolaZastavek, novaZastavka, navazOdjezd, presun, kodujTrasu, dekodujTrasu, dnyMezi, pridejDny
+    kontrolaZastavek, novaZastavka, navazOdjezd, presun, kodujTrasu, dekodujTrasu, dnyMezi, pridejDny, slunce,
+    OCKOVANI, VYBAVA, VSTUP, ockovaniZeme, pasNutny, dnyCesty, zmenyCasu, jetlag, rozpocet
   };
   if (typeof module !== 'undefined') module.exports = api;
   else window.ZVK = api;

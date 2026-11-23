@@ -224,7 +224,7 @@ Když Vrbová řekla *Píše to sám* o *non bene*, Sael se usmála. Vrbová to 
 
 V noci na středu seděla v archivu nad knihou.
 
-Neotevřela ji na posledním svazku. Otevřela truhlu pod stolem a vzala do rukou ten nejstarší list. Ležel na dně, v obalu z nekyselého papíru, který mu Sael ušila v sedmdesátých letech, když se naučila, co je nekyselý papír. Kdysi býval svázaný na samém začátku knihy. Vazba se na něm rozpadla ještě za Rokyty a Sael ho vyňala, aby se nedrolil dál.
+Neotevřela ji na posledním svazku. Otevřela truhlu pod stolem a vzala do rukou ten nejstarší list. Ležel na dně, v obalu z archivního papíru, který mu Sael ušila v sedmdesátých letech, když se naučila, co je papír bez kyselin. Kdysi býval svázaný na samém začátku knihy. Vazba se na něm rozpadla ještě za Rokyty a Sael ho vyňala, aby se nedrolil dál.
 
 Pergamen tmavý a tuhý jako kůra. Na okraji kresba kopce, jeden oblouk se strmějším koncem. Uvnitř kopce kruh a z něj vlnovky, jako když se na vodu hodí kámen. Pod kopcem šipka ven. Vedle kresby čtyřicet jedna čárek v jedné řadě, nakreslených tlustě a pomalu, inkoustem, který ztratil barvu. Pod čárkami znak úřadu, ten první, s dlouhým tahem dolů, ještě nejistým, jako když se písmo teprve rozhoduje, jaké bude. A u hřbetu, natěsnané na samém kraji, jediné slovo latinkou, malými písmeny, cizí rukou, nebo rukou, která latinku kreslila poprvé.
 

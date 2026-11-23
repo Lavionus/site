@@ -1617,9 +1617,9 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/zeme_v_kostce.html",
         "nazev": "🌍 Země v kostce pro cestovatele",
-        "popis": "Zásuvky, napětí, tísňová čísla, měna a strana jízdy států",
+        "popis": "Vstup, očkování, zásuvky, tísňová čísla, klima a svátky států",
         "stav": "vyvoj",
-        "tagy": ["zásuvky", "adaptér", "napětí", "tísňová čísla", "měna", "předvolba", "časové pásmo", "strana jízdy", "spropitné", "pitná voda", "dálniční známka", "mýto", "MZV", "státy světa", "cestování"]
+        "tagy": ["zásuvky", "adaptér", "napětí", "tísňová čísla", "měna", "předvolba", "časové pásmo", "strana jízdy", "spropitné", "pitná voda", "dálniční známka", "mýto", "MZV", "státy světa", "cestování", "víza", "očkování", "malárie", "státní svátky", "klima", "fráze", "jet lag", "rozpočet cesty", "silniční pravidla", "velikosti oblečení", "volné táboření", "spaní v autě", "obytňák", "pláže", "houby", "drony", "nudismus", "alkohol na veřejnosti"]
       }
     ]
   },
@@ -3858,6 +3858,13 @@ const KATALOG_SEKCE = [
         "popis": "Zacouvej s přívěsem na parkovací místo v pěti levelech",
         "stav": "beta",
         "tagy": ["couvání", "vozík", "přívěs", "simulátor", "řidič"]
+      },
+      {
+        "soubor": "obsah/blinkr.html",
+        "nazev": "🚦 Zrcátko, blinkr, jeď!",
+        "popis": "Jízda shora po křižovatkách: přednost podle pravidel ČR nebo Británie",
+        "stav": "vyvoj",
+        "tagy": ["autoškola", "přednost v jízdě", "křižovatka", "pravidlo pravé ruky", "kruhový objezd", "semafor", "jízda vlevo", "Velká Británie", "Highway Code", "simulátor", "řidič", "hra"]
       },
       {
         "soubor": "obsah/pozirani_bunek.html",

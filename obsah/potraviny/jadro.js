@@ -595,7 +595,9 @@
       const ok = x => x.f.ean && (!volby.filtr || volby.filtr(x.f));
       const presne = index.filter(x => ok(x) && v.includes(x.f.ean));
       const zacatek = index.filter(x => ok(x) && !v.includes(x.f.ean) && x.f.ean.startsWith(cislice));
-      return presne.concat(zacatek).slice(0, limit).map(x => x.f);
+      const ob = volby.oblibene;
+      const nahoru = a => ob ? a.filter(x => ob.has(x.f.id)).concat(a.filter(x => !ob.has(x.f.id))) : a;
+      return nahoru(presne).concat(nahoru(zacatek)).slice(0, limit).map(x => x.f);
     }
     const tokeny = slova(q);
     if (!tokeny.length) return [];
@@ -641,7 +643,9 @@
       skore += bodyPotraviny(x, volby);
       vys.push({ f: x.f, skore });
     }
-    vys.sort((a, b) => b.skore - a.skore || a.f.nazev.length - b.f.nazev.length);
+    const ob = volby.oblibene;   // Set id – oblíbené vždy před ostatními (mezi sebou podle shody)
+    const jeOb = v => ob && ob.has(v.f.id) ? 1 : 0;
+    vys.sort((a, b) => jeOb(b) - jeOb(a) || b.skore - a.skore || a.f.nazev.length - b.f.nazev.length);
     if (!vys.length && !volby.presne) return tolerantne(index, tokeny, volby, limit);
     return vys.slice(0, limit).map(v => v.f);
   }
@@ -696,7 +700,9 @@
       skore += bodyPotraviny(x, volby);
       vys.push({ f: x.f, skore });
     }
-    vys.sort((a, b) => b.skore - a.skore);
+    const ob = volby.oblibene;
+    const jeOb = v => ob && ob.has(v.f.id) ? 1 : 0;
+    vys.sort((a, b) => jeOb(b) - jeOb(a) || b.skore - a.skore);
     const v = vys.slice(0, limit).map(x => x.f);
     v.tolerantni = true;
     return v;
@@ -1018,7 +1024,7 @@
   function dvojiPohyb(stav) {
     return !!(stav && stav.nastaveni && stav.nastaveni.pohybKCili && (cislo(stav.profil && stav.profil.pal) || 1.4) >= 1.6);
   }
-  function hledejPohyb(katalog, dotaz, max) {
+  function hledejPohyb(katalog, dotaz, max, oblibene) {
     const q = norm(dotaz).trim();
     if (!katalog || !q) return [];
     const slova = q.split(/\s+/).filter(Boolean);
@@ -1028,7 +1034,36 @@
       const nz = norm(p.nazev);
       vys.push({ p, b: (nz.startsWith(q) ? 20 : 0) + (nz.includes(q) ? 10 : 0) - nz.length / 100 });
     }
-    return vys.sort((a, b) => b.b - a.b).slice(0, max || 30).map(x => x.p);
+    const jeOb = x => oblibene && oblibene.has(idPohybu(x.p.kod)) ? 1 : 0;
+    return vys.sort((a, b) => jeOb(b) - jeOb(a) || b.b - a.b).slice(0, max || 30).map(x => x.p);
+  }
+
+  /* ---------- oblíbené ----------
+     stav.oblibene = pole id v pořadí přidání: potraviny (s/v/d/m/o…), recepty (r…),
+     uložená jídla (t…) a pohyby z katalogu ('P:' + kód Compendia). */
+  const MAX_OBLIBENYCH = 500;
+  function idPohybu(kod) { return 'P:' + kod; }
+  function jeOblibena(stav, id) { return !!(stav && Array.isArray(stav.oblibene) && id && stav.oblibene.includes(id)); }
+  // přepne (nebo nastaví podle `zapnout`) oblíbenost; vrací nový stav true/false
+  function prepniOblibenou(stav, id, zapnout) {
+    if (typeof id !== 'string' || !id) throw new Error('Neplatná položka.');
+    if (!Array.isArray(stav.oblibene)) stav.oblibene = [];
+    const i = stav.oblibene.indexOf(id);
+    const je = zapnout === undefined ? i < 0 : !!zapnout;
+    if (je && i < 0) {
+      if (stav.oblibene.length >= MAX_OBLIBENYCH) throw new Error('Oblíbených může být nejvýš ' + MAX_OBLIBENYCH + '.');
+      stav.oblibene.push(id);
+    } else if (!je && i >= 0) stav.oblibene.splice(i, 1);
+    return je;
+  }
+  // uložená jídla, která jsou oblíbená a sedí na dotaz (všechna slova dotazu v názvu nebo položkách)
+  function oblibeneSablony(stav, dotaz) {
+    const tok = slova(norm(dotaz || ''));
+    return Object.values(stav.sablony || {}).filter(s => jeOblibena(stav, s.id)).filter(s => {
+      if (!tok.length) return true;
+      const t = norm(s.nazev + ' ' + s.polozky.map(p => p.f.nazev).join(' '));
+      return tok.every(x => t.includes(x));
+    }).sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
   }
 
   /* ---------- sdílení receptu nebo uloženého jídla (QR kód, odkaz) ----------
@@ -2644,7 +2679,7 @@
       return ok.length ? ok : null;
     });   // id vždy podle klíče (ručně upravené zálohy)
     s.vahy = mapa(x.vahy, (v, k) => zKlice(k) && cislo(v) >= 25 && cislo(v) <= 350 ? cislo(v) : null);
-    if (Array.isArray(x.oblibene)) s.oblibene = x.oblibene.filter(v => typeof v === 'string');
+    if (Array.isArray(x.oblibene)) s.oblibene = [...new Set(x.oblibene.filter(v => typeof v === 'string' && v.length <= 120))].slice(0, MAX_OBLIBENYCH);
     if (x.dny && typeof x.dny === 'object') {
       for (const k of Object.keys(x.dny)) {
         const d = x.dny[k];
@@ -2720,13 +2755,13 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-11-16a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-11-23a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
     vyrobekZRadku, surovinaZRadku, vyrobekZOff, obrazekUrl,
     zivinyZa, secti, energieSedi, energieZMaker, podilEnergie,
-    vytvorIndex, hledej,
+    vytvorIndex, hledej, jeOblibena, prepniOblibenou, oblibeneSablony, idPohybu, MAX_OBLIBENYCH,
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
     kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, tipyNaZiviny, rozeberSuroviny, gramySuroviny, tvaryNazvu, najdiSurovinu,

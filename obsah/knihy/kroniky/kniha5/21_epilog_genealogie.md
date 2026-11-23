@@ -4,7 +4,7 @@ Poslední noc, kdy kniha ležela v Kozí uličce, nepršelo.
 
 Sael otevřela okno do dvora. Srpen byl suchý a teplý a do dílny šla vůně z pekárny o dva domy dál, kde se začínalo péct ve dvě. Nikdy si jí nevšimla. Dvaadvacet let tu pracovala s okny zavřenými kvůli prachu a vlhku a kvůli papíru. Dnes papíru už nic nehrozilo. Zítra v devět ho odnesou do archivu.
 
-Jedenáct balíků stálo u dveří, v krabicích z nekyselé lepenky, které sama nařezala a slepila podle míry každého svazku. Na každé visačka jejím písmem a pod ní druhá, archivní, s číslem deponátu, kterou tam ve čtvrtek nalepila Šindelářová. Dvě písma na jedné krabici. Sael si toho všimla až potom, co Šindelářová odešla, a chvíli se na to dívala.
+Jedenáct balíků stálo u dveří, v archivních krabicích, které sama nařezala a slepila podle míry každého svazku. Na každé visačka jejím písmem a pod ní druhá, archivní, s číslem deponátu, kterou tam ve čtvrtek nalepila Šindelářová. Dvě písma na jedné krabici. Sael si toho všimla až potom, co Šindelářová odešla, a chvíli se na to dívala.
 
 Na stole ležel jen poslední svazek. Ten, který založila Rokyta v zimě po válce.
 

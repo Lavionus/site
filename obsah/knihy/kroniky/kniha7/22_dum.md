@@ -266,7 +266,7 @@ Nikdy se to nedozví. To bylo v pořádku.
 
 V úterý měla svůj den v archivu. Šindelářová jí ho určila už v létě, jako každý rok. Říjen, studovna, rukavice.
 
-Kniha ležela na pultu v krabici z nekyselé lepenky, kterou pro ni Sael kdysi udělala. Sael ji otevřela na posledním svazku. Na Rokytině ruce, a pak na své. Narození, svatby, úmrtí. Pak pět let cizích rukou. Apolena, zima 2033: zapsala to Lada, protože si ji Ostří vybrali, a podepsala se celým jménem. Pod tím Klářin řádek latinkou s jedním obráceným písmenem. *Jonáš umí napsat svoje jméno. Taky obráceně. K. R.*
+Kniha ležela na pultu v archivní krabici, kterou pro ni Sael kdysi udělala. Sael ji otevřela na posledním svazku. Na Rokytině ruce, a pak na své. Narození, svatby, úmrtí. Pak pět let cizích rukou. Apolena, zima 2033: zapsala to Lada, protože si ji Ostří vybrali, a podepsala se celým jménem. Pod tím Klářin řádek latinkou s jedním obráceným písmenem. *Jonáš umí napsat svoje jméno. Taky obráceně. K. R.*
 
 Pod tím nic. Za rok tu nepřibylo nic.
 
@@ -290,7 +290,7 @@ Sael vytáhla z kapsy složený papír. Rozložila ho a položila vedle knihy. *
 
 „Nevím,“ řekla Sael. „Pod nic.“
 
-Šindelářová vytáhla ze šuplíku obálku z nekyselého papíru a do ní papír vložila. Na obálku napsala tužkou: *Příloha k deponátu. Bez zařazení. Předala Sael, 16. 10. 2035.* Pod to po chvíli ještě: *Psal Jonáš R., 5 let.*
+Šindelářová vytáhla ze šuplíku archivní obálku a do ní papír vložila. Na obálku napsala tužkou: *Příloha k deponátu. Bez zařazení. Předala Sael, 16. 10. 2035.* Pod to po chvíli ještě: *Psal Jonáš R., 5 let.*
 
 „Je mu skoro šest,“ řekla Sael.
 

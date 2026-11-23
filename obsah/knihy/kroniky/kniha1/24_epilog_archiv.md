@@ -106,7 +106,7 @@ A ta věta byla na posledním listu, pod kresbou úlomku kosti s mřížkou čar
 
 *
 
-Kodex odnesla do depozitáře Šindelářová sama. Hana šla s ní až ke dveřím, dál nesměla. Krabice z nekyselé lepenky, štítek, signatura. Za dveřmi regály až ke stropu a ticho, jaké mají jen archivy a kostely.
+Kodex odnesla do depozitáře Šindelářová sama. Hana šla s ní až ke dveřím, dál nesměla. Archivní krabice, štítek, signatura. Za dveřmi regály až ke stropu a ticho, jaké mají jen archivy a kostely.
 
 Doplněk posudku napsala ve vlaku. Křemen s inkluzemi oxidů železa, sintr vysrážený z vod s uhlíkem hlubokého původu, provenience v oblasti Oháreckého riftu vysoce pravděpodobná. Doporučila datovat sintr metodou uran-thorium, pokud se najdou prostředky. Věděla, že se nenajdou.
 

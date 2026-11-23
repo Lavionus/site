@@ -54,7 +54,7 @@ Hana zvětšila sken. Písmo bylo stejné, stejně drobné a rovné, jen ten ř�
 
 *Víc jsem nezapsala.* Ne *víc neřekla*. Ta svědkyně mluvila dál, a zapisovatelka přestala psát. A napsala to tam. Mohla to vynechat a nikdo by se to nedozvěděl. Napsala to tam.
 
-Hana nad tím seděla a čaj jí stydl. Myslela na sedm křížků *a me*, ode mne, na dvoustraně v kodexu, který jí v dubnu Šindelářová zavřela před nosem do krabice z nekyselé lepenky. Myslela na slovo *tacui*. Pak se za to na sebe trochu zlobila. Tohle byl jiný člověk, jiné století, jiná věc. A kdo v každém pečlivém písaři vidí toho jednoho, kterého si oblíbil, ten píše romány. Tak by to řekl starý pán s dýmkou.
+Hana nad tím seděla a čaj jí stydl. Myslela na sedm křížků *a me*, ode mne, na dvoustraně v kodexu, který jí v dubnu Šindelářová zavřela před nosem do archivní krabice. Myslela na slovo *tacui*. Pak se za to na sebe trochu zlobila. Tohle byl jiný člověk, jiné století, jiná věc. A kdo v každém pečlivém písaři vidí toho jednoho, kterého si oblíbil, ten píše romány. Tak by to řekl starý pán s dýmkou.
 
 ![Spis horního soudu](obrazky/00_prolog.webp)
 

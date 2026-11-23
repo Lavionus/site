@@ -32,7 +32,7 @@ V září tu podlahu viděla na fotkách. Tadeáš je poslal všem ve dvě odpol
 
 „Ještě něco vám chci ukázat.“
 
-Šindelářová sáhla do šuplíku a vytáhla obálku z nekyselého papíru. Na ní tužkou: *Příloha k deponátu. Bez zařazení. Předala Sael, 16. 10. 2035. Psal Jonáš R., skoro 6 let.*
+Šindelářová sáhla do šuplíku a vytáhla archivní obálku. Na ní tužkou: *Příloha k deponátu. Bez zařazení. Předala Sael, 16. 10. 2035. Psal Jonáš R., skoro 6 let.*
 
 Uvnitř byl papír složený na čtvrtinu. Šindelářová ho rozložila v rukavicích.
 

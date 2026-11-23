@@ -354,6 +354,21 @@
   }
 
   // --- postava, zbraně, bestiář ---------------------------------
+  // jméno hrdiny ze seedu: křestní jméno a přídomek ve správném rodě
+  const KRESTNI = {
+    m: ['Bořek', 'Hostivít', 'Ondřej', 'Vilém', 'Jaroš', 'Mikuláš', 'Radomír', 'Ctibor', 'Lubor', 'Dobeš', 'Kryštof', 'Vratislav', 'Matouš', 'Zbyšek', 'Oldřich', 'Bohuslav', 'Hynek', 'Přemek'],
+    z: ['Ivana', 'Morgana', 'Zdislava', 'Kateřina', 'Anežka', 'Ludmila', 'Dobroslava', 'Johana', 'Eliška', 'Milada', 'Božena', 'Radka', 'Vlasta', 'Hedvika', 'Kunhuta', 'Bohdana', 'Jitka', 'Markéta'],
+  };
+  const PRIDOMKY = [
+    ['Zvědavý', 'Zvědavá'], ['Neohrožený', 'Neohrožená'], ['Bezruký', 'Bezruká'], ['Hbitý', 'Hbitá'], ['Poslední', 'Poslední'], ['Svítivý', 'Svítivá'],
+    ['Kamenný', 'Kamenná'], ['Tichý', 'Tichá'], ['Šedivý', 'Šedivá'], ['Rudovousý', 'Rudovlasá'], ['Bdělý', 'Bdělá'], ['Prostořeký', 'Prostořeká'],
+    ['z Hlubin', 'z Hlubin'], ['z Rokle', 'z Rokle'], ['od Studny', 'od Studny'], ['ze Skály', 'ze Skály'], ['z Doupěte', 'z Doupěte'], ['Loučník', 'Loučnice'],
+  ];
+  function jmenoHrdiny(seed) {
+    const R = nahoda(smichej(seed, 0x4A3E));
+    const rod = R.f() < 0.5 ? 'm' : 'z', jm = R.vyber(KRESTNI[rod]), pr = R.vyber(PRIDOMKY)[rod === 'm' ? 0 : 1];
+    return [`${jm} ${pr}`, rod, Math.floor(R.f() * 2)];          // [jméno, rod, varianta portrétu]
+  }
   const JMENA = [
     ['Sir Cortanus', 'm'], ['Dáma Ivana z Hlubin', 'z'], ['Bořek Zvědavý', 'm'], ['Rytíř Hostivít', 'm'],
     ['Lady Morgana', 'z'], ['Bratr Ondřej', 'm'], ['Zdislava Neohrožená', 'z'], ['Vilém Bezruký', 'm'],
@@ -363,7 +378,8 @@
   // Jak rychle potvory sílí s patry nad svým `od` (laděno botem v _test/podzemi_boj.js).
   // vyladěno 29. 9. 2026 na rozumného bota s hromádkami, kovárnou a taktikou potvor:
   // medián všech výprav 10. patro, průměrná smrt 11,4., do 40. patra ~5 %
-  const OBTIZNOST = { hpRust: 0.45, utokRust: 1.1, presnostRust: 0.02 };
+  // 20. 11. 2026 (večer): začátek mírnější, od 12. patra potvory rostou rychleji (bot: medián 10, do 40. patra ~2 %, dřív medián 8 / 8 %)
+  const OBTIZNOST = { hpRust: 0.65, utokRust: 1.5, presnostRust: 0.031, pozdniOd: 12, hpPozdni: 0.3, utokPozdni: 0.8 };
 
   // od/do = rozsah pater; rychlost = akcí za tah (0,6 = občas stojí); uteka = při jaké části zdraví prchá
   const BESTIAR = {
@@ -391,6 +407,13 @@
       utokText: 'tě udeřil kyjem', minulText: 'máchl kyjem vedle', smrtText: 'Goblin padl s posledním zachrochtáním.',
       pricina: ['goblin s kyjem a pevným názorem', 'goblin, který si na tebe počkal za rohem'],
     },
+    // zlatý goblin: jen náhodná událost (od 999 – generátor ho nevybírá), pořád utíká a za čas zmizí
+    zlatyGoblin: {
+      nom: 'Zlatý goblin', aku: 'zlatého goblina', rod: 'm', od: 999, do: 999, hp: 12, utok: [1, 2], obrana: 1, presnost: 0.5,
+      zk: 20, rychlost: 1, uteka: 1, dvere: true, spi: 0, vaha: 0,
+      utokText: 'tě kousl do prstu', minulText: 'kvikl a uskočil', smrtText: 'Zlatý goblin padl – z měšce se vysypalo zlato!',
+      pricina: ['zlatý goblin a jeho nečekaně ostré zuby'],
+    },
     // goblin lučištník: drží se na dostřel a ustupuje; šaman léčí zraněné spojence a do boje nechodí
     lucistnik: {
       nom: 'Goblin lučištník', aku: 'goblina lučištníka', rod: 'm', od: 5, do: 16, hp: 13, utok: [2, 5], obrana: 0, presnost: 0.72,
@@ -402,7 +425,7 @@
     saman: {
       nom: 'Goblin šaman', aku: 'goblina šamana', rod: 'm', od: 7, do: 22, hp: 18, utok: [2, 5], obrana: 1, presnost: 0.65,
       zk: 22, rychlost: 1, uteka: 0.45, dvere: true, spi: 0.3, vaha: 2, smecka: true, drzOdstup: true,
-      leci: { dosah: 5, podil: 0.35, kazdych: 3 },
+      leci: { dosah: 5, podil: 0.35, kazdych: 3, mana: 4 },   // mana = kolikrát vyléčí (pak 1 za 15 tahů)
       utokText: 'tě šlehl holí', minulText: 'zamával holí', smrtText: 'Šamanovi zhasla koule na holi.',
       pricina: ['goblin šaman, který vyléčil celou bandu', 'šaman a jeho nesmrtelní kumpáni'],
     },
@@ -786,6 +809,8 @@
       o.maxHp += w.zdravi || 0; o.presnost += w.presnost || 0; o.ohen += w.ohen || 0;
     }
     if (ma(s, 'tuhy')) o.maxHp += 15;
+    o.maxHp += 2 * navic(s, 'odolnost');
+    if (h.kuze > 0) o.obrana += 3;
     if (ma(s, 'mag')) o.magie += 2;
     if (ma(s, 'stitonos') && v.stit) o.obrana += 1;
     o.hladovost = ma(s, 'skromny') ? 0.5 : 1;
@@ -799,6 +824,8 @@
     const zb = ruka ? vlastnostiPredmetu(ruka) : { min: 1, max: 3, rychlost: 1 };   // pěsti
     o.zbran = { min: zb.min, max: zb.max, rychlost: zb.rychlost, dosah: zb.dosah ? zb.dosah + (ma(s, 'lukostrelec') ? 2 : 0) : 0, nazev: ruka ? nazevPredmetu(s, ruka) : 'Pěsti' };
     o.sipy = h.batoh.filter(p => p.typ === 'sipy').reduce((a, p) => a + p.pocet, 0);
+    o.presnost += o.zbran.dosah ? 2 * navic(s, 'strelba') : navic(s, 'boj');
+    o.maxMana = maxMany(s, o);
     return o;
   }
   function srovnejZdravi(s) { const m = odvozene(s).maxHp; if (s.hrac.hp > m) s.hrac.hp = m; }
@@ -914,20 +941,26 @@
   }
 
   // hráč vstoupil na pole: zlato vždy, předměty dokud je místo
-  function seberZeZeme(s, ud) {
-    const i = s.zeme.findIndex(z => z.x === s.x && z.y === s.y);
-    if (i < 0) return;
+  // vse = i věci, které hráč sám položil (ty se při šlápnutí nezvedají – jen klávesou X)
+  function seberZeZeme(s, ud, x, y, vse) {
+    if (x === undefined) { x = s.x; y = s.y; }
+    const i = s.zeme.findIndex(z => z.x === x && z.y === y);
+    if (i < 0) return false;
     const z = s.zeme[i];
-    if (z.zlato) { s.zlato += z.zlato; ud.push({ typ: 'zlato', kolik: z.zlato }); z.zlato = 0; }
+    let neco = false;
+    if (z.zlato) { s.zlato += z.zlato; ud.push({ typ: 'zlato', kolik: z.zlato }); z.zlato = 0; neco = true; }
     const zbyva = [];
     for (const p of z.predmety) {
+      if (p.polozeno && !vse) { zbyva.push(p); continue; }
+      neco = true;
+      delete p.polozeno;
       if (p.typ === 'ukol') { ud.push({ typ: 'sebral', predmet: p, nazev: nazevPredmetu(s, p) }); postupUkolu(s, 'denik', ud); continue; }
       if (doBatohu(s, p)) ud.push({ typ: 'sebral', predmet: p, nazev: nazevPredmetu(s, p) });
-      else zbyva.push(p);
+      else { if (vse || !p.polozeno) ud.push({ typ: 'plno', pocet: 1 }); zbyva.push(p); }
     }
-    if (zbyva.length) ud.push({ typ: 'plno', pocet: zbyva.length });
     z.predmety = zbyva;
     if (!zbyva.length) s.zeme.splice(i, 1);
+    return neco;
   }
 
   function otevriTruhlu(s, t, ud) {
@@ -970,11 +1003,201 @@
     obchod: { nazev: 'Obchod', od: 999, vaha: 0, vstup: 'Obchod! „Vítej, poutníku. Zlato se hodí i v hlubinách."' },
     kovarna: { nazev: 'Kovárna', od: 999, vaha: 0, vstup: 'Kovárna! Zvoní kladivo. „Ukuju ti cokoli – za zlato, nebo za rudu."' },
     pokladnice: { nazev: 'Pokladnice', od: 3, vaha: 0.9, max: 1, vstup: 'Pokladnice! Zlato se třpytí ve světle louče.' },
+    poi: { nazev: 'Zajímavé místo', od: 999, vaha: 0, vstup: 'Tohle místo je jiné než ostatní… Něco tu na tebe čeká.' },
   };
   // překážky; `kosti` jsou jen na zemi a neblokují
   const DEKORACE = {
     obchodnik: 'obchodník', mistrKovar: 'kovář', rakev: 'kamenná rakev', sud: 'sud', bedna: 'bedna', police: 'police s knihami', oltar: 'oltář', klec: 'klec', kosti: 'kosti',
+    studna: 'vyschlá studna', socha: 'socha', alchymie: 'alchymistický stůl', koule: 'věštecká koule', hrob: 'hrob', taborak: 'vyhaslý táborák',
+    kostkar: 'goblin', fontana: 'fontána', houby: 'houbový háj', zrcadlo: 'zrcadlo',
   };
+  // --- zajímavá místa (POI): v patře nejvýš jedno, každé jde použít jednou (studna a kostky víckrát) ---
+  // vznikají až na konci stavby patra s vlastní náhodou (staré uložené hry zůstanou stejné)
+  const ZAJIMAVOSTI = {
+    studna: { nazev: 'Studna přání', od: 1, vaha: 1, popis: 'Stará kamenná studna. Z hlubin se ozývá tiché zurčení – prý plní přání, když do ní hodíš minci.' },
+    socha: { nazev: 'Socha zapomenutého hrdiny', od: 2, vaha: 0.8, popis: 'Kamenný hrdina s mečem. V očních důlcích se lesknou dva drahokamy.' },
+    alchymie: { nazev: 'Alchymistický stůl', od: 2, vaha: 0.9, popis: 'Baňky, křivule a kotlík, pod kterým ještě doutnají uhlíky.' },
+    koule: { nazev: 'Věštecká koule', od: 3, vaha: 0.7, popis: 'Křišťálová koule na zdobeném podstavci. Uvnitř se převalují obrazy chodeb.' },
+    hrob: { nazev: 'Hrob padlého dobrodruha', od: 3, vaha: 0.9, popis: 'Mohyla z kamení, v ní zapíchnutý meč a rezavá přilba. Někdo tu skončil před tebou.' },
+    taborak: { nazev: 'Táborák', od: 1, vaha: 1, popis: 'Kruh kamenů, dohasínající oheň a srolovaná houně. Místo k odpočinku – když je klid.' },
+    kostkar: { nazev: 'Goblin s kostkami', od: 4, vaha: 0.7, popis: '„Hej, cizinče! Zahraješ si? Kdo hodí víc, bere všechno."' },
+    fontana: { nazev: 'Fontána', od: 2, vaha: 0.8, popis: 'Z kamenné tlamy crčí čistá voda. Nebo aspoň vypadá čistě.' },
+    houby: { nazev: 'Houbový háj', od: 6, vaha: 0.7, popis: 'Obří houby září teplým oranžovým světlem. Voní jako pečený chléb.' },
+    zrcadlo: { nazev: 'Magické zrcadlo', od: 5, vaha: 0.6, popis: 'Ve zlatém rámu se nezrcadlíš ty – ale někdo, kdo se ti podobá.' },
+  };
+  const jePoi = d => !!d && !!ZAJIMAVOSTI[d.druh];
+  const cenaPrani = s => 5 + 3 * s.patro;
+  const sazkaKostek = s => 10 * s.patro;
+  function zajimavosti(s) {
+    const p = s.mapaPatra, R = nahoda(smichej(s.seed ^ 0x9015, p.patro));
+    if (R.f() >= 0.4) return;
+    const startM = p.mistnostId[p.start.y * p.w + p.start.x], dolM = p.mistnostId[p.dolu.y * p.w + p.dolu.x];
+    // i do obyčejných místností se zařízením (skladiště, knihovna…), ne do obchodu, kovárny, pokladnice apod.
+    const kandidati = p.mistnosti.filter(m => !m.tajna && !m.boss && m.id !== startM && m.id !== dolM
+      && (!m.ucel || ['skladiste', 'knihovna', 'kobka', 'hrobka'].includes(m.ucel)));
+    const druhy = Object.keys(ZAJIMAVOSTI).filter(k => ZAJIMAVOSTI[k].od <= p.patro);
+    const soucet = druhy.reduce((a, k) => a + ZAJIMAVOSTI[k].vaha, 0);
+    let r = R.f() * soucet, druh = druhy[0];
+    for (const k of druhy) { r -= ZAJIMAVOSTI[k].vaha; if (r <= 0) { druh = k; break; } }
+    for (let k = 0; k < 4 && kandidati.length; k++) {
+      const m = kandidati.splice(Math.floor(R.f() * kandidati.length), 1)[0];
+      const o = umisti(s, m, R, druh, true);
+      if (!o) continue;
+      if (!m.ucel) m.ucel = 'poi';
+      if (druh === 'kostkar') s.potvory = s.potvory.filter(q => p.mistnostId[q.y * p.w + q.x] !== m.id);   // u hráče se nebojuje
+      return;
+    }
+  }
+  // strážce vyvolaný oltářem, sochou, hrobem…: hned vedle hráče a rovnou honí
+  function vyvolejStrazce(s, druh) {
+    if (!druh) {
+      const druhy = Object.keys(BESTIAR).filter(k => !BESTIAR[k].boss && BESTIAR[k].od <= s.patro && s.patro <= BESTIAR[k].do);
+      druh = druhy[Ri(s, 0, druhy.length - 1)] || 'krysa';
+    }
+    for (let k = 0; k < 4; k++) {
+      const x = s.x + DX[k], y = s.y + DY[k];
+      if (!volneProPotvoru(s, x, y, null, { dvere: false })) continue;
+      const m = novaPotvora(s, druh, x, y, false);
+      m.stav = 'honi'; m.stopa = 15;
+      s.potvory.push(m);
+      return m;
+    }
+    return null;
+  }
+  // co se dá u místa dělat: [{id, text, lze}] (stránka z toho udělá tlačítka)
+  function moznostiPoi(s, d) {
+    if (!jePoi(d) || d.pouzito) return [];
+    const h = s.hrac, nezname = h.batoh.some(q => q.typ === 'lektvar' && !s.zname.includes(q.lektvar));
+    switch (d.druh) {
+      case 'studna': return [{ id: 'prani', text: `Hodit minci (${cenaPrani(s)} 💰)`, lze: s.zlato >= cenaPrani(s) }];
+      case 'socha': return [{ id: 'poklek', text: 'Pokleknout a pomodlit se', lze: true }, { id: 'kamen', text: 'Vylomit drahokamy z očí', lze: true }];
+      case 'alchymie': return [{ id: 'poznej', text: 'Prozkoumat lektvary z batohu', lze: nezname },
+        { id: 'svar', text: 'Svařit léčivý lektvar z jídla', lze: h.batoh.some(q => q.typ === 'jidlo') }];
+      case 'koule': return [{ id: 'pohled', text: 'Pohlédnout do koule', lze: true }];
+      case 'hrob': return [{ id: 'ucta', text: 'Vzdát úctu padlému', lze: true }, { id: 'kopat', text: 'Vykopat hrob', lze: true }];
+      case 'taborak': return [{ id: 'odpocinek', text: 'Odpočinout si u ohně', lze: true }];
+      case 'kostkar': return [{ id: 'hra', text: `Vsadit ${sazkaKostek(s)} 💰`, lze: s.zlato >= sazkaKostek(s) }];
+      case 'fontana': return [{ id: 'napit', text: 'Napít se', lze: true }];
+      case 'houby': return [{ id: 'snist', text: 'Sníst svítící houbu', lze: true }];
+      case 'zrcadlo': return [{ id: 'pohled', text: 'Pohlédnout do zrcadla', lze: true }];
+    }
+    return [];
+  }
+  function dejPredmet(s, p) { if (!doBatohu(s, p)) polozNaZem(s, s.x, s.y, [p], 0); }
+  const STATY = [['sila', 'síla'], ['obrana', 'obrana'], ['magie', 'magie']];
+  function poiAkce(s, arg, ud) {
+    const d = arg && s.dekorace[arg.i];
+    if (!jePoi(d) || d.pouzito || Math.abs(d.x - s.x) + Math.abs(d.y - s.y) !== 1) return false;
+    if (!moznostiPoi(s, d).some(v => v.id === arg.volba && v.lze)) return false;
+    const h = s.hrac, o = odvozene(s), P = s.patro;
+    const vysledek = (dobre, text) => ud.push({ typ: 'poi', druh: d.druh, dobre, text, x: d.x, y: d.y });
+    let pouzito = true;
+    s.stat.poi = (s.stat.poi || 0) + 1;
+    switch (d.druh + ':' + arg.volba) {
+      case 'studna:prani': {
+        s.zlato -= cenaPrani(s); s.stat.utraceno += cenaPrani(s);
+        d.hody = (d.hody || 0) + 1; pouzito = d.hody >= 3;
+        const r = Rs(s);
+        if (r < 0.3) { const q = nahodnyPredmet(s, P + 2); if (q.vzacnost !== undefined && slotPro(q)) q.vzacnost = Math.max(1, q.vzacnost); dejPredmet(s, q); vysledek(true, `Z hlubin vyplaval dar: ${nazevPredmetu(s, q)}!`); }
+        else if (r < 0.55) { h.hp = o.maxHp; h.mana = o.maxMana; vysledek(true, 'Ze studny vystoupala teplá pára – jsi zdravý jako rybička.'); }
+        else if (r < 0.65) { const z = cenaPrani(s) * 4; s.zlato += z; vysledek(true, `Studna ti vrátila víc, než dostala (+${z} 💰).`); }
+        else vysledek(false, 'Šplouchnutí… a nic. Možná příště.');
+        if (pouzito) ud.push({ typ: 'poiKonec', text: 'Studna vyschla.' });
+        break;
+      }
+      case 'socha:poklek': {
+        if (Rs(s) < 0.6) { const [k, n] = STATY[Ri(s, 0, 2)]; h[k]++; vysledek(true, `Hrdina ti požehnal – ${n} +1.`); }
+        else { h.hp = Math.min(o.maxHp, h.hp + 10 + P); vysledek(true, 'Kamenná ruka ti spočinula na rameni. Cítíš se líp.'); }
+        break;
+      }
+      case 'socha:kamen': {
+        const z = P * Ri(s, 14, 22);
+        s.zlato += z;
+        if (Rs(s) < 0.5) { vyvolejStrazce(s, P >= 12 ? 'golem' : 'kostlivec'); vysledek(false, `Drahokamy jsou tvoje (+${z} 💰), ale socha se pohnula a vyslala strážce!`); }
+        else vysledek(true, `Drahokamy jsou tvoje (+${z} 💰). Socha mlčí.`);
+        break;
+      }
+      case 'alchymie:poznej': {
+        const nove = [...new Set(h.batoh.filter(q => q.typ === 'lektvar' && !s.zname.includes(q.lektvar)).map(q => q.lektvar))];
+        s.zname.push(...nove);
+        vysledek(true, `Poznal jsi ${nove.length === 1 ? 'nový lektvar' : nove.length + ' nové lektvary'}: ${nove.map(k => LEKTVARY[k].nazev).join(', ')}.`);
+        break;
+      }
+      case 'alchymie:svar': {
+        const i = h.batoh.findIndex(q => q.typ === 'jidlo');
+        odeberKus(h.batoh, i);
+        dejPredmet(s, novyPredmet(s, 'lektvar', { lektvar: P >= 8 ? 'velkeLeceni' : 'leceni' }));
+        vysledek(true, `Z jídla a bylin se ti podařilo svařit ${P >= 8 ? 'Lektvar velkého léčení' : 'Lektvar léčení'}.`);
+        break;
+      }
+      case 'koule:pohled':
+        s.prozkoumano.fill(1);
+        for (const t of s.pasti) t.odhalena = true;
+        vysledek(true, 'V kouli se ti ukázalo celé patro – i všechny pasti.');
+        break;
+      case 'hrob:ucta':
+        h.zk += 6 * P;
+        vysledek(true, `Duch padlého ti pošeptal, co ho zabilo (+${6 * P} zkušeností).`);
+        povysuj(s, ud);
+        break;
+      case 'hrob:kopat': {
+        const q = nahodnyPredmet(s, P + 3, Rs(s) < 0.5 ? 'zbran' : 'ochrana');
+        q.vzacnost = Math.max(1, q.vzacnost || 0);
+        dejPredmet(s, q);
+        if (Rs(s) < 0.6) { vyvolejStrazce(s, P >= 13 ? 'prizrak' : 'kostlivec'); vysledek(false, `Vykopal jsi ${nazevPredmetu(s, q)} – a mrtvý se zvedl, aby si ho vzal zpátky!`); }
+        else vysledek(true, `Vykopal jsi ${nazevPredmetu(s, q)}. Odpočívej v pokoji.`);
+        break;
+      }
+      case 'taborak:odpocinek':
+        if (s.potvory.some(m => m.stav !== 'spi' && !BESTIAR[m.druh].boss && Math.abs(m.x - s.x) + Math.abs(m.y - s.y) <= 8)) {
+          ud.push({ typ: 'poiNelze', text: 'Nablízku se něco pohybuje – teď odpočívat nemůžeš.' });
+          s.stat.poi--;
+          return false;
+        }
+        h.hp = o.maxHp; h.mana = o.maxMana; h.pochoden = Math.min(MAX_PALIVA, h.pochoden + 300); h.sytost = Math.max(0, h.sytost - 15);
+        s.tah += 20;
+        if (Rs(s) < 0.35) { vyvolejStrazce(s); vysledek(false, 'Prospal ses u ohně – a oheň přilákal nezvaného hosta!'); }
+        else vysledek(true, 'Prospal ses u ohně. Zdraví plné, pochodeň opravená.');
+        break;
+      case 'kostkar:hra': {
+        const sazka = sazkaKostek(s), ty = Ri(s, 1, 6) + Ri(s, 1, 6), on = Ri(s, 1, 6) + Ri(s, 1, 6);
+        d.hody = (d.hody || 0) + 1; pouzito = d.hody >= 3;
+        if (ty > on) { s.zlato += sazka; vysledek(true, `Hodil jsi ${ty}, goblin ${on}. Vyhráváš ${sazka} 💰!`); }
+        else if (ty < on) { s.zlato -= sazka; s.stat.utraceno += sazka; vysledek(false, `Hodil jsi ${ty}, goblin ${on}. Prohráváš ${sazka} 💰.`); }
+        else vysledek(true, `Oba jste hodili ${ty}. Remíza.`);
+        if (pouzito) ud.push({ typ: 'poiKonec', text: '„Dost, dost! Musím jít." Goblin sbalil kostky a zmizel.' });
+        break;
+      }
+      case 'fontana:napit': {
+        const r = Rs(s);
+        if (r < 0.5) { h.hp = Math.min(o.maxHp, h.hp + Math.round(o.maxHp / 3)); h.mana = o.maxMana; h.sytost = Math.min(100, h.sytost + 20); vysledek(true, 'Studená voda tě osvěžila a uzdravila.'); }
+        else if (r < 0.75) { s.prozkoumano.fill(1); vysledek(true, 'Voda ti zbystřila smysly – vidíš celé patro.'); }
+        else if (r < 0.9) { const [k, n] = STATY[Ri(s, 0, 2)]; h[k]++; vysledek(true, `Voda je kouzelná – ${n} +1.`); }
+        else { const dmg = Math.max(1, Math.round(o.maxHp * 0.15)); h.hp -= dmg; vysledek(false, `Fuj, zkažená voda! (−${dmg})`); if (h.hp <= 0) zemri(s, 'zkažená voda z fontány', 'poi', ud); }
+        break;
+      }
+      case 'houby:snist': {
+        const r = Rs(s);
+        h.sytost = Math.min(100, h.sytost + 40);
+        if (r < 0.45) { h.hp = Math.min(o.maxHp, h.hp + 15 + P); vysledek(true, 'Chutná jako pečený chléb! Sytost i zdraví nahoru.'); }
+        else if (r < 0.7) { h.magie++; vysledek(true, 'Svět se rozzářil barvami… magie +1.'); }
+        else if (r < 0.85) { h.pochoden = Math.min(MAX_PALIVA, h.pochoden + 200); vysledek(true, 'Svítivé výtrusy ti obalily pochodeň – hoří jasněji.'); }
+        else { const dmg = Math.max(1, Math.round(o.maxHp * 0.2)); h.hp -= dmg; vysledek(false, `Tahle byla jedovatá! (−${dmg})`); if (h.hp <= 0) zemri(s, 'jedovatá houba', 'poi', ud); }
+        break;
+      }
+      case 'zrcadlo:pohled': {
+        const n = sejmiKletby(s);
+        if (n) vysledek(true, 'Odraz z tebe stáhl všechny kletby a zmizel s nimi v rámu.');
+        else if (Rs(s) < 0.5) { h.obrana++; vysledek(true, 'Odraz ti ukázal tvé slabiny – obrana +1.'); }
+        else { vyvolejStrazce(s, 'prizrak'); vysledek(false, 'Odraz vystoupil ze zrcadla – a není přátelský!'); }
+        break;
+      }
+      default: s.stat.poi--; return false;
+    }
+    d.pouzito = pouzito;
+    srovnejZdravi(s);
+    return true;
+  }
   const PASTI = {
     jama: { nazev: 'jáma', vaha: 0.3 },
     sipky: { nazev: 'šipková past', vaha: 0.4 },
@@ -988,10 +1211,43 @@
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   }
-  const jeLouc = (s, x, y, k) => hashSteny(s.mapaPatra, x, y, k + 40) < SANCE_LOUCE && !(s.sebraneLouce && s.sebraneLouce.has(`${x},${y},${k}`));
+  const jeLouc = (s, x, y, k) => hashSteny(s.mapaPatra, x, y, k + 40) < SANCE_LOUCE && !(s.sebraneLouce && s.sebraneLouce.has(`${x},${y},${k}`)) && !uDveriSteny(s.mapaPatra, x, y, k);
+  // stěna u dveří nebo průchodu: louč by zasahovala do dveří (zeď sousedí s dveřmi, nebo se z nich na ni díváme)
+  function uDveriSteny(p, x, y, k) {
+    const dv = (a, b) => { if (a < 0 || b < 0 || a >= p.w || b >= p.h) return false; const t = p.mapa[b * p.w + a]; return t === T.DVERE || t === T.OTVOR; };
+    if (dv(x + DX[k], y + DY[k])) return true;
+    for (let q = 0; q < 4; q++) if (dv(x + DX[q], y + DY[q]) || dv(x + DX[k] + DX[q], y + DY[k] + DY[q])) return true;
+    return false;
+  }
   const MAX_PALIVA = 1000;
 
-  const dekoraceNa = (s, x, y) => s.dekorace && s.dekorace.find(d => d.x === x && d.y === y && d.druh !== 'kosti');
+  // stojí = překáží (kosti jsou jen na zemi, rozbitá věc zmizela)
+  const stoji = d => d.druh !== 'kosti' && !d.rozbito;
+  const dekoraceNa = (s, x, y) => s.dekorace && s.dekorace.find(d => d.x === x && d.y === y && stoji(d));
+  // rozbitné věci: kolik zásahů vydrží podle materiálu (klec, oltář, postavy a zajímavá místa rozbít nejdou)
+  const ODOLNOST = {
+    bedna: [1, 'dřevo'], amfora: [1, 'hlína'], pytle: [1, 'plátno'], lebky: [1, 'kost'],
+    sud: [2, 'dřevo'], stul: [2, 'dřevo'], svicen: [2, 'železo'], stojan: [2, 'dřevo'],
+    police: [3, 'dřevo'], vozik: [3, 'dřevo a železo'], sut: [3, 'kámen'],
+    kotel: [4, 'železo'], krystaly: [4, 'krystal'],
+    rakev: [5, 'kámen'], nahrobek: [5, 'kámen'], stalagmit: [5, 'kámen'],
+    sloup: [6, 'kámen'], chrlic: [6, 'kámen'], trun: [6, 'kámen'],
+  };
+  const NADOBY = new Set(['bedna', 'sud', 'amfora', 'pytle', 'vozik', 'kotel']);
+  function uderDoVeci(s, d, ud) {
+    const [vydrz, material] = ODOLNOST[d.druh];
+    d.zasahy = (d.zasahy || 0) + 1;
+    if (d.zasahy < vydrz) { ud.push({ typ: 'rana', druh: d.druh, x: d.x, y: d.y, zbyva: vydrz - d.zasahy, material }); return; }
+    d.rozbito = true; delete d.zasahy;
+    ud.push({ typ: 'rozbito', druh: d.druh, x: d.x, y: d.y, material });
+    // v nádobách a nábytku občas něco je
+    if (Rs(s) < (NADOBY.has(d.druh) ? 0.45 : 0.15)) {
+      const r = Rs(s), zlato = r < 0.35 ? Ri(s, 2, 6) * s.patro : 0;
+      const veci = r < 0.35 ? [] : [nahodnyPredmet(s, s.patro, r < 0.6 ? 'jidlo' : r < 0.75 ? 'sipy' : r < 0.9 ? 'lektvar' : undefined)];
+      polozNaZem(s, d.x, d.y, veci, zlato);
+      ud.push({ typ: 'korist', x: d.x, y: d.y });
+    }
+  }
   const pastNa = (s, x, y) => s.pasti && s.pasti.find(t => t.x === x && t.y === y);
   const prekazkaNa = (s, x, y) => truhlaNa(s, x, y) || dekoraceNa(s, x, y);
 
@@ -1002,7 +1258,10 @@
   function souvisle(s) {
     const p = s.mapaPatra, w = p.w, n = w * p.h, blok = new Uint8Array(n);
     for (const t of s.truhly) blok[t.y * w + t.x] = 1;
-    for (const d of s.dekorace) if (d.druh !== 'kosti') blok[d.y * w + d.x] = 1;
+    for (const d of s.dekorace) if (stoji(d)) blok[d.y * w + d.x] = 1;
+    for (const t of s.pasti || []) if (t.druh === 'jama') blok[t.y * w + t.x] = 1;   // jámou se projít nedá (propadneš se)
+    // ozdoby se staví až po teleportech: runový kruh se nesmí stát jedinou cestou (šlápnutí na něj přenáší)
+    const tele = new Set(s.stavimOzdoby && s.teleporty ? s.teleporty.map(([x, y]) => y * w + x) : []);   // na kruh vstoupit lze, projít ne
     const schody = p.dolu.y * w + p.dolu.x;
     blok[schody] = 1;                       // přes schody se projít nedá (šlápnutí = sestup, na patře s bossem bariéra)
     const zamky = new Set([...(s.zamcene || []), ...(s.mrize || [])]);
@@ -1013,6 +1272,7 @@
       const fronta = [p.start.y * w + p.start.x]; dist[fronta[0]] = 1;
       for (let q = 0; q < fronta.length; q++) {
         const i = fronta[q], x = i % w, y = (i / w) | 0;
+        if (q && tele.has(i)) continue;
         for (let k = 0; k < 4; k++) {
           const j = (y + DY[k]) * w + x + DX[k];
           if (dist[j] || blok[j] || p.mapa[j] === T.SKALA || (sZamky && zamky.has(j))) continue;   // tajné dveře bereme jako průchozí
@@ -1037,7 +1297,7 @@
   function dostupneSeZamky(s) {
     const p = s.mapaPatra, w = p.w, n = w * p.h, blok = new Uint8Array(n);
     for (const t of s.truhly) blok[t.y * w + t.x] = 1;
-    for (const d of s.dekorace) if (d.druh !== 'kosti') blok[d.y * w + d.x] = 1;
+    for (const d of s.dekorace) if (stoji(d)) blok[d.y * w + d.x] = 1;
     for (const i of [...s.zamcene, ...s.mrize]) blok[i] = 1;
     blok[p.dolu.y * w + p.dolu.x] = 1;
     const dist = new Int8Array(n), fronta = [p.start.y * w + p.start.x]; dist[fronta[0]] = 1;
@@ -1079,6 +1339,7 @@
     return null;
   }
   const n2 = (R, a, b) => a + Math.floor(R.f() * (b - a + 1));
+  const uSchodu = (p, c) => Math.abs(c.x - p.dolu.x) + Math.abs(c.y - p.dolu.y) <= 1;   // runový kruh nesmí být jediná cesta ke schodům
   const teleportNa = (s, x, y) => !!s.teleporty && s.teleporty.some(([tx, ty]) => tx === x && ty === y);
 
   function volneVMistnosti(s, m, R) {
@@ -1097,7 +1358,7 @@
     for (const d of dvere) kopie[d.y * p.w + d.x] = T.SKALA;
     // počítá i s už rozmístěnými truhlami, překážkami a jinými zámky
     for (const t of s.truhly || []) kopie[t.y * p.w + t.x] = T.SKALA;
-    for (const d of s.dekorace || []) if (d.druh !== 'kosti') kopie[d.y * p.w + d.x] = T.SKALA;
+    for (const d of s.dekorace || []) if (stoji(d)) kopie[d.y * p.w + d.x] = T.SKALA;
     for (const i of [...(s.zamcene || []), ...(s.mrize || [])]) kopie[i] = T.SKALA;
     const dist = vzdalenosti(kopie, p.w, p.h, p.start.x, p.start.y);
     for (const o of p.mistnosti) {
@@ -1262,7 +1523,7 @@
         const a = vhodne[Math.floor(R.f() * vhodne.length)], b = vhodne[Math.floor(R.f() * vhodne.length)];
         if (!a || !b || a === b) continue;
         const ca = volneVMistnosti(s, a, R), cb = volneVMistnosti(s, b, R);
-        if (!ca || !cb || uDveri(s, ca.x, ca.y) || uDveri(s, cb.x, cb.y) || Math.abs(ca.x - cb.x) + Math.abs(ca.y - cb.y) < 8) continue;
+        if (!ca || !cb || uDveri(s, ca.x, ca.y) || uDveri(s, cb.x, cb.y) || uSchodu(p, ca) || uSchodu(p, cb) || Math.abs(ca.x - cb.x) + Math.abs(ca.y - cb.y) < 8) continue;
         s.teleporty = [[ca.x, ca.y], [cb.x, cb.y]];
       }
     }
@@ -1280,6 +1541,7 @@
       let r = R.f(), druh = 'deska';
       for (const d in PASTI) { r -= PASTI[d].vaha; if (r <= 0) { druh = d; break; } }
       s.pasti.push({ x, y, druh, odhalena: false });
+      if (druh === 'jama' && !souvisle(s)) s.pasti[s.pasti.length - 1].druh = 'deska';   // jáma by odřízla kus patra
     }
   }
 
@@ -1479,15 +1741,7 @@
       ud.push({ typ: 'oltar', dobre: false, text: `Oltář vzplál a popálil tě (−${dmg}).` });
       if (h.hp <= 0) zemri(s, 'hněv zapomenutého boha', 'oltar', ud);
     } else if (r === 1) {
-      const druhy = Object.keys(BESTIAR).filter(k => BESTIAR[k].od <= s.patro && s.patro <= BESTIAR[k].do);
-      for (let k = 0; k < 4; k++) {
-        const x = s.x + DX[k], y = s.y + DY[k];
-        if (!volneProPotvoru(s, x, y, null, { dvere: false })) continue;
-        const m = novaPotvora(s, druhy[Ri(s, 0, druhy.length - 1)] || 'krysa', x, y, false);
-        m.stav = 'honi'; m.stopa = 15;
-        s.potvory.push(m);
-        break;
-      }
+      vyvolejStrazce(s);
       ud.push({ typ: 'oltar', dobre: false, text: 'Z temnoty se vynořil strážce svatyně!' });
     } else {
       h.sytost = Math.max(0, h.sytost - 40);
@@ -1503,12 +1757,13 @@
     if (m.boss && bossZiv(s)) ud.push({ typ: 'mistnost', ucel: 'boss', text: BESTIAR[m.boss].vstup });
     else if (m.tajna) ud.push({ typ: 'mistnost', ucel: 'tajna', text: 'Tajná místnost! Sem už věky nikdo nevkročil.' });
     else if (m.ucel) ud.push({ typ: 'mistnost', ucel: m.ucel, text: UCELY[m.ucel].vstup });
+    prepadeni(s, m, ud);
   }
 
   // --- použití předmětů ---------------------------------------------
   function najdiVBatohu(s, id) { return s.hrac.batoh.findIndex(p => p.id === id); }
 
-  function nasad(s, id, ud) {
+  function nasad(s, id, ud, cilSlot) {
     const b = s.hrac.batoh, i = najdiVBatohu(s, id);
     if (i < 0) return false;
     const p = b[i], slotTyp = slotPro(p);
@@ -1519,14 +1774,14 @@
       const volne = ['prsten1', 'prsten2'].filter(k => !v[k] || !v[k].prokleti);
       slot = !v.prsten1 ? 'prsten1' : !v.prsten2 ? 'prsten2'
         : volne.length === 2 ? (skorePredmetu(v.prsten1) <= skorePredmetu(v.prsten2) ? 'prsten1' : 'prsten2') : volne[0] || 'prsten1';
+      if (cilSlot === 'prsten1' || cilSlot === 'prsten2') slot = cilSlot;
     }
     if (v[slot] && v[slot].prokleti) {            // prokletá věc nejde sundat, a tak ani vyměnit
       v[slot].odhaleno = true;
       ud.push({ typ: 'prokleto', nazev: nazevPredmetu(s, v[slot]) });
       return false;
     }
-    b.splice(i, 1);
-    if (v[slot]) b.push(v[slot]);
+    if (v[slot]) b.splice(i, 1, v[slot]); else b.splice(i, 1);   // výměna: sundaná věc zaujme místo nasazené
     v[slot] = p;
     if (slot === 'zbran' || slot === 'luk') s.hrac.drzi = slot;   // nasazenou zbraň bereš rovnou do ruky
     srovnejZdravi(s);
@@ -1594,15 +1849,17 @@
         const [druh, k] = nezname[Ri(s, 0, nezname.length - 1)];
         if (druh === 'l') {
           s.zname.push(k);
-          ud.push({ typ: 'precetl', text: `Kniha receptur: ${s.barvyLektvaru[k][0].toLowerCase()} lektvar je ${LEKTVARY[k].nazev.toLowerCase()}.` });
+          ud.push({ typ: 'precetl', druh: 'lektvar', klic: k, nazev: LEKTVARY[k].nazev, barva: s.barvyLektvaru[k][0],
+            text: `Kniha receptur: ${s.barvyLektvaru[k][0].toLowerCase()} lektvar je ${LEKTVARY[k].nazev.toLowerCase()}.` });
         } else {
           s.znameSvitky.push(k);
-          ud.push({ typ: 'precetl', text: `Kniha run: nápis „${s.napisySvitku[k]}" znamená ${ZAKLADY[k].nazev.toLowerCase()}.` });
+          ud.push({ typ: 'precetl', druh: 'svitek', klic: k, nazev: ZAKLADY[k].nazev, napis: s.napisySvitku[k],
+            text: `Kniha run: nápis „${s.napisySvitku[k]}" znamená ${ZAKLADY[k].nazev.toLowerCase()}.` });
         }
       } else {
         const zk = Math.round(h.zkDalsi * 0.3);
         h.zk += zk;
-        ud.push({ typ: 'precetl', text: `Učená pojednání o nestvůrách (+${zk} zkušeností).` });
+        ud.push({ typ: 'precetl', druh: 'zk', zk, text: `Učená pojednání o nestvůrách (+${zk} zkušeností).` });
         povysuj(s, ud);
       }
       return true;
@@ -1647,7 +1904,7 @@
 
   // --- kouzla ----------------------------------------------------------
   // síla: základ roste s patrem (svitky z hloubky jsou silnější) a magie ji násobí
-  const silaKouzla = (s, zaklad) => Math.round(zaklad * (1 + 0.15 * odvozene(s).magie));
+  const silaKouzla = (s, zaklad) => Math.round(zaklad * (1 + 0.15 * odvozene(s).magie) * (1 + 0.04 * navic(s, 'kouzleni')));
   const silaUtocneho = (s, zaklad) => Math.round(silaKouzla(s, zaklad) * (ma(s, 'zaklinac') ? 1.35 : 1));
   function sesli(s, kouzlo, ud) {
     const h = s.hrac, o = odvozene(s);
@@ -1717,10 +1974,38 @@
     return true;
   }
 
+  // lepší věci z batohu: pro každý slot ta nejlepší, pokud je lepší než nasazená (odhalené kletby ne, prokleté nasazené nejde sundat)
+  function lepsiVybava(s) {
+    const v = s.hrac.vybava, plan = [];
+    const kand = typ => s.hrac.batoh.filter(p => slotPro(p) === typ && !(p.prokleti && p.odhaleno)).sort((a, b) => skorePredmetu(b) - skorePredmetu(a));
+    for (const typ of ['zbran', 'luk', 'stit', 'helma', 'brneni', 'boty', 'amulet']) {
+      const p = kand(typ)[0];
+      if (p && !(v[typ] && v[typ].prokleti) && skorePredmetu(p) > skorePredmetu(v[typ]) + 0.01) plan.push([p.id, typ]);
+    }
+    const prsteny = kand('prsten'), sloty = ['prsten1', 'prsten2'].filter(k => !(v[k] && v[k].prokleti)).sort((a, b) => skorePredmetu(v[a]) - skorePredmetu(v[b]));
+    for (const k of sloty) { const p = prsteny[0]; if (p && skorePredmetu(p) > skorePredmetu(v[k]) + 0.01) { plan.push([p.id, k]); prsteny.shift(); } }
+    return plan;
+  }
+  function nasadLepsi(s, ud) {
+    let n = 0;
+    for (const [id, slot] of lepsiVybava(s)) if (nasad(s, id, ud, slot)) n++;
+    return n;
+  }
+  // výbava v batohu, která není lepší než to, co hráč nosí (prázdný slot = nic není horší; prsteny proti slabšímu z obou)
+  function horsiVybava(s) {
+    const v = s.hrac.vybava;
+    return s.hrac.batoh.filter(p => {
+      const slot = slotPro(p);
+      if (!slot) return false;
+      const proti = slot === 'prsten' ? (v.prsten1 && v.prsten2 ? [v.prsten1, v.prsten2].reduce((a, b) => (skorePredmetu(a) <= skorePredmetu(b) ? a : b)) : null) : v[slot];
+      return !!proti && skorePredmetu(p) <= skorePredmetu(proti);
+    }).map(p => p.id);
+  }
   function zahod(s, id, ud) {
     const b = s.hrac.batoh, i = najdiVBatohu(s, id);
     if (i < 0) return false;
     const p = b.splice(i, 1)[0];
+    p.polozeno = true;
     polozNaZem(s, s.x, s.y, [p], 0);
     ud.push({ typ: 'zahodil', nazev: nazevPredmetu(s, p) });
     return true;
@@ -1759,8 +2044,8 @@
   }
 
   function novyHrdina(s) {
-    const [jmeno, rod] = JMENA[s.seed % JMENA.length];
-    s.jmeno = jmeno; s.rod = rod;
+    const [jmeno, rod, tvar] = jmenoHrdiny(s.seed);
+    s.jmeno = jmeno; s.rod = rod; s.tvar = tvar;
     const tr = TRIDY[s.trida] || TRIDY.rytir;
     s.hrac = {
       hp: tr.hp, maxHp: tr.hp, sila: tr.sila, obrana: 0, magie: tr.magie, uroven: 1, zk: 0, zkDalsi: 15, sytost: 100,
@@ -1789,7 +2074,8 @@
     if (tr.brneni) v.brneni = novyPredmet(s, tr.brneni);
     if (tr.boty) v.boty = novyPredmet(s, tr.boty);
     // rychlá lišta drží druh věci (ne konkrétní kus), takže se po spotřebování sama doplní dalším stejným
-    s.rychla = [tr.bezLektvaru ? null : { typ: 'lektvar', lektvar: 'leceni' }, { typ: 'jidlo' }, null];
+    // sloty 4–6: přednastavená kouzla (dokud je hrdina neumí, jsou zamčená)
+    s.rychla = [tr.bezLektvaru ? null : { typ: 'lektvar', lektvar: 'leceni' }, { typ: 'jidlo' }, null, { kouzlo: 'jiskra' }, { kouzlo: 'hojeni' }, { kouzlo: 'ohen' }];
     for (const q of [novyPredmet(s, 'chleb'), novyPredmet(s, 'chleb'), novyPredmet(s, 'pochoden')]) doBatohu(s, q);
     if (!tr.bezLektvaru) for (let i = 0; i < 2; i++) doBatohu(s, novyPredmet(s, 'lektvar', { lektvar: 'leceni' }));
     for (const [zaklad, o] of tr.navic) {
@@ -1800,8 +2086,280 @@
       doBatohu(s, p);
     }
     if (s.trida === 'mag') s.rychla[2] = { zaklad: 'hulkaOhen' };
+    pripravMagii(s);
   }
 
+  const RYCHLYCH = 6;                     // sloty rychlé lišty
+  // --- ozdoby místností: nábytek a předměty podle prostředí (jen vzhled a překážka, nic nedávají) ---
+  // až na konci stavby patra s vlastní náhodou (staré uložené hry: nové ozdoby přibudou na konec seznamu)
+  const OZDOBY = {
+    svicen: 'svícen', lebky: 'hromada lebek', vozik: 'důlní vozík', stul: 'stůl', sloup: 'zlomený sloup', kotel: 'kotel',
+    stojan: 'stojan se zbraněmi', pytle: 'pytle s obilím', stalagmit: 'krápník', krystaly: 'krystaly', nahrobek: 'náhrobek',
+    amfora: 'amfora', sut: 'hromada sutě', chrlic: 'chrlič', trun: 'kamenný trůn',
+  };
+  Object.assign(DEKORACE, OZDOBY);
+  const OZDOBY_BIOMU = {
+    'Kamenné kobky': ['svicen', 'stul', 'stojan', 'pytle', 'amfora', 'sut', 'lebky'],
+    'Zatopené jeskyně': ['stalagmit', 'stalagmit', 'sut', 'amfora', 'kotel'],
+    'Trpasličí doly': ['vozik', 'sut', 'pytle', 'stojan', 'stul', 'svicen'],
+    'Krypta': ['nahrobek', 'lebky', 'svicen', 'amfora', 'chrlic', 'sloup'],
+    'Lávové podzemí': ['sloup', 'kotel', 'lebky', 'chrlic', 'sut'],
+    'Podivno': ['krystaly', 'sloup', 'krystaly', 'chrlic'],
+  };
+  function ozdoby(s) {
+    const p = s.mapaPatra, R = nahoda(smichej(s.seed ^ 0x02D0B, p.patro));
+    const sada = OZDOBY_BIOMU[p.biom] || OZDOBY_BIOMU['Kamenné kobky'];
+    s.stavimOzdoby = true;
+    for (const m of p.mistnosti) {
+      if (m.tajna || m.boss || ['obchod', 'kovarna', 'pokladnice', 'mriz'].includes(m.ucel) || R.f() < 0.45) continue;
+      const n = 1 + (m.w * m.h >= 20 && R.f() < 0.5 ? 1 : 0);
+      for (let k = 0; k < n; k++) {
+        let druh = sada[Math.floor(R.f() * sada.length)];
+        if (R.f() < 0.04) druh = 'trun';
+        umisti(s, m, R, druh);
+      }
+    }
+    delete s.stavimOzdoby;
+  }
+  // --- magie u postavy: mana a kniha kouzel (kouzlit umí každý, mág nejvíc) ----------------
+  // smerem = letí ve směru pohledu; od = od jaké úrovně se kouzlo dá naučit
+  // kouzla po sekcích; nazev = vlastní jméno kouzla, druh = co dělá (pro nováčka)
+  const SEKCE_KOUZEL = {
+    utok: { nazev: 'Útočná', ikona: '🔥' }, leceni: { nazev: 'Léčivá', ikona: '💚' }, ochrana: { nazev: 'Ochranná', ikona: '🛡️' },
+    mysl: { nazev: 'Mysl a stíny', ikona: '🌀' }, svetlo: { nazev: 'Světlo a poznání', ikona: '🕯️' }, vyvolani: { nazev: 'Vyvolávání', ikona: '✨' },
+  };
+  const KOUZLA = {
+    jiskra: { nazev: 'Uhlíková jiskra', druh: 'jiskra', sekce: 'utok', ikona: '✨', mana: 3, od: 1, smerem: true, popis: 'Ohnivá jiskra zasáhne první potvoru v přímce (do 5 polí).' },
+    led: { nazev: 'Mrazivý hrot', druh: 'ledový šíp', sekce: 'utok', ikona: '❄️', mana: 7, od: 3, smerem: true, popis: 'Zraní první potvoru v přímce a na chvíli ji zpomalí.' },
+    jed: { nazev: 'Bažinný dech', druh: 'jedovatý mrak', sekce: 'utok', ikona: '☠️', mana: 6, od: 2, smerem: true, popis: 'Otráví první potvoru v přímce – 5 tahů ji jed spaluje.' },
+    upir: { nazev: 'Polibek upíra', druh: 'vysátí života', sekce: 'utok', ikona: '🩸', mana: 9, od: 5, smerem: true, popis: 'Zraní první potvoru v přímce a polovinu zranění ti vrátí jako zdraví.' },
+    ohen: { nazev: 'Dračí dech', druh: 'ohnivá koule', sekce: 'utok', ikona: '🔥', mana: 10, od: 4, smerem: true, popis: 'Výbuch zasáhne první potvoru v přímce i její sousedy.' },
+    blesk: { nazev: 'Hromový šíp', druh: 'blesk', sekce: 'utok', ikona: '⚡', mana: 12, od: 6, smerem: true, popis: 'Zasáhne všechny potvory v přímce před tebou.' },
+    otres: { nazev: 'Hněv hory', druh: 'otřes země', sekce: 'utok', ikona: '🌋', mana: 13, od: 8, popis: 'Zraní všechny potvory do dvou polí od tebe.' },
+    hojeni: { nazev: 'Hojivý dotek', druh: 'léčení', sekce: 'leceni', ikona: '💚', mana: 5, od: 1, popis: 'Uzdraví část zdraví; síla roste s magií.' },
+    uzdraveni: { nazev: 'Slzy světice', druh: 'velké léčení', sekce: 'leceni', ikona: '💧', mana: 14, od: 6, popis: 'Uzdraví hodně zdraví a zažene hlad; síla roste s magií.' },
+    kuze: { nazev: 'Kamenná kůže', druh: 'obrana +3', sekce: 'ochrana', ikona: '🪨', mana: 6, od: 2, popis: 'Obrana +3 na 12 tahů.' },
+    stit: { nazev: 'Runový štít', druh: 'magický štít', sekce: 'ochrana', ikona: '🔷', mana: 8, od: 6, popis: 'Štít z run pohltí příští zranění (síla roste s magií).' },
+    strach: { nazev: 'Hrůzný šepot', druh: 'děs', sekce: 'mysl', ikona: '😱', mana: 5, od: 3, smerem: true, popis: 'Potvora v přímce dostane strach a na pár tahů uteče (boss ne).' },
+    spanek: { nazev: 'Ukolébavka stínů', druh: 'uspání', sekce: 'mysl', ikona: '🌙', mana: 8, od: 4, smerem: true, popis: 'Uspí potvoru v přímce na 6 tahů – pak ji zasáhneš ze zálohy (boss ne).' },
+    teleport: { nazev: 'Krok skrze stín', druh: 'přemístění', sekce: 'mysl', ikona: '🌀', mana: 9, od: 5, popis: 'Přenese tě jinam v patře.' },
+    svetlo: { nazev: 'Svíčka poutníka', druh: 'oživení pochodně', sekce: 'svetlo', ikona: '🕯️', mana: 2, od: 1, popis: 'Rozjasní pochodeň o 15 %.' },
+    lumen: { nazev: 'Slunce podzemí', druh: 'magické světlo', sekce: 'svetlo', ikona: '☀️', mana: 8, od: 2, popis: 'Nad hlavou ti vzplane koule světla – svítí víc než louč a daleko. Čím vyšší magie, tím déle (30 tahů + 12 za každý bod magie).' },
+    odhaleni: { nazev: 'Lucerna mudrců', druh: 'odhalení', sekce: 'svetlo', ikona: '🏮', mana: 7, od: 3, popis: 'Odhalí pasti a tajné dveře v okolí 6 polí.' },
+    mapa: { nazev: 'Oko věštce', druh: 'jasnozření', sekce: 'svetlo', ikona: '👁️', mana: 14, od: 7, popis: 'Ukáže celé patro i s pastmi.' },
+    sipy: { nazev: 'Toulec z mlhy', druh: 'vyčaruj šípy', sekce: 'vyvolani', ikona: '🏹', mana: 5, od: 1, popis: 'Vyčaruje šípy (8 + magie).' },
+    jidlo: { nazev: 'Chléb poutníka', druh: 'vyčaruj jídlo', sekce: 'vyvolani', ikona: '🍞', mana: 9, od: 3, popis: 'Vyčaruje bochník chleba, s vyšší magií pečené maso.' },
+  };
+  const KOUZLA_TRIDY = { rytir: ['jiskra', 'hojeni'], zlodej: ['jiskra', 'svetlo', 'sipy'], mag: ['jiskra', 'hojeni', 'ohen', 'kuze', 'lumen'], barbar: ['jiskra'] };
+  const MANA_TRIDY = { rytir: 6, zlodej: 8, mag: 22, barbar: 4 };
+
+  // --- dovednosti: zlepšují se samy tím, jak je hráč používá (hráč vidí jen zvýšení) ---------
+  const DOVEDNOSTI = {
+    boj: { nazev: 'Boj zblízka', ikona: '⚔️', popis: 'za stupeň +3 % poškození a +1 % přesnost zbraní na blízko' },
+    strelba: { nazev: 'Lukostřelba', ikona: '🏹', popis: 'za stupeň +4 % poškození a +2 % přesnost luku' },
+    kouzleni: { nazev: 'Kouzlení', ikona: '✨', popis: 'za stupeň +2 many a +4 % síla kouzel' },
+    odolnost: { nazev: 'Odolnost', ikona: '🛡️', popis: 'za stupeň +2 maximální zdraví' },
+  };
+  const MAX_DOVEDNOST = 20;
+  const potrebaDovednosti = u => Math.round(10 * Math.pow(u, 1.8));
+  // stupeň dovednosti nad výchozí 1 (0 = nic navíc)
+  const navic = (s, k) => { const d = s.hrac.dovednosti && s.hrac.dovednosti[k]; return d ? d.u - 1 : 0; };
+  function cvic(s, k, ud, kolik) {
+    const h = s.hrac;
+    if (!h.dovednosti) h.dovednosti = {};
+    const d = h.dovednosti[k] || (h.dovednosti[k] = { u: 1, zk: 0 });
+    if (d.u >= MAX_DOVEDNOST) return;
+    d.zk += kolik || 1;
+    while (d.zk >= potrebaDovednosti(d.u) && d.u < MAX_DOVEDNOST) {
+      d.zk -= potrebaDovednosti(d.u); d.u++;
+      if (k === 'odolnost') h.hp += 2;
+      ud.push({ typ: 'dovednost', klic: k, uroven: d.u });
+    }
+  }
+  function maxMany(s, o) {
+    const h = s.hrac;
+    return (h.manaZaklad || 0) + 2 * (o ? o.magie : odvozene(s).magie) + 2 * navic(s, 'kouzleni');
+  }
+  function naucKouzlo(s, ud) {
+    const h = s.hrac, zname = h.kouzla || (h.kouzla = []);
+    const mozna = Object.keys(KOUZLA).filter(k => !zname.includes(k) && KOUZLA[k].od <= h.uroven);
+    if (!mozna.length) return;
+    const k = mozna[Ri(s, 0, mozna.length - 1)];
+    zname.push(k);
+    // nové kouzlo hned do rychlé lišty, je-li volný slot (a ještě tam není)
+    let slot = -1;
+    if (Array.isArray(s.rychla) && !s.rychla.some(q => q && q.kouzlo === k)) {
+      slot = s.rychla.findIndex(q => !q);
+      if (slot >= 0) s.rychla[slot] = { kouzlo: k };
+    }
+    ud.push({ typ: 'noveKouzlo', klic: k, nazev: KOUZLA[k].nazev, slot });
+  }
+  // první potvora v přímce před hráčem (do `dosah` polí) a vzdálenost, kam kouzlo doletí
+  function cilVPrimce(s, dosah) {
+    let d = 1;
+    for (; d <= dosah; d++) {
+      const x = s.x + DX[s.smer] * d, y = s.y + DY[s.smer] * d;
+      if (blokujePohled(s, x, y) || prekazkaNa(s, x, y)) break;
+      const m = potvoraNa(s, x, y);
+      if (m) return { m, d };
+    }
+    return { m: null, d: Math.max(1, d - 1) };
+  }
+  function seslatKouzlo(s, k, ud) {
+    const h = s.hrac, o = odvozene(s);
+    if (k === 'ohen' || k === 'blesk' || k === 'teleport' || k === 'mapa') { sesli(s, k, ud); return; }
+    if (k === 'hojeni') {
+      const kolik = Math.min(o.maxHp - h.hp, silaKouzla(s, 6 + Math.floor(s.patro / 2)));
+      h.hp += kolik;
+      ud.push({ typ: 'kouzlo', kouzlo: 'leceni', text: `Hojivý dotek tě uzdravil (+${kolik}).` });
+      return;
+    }
+    if (k === 'lumen') {
+      h.lumen = 30 + 12 * Math.max(0, o.magie);
+      ud.push({ typ: 'kouzlo', kouzlo: 'lumen', text: `Nad hlavou ti vzplálo Slunce podzemí (${h.lumen} tahů).` });
+      return;
+    }
+    if (k === 'sipy') {
+      const n = 8 + Math.max(0, o.magie);
+      const st = h.batoh.find(q => q.typ === 'sipy');
+      if (st) st.pocet += n; else { const p = novyPredmet(s, 'sipy', { pocet: n }); if (!doBatohu(s, p)) polozNaZem(s, s.x, s.y, [p], 0); }
+      ud.push({ typ: 'kouzlo', kouzlo: 'sipy', text: `Z mlhy se zhmotnilo ${n} šípů.` });
+      return;
+    }
+    if (k === 'jidlo') {
+      const p = novyPredmet(s, o.magie >= 5 ? 'maso' : 'chleb');
+      if (!doBatohu(s, p)) polozNaZem(s, s.x, s.y, [p], 0);
+      ud.push({ typ: 'kouzlo', kouzlo: 'jidlo', text: `Vyčaroval jsi: ${nazevPredmetu(s, p)}.` });
+      return;
+    }
+    if (k === 'uzdraveni') {
+      const kolik = Math.min(o.maxHp - h.hp, silaKouzla(s, 16 + s.patro));
+      h.hp += kolik; h.sytost = Math.min(100, h.sytost + 25);
+      ud.push({ typ: 'kouzlo', kouzlo: 'leceni', text: `Slzy světice tě uzdravily (+${kolik}) a zahnaly hlad.` });
+      return;
+    }
+    if (k === 'svetlo') {
+      h.pochoden = Math.min(MAX_PALIVA, h.pochoden + 150);
+      ud.push({ typ: 'kouzlo', kouzlo: 'svetlo', text: 'Plamen pochodně se rozzářil.' });
+      return;
+    }
+    if (k === 'kuze') {
+      h.kuze = 12;
+      ud.push({ typ: 'kouzlo', kouzlo: 'kuze', text: 'Kůže ti zkameněla – obrana +3.' });
+      return;
+    }
+    if (k === 'stit') {
+      h.stitMag = (h.stitMag || 0) + silaKouzla(s, 8 + Math.floor(s.patro / 2));
+      ud.push({ typ: 'kouzlo', kouzlo: 'stit', text: `Kolem tebe se rozzářil štít z run (pohltí ${h.stitMag} zranění).` });
+      return;
+    }
+    if (k === 'otres') {
+      const cile = s.potvory.filter(m => Math.abs(m.x - s.x) + Math.abs(m.y - s.y) <= 2);
+      ud.push({ typ: 'kouzlo', kouzlo: 'otres', text: cile.length ? 'Země se otřásla!' : 'Země se otřásla – nikoho to nezasáhlo.' });
+      for (const m of cile) if (m.hp > 0) zranPotvoru(s, m, silaUtocneho(s, Ri(s, 4, 8) + s.patro), ud, true);
+      hluk(s, 8);
+      return;
+    }
+    if (k === 'odhaleni') {
+      const p = s.mapaPatra;
+      let n = 0;
+      for (const t of s.pasti) if (!t.odhalena && Math.abs(t.x - s.x) + Math.abs(t.y - s.y) <= 6) { t.odhalena = true; n++; }
+      for (let y = s.y - 6; y <= s.y + 6; y++) for (let x = s.x - 6; x <= s.x + 6; x++) {
+        if (x > 0 && y > 0 && x < p.w - 1 && y < p.h - 1 && p.mapa[y * p.w + x] === T.TAJNE && Math.abs(x - s.x) + Math.abs(y - s.y) <= 6) { odhalTajne(s, x, y, ud, 'kouzlo'); n++; }
+      }
+      ud.push({ typ: 'kouzlo', kouzlo: 'odhaleni', text: n ? `Runy se rozzářily – odhalených tajemství: ${n}.` : 'Nic skrytého tu není.' });
+      return;
+    }
+    // jed, děs, uspání: působí na první potvoru v přímce (do 6 polí)
+    if (k === 'jed' || k === 'strach' || k === 'spanek') {
+      const { m, d } = cilVPrimce(s, 6);
+      ud.push({ typ: 'kouzlo', kouzlo: k, vzdalenost: d, text: m ? '' : 'Kouzlo se rozplynulo o zeď.' });
+      if (!m) return;
+      const b = BESTIAR[m.druh];
+      if (k === 'jed') { m.jed = { dmg: Math.max(1, silaUtocneho(s, 2 + Math.floor(s.patro / 3))), zbyva: 5 }; ud.push({ typ: 'kouzloUcinek', text: `${b.nom}: jed začíná působit.` }); }
+      else if (b.boss) ud.push({ typ: 'kouzloUcinek', text: `${b.nom} kouzlu odolal.` });
+      else if (k === 'strach') { m.stav = 'utika'; m.strachDo = s.tah + 8; ud.push({ typ: 'utika', id: m.id, druh: m.druh, x: m.x, y: m.y }); }
+      else { m.stav = 'spi'; m.spankem = s.tah + 6; ud.push({ typ: 'kouzloUcinek', text: `${b.nom} usnul${b.rod === 'z' ? 'a' : b.rod === 's' ? 'o' : ''}.` }); }
+      if (m.stav !== 'spi' || k !== 'spanek') hluk(s, 3);
+      return;
+    }
+    // jiskra, ledový šíp, vysátí: první potvora v přímce
+    const { m, d } = cilVPrimce(s, 5);
+    ud.push({ typ: 'kouzlo', kouzlo: k, vzdalenost: d, text: m ? '' : 'Kouzlo se rozplynulo o zeď.' });
+    if (m) {
+      const b = BESTIAR[m.druh], zaklad = k === 'led' || k === 'upir' ? Ri(s, 5, 9) + s.patro : Ri(s, 3, 6) + Math.floor(s.patro * 0.6);
+      const dmg = Math.max(1, silaUtocneho(s, zaklad) - Math.floor(b.obrana / 3));
+      zranPotvoru(s, m, dmg, ud, true);
+      if (k === 'upir') { const kolik = Math.min(odvozene(s).maxHp - h.hp, Math.ceil(dmg / 2)); h.hp += kolik; if (kolik) ud.push({ typ: 'kouzloUcinek', text: `Vysátý život tě posílil (+${kolik}).` }); }
+      if (k === 'led' && m.hp > 0) m.energie = Math.min(m.energie, -1.5);       // zmrzlá potvora pár tahů nejedná
+    }
+    hluk(s, 4);
+  }
+
+  // --- náhodné prvky v patře: elitní potvory, přepadení, zlatý goblin ----------------------
+  const ELITY = {
+    zurivy: { nazev: 'Zuřivý', popis: 'silnější útok' },
+    obrneny: { nazev: 'Obrněný', popis: 'dvakrát víc zdraví' },
+    rychly: { nazev: 'Rychlý', popis: 'jedná o polovinu častěji' },
+  };
+  // elity se losují až na konci stavby patra s vlastní náhodou (staré uložené hry se nezmění)
+  function elity(s) {
+    const p = s.mapaPatra, R = nahoda(smichej(s.seed ^ 0xE117E, p.patro));
+    if (p.patro < 3) return;
+    const druhy = Object.keys(ELITY);
+    for (const m of s.potvory) {
+      if (BESTIAR[m.druh].boss || m.nacelnik || R.f() >= 0.07) continue;
+      udelejElitu(m, druhy[Math.floor(R.f() * druhy.length)], p.patro);
+    }
+  }
+  function udelejElitu(m, druh, patro) {
+    m.elita = druh;
+    if (druh === 'obrneny') { m.maxHp = m.hp = Math.round(m.maxHp * 2); }
+    else { m.maxHp = m.hp = Math.round(m.maxHp * 1.3); }
+    if (druh === 'zurivy') m.bonus += 2 + Math.floor(patro / 5);
+  }
+  // přepadení: při vstupu do neprobádané místnosti se ze stínů občas vynoří smečka
+  function prepadeni(s, m, ud) {
+    if (s.patro < 2 || m.tajna || m.boss || m.ucel === 'obchod' || m.ucel === 'kovarna' || m.ucel === 'poi' || Rs(s) >= 0.07) return;
+    const druhy = Object.keys(BESTIAR).filter(k => !BESTIAR[k].boss && BESTIAR[k].od <= s.patro && s.patro <= BESTIAR[k].do);
+    if (!druhy.length) return;
+    const druh = druhy[Ri(s, 0, druhy.length - 1)];
+    let n = 0;
+    for (let k = 0; k < 4 && n < (s.patro >= 8 ? 2 : 1); k++) {
+      const x = s.x + DX[(s.smer + 2 + k) % 4] * 2, y = s.y + DY[(s.smer + 2 + k) % 4] * 2;   // nejdřív za zády
+      if (!volneProPotvoru(s, x, y, null, { dvere: false }) || !vidi(s, s.x, s.y, x, y)) continue;
+      const q = novaPotvora(s, druh, x, y, false);
+      q.stav = 'honi'; q.stopa = 12;
+      s.potvory.push(q); n++;
+    }
+    if (n) ud.push({ typ: 'prepadeni', druh, pocet: n });
+  }
+  // zlatý goblin: vzácně se objeví, utíká a za pár tahů zmizí; kdo ho chytí, zbohatne
+  const SANCE_ZLATEHO = 1 / 450;
+  function zlatyGoblin(s, ud) {
+    const p = s.mapaPatra;
+    if (s.patro < 2 || L_BOSS(s) || s.potvory.some(m => m.druh === 'zlatyGoblin')) return;
+    for (let k = 0; k < 40; k++) {
+      const x = Ri(s, 1, p.w - 2), y = Ri(s, 1, p.h - 2), dd = Math.abs(x - s.x) + Math.abs(y - s.y);
+      if (dd < 3 || dd > 7 || !vidi(s, s.x, s.y, x, y) || !volneProPotvoru(s, x, y, null, { dvere: false })) continue;
+      const m = novaPotvora(s, 'zlatyGoblin', x, y, false);
+      m.hp = m.maxHp = 10 + 3 * s.patro;
+      m.stav = 'utika'; m.strachDo = s.tah + 999; m.zmizi = s.tah + 35;
+      s.potvory.push(m);
+      ud.push({ typ: 'zlatyGoblin', id: m.id, x, y });
+      return;
+    }
+  }
+  const L_BOSS = s => s.potvory.some(m => BESTIAR[m.druh].boss);
+
+  // mana a kouzla podle povolání (i pro starší uložené hry, které je neznaly)
+  function pripravMagii(s) {
+    const h = s.hrac;
+    if (h.manaZaklad === undefined) h.manaZaklad = MANA_TRIDY[s.trida] || 6;
+    if (!h.kouzla) h.kouzla = (KOUZLA_TRIDY[s.trida] || KOUZLA_TRIDY.rytir).slice();
+    if (!h.dovednosti) h.dovednosti = {};
+    if (h.mana === undefined) h.mana = maxMany(s);
+  }
   // --- schopnosti (volba každou 3. úroveň) ----------------------------
   const SCHOPNOSTI = {
     bojovnik: { nazev: 'Bojovník', ikona: '⚔️', popis: 'Zbraně na blízko zraňují o 25 % víc.' },
@@ -1840,6 +2398,7 @@
       if (h.uroven % 3 === 0) h.magie++;
       ud.push({ typ: 'uroven', uroven: h.uroven });
       if (h.uroven % 3 === 0 && !h.volba) nabidniSchopnosti(s, ud);
+      if (h.uroven % 2 === 0) naucKouzlo(s, ud);
     }
   }
 
@@ -1905,11 +2464,11 @@
   }
 
   function novaPotvora(s, druh, x, y, spi) {
-    const d = BESTIAR[druh], navic = Math.max(0, s.patro - d.od);
-    const hp = Math.round(d.hp * (1 + OBTIZNOST.hpRust * navic));
+    const d = BESTIAR[druh], navic = Math.max(0, s.patro - d.od), pozde = Math.max(0, s.patro - OBTIZNOST.pozdniOd);
+    const hp = Math.round(d.hp * (1 + OBTIZNOST.hpRust * navic + OBTIZNOST.hpPozdni * pozde));   // od pozdniOd potvory rostou rychleji
     return {
       id: s.dalsiId = (s.dalsiId || 0) + 1, druh, x, y, hp, maxHp: hp,
-      bonus: Math.floor(navic * OBTIZNOST.utokRust), stav: spi ? 'spi' : 'bloudi', energie: 0, stopa: 0,
+      bonus: Math.floor(navic * OBTIZNOST.utokRust + pozde * OBTIZNOST.utokPozdni), stav: spi ? 'spi' : 'bloudi', energie: 0, stopa: 0,
     };
   }
 
@@ -1942,6 +2501,9 @@
     rozmistiKorist(s);
     kovarna(s);
     zadejUkol(s);
+    zajimavosti(s);
+    elity(s);
+    ozdoby(s);
     aktualizujViditelnost(s);
   }
 
@@ -2120,6 +2682,24 @@
       ud.push({ typ: 'schopnost', klic: arg, nazev: SCHOPNOSTI[arg].nazev });
       return { tah: false, udalost: 'schopnost', udalosti: ud };
     }
+    if (typ === 'skok') {                         // přeskočit odhalenou nástrahu nebo jámu před sebou (2 tahy)
+      const p = s.mapaPatra, ax = s.x + DX[s.smer], ay = s.y + DY[s.smer], bx = ax + DX[s.smer], by = ay + DY[s.smer];
+      const past = pastNa(s, ax, ay);
+      if (!past || !past.odhalena) { ud.push({ typ: 'skokNelze', proc: 'nic' }); return { tah: false, udalost: 'nic', udalosti: ud }; }
+      const tb = dlazdice(s, bx, by), cil = pastNa(s, bx, by);
+      if (!pruchozi(tb) || tb === T.DOLU || dvereZavrene(s, bx, by) || potvoraNa(s, bx, by) || potvoraNa(s, ax, ay) || prekazkaNa(s, bx, by)
+        || (s.mrize && s.mrize.has(by * p.w + bx)) || (cil && cil.druh === 'jama')) {
+        ud.push({ typ: 'skokNelze', proc: 'dopad' }); return { tah: false, udalost: 'nic', udalosti: ud };
+      }
+      const z = { x: s.x, y: s.y };
+      s.x = bx; s.y = by; s.varovani = -1;
+      s.hrac.sytost = Math.max(0, s.hrac.sytost - 1);
+      ud.push({ typ: 'skok', druh: past.druh });
+      seberZeZeme(s, ud);
+      if (cil && slapniNaPast(s, cil, ud) === 'pad') return { tah: true, udalost: 'pad', udalosti: ud };
+      if (!s.mrtvy) { vstupDoMistnosti(s, ud); rozhlednise(s, ud, false); konecTahu(s, 2, ud); }
+      return { tah: true, udalost: 'skok', z, udalosti: ud };
+    }
     if (typ === 'kryt') {
       if (!s.hrac.vybava.stit) return { tah: false, udalost: 'bezStitu', udalosti: ud };
       s.hrac.kryti = true;
@@ -2163,15 +2743,70 @@
         if (m) utokHrace(s, m, ud, true); else ud.push({ typ: 'sipMinul', lezi });
       } else {
         m = potvoraNa(s, s.x + DX[s.smer], s.y + DY[s.smer]);
-        if (m) utokHrace(s, m, ud); else ud.push({ typ: 'mach' });
+        const vec = !m && dekoraceNa(s, s.x + DX[s.smer], s.y + DY[s.smer]);
+        if (m) utokHrace(s, m, ud);
+        else if (vec && ODOLNOST[vec.druh]) uderDoVeci(s, vec, ud);
+        else if (vec) ud.push({ typ: 'nerozbitne', druh: vec.druh });
+        else ud.push({ typ: 'mach' });
       }
       hluk(s, 5);
       konecTahu(s, o.zbran.rychlost, ud);
       return { tah: true, udalost: m ? 'utok' : 'mach', udalosti: ud };
     }
+    if (typ === 'kouzlo') {                       // kouzlo z knihy kouzel – stojí manu a tah
+      const k = KOUZLA[arg], h = s.hrac;
+      if (!k || !(h.kouzla || []).includes(arg)) return { tah: false, udalost: 'nic', udalosti: ud };
+      if (h.mana < k.mana) { ud.push({ typ: 'maloMany', klic: arg, chybi: k.mana - h.mana }); return { tah: false, udalost: 'maloMany', udalosti: ud }; }
+      h.mana -= k.mana;
+      seslatKouzlo(s, arg, ud);
+      cvic(s, 'kouzleni', ud, 1 + Math.floor(k.mana / 6));
+      if (!s.mrtvy) konecTahu(s, 1, ud);
+      return { tah: true, udalost: 'kouzlo', udalosti: ud };
+    }
+    if (typ === 'zahodHorsi') {                   // položit na zem všechnu výbavu z batohu horší než ta na sobě (jeden tah)
+      const ids = new Set(horsiVybava(s));
+      if (!ids.size) return { tah: false, udalost: 'nic', udalosti: ud };
+      const pryc = s.hrac.batoh.filter(p => ids.has(p.id));
+      for (const p of pryc) p.polozeno = true;
+      s.hrac.batoh = s.hrac.batoh.filter(p => !ids.has(p.id));
+      polozNaZem(s, s.x, s.y, pryc, 0);
+      ud.push({ typ: 'zahodilHorsi', pocet: pryc.length, nazvy: pryc.map(p => nazevPredmetu(s, p)) });
+      konecTahu(s, 1, ud);
+      return { tah: true, udalost: 'zahodHorsi', udalosti: ud };
+    }
+    if (typ === 'seradit') {                      // seřadit batoh podle druhu (čas nestojí)
+      const PORADI = ['zbran', 'luk', 'stit', 'helma', 'brneni', 'boty', 'amulet', 'prsten', 'lektvar', 'svitek', 'hulka', 'jidlo', 'pochoden', 'sipy', 'nastroj', 'surovina', 'kniha', 'klic', 'ukol'];
+      const misto = p => { const i = PORADI.indexOf(p.typ); return i < 0 ? 99 : i; };
+      const podleDruhu = (a, b) => misto(a) - misto(b) || skorePredmetu(b) - skorePredmetu(a) || a.zaklad.localeCompare(b.zaklad);
+      const RAZENI = {
+        druh: podleDruhu,
+        cena: (a, b) => cenaPredmetu(b, s) * kusu(b) - cenaPredmetu(a, s) * kusu(a) || podleDruhu(a, b),
+        vzacnost: (a, b) => (b.vzacnost || 0) - (a.vzacnost || 0) || skorePredmetu(b) - skorePredmetu(a) || podleDruhu(a, b),
+        nazev: (a, b) => nazevPredmetu(s, a).localeCompare(nazevPredmetu(s, b), 'cs'),
+      };
+      s.hrac.batoh.sort(RAZENI[arg] || podleDruhu);
+      return { tah: false, udalost: 'presun', udalosti: ud };
+    }
+    if (typ === 'presun') {                       // přeskládání batohu (čas nestojí)
+      const b = s.hrac.batoh, z = arg && arg.z, na = arg && arg.na;
+      if (!(z >= 0 && z < b.length && na >= 0 && na < kapacita(s)) || z === na) return { tah: false, udalost: 'nic', udalosti: ud };
+      const [q] = b.splice(z, 1);
+      b.splice(Math.min(na, b.length), 0, q);
+      return { tah: false, udalost: 'presun', udalosti: ud };
+    }
+    if (typ === 'poi') {                          // volba u zajímavého místa stojí tah
+      if (!poiAkce(s, arg, ud)) return { tah: false, udalost: 'nic', udalosti: ud };
+      if (!s.mrtvy) konecTahu(s, 1, ud);
+      return { tah: true, udalost: 'poiAkce', udalosti: ud };
+    }
     if (typ === 'kovat') {
       const ok = kovat(s, arg, ud);
       return { tah: false, udalost: ok ? 'kovat' : 'nic', udalosti: ud };   // kování čas nestojí
+    }
+    if (typ === 'prodejHorsi') {                  // u obchodníka prodat všechnu horší výbavu z batohu (čas nestojí)
+      let n = 0;
+      for (const id of horsiVybava(s)) if (obchodAkce(s, 'prodej', id, ud)) n++;
+      return { tah: false, udalost: n ? 'prodej' : 'nic', udalosti: ud };
     }
     if (typ === 'kup' || typ === 'prodej' || typ === 'odklet' || typ === 'hadanka' || typ === 'batoh') {
       const ok = obchodAkce(s, typ, arg, ud);
@@ -2190,9 +2825,29 @@
         ud.push({ typ: 'louc' });
       } else if (t === T.TAJNE) odhalTajne(s, x, y, ud, 'ohmatani');
       else if (t === T.SKALA) ud.push({ typ: 'ohmatal' });
-      else return { tah: false, udalost: 'nic', udalosti: ud };
+      else if (dvereZavrene(s, x, y) || truhlaNa(s, x, y) || dekoraceNa(s, x, y)) {
+        // dveře, truhla, obchodník, zajímavé místo, oltář…: stejně jako když do nich vejdeš
+        const r = akceVnitrni(s, 'vpred');
+        if (r.udalost === 'prekazka') ud.push({ typ: 'prohlidl', druh: r.druh, vydrz: ODOLNOST[r.druh] ? ODOLNOST[r.druh][0] - (dekoraceNa(s, x, y).zasahy || 0) : 0, material: ODOLNOST[r.druh] ? ODOLNOST[r.druh][1] : '' });
+        return r;
+      } else if (s.zeme.some(z => z.x === x && z.y === y) && !potvoraNa(s, x, y)) {
+        if (!seberZeZeme(s, ud, x, y, true)) return { tah: false, udalost: 'nic', udalosti: ud };
+      } else if (s.zeme.some(z => z.x === s.x && z.y === s.y)) {
+        if (!seberZeZeme(s, ud, s.x, s.y, true)) return { tah: false, udalost: 'nic', udalosti: ud };
+      } else return { tah: false, udalost: 'nic', udalosti: ud };
       konecTahu(s, 1, ud);
       return { tah: true, udalost: 'ohmatat', udalosti: ud };
+    }
+    if (typ === 'nasadLepsi') {                   // nasadit z batohu všechno lepší než nasazené (jeden tah)
+      const n = nasadLepsi(s, ud);
+      if (!n) return { tah: false, udalost: 'nic', udalosti: ud };
+      konecTahu(s, 1, ud);
+      return { tah: true, udalost: 'nasadLepsi', udalosti: ud };
+    }
+    if (typ === 'nasad' && arg && typeof arg === 'object') {     // přetažení na konkrétní slot
+      if (!nasad(s, arg.id, ud, arg.slot)) return { tah: false, udalost: 'nic', udalosti: ud };
+      konecTahu(s, 1, ud);
+      return { tah: true, udalost: 'nasad', udalosti: ud };
     }
     if (typ === 'nasad' || typ === 'sundej' || typ === 'pouzij' || typ === 'zahod') {
       const ok = typ === 'nasad' ? nasad(s, arg, ud) : typ === 'sundej' ? sundej(s, arg, ud)
@@ -2217,6 +2872,7 @@
     if (dek && dek.druh === 'obchodnik') return { tah: false, udalost: 'obchod', udalosti: ud };
     if (dek && dek.druh === 'mistrKovar') return { tah: false, udalost: 'kovar', udalosti: ud };
     if (dek) {
+      if (jePoi(dek) && !dek.pouzito) return { tah: false, udalost: 'poi', druh: dek.druh, i: s.dekorace.indexOf(dek), udalosti: ud };
       if (dek.druh === 'oltar' && !dek.pouzito) {
         modlitba(s, dek, ud);
         if (!s.mrtvy) konecTahu(s, 1, ud);
@@ -2300,7 +2956,14 @@
     for (let i = 0; i < kol && !s.mrtvy; i++) {
       s.tah++;
       if (Rs(s) < SANCE_POTULNE) potulnaPotvora(s, ud);
+      if (Rs(s) < SANCE_ZLATEHO) zlatyGoblin(s, ud);
       const h = s.hrac, pred = h.sytost;
+      const mm = maxMany(s);
+      h.manaReg = (h.manaReg || 0) + 0.025 + 0.008 * h.magie;
+      if (h.manaReg >= 1) { h.manaReg -= 1; if (h.mana < mm) h.mana++; }
+      if (h.mana > mm) h.mana = mm;
+      if (h.kuze > 0 && --h.kuze === 0) ud.push({ typ: 'kuzeKonec' });
+      if (h.lumen > 0 && --h.lumen === 0) ud.push({ typ: 'lumenKonec' });
       h.sytost = Math.max(0, Math.round((h.sytost - 0.1 * odvozene(s).hladovost) * 10) / 10);
       if (pred > 30 && h.sytost <= 30) ud.push({ typ: 'hlad', stupen: 1 });
       if (pred > 10 && h.sytost <= 10) ud.push({ typ: 'hlad', stupen: 2 });
@@ -2329,6 +2992,8 @@
     const silou = strela ? Math.floor((o.sila - 3) / 4) : Math.floor((o.sila - 3) / 2);
     let dmg = Math.max(1, Ri(s, z.min, z.max) + silou + o.ohen - Math.floor(d.obrana / 2));
     if (!strela && ma(s, 'bojovnik')) dmg = Math.round(dmg * 1.25);
+    dmg = Math.round(dmg * (1 + (strela ? 0.04 * navic(s, 'strelba') : 0.03 * navic(s, 'boj'))));
+    cvic(s, strela ? 'strelba' : 'boj', ud);
     // ze zálohy: potvora spí, nic netuší, nebo je k tobě zády (ne boss)
     const zezadu = m.smer !== undefined && s.x === m.x - DX[m.smer] && s.y === m.y - DY[m.smer];
     if (!d.boss && (m.stav === 'spi' || m.stav === 'bloudi' || zezadu)) {
@@ -2363,6 +3028,12 @@
         for (const p of kor) if (p.vzacnost !== undefined && L_SLOTOVY(p)) p.vzacnost = Math.max(3, p.vzacnost);
         polozNaZem(s, m.x, m.y, kor, s.patro * Ri(s, 25, 40));
       } else korist(s, m, ud);
+      if (m.elita || m.druh === 'zlatyGoblin') {             // elita a zlatý goblin nesou víc
+        const q = nahodnyPredmet(s, s.patro + 2);
+        if (slotPro(q)) q.vzacnost = Math.max(2, q.vzacnost || 0);
+        polozNaZem(s, m.x, m.y, [q], s.patro * (m.druh === 'zlatyGoblin' ? Ri(s, 25, 45) : Ri(s, 4, 9)));
+        h.zk += zk;                                           // dvojnásobek zkušeností
+      }
       povysuj(s, ud);
     }
   }
@@ -2402,8 +3073,18 @@
     for (const m of s.potvory.slice()) {
       if (m.hp <= 0) continue;
       const d = BESTIAR[m.druh];
+      if (m.jed) {                                     // jed z kouzla spaluje potvoru
+        zranPotvoru(s, m, m.jed.dmg, ud, true);
+        if (m.jed && --m.jed.zbyva <= 0) delete m.jed;
+        if (m.hp <= 0) continue;
+      }
       if (m.stav === 'spi') { jednej(s, m, d, pole, ud); continue; }
-      m.energie += d.rychlost;
+      if (m.zmizi && s.tah >= m.zmizi) {
+        s.potvory = s.potvory.filter(q => q !== m);
+        ud.push({ typ: 'zmizel', id: m.id, druh: m.druh, x: m.x, y: m.y });
+        continue;
+      }
+      m.energie += d.rychlost * (m.elita === 'rychly' ? 1.5 : 1);
       while (m.energie >= 1 && !s.mrtvy) { m.energie -= 1; jednej(s, m, d, pole, ud); }
     }
   }
@@ -2413,12 +3094,14 @@
     if (t === T.SKALA || t === T.TAJNE || t === T.DOLU || t === T.NAHORU) return false;
     if (x === s.x && y === s.y) return false;
     if (prekazkaNa(s, x, y)) return false;       // pasti potvory znají – chodí po nich bez spuštění
+    if (!(m && LETAJICI.has(m.druh))) { const pa = pastNa(s, x, y); if (pa && pa.druh === 'jama') return false; }   // jámou by propadly
     if (dvereZavrene(s, x, y) && (s.zamcene.has(y * s.mapaPatra.w + x) || s.mrize.has(y * s.mapaPatra.w + x))) return false;
     if (dvereZavrene(s, x, y) && !d.dvere) return false;
     const jina = potvoraNa(s, x, y);
     return !jina || jina === m;
   }
 
+  const LETAJICI = new Set(['prizrak', 'ohnivak', 'bezejmenny', 'srdce', 'lich']);
   function krokPotvory(s, m, d, x, y, ud) {
     if (dvereZavrene(s, x, y)) {            // goblin a kostlivec umí otevřít dveře – stojí je to akci
       s.otevrene.add(y * s.mapaPatra.w + x);
@@ -2444,6 +3127,13 @@
   // šaman: vyléčí nejzraněnějšího spojence na dohled
   function lecitel(s, m, d, ud) {
     if (!d.leci || s.tah - (m.lecil || -99) < d.leci.kazdych) return false;
+    if (m.mana === undefined || m.mana === null) m.mana = d.leci.mana;
+    // mana šamana: pár léčení, pak se doplňuje jen pomalu (1 za 15 tahů od posledního léčení)
+    if (m.mana < d.leci.mana && m.lecil != null && s.tah - m.lecil >= 15) {
+      const obnova = Math.floor((s.tah - m.lecil) / 15);
+      m.mana = Math.min(d.leci.mana, m.mana + obnova); m.lecil += obnova * 15;
+    }
+    if (m.mana <= 0) return false;                    // došla mana – jen čeká, než se mu trochu vrátí
     let cil = null;
     for (const q of s.potvory) {
       if (q === m || q.hp >= q.maxHp * 0.7 || Math.abs(q.x - m.x) + Math.abs(q.y - m.y) > d.leci.dosah) continue;
@@ -2452,13 +3142,14 @@
     }
     if (!cil) return false;
     const kolik = Math.min(cil.maxHp - cil.hp, Math.round(cil.maxHp * d.leci.podil));
-    cil.hp += kolik; m.lecil = s.tah;
+    cil.hp += kolik; m.lecil = s.tah; m.mana--;
     ud.push({ typ: 'vylecil', id: m.id, druh: m.druh, x: m.x, y: m.y, cil: cil.druh, cilId: cil.id, cx: cil.x, cy: cil.y, kolik });
     return true;
   }
   function jednej(s, m, d, pole, ud) {
     const dx = s.x - m.x, dy = s.y - m.y, blizko = Math.abs(dx) + Math.abs(dy);
     const vidiHrace = Math.max(Math.abs(dx), Math.abs(dy)) <= 7 && vidi(s, m.x, m.y, s.x, s.y);
+    if (m.stav === 'spi' && m.spankem && s.tah < m.spankem) return;      // uspaná kouzlem nevnímá
     if (m.stav === 'spi') {
       if (vidiHrace && blizko <= (d.boss ? 6 : 2)) { m.stav = 'honi'; m.stopa = 8; ud.push({ typ: 'probudila', id: m.id, druh: m.druh, x: m.x, y: m.y, boss: !!d.boss }); burcuj(s, m, d, ud); }
       return;
@@ -2562,6 +3253,12 @@
     const sance = omez(d.presnost + OBTIZNOST.presnostRust * Math.max(0, s.patro - d.od) - 0.02 * obrana, 0.3, 0.95);
     if (Rs(s) >= sance || (ma(s, 'hbity') && Rs(s) < 0.2)) { ud.push({ typ: 'uhnul', id: m.id, druh: m.druh, x: m.x, y: m.y }); return; }
     let dmg = Math.max(1, Ri(s, d.utok[0], d.utok[1]) + m.bonus - Math.floor(obrana / 2));
+    if (h.stitMag > 0) {                            // magický štít pohltí zranění
+      const pohlti = Math.min(h.stitMag, dmg);
+      h.stitMag -= pohlti; dmg -= pohlti;
+      ud.push({ typ: 'stitMag', pohltil: pohlti, zbyva: h.stitMag });
+      if (!dmg) return;
+    }
     if (h.kryti) {
       const pred = dmg;
       dmg = Math.max(0, Math.round(dmg * (ma(s, 'stitonos') ? 0.1 : 0.3)));
@@ -2569,6 +3266,7 @@
       if (!dmg) return;
     }
     h.hp -= dmg;
+    cvic(s, 'odolnost', ud);
     let vysal = 0;
     if (d.vysava) { vysal = Math.min(m.maxHp - m.hp, Math.ceil(dmg / 2)); m.hp += vysal; }
     ud.push({ typ: 'zranen', id: m.id, druh: m.druh, dmg, x: m.x, y: m.y, vysal });
@@ -2645,7 +3343,7 @@
     return u8;
   }
 
-  const POLE_POTVORY = ['id', 'druh', 'x', 'y', 'hp', 'maxHp', 'bonus', 'stav', 'energie', 'stopa', 'volal', 'pan', 'smer', 'strachDo', 'vzchopila', 'lecil', 'nacelnik'];
+  const POLE_POTVORY = ['id', 'druh', 'x', 'y', 'hp', 'maxHp', 'bonus', 'stav', 'energie', 'stopa', 'volal', 'pan', 'smer', 'strachDo', 'vzchopila', 'lecil', 'nacelnik', 'elita', 'zmizi', 'jed', 'spankem', 'mana'];
   function serializuj(s) {
     return JSON.stringify({
       verze: 4, seed: s.seed, patro: s.patro, tah: s.tah, nejhlubsi: s.nejhlubsi, rng: s.rng,
@@ -2655,7 +3353,7 @@
       jmeno: s.jmeno, rod: s.rod, hrac: s.hrac, zabito: s.zabito, tajne: s.tajne, zlato: s.zlato, dalsiId: s.dalsiId, bossu: s.bossu || 0,
       potvory: s.potvory.map(m => POLE_POTVORY.map(k => m[k])),
       barvyLektvaru: s.barvyLektvaru, zname: s.zname, truhly: s.truhly, zeme: s.zeme,
-      pasti: s.pasti, dekorace: s.dekorace.map(d => (d.pouzito ? 1 : 0)), odhalene: [...s.odhalene], prokopano: [...(s.prokopano || [])],
+      pasti: s.pasti, dekorace: s.dekorace.map(d => (d.rozbito ? 100 : d.zasahy ? 200 + d.zasahy : d.pouzito ? 1 : d.hody ? 10 + d.hody : 0)), odhalene: [...s.odhalene], prokopano: [...(s.prokopano || [])],
       zamcene: [...s.zamcene], navstivene: [...s.navstivene], rychla: s.rychla,
       mrize: [...s.mrize], paka: s.paka, sebraneLouce: [...s.sebraneLouce],
       napisySvitku: s.napisySvitku, znameSvitky: s.znameSvitky, obchod: s.obchod, obchodPred: s.obchodPred, ukol: s.ukol, trida: s.trida, denni: s.denni, stat: s.stat,
@@ -2671,7 +3369,9 @@
     novyHrdina(s);
     vstupDoPatra(s, d.patro | 0 || 1);
     const p = s.mapaPatra;
-    if (!(d.x >= 0 && d.y >= 0 && d.x < p.w && d.y < p.h) || !pruchozi(p.mapa[d.y * p.w + d.x])) return null;
+    // hráč smí stát i na odhalené tajné zdi (dveře) nebo na prokopaném poli – ty se obnoví až níž
+    const iHrace = d.y * p.w + d.x;
+    if (!(d.x >= 0 && d.y >= 0 && d.x < p.w && d.y < p.h) || !(pruchozi(p.mapa[iHrace]) || (d.odhalene || []).includes(iHrace) || (d.prokopano || []).includes(iHrace))) return null;
     s.x = d.x; s.y = d.y; s.smer = d.smer & 3;
     s.prozkoumano = hexNaBity(d.prozkoumano || '', p.w * p.h);
     s.otevrene = new Set((d.otevrene || []).filter(i => p.mapa[i] === T.DVERE || (d.odhalene || []).includes(i)));
@@ -2703,18 +3403,19 @@
     }
     if (d.verze >= 4) {
       s.pasti = d.pasti || [];
-      (d.dekorace || []).forEach((u, i) => { if (s.dekorace[i]) s.dekorace[i].pouzito = !!u; });
+      (d.dekorace || []).forEach((u, i) => { const q = s.dekorace[i]; if (!q) return; if (u >= 200) q.zasahy = u - 200; else if (u === 100) q.rozbito = true; else if (u >= 10) q.hody = u - 10; else q.pouzito = !!u; });
       for (const i of d.odhalene || []) { if (p.mapa[i] === T.TAJNE) { p.mapa[i] = T.DVERE; s.odhalene.add(i); } }
       s.prokopano = new Set(d.prokopano || []);
       for (const i of s.prokopano) if (p.mapa[i] === T.SKALA) p.mapa[i] = T.CHODBA;
       s.zamcene = new Set(d.zamcene || []);
       s.navstivene = new Set(d.navstivene || []);
     }
-    if (Array.isArray(d.rychla)) s.rychla = d.rychla;
+    if (Array.isArray(d.rychla)) s.rychla = d.rychla.concat(Array(Math.max(0, RYCHLYCH - d.rychla.length)).fill(null));   // dřív jen 3 sloty
     if (d.stat) s.stat = d.stat;
     if (d.napisySvitku) { s.napisySvitku = d.napisySvitku; s.znameSvitky = d.znameSvitky || []; }
     if (d.obchod !== undefined) s.obchod = d.obchod;
     s.ukol = d.ukol || null;                      // starší uložení úkoly neznalo
+    pripravMagii(s);
     s.rng = d.rng | 0;                           // novyHrdina výše náhodu posunul
     aktualizujViditelnost(s);
     return s;
@@ -2739,7 +3440,8 @@
     aktualizujViditelnost, serializuj, obnov, ascii, mulberry32, smichej,
     jeLouc, SANCE_LOUCE, MAX_PALIVA, TRIDY, seedDne, SCHOPNOSTI, najdiCestu, HADANKY, KLETBY, cenaPredmetu, cenaNakupu, cenaVykupu, cenaOdkleti, uObchodnika, BESTIAR, BOSSOVE, bossZiv, JMENA, potvoraNa, zkDalsi, OBTIZNOST, UCELY, DEKORACE, PASTI, dekoraceNa, pastNa, prekazkaNa, souvisle,
     maLucernu, popisUkolu, MAX_HROMADKA, hromadi, kusu, MAX_KOVANI, KOVATELNE, uKovare, kovatelny, cenaKovani, rudyNaKovani, rudyVBatohu, ZAKLADY, SLOTY, MAX_BATOH, BATOHY, kapacita, cenaBatohu, drziLuk, vRuce, VZACNOSTI, VLASTNOSTI, LEKTVARY, novyPredmet, nahodnyPredmet, nazevPredmetu,
-    vlastnostiPredmetu, skorePredmetu, slotPro, odvozene, truhlaNa, doBatohu,
+    vlastnostiPredmetu, skorePredmetu, slotPro, odvozene, truhlaNa, doBatohu, ZAJIMAVOSTI, jePoi, moznostiPoi,
+    KOUZLA, SEKCE_KOUZEL, DOVEDNOSTI, potrebaDovednosti, MAX_DOVEDNOST, ELITY, cilVPrimce, OZDOBY, RYCHLYCH, horsiVybava, ODOLNOST, stoji, lepsiVybava, jmenoHrdiny,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else koren.PodzemiLogika = API;

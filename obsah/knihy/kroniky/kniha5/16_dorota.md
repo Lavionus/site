@@ -46,7 +46,7 @@ Pak udělala něco, co nikdy neudělala.
 
 Prošla celou knihu jen podle znaku.
 
-Začala u nejstaršího listu. Truhla zůstala v hoře, ale list s čárkami Sael přenesla v březnu v obalu z nekyselého papíru, v balíku s nejstaršími svazky, a sešit z matrik s ním. Vytáhla ho z obalu a položila na plátno.
+Začala u nejstaršího listu. Truhla zůstala v hoře, ale list s čárkami Sael přenesla v březnu v obalu z archivního papíru, v balíku s nejstaršími svazky, a sešit z matrik s ním. Vytáhla ho z obalu a položila na plátno.
 
 Kopec, kruh, čtyřicet jedna čárek. Pod nimi první znak úřadu. Dlouhý tah dolů, nejistý, jako když se písmo teprve rozhoduje, jaké bude. Ruka, která ho kreslila, nevěděla, jak má vypadat. Kreslila ho poprvé na světě.
 
