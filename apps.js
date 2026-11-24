@@ -1986,6 +1986,13 @@ const KATALOG_SEKCE = [
         "tagy": ["fonty", "písmo", "editor fontů", "fontforge", "glyfy", "bézierovy křivky", "kerning", "ligatury", "diakritika", "ttf", "otf", "woff", "svg font", "typografie", "rukopisné písmo", "obtahování", "vlastní font"]
       },
       {
+        "soubor": "obsah/pergamen.html",
+        "nazev": "📜 Pergamen",
+        "popis": "Listina na pergamenu písmem z webu, se šifrou a šifrovacím klíčem",
+        "stav": "vyvoj",
+        "tagy": ["pergamen", "listina", "dopis", "svitek", "starý papír", "pečeť", "iniciála", "fonty", "vlastní font", "šifra", "šifrovací klíč", "Caesar", "runy", "ptačí písmo", "pozvánka", "hra", "tisk", "PDF"]
+      },
+      {
         "soubor": "obsah/emoji_picker.html",
         "nazev": "😀 Picker emoji",
         "popis": "Vyhledá emoji a symboly a zkopíruje je jedním klikem",
@@ -4451,6 +4458,13 @@ const KATALOG_SEKCE = [
         "popis": "Převez všechny přes řeku tak, aby se nesnědli",
         "stav": "vyvoj",
         "tagy": ["hlavolam", "logika", "převoz", "řeka", "vlk koza zelí", "misionáři a kanibalové", "most a lucerna", "žárliví manželé", "hádanka"]
+      },
+      {
+        "soubor": "obsah/vyprava.html",
+        "nazev": "🧭 Dílna výprav",
+        "popis": "Připrav pro druhé šifrovanou hru s mapou pokladu a kartami k tisku",
+        "stav": "vyvoj",
+        "tagy": ["hledání pokladu", "bojovka", "šifrovačka", "mapa pokladu", "šifry", "stopovaná", "Indiana Jones", "dětská hra", "narozeninová hra", "únikovka", "zednářská šifra", "Caesar", "Morseovka", "ptačí písmo", "šifrovací kolečko", "tisk"]
       }
     ]
   },

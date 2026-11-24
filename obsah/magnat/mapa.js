@@ -26,6 +26,12 @@
       mostV: new Uint8Array(W * H),   // výška mostovky (stupně)
       navest: new Uint8Array(W * H),  // návěstidla: bit d = hlídá odjezd z pole směrem d
       navestJ: new Uint8Array(W * H), // jednosměrná: bit d = proti směru d se nesmí jet
+      elek: new Uint8Array(W * H),    // 1 = elektrizovaná kolej (trolej)
+      vrt: new Uint8Array(W * H),     // 1 = rychlostní kolej
+      tunel: new Uint8Array(W * H),   // vnitřek tunelu (kolej/silnice pod terénem): osa 1 = podél x, 2 = podél y
+      tunelV: new Uint8Array(W * H),  // výška tunelu (stupně)
+      zdym: new Uint8Array(W * H),    // zdymadlo na svažité řece: osa 1 = podél x, 2 = podél y
+      tram: new Uint8Array(W * H),    // 1 = tramvajová kolej v silnici (nebo v garáži)
       dum: new Int32Array(W * H),     // index domu + 1
       prum: new Int16Array(W * H),    // index průmyslu + 1
       domy: [], mesta: [], prumysl: [],
@@ -58,6 +64,7 @@
      `chranene` (Set indexů rohů): kdyby se musel změnit některý z nich, vše se vrátí a vrací null. */
   function terraformuj(m, pevne, chranene) {
     const R = m.R, Hh = m.H + 1, fronta = [];
+    if (chranene && m.tunel) for (let i = 0; i < m.W * m.H; i++) if (m.tunel[i]) { const x = i % m.W, y = (i / m.W) | 0; for (const c of [y * R + x, y * R + x + 1, (y + 1) * R + x, (y + 1) * R + x + 1]) chranene.add(c); }   // terén nad tunelem se nemění
     const zaloha = chranene ? { v: m.v.slice(), typ: m.typ.slice(), les: m.les.slice(), reka: m.reka.slice() } : null;
     let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1;
     const zmena = i => { const x = i % R, y = (i / R) | 0; if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; };
@@ -282,40 +289,47 @@
     }
   }
 
-  function vhodneMisto(m, p, x, y, mapaVrch) {
+  function vhodneMisto(m, p, x, y, mapaVrch, duvod) {
+    const ne = t => { if (duvod) duvod.text = t; return false; };
     const [w, h] = p.rozmer;
-    if (x < 2 || y < 2 || x + w > m.W - 2 || y + h > m.H - 2) return false;
+    if (x < 2 || y < 2 || x + w > m.W - 2 || y + h > m.H - 2) return ne('Moc blízko okraje mapy');
     let soucet = 0, mn = 99, mx = 0;
     for (let dy = -1; dy <= h; dy++) for (let dx = -1; dx <= w; dx++) {
       const qx = x + dx, qy = y + dy;
-      if (!volnaZeme(m, qx, qy)) return false;
+      if (!volnaZeme(m, qx, qy)) return ne(`Pozemek i s okrajem 1 pole musí být volný (překáží ${qx}, ${qy})`);
       const i = idx(m, qx, qy);
       if (dx >= 0 && dy >= 0 && dx < w && dy < h) {
-        if (m.typ[i] === T.SNIH) return false;
+        if (m.typ[i] === T.SNIH) return ne('Na sněhu nejde stavět');
         const r = rohy(m, qx, qy);
         for (const v of r) { soucet += v; if (v < mn) mn = v; if (v > mx) mx = v; }
       }
     }
-    if (mx - mn > 2) return false;
+    if (mx - mn > 2) return ne('Terén je moc kopcovitý');
     const stred = [x + w / 2, y + h / 2];
     // odstup od jiného průmyslu (zavřený se nepočítá)
-    for (const q of m.prumysl) if (!q.zrusen && x < q.x + q.w + 3 && q.x < x + w + 3 && y < q.y + q.h + 3 && q.y < y + h + 3) return false;
+    for (const q of m.prumysl) if (!q.zrusen && x < q.x + q.w + 3 && q.x < x + w + 3 && y < q.y + q.h + 3 && q.y < y + h + 3) return ne('Moc blízko jiného podniku (aspoň 3 pole odstup)');
     const vzdMesta = Math.min(...m.mesta.map(c => Math.hypot(c.x - stred[0], c.y - stred[1])), 999);
-    if (p.misto === 'mesto') { if (vzdMesta < 5 || vzdMesta > 16) return false; }
-    else if (vzdMesta < 7) return false;
-    if (p.misto === 'kopce' && soucet / (w * h * 4) < Math.max(2, mapaVrch * 0.4)) return false;
-    if (p.misto === 'rovina' && (mx - mn > 1 || soucet / (w * h * 4) > Math.max(2, mapaVrch * 0.5))) return false;
+    if (p.misto === 'mesto') { if (vzdMesta < 5 || vzdMesta > 16) return ne('Patří 5–16 polí od středu města'); }
+    else if (vzdMesta < 7) return ne('Moc blízko města (aspoň 7 polí od středu)');
+    if (p.misto === 'kopce' && soucet / (w * h * 4) < Math.max(2, mapaVrch * 0.4)) return ne('Patří do kopců (výš)');
+    if (p.misto === 'rovina' && (mx - mn > 1 || soucet / (w * h * 4) > Math.max(2, mapaVrch * 0.5))) return ne('Patří na rovinu v nížině');
     if (p.misto === 'les') {
       let l = 0;
       for (let dy = -3; dy <= h + 2; dy++) for (let dx = -3; dx <= w + 2; dx++)
         if (uvnitr(m, x + dx, y + dy) && m.les[idx(m, x + dx, y + dy)]) l++;
-      if (l < 14) return false;
+      if (l < 14) return ne('Patří do lesa');
+    }
+    if (p.misto === 'voda') {   // vodárna u moře, jezera nebo řeky
+      let voda = false;
+      for (let dy = -3; dy <= h + 2 && !voda; dy++) for (let dx = -3; dx <= w + 2; dx++)
+        if (uvnitr(m, x + dx, y + dy) && (jeVoda(m, x + dx, y + dy) || m.reka[idx(m, x + dx, y + dy)])) { voda = true; break; }
+      if (!voda) return ne('Patří k vodě (moře, jezero nebo řeka do 3 polí)');
     }
     if (p.misto === 'pobrezi') {
       let voda = false;
       for (let dy = -5; dy <= h + 4 && !voda; dy++) for (let dx = -5; dx <= w + 4; dx++)
         if (uvnitr(m, x + dx, y + dy) && jeVoda(m, x + dx, y + dy)) { voda = true; break; }
-      if (!voda) return false;
+      if (!voda) return ne('Patří k moři (do 5 polí)');
     }
     return true;
   }
@@ -353,8 +367,8 @@
     // nejdřív páry řetězců (aby měl každý výrobce odběratele), pak zbytek podle vah
     const fronta = [];
     for (const [a, b] of D.RETEZCE) fronta.push(b, a);
-    if (m.W >= 128) fronta.push('tovarna');
-    const vahy = { dul: 3, elektrarna: 1.5, tezba: 2.5, pila: 1, rudnydul: 1.5, ocelarna: 0.8, tovarna: 1, farma: 3, potravinarna: 1.2, vrt: 1.5, rafinerie: 0.6 };
+    if (m.W >= 128) fronta.push('tovarna', 'vodarna');
+    const vahy = { dul: 3, elektrarna: 1.5, tezba: 2.5, pila: 1, rudnydul: 1.5, ocelarna: 0.8, tovarna: 1, farma: 3, potravinarna: 1.2, vrt: 1.5, rafinerie: 0.6, vodarna: 0.7 };
     while (fronta.length < pocet) fronta.push(nah.vazene(Object.entries(vahy)));
     const odberatel = Object.fromEntries(D.RETEZCE);
     for (const id of fronta.slice(0, Math.max(pocet, D.RETEZCE.length * 2))) {
@@ -425,6 +439,10 @@
       if (m.kolej[i] && (m.dum[i] || m.prum[i])) z.push(`kolej v budově ${x},${y}`);
       if ((m.navest[i] | m.navestJ[i]) & ~m.kolej[i]) z.push(`návěstidlo mimo kolej ${x},${y}`);
       if (m.navestJ[i] & ~m.navest[i]) z.push(`jednosměrnost bez návěstidla ${x},${y}`);
+      if ((m.elek[i] || m.vrt[i]) && !m.kolej[i]) z.push(`trolej nebo rychlostní kolej bez koleje ${x},${y}`);
+      if (m.zdym[i] && !m.reka[i]) z.push(`zdymadlo mimo řeku ${x},${y}`);
+      if (m.tram[i] && !m.cesta[i] && !m.depo[i]) z.push(`tramvajová kolej bez silnice ${x},${y}`);
+      if (m.tunel[i] && ((!m.kolej[i] && !m.cesta[i]) || minR(m, x, y) < m.tunelV[i])) z.push(`tunel bez koleje/silnice nebo nad terénem ${x},${y}`);
       for (let d = 0; d < 4; d++) if (m.kolej[i] & (1 << d)) {
         // bit směrem ven z mapy je chyba; k sousedovi bez opačného bitu je slepá kolej (smí být)
         const nx = x + SOUSEDE4[d][0], ny = y + SOUSEDE4[d][1];
@@ -432,7 +450,7 @@
       }
       if ((m.cesta[i] ? 1 : 0) + (m.dum[i] ? 1 : 0) + (m.prum[i] ? 1 : 0) > 1) z.push(`dva objekty na ${x},${y}`);
       if (m.reka[i] && (m.dum[i] || m.prum[i] || ((m.cesta[i] || m.kolej[i]) && !m.most[i]))) z.push(`stavba na řece ${x},${y}`);
-      if (m.stan[i] && ((!m.cesta[i] && !m.kolej[i]) || !m.osa[i])) z.push(`zastávka mimo silnici i kolej ${x},${y}`);
+      if (m.stan[i] && ((!m.cesta[i] && !m.kolej[i] && m.osa[i] < 3) || !m.osa[i])) z.push(`zastávka mimo silnici i kolej ${x},${y}`);
       if (m.depo[i] && (m.cesta[i] || m.dum[i] || m.prum[i] || !m.smer[i])) z.push(`garáž na obsazeném poli ${x},${y}`);
     }
     for (const q of m.prumysl) {

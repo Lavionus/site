@@ -9,6 +9,7 @@
   function propousti(m, i, d) {
     if (m.depo[i]) return !m.kolej[i] && m.smer[i] - 1 === d;   // železniční depo (má kolej) není pro auta
     if (!m.cesta[i]) return false;
+    if (m.tunel && m.tunel[i]) return m.tunel[i] === 1 ? (d === 1 || d === 3) : (d === 0 || d === 2);   // v tunelu jen podél
     if (m.stan[i]) return m.osa[i] === 1 ? (d === 1 || d === 3) : (d === 0 || d === 2);
     return true;
   }
@@ -82,12 +83,13 @@
   }
 
   // cesta silničního vozidla po síti
-  function cestaPoSilnici(m, start, cile) {
+  // tram: jen po tramvajové koleji (m.tram) a z/do garáže
+  function cestaPoSilnici(m, start, cile, tram = false) {
     return astar(m, start, cile, i => {
       const out = [];
       for (let d = 0; d < 4; d++) {
         const j = spojeno(m, i, d);
-        if (j >= 0) out.push([j, m.stan[j] ? 1.3 : 1]);   // průjezd zastávkou lehce odradit
+        if (j >= 0 && (!tram || m.tram[j] || m.depo[j])) out.push([j, m.stan[j] ? 1.3 : 1]);   // průjezd zastávkou lehce odradit
       }
       return out;
     });
@@ -138,5 +140,74 @@
     }, 250000);
   }
 
-  MAG.cesty = { propoustiK, spojenoK, navrhniKolej, propousti, soused, spojeno, smerMezi, astar, cestaPoSilnici, navrhniSilnici, Halda };
+  /* Trasa pro stavbu tažením (nástroj silnice / kolej): A* nad stavem (pole, směr), zatáčka stojí navíc (u koleje víc),
+     existující silnice / kolej je levná, přejezd jen kolmo přes rovný úsek a za ním rovně, mosty ne (ty se staví rovným
+     tahem se Shiftem). Hledá se jen v okolí obdélníku tahu (rychlé pro náhled). Vrací indexy polí od startu k cíli nebo null. */
+  function trasaStavby(m, start, cil, druh, okraj = 16) {
+    if (start === cil) return [start];
+    const kolej = druh === 'kolej', W = m.W;
+    const sx = start % W, sy = (start / W) | 0, cx = cil % W, cy = (cil / W) | 0;
+    const x0 = Math.max(0, Math.min(sx, cx) - okraj), x1 = Math.min(W - 1, Math.max(sx, cx) + okraj);
+    const y0 = Math.max(0, Math.min(sy, cy) - okraj), y1 = Math.min(m.H - 1, Math.max(sy, cy) + okraj);
+    const ZATACKA = kolej ? 2.5 : 1.2;
+    const rovnaKolejNapric = (j, d) => { const k = m.kolej[j]; return d % 2 ? k === 0b0101 : k === 0b1010; };   // kolej podél osy kolmé na d
+    const silniceJenNapric = (j, d) => {   // silnice vede jen kolmo na směr d
+      const podel = [d, (d + 2) & 3].some(e => { const q = soused(m, j, e); return q >= 0 && m.cesta[q]; });
+      const napric = [(d + 1) & 3, (d + 3) & 3].some(e => { const q = soused(m, j, e); return q >= 0 && m.cesta[q]; });
+      return napric && !podel;
+    };
+    // cena vstupu na pole j ve směru d; -1 = nejde; prejezd = za polem se musí jet rovně
+    const vstup = (j, d) => {
+      const x = j % W, y = (j / W) | 0;
+      if (x < x0 || x > x1 || y < y0 || y > y1) return -1;
+      if (m.tunel && m.tunel[j]) return -1;
+      if (m.dum[j] || m.prum[j] || m.depo[j]) return -1;
+      const vlastni = kolej ? m.kolej[j] : m.cesta[j];
+      if (m.most[j]) return vlastni && m.most[j] === (d % 2 ? 1 : 2) ? 0.4 : -1;
+      if (m.stan[j]) return vlastni && (m.osa[j] === (d % 2 ? 1 : 2)) ? 1 : -1;   // průjezd zastávkou / nádražím podél osy
+      if (m.typ[j] === T.VODA || m.reka[j]) return -1;
+      if (vlastni) return kolej ? 0.6 : 0.3;
+      if (kolej && m.cesta[j]) return silniceJenNapric(j, d) ? 4 : -1;    // přejezd
+      if (!kolej && m.kolej[j]) return rovnaKolejNapric(j, d) ? 4 : -1;
+      return 1 + (M.jeRovne(m, x, y) ? 0 : 0.7) + m.les[j] * 0.15;
+    };
+    const prejezd = j => kolej ? (m.cesta[j] && !m.kolej[j]) : (m.kolej[j] && !m.cesta[j]);
+    const heur = i => Math.abs(i % W - cx) + Math.abs(((i / W) | 0) - cy);
+    const k0 = start * 5 + 4, g = new Map([[k0, 0]]), odkud = new Map(), halda = Halda();
+    halda.push(heur(start), k0);
+    let uzlu = 0;
+    while (halda.size && uzlu++ < 60000) {
+      const k = halda.pop(), i = (k / 5) | 0, d = k % 5;
+      if (i === cil) {
+        const out = [i]; let q = k;
+        while (odkud.has(q)) { q = odkud.get(q); out.push((q / 5) | 0); }
+        return out.reverse();
+      }
+      const gi = g.get(k);
+      for (let e = 0; e < 4; e++) {
+        if (d < 4 && e === ((d + 2) & 3)) continue;
+        if (d < 4 && e !== d && i !== start && prejezd(i)) continue;   // na přejezdu se nezatáčí
+        const j = soused(m, i, e);
+        if (j < 0) continue;
+        const c = vstup(j, e);
+        if (c < 0) continue;
+        const nc = gi + c + (d < 4 && e !== d ? ZATACKA : 0);
+        const nk = j * 5 + e;
+        if (nc < (g.get(nk) ?? Infinity)) { g.set(nk, nc); odkud.set(nk, k); halda.push(nc + heur(j), nk); }
+      }
+    }
+    return null;
+  }
+  // trasa (indexy) → rovné úseky [[x0, y0, x1, y1], …]; sousední úseky sdílí rohové pole
+  function useky(m, trasa) {
+    const out = [], xy = i => [i % m.W, (i / m.W) | 0];
+    let a = 0;
+    for (let k = 1; k < trasa.length; k++) {
+      const posledni = k === trasa.length - 1;
+      if (posledni || smerMezi(m, trasa[k - 1], trasa[k]) !== smerMezi(m, trasa[k], trasa[k + 1])) { out.push([...xy(trasa[a]), ...xy(trasa[k])]); a = k; }
+    }
+    return out;
+  }
+
+  MAG.cesty = { trasaStavby, useky, propoustiK, spojenoK, navrhniKolej, propousti, soused, spojeno, smerMezi, astar, cestaPoSilnici, navrhniSilnici, Halda };
 })(globalThis.MAG = globalThis.MAG || {});

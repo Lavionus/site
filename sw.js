@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v912';
+const CACHE = PREFIX + 'v969';
 const JADRO = [
   './',
   './index.html',
@@ -145,6 +145,42 @@ const OBLEHENI = [
   './obsah/obleheni/toky.js',
   './obsah/obleheni/ui.js',
   './obsah/obleheni/zvuk.js',
+];
+
+/* Dopravní magnát (obsah/magnat.html) – skripty + atlasy grafiky (~2 MB). Docachuje se celý při prvním otevření.
+   Úmyslně chybí magnat/bot.js (jen pro testy). Že seznam sedí se soubory na disku, hlídá _test/sw_magnat_check.js. */
+const MAGNAT = [
+  './obsah/magnat.html',
+  './obsah/gen3d/gui.js',
+  './obsah/magnat/cesty.js',
+  './obsah/magnat/data.js',
+  './obsah/magnat/ekonomika.js',
+  './obsah/magnat/grafika.js',
+  './obsah/magnat/hra.js',
+  './obsah/magnat/mapa.js',
+  './obsah/magnat/nahoda.js',
+  './obsah/magnat/prehledy.js',
+  './obsah/magnat/scenare.js',
+  './obsah/magnat/ui.js',
+  './obsah/magnat/ui_hra.js',
+  './obsah/magnat/ui_prehledy.js',
+  './obsah/magnat/ui_scenare.js',
+  './obsah/magnat/voda_vzduch.js',
+  './obsah/magnat/zeleznice.js',
+  './obsah/magnat/zvuk.js',
+  './obsah/magnat/grafika/atlas.js',
+  './obsah/magnat/grafika/domy1.webp',
+  './obsah/magnat/grafika/domy2.webp',
+  './obsah/magnat/grafika/ikony1.webp',
+  './obsah/magnat/grafika/ikony2.webp',
+  './obsah/magnat/grafika/prumysl.webp',
+  './obsah/magnat/grafika/stanice.webp',
+  './obsah/magnat/grafika/stromy.webp',
+  './obsah/magnat/grafika/teren.webp',
+  './obsah/magnat/grafika/uvod.webp',
+  './obsah/magnat/grafika/vozidla.js',
+  './obsah/magnat/grafika/vozidla.webp',
+  './obsah/magnat/grafika/vozidla_m.webp',
 ];
 
 /* Modelář 3D (obsah/modelar.html) – CAD pro 3D tisk, ~1,5 MB skriptů + jádro manifold (WASM 0,7 MB).
@@ -391,6 +427,7 @@ self.addEventListener('message', e => {
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'trpaslici') e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'sine') e.waitUntil(dotahniSadu('sine', SINE));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'obleheni') e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
+  if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'magnat') e.waitUntil(dotahniSadu('magnat', MAGNAT));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'modelar') e.waitUntil(dotahniSadu('modelar', MODELAR));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'potraviny') e.waitUntil(dotahniSadu('potraviny', POTRAVINY));
 });
@@ -418,6 +455,7 @@ self.addEventListener('fetch', e => {
   if (url.pathname.endsWith('/obsah/trpaslici.html')) e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
   if (url.pathname.endsWith('/obsah/sine.html')) e.waitUntil(dotahniSadu('sine', SINE));
   if (url.pathname.endsWith('/obsah/obleheni.html')) e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
+  if (url.pathname.endsWith('/obsah/magnat.html')) e.waitUntil(dotahniSadu('magnat', MAGNAT));
   if (url.pathname.endsWith('/obsah/modelar.html')) e.waitUntil(dotahniSadu('modelar', MODELAR));
   if (url.pathname.endsWith('/obsah/potraviny.html')) e.waitUntil(dotahniSadu('potraviny', POTRAVINY));
 

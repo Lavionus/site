@@ -143,7 +143,7 @@ const PodzemiGL = (function () {
 
     // pole textur: plochy (TS × TS) a sprity (256 × 256, menší se zvětší bez vyhlazení)
     const texT = gl.createTexture(), texS = gl.createTexture(), texB = gl.createTexture();
-    const SPR = 256, MAXS = 160;
+    const SPR = 256, MAXS = 200;                  // vrstvy spritů se plní podle potřeby a s novým patrem vyprázdní (vycistiSprity)
     let vrstvyT = new Map(), vrstvyS = new Map(), TSg = 0;
     const nastavFiltr = (cil) => {
       gl.texParameteri(cil, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(cil, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -173,6 +173,8 @@ const PodzemiGL = (function () {
       gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     }
     let sprPripraven = false;
+    // nové patro: vrstvy spritů znovu od nuly – nahrají se jen ty, které patro opravdu potřebuje
+    function vycistiSprity() { vrstvyS.clear(); }
     function vrstvaSpritu(klic, t) {
       let i = vrstvyS.get(klic);
       if (i !== undefined) return i;
@@ -250,7 +252,7 @@ const PodzemiGL = (function () {
       }
       gl.bindVertexArray(null);
     }
-    return { gl, nastavTextury, vrstvaT: k => vrstvyT.get(k), vrstvaSpritu, nastavPatro, nastavSvetla, kresli, VRCHOL, cekej: () => gl.finish() };
+    return { gl, nastavTextury, vrstvaT: k => vrstvyT.get(k), vrstvaSpritu, vycistiSprity, nastavPatro, nastavSvetla, kresli, VRCHOL, cekej: () => gl.finish() };
   }
 
   // pomůcka: zapíše čtyřúhelník (dva trojúhelníky) z rohů a,b,c,d (proti směru, a = levý horní)

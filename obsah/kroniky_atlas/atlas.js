@@ -83,6 +83,9 @@
       telo += fakta(p.fakta);
     } else if (sb === 'pojmy') {
       telo += `<p class="taxon">${esc({ artefakt: 'artefakt', pojem: 'pojem', organizace: 'organizace', misto_v_textu: 'místo v textu' }[p.druh] || p.druh)}</p>` + fakta(p.fakta);
+      // ptačí písmo knihy rodu – vlastní font webu (tools/ptaci_pismo.js); id je v datech anonymizované, proto podle názvu
+      if (/^Kniha rodu/.test(p.nazev)) telo += `<p class="ptaci-ukazka" data-i18n="ne" title="Kniha rodu, znak úřadu Merin">Kniha rodu [merin]</p>
+        <p class="ptaci-odkazy">Ptačí písmo si můžete vyzkoušet v <a href="prevod_pisma.html">Převodníku písma</a>, v <a href="sifry.html">Šifrách</a> (Šifrovačky) nebo v <a href="pismolijna.html">Písmolijně</a>.</p>`;
     } else if (sb === 'mista') {
       telo += `<p class="taxon">${esc(PRESNOST[p.presnost] || '')}${p.knihy && p.knihy.length ? ' · ' + esc(p.knihy.map(popisKnihy).join(', ')) : ''}</p>` + fakta(p.fakta);
     } else if (sb === 'osa') {

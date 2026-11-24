@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧭 Dílna výprav – šifry a mapy pokladu pro druhé</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="fonty/fonty.js"></script>
+<script src="fonty/prepis.js"></script>
+<script src="vyprava/jadro.js"></script>
+<script src="vyprava/mapa.js"></script>
+<style>
+@font-face{font-family:'IM Fell English';src:url(fonty/IMFellEnglish-Regular.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Ptaci pismo';src:url(fonty/PtaciPismo-Regular.ttf) format('truetype');font-display:swap}
+body{background:var(--bg-deep);margin:0;min-height:100vh;display:flex;flex-direction:column}
+[hidden]{display:none !important}
+
+/* horní lišta se skupinami (vzor Databanka promptů) */
+.lista{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:4px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:30}
+.lista > *{flex-shrink:0}
+.lista h1{font-size:1.02rem;font-weight:600;white-space:nowrap;margin:0}
+.lista .skup{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:1px 4px 3px;border-radius:9px;background:color-mix(in srgb,var(--bg-control) 45%,transparent);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.lista .skup-projekt{flex-direction:row;align-items:baseline;gap:8px;background:none;border-color:transparent;padding-left:0;margin-right:4px}
+.lista .skup-nazev{font-size:9.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;user-select:none}
+.lista .skup-tl{display:flex;align-items:center;gap:2px}
+.lista .vpravo{margin-left:auto;display:flex;gap:4px}
+.samostatne .lista{padding-right:72px}
+.nazev-vypravy{color:var(--text-muted);font-size:.85rem;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.84rem;white-space:nowrap;font-family:inherit;line-height:1.3}
+.tl:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.tl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl[aria-pressed="true"],.tl[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tl.hlavni-tl{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent);font-weight:600}
+.tl.hlavni-tl:hover{background:var(--accent-hover)}
+.tl:disabled{opacity:.45;cursor:default}
+.tl.male{padding:2px 7px;font-size:.78rem}
+@media (max-width:900px){.lista .txt{display:none}}
+.nabidka{position:fixed;z-index:60;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:250px;max-height:calc(100vh - 70px);overflow-y:auto}
+.nabidka .tl{display:flex;align-items:center;gap:6px;text-align:left;background:none;border-color:transparent;padding:6px 10px}
+.nabidka .tl:hover:not(:disabled){background:var(--bg-hover)}
+.nabidka hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+.nabidka .titulek{font-size:.72rem;color:var(--text-faint);padding:4px 10px;text-transform:uppercase;letter-spacing:.04em}
+
+/* kroky průvodce */
+.kroky{display:flex;gap:4px;padding:8px 10px 0;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid var(--border);background:var(--bg-elevated)}
+.kroky button{display:flex;align-items:center;gap:6px;background:none;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px;color:var(--text-muted);font:inherit;font-size:.9rem;cursor:pointer;white-space:nowrap}
+.kroky button[aria-selected="true"]{background:var(--bg-deep);border-color:var(--border);color:var(--text);font-weight:600}
+.kroky .c{display:inline-flex;align-items:center;justify-content:center;width:1.45em;height:1.45em;border-radius:50%;border:1px solid var(--border-strong);font-size:.75rem}
+.kroky .hotovo .c{background:var(--ok);border-color:var(--ok);color:var(--on-accent,#fff)}
+.kroky .problem .c{background:var(--warn);border-color:var(--warn);color:#000}
+.kroky .rady{margin-left:auto}
+
+main{flex:1;padding:14px 14px 50px;max-width:1280px;width:100%;margin:0 auto;box-sizing:border-box}
+section.pohled > h2{font-size:1.15rem;margin:2px 0 4px}
+.uvodni-veta{color:var(--text-muted);margin:0 0 14px;max-width:880px;font-size:.92rem}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+.sloupce{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.sloupce{grid-template-columns:1fr}}
+label{display:block;font-size:.8rem;color:var(--text-muted);margin:10px 0 3px}
+label:first-child{margin-top:0}
+input[type=text],input[type=number],select,textarea{width:100%;box-sizing:border-box;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:7px 9px;font:inherit;font-size:.92rem}
+textarea{resize:vertical;min-height:70px}
+.radek{display:flex;gap:10px;flex-wrap:wrap}
+.radek > *{flex:1 1 160px;min-width:0}
+.stanoviste > *,.sloupce > *{min-width:0}
+.fv{max-width:100%;min-width:0}
+.fv .fv-tlacitko{max-width:100%;overflow:hidden}
+.tlacitka{display:flex;gap:4px;flex-wrap:wrap}
+.pozn{font-size:.8rem;color:var(--text-faint);margin:5px 0 0}
+.zaskrt{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--text);margin:6px 0}
+.zaskrt input{width:auto}
+
+/* šablony příběhů */
+.sablony{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:6px}
+.sablony button{text-align:left;background:var(--bg-control);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font:inherit;font-size:.88rem;cursor:pointer}
+.sablony button:hover{border-color:var(--border-strong)}
+.sablony button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.sablony small{display:block;color:var(--text-faint);font-size:.74rem;margin-top:3px}
+
+/* pergamen – dokument k tisku, vzhled nezávisí na tématu */
+.pergamen{color:var(--ink,#3d2714);background:radial-gradient(ellipse at 30% 20%,#f4e8cb 0%,#ead7aa 55%,#d9bf86 100%);border-radius:3px;box-shadow:inset 0 0 40px rgba(110,70,20,.45),0 2px 10px rgba(0,0,0,.25);padding:26px 30px;font-family:var(--pismo-karet,'IM Fell English','Palatino Linotype',Georgia,serif);position:relative;overflow:hidden;line-height:1.45}
+.papir-stary .pergamen{background:radial-gradient(ellipse at 35% 25%,#e6cf9c 0%,#cfae6c 60%,#a9843f 100%);box-shadow:inset 0 0 60px rgba(80,45,10,.65),0 2px 10px rgba(0,0,0,.3)}
+.papir-cisty .pergamen{background:#fff;box-shadow:none;border:1.5px dashed #9a9a9a}
+.papir-cisty .pergamen::after{display:none}
+.bez-pecete .pergamen .pecet{display:none}
+.pergamen .uvod-karty{font-style:italic;font-size:1.15rem;text-align:center;margin:0 0 4px}
+.pergamen .sifra.pismo{font-size:2.3rem;line-height:1.45}
+.mrizka-vzhledu{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 12px}
+.pergamen::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 80% 85%,rgba(120,70,20,.16) 0 40px,transparent 70px),radial-gradient(circle at 12% 70%,rgba(120,70,20,.10) 0 26px,transparent 50px)}
+.pergamen .hlavicka{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid color-mix(in srgb,var(--ink,#3d2714) 40%,transparent);padding-bottom:6px;margin-bottom:14px;font-size:1rem;letter-spacing:.06em;text-transform:uppercase}
+.pergamen .dopis{white-space:pre-wrap;font-size:1.15rem}
+.pergamen .sifra{font-size:1.7rem;line-height:1.55;word-break:break-word;text-align:center;margin:10px 0}
+.pergamen .sifra.mono{font-size:1.35rem;letter-spacing:.06em}
+.pergamen .sifra.zrcadlo{transform:scaleX(-1)}
+.pergamen .sifra.ptaci{font-family:'Ptaci pismo',serif;font-size:2.6rem;line-height:1.35}
+.pergamen .zed{display:flex;flex-wrap:wrap;gap:4px 3px;justify-content:center;margin:12px 0}
+.pergamen .zed svg{width:38px;height:38px}
+.pergamen .zed .mez{width:20px}
+.pergamen .pata{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;opacity:.8;margin-top:16px;border-top:1px solid rgba(61,39,20,.3);padding-top:6px}
+.pergamen .pecet{position:absolute;right:22px;bottom:18px;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--pecet-a,#c3412b),var(--pecet-b,#7d1a10) 70%);box-shadow:0 2px 3px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#f0c9a8;font-size:1.4rem}
+.pergamen .navod{font-size:.95rem;font-style:italic;opacity:.85}
+
+/* stanoviště */
+.stanoviste{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.stanoviste{grid-template-columns:1fr}}
+.seznam-st{display:flex;flex-direction:column;gap:4px}
+.seznam-st .polozka{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-control);cursor:pointer;font-size:.86rem;color:var(--text);text-align:left;font:inherit;width:100%}
+.seznam-st .polozka[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.seznam-st .polozka .c{font-weight:700;min-width:1.4em}
+.seznam-st .polozka .m{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seznam-st .konec{font-size:.82rem;color:var(--text-muted);padding:6px 8px;border:1px dashed var(--border);border-radius:8px}
+.znacka-stavu{font-size:.8rem}
+.nahled-karty{margin-top:14px}
+.typy-popis{background:var(--bg-elevated);border-radius:8px;padding:8px 10px;font-size:.85rem;color:var(--text-muted);margin-top:8px}
+.napovedy input{margin-bottom:5px}
+.hlaseni{list-style:none;padding:0;margin:8px 0 0;font-size:.84rem}
+.hlaseni li{padding:4px 8px;border-left:3px solid var(--border-strong);margin-bottom:3px;background:var(--bg-elevated);border-radius:0 6px 6px 0}
+.hlaseni li.chyba{border-color:var(--danger)}
+.hlaseni li.varovani{border-color:var(--warn)}
+.hlaseni li.tip{border-color:var(--accent)}
+
+/* mapa */
+.mapa-lista{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:8px}
+.mapa-lista .odd{width:1px;height:24px;background:var(--border);margin:0 4px}
+.platno-mapy{position:relative;border-radius:8px;overflow:hidden;background:var(--bg-elevated);touch-action:none}
+.platno-mapy svg{display:block;width:100%;height:auto;user-select:none}
+.platno-mapy .znacka{cursor:grab}
+.platno-mapy.rezim-pridat svg{cursor:copy}
+.platno-mapy.rezim-trasa .znacka{cursor:pointer}
+.mapa-detail{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:8px}
+.mapa-detail > div{flex:1 1 200px}
+.ikony-znacek{display:flex;flex-wrap:wrap;gap:3px}
+
+/* kontrola – řetěz */
+.retez{display:flex;flex-direction:column;gap:0;margin-top:6px}
+.retez .clanek{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:start}
+.retez .bod{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg-control);border:2px solid var(--border-strong);font-weight:700;font-size:.85rem}
+.retez .bod.ok{border-color:var(--ok)}
+.retez .bod.pozor{border-color:var(--warn)}
+.retez .bod.spatne{border-color:var(--danger)}
+.retez .obsah{padding:3px 0 14px;border-left:2px dashed var(--border);margin-left:-29px;padding-left:29px;font-size:.88rem}
+.retez .obsah b{display:block}
+.retez .obsah .sip{color:var(--text-muted);font-size:.82rem}
+.souhrn{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.souhrn div{background:var(--bg-elevated);border-radius:8px;padding:8px 12px;font-size:.85rem;color:var(--text-muted)}
+.souhrn b{display:block;font-size:1.2rem;color:var(--text)}
+
+/* tisk */
+.tisk-volby{display:flex;flex-wrap:wrap;gap:4px 16px;margin-bottom:10px}
+.archy{display:flex;flex-direction:column;align-items:safe center;gap:18px;overflow-x:auto;padding-bottom:6px}
+.arch{width:210mm;max-width:100%;min-height:297mm;background:#fff;color:#222;box-shadow:0 2px 12px rgba(0,0,0,.25);padding:10mm;box-sizing:border-box;display:flex;flex-direction:column;gap:8mm}
+.arch .pergamen{flex:1;display:flex;flex-direction:column}
+.arch .pergamen > .sifra,.arch .pergamen > .zed{margin-block:auto}
+.arch .pergamen > .pata{margin-top:auto}
+.arch h3{margin:0;font-family:'IM Fell English',Georgia,serif;font-size:1.3rem;color:#3d2714}
+.arch .mrizka-karet{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.arch.karet-4{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6mm}
+.arch.karet-4 .pergamen{font-size:.78em;padding:16px 18px}
+.arch.karet-4 .pergamen .sifra{font-size:1.4rem}
+.arch.karet-4 .pergamen .sifra.ptaci,.arch.karet-4 .pergamen .sifra.pismo{font-size:1.9rem}
+.arch.karet-4 .pergamen .pecet{width:40px;height:40px;font-size:1.1rem}
+.obalka{border:1.5px dashed #8a6a40;border-radius:4px;padding:5mm;font-family:'IM Fell English',Georgia,serif;color:#3d2714;min-height:40mm;display:flex;flex-direction:column;gap:3mm}
+.obalka .nad{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.tahak{width:100%;border-collapse:collapse;font-size:.82rem}
+.tahak th,.tahak td{border:1px solid #bbb;padding:4px 6px;text-align:left;vertical-align:top}
+.tahak th{background:#f1ece2}
+.pomucka svg{width:100%;height:auto}
+.klic-ptaci{display:grid;grid-template-columns:repeat(9,1fr);gap:2mm;text-align:center;font-size:.8rem;color:#3d2714}
+.klic-ptaci span{display:block;font-family:'Ptaci pismo',serif;font-size:1.9rem;line-height:1.3}
+.klic-tab{border-collapse:collapse;margin:0 auto;font-family:'IM Fell English',Georgia,serif;color:#3d2714}
+.klic-tab td{border:1px solid #c9b48a;padding:2px 6px;text-align:center}
+.zaskrtavatko{list-style:none;padding:0;font-size:.9rem;columns:2}
+.zaskrtavatko li::before{content:'☐ '}
+
+/* rady */
+.rady-mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.rady-mrizka .card h3{margin:0 0 6px;font-size:1rem}
+.rady-mrizka ul{margin:4px 0 0;padding-left:18px;font-size:.88rem;line-height:1.5}
+.rady-mrizka p{font-size:.88rem;margin:4px 0}
+
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .lista,.kroky,section.pohled:not(#v-tisk),#v-tisk > h2,#v-tisk > .uvodni-veta,.tisk-ovladani,#zprava,[id^="autor-podpis"],.verze-stranky{display:none !important}
+  .archy{margin-top:0 !important;overflow:visible;padding:0}
+  html,body{display:block;min-height:0;height:auto;padding:0 !important;margin:0}
+  main{padding:0;max-width:none}
+  .archy{gap:0}
+  .arch{box-shadow:none;width:210mm;height:296mm;min-height:0;page-break-after:always;break-after:page;overflow:hidden}
+  .arch:last-child{page-break-after:auto;break-after:auto}
+  .pergamen{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.zprava{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:8px 14px;box-shadow:var(--shadow);z-index:70;font-size:.88rem}
+</style>
+</head>
+<body>
+<header class="lista" id="lista">
+  <div class="skup skup-projekt">
+    <h1>🧭 Dílna výprav</h1>
+    <span class="nazev-vypravy" id="nazevVypravy"></span>
+  </div>
+  <div class="skup" role="group" aria-label="Výprava"><span class="skup-nazev" aria-hidden="true">Výprava</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabVyprava" title="Nová, uložené, soubor">📁<span class="txt"> Výprava</span> ▾</button>
+    <button class="tl hlavni-tl" data-prikaz="nova" title="Nová výprava podle šablony">✚<span class="txt"> Nová</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Úpravy"><span class="skup-nazev" aria-hidden="true">Úpravy</span><div class="skup-tl">
+    <button class="tl" id="tlZpet" data-prikaz="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+    <button class="tl" id="tlZnovu" data-prikaz="znovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
+    <button class="tl" data-prikaz="vzhled" title="Písma z knihovny webu, papír, inkoust, pečeť">🎨<span class="txt"> Vzhled</span></button>
+    <button class="tl" data-prikaz="krok-kontrola" title="Zkontrolovat, jestli řetěz stop dává smysl">🔍<span class="txt"> Kontrola</span></button>
+    <button class="tl" data-prikaz="krok-tisk" title="Karty, mapa, pomůcky a tahák k tisku">🖨️<span class="txt"> Tisk</span></button>
+  </div></div>
+  <span class="vpravo">
+    <button class="tl" data-prikaz="krok-rady" title="Rady tvůrce: rekvizity, obtížnost, bezpečnost">📜<span class="txt"> Rady</span></button>
+  </span>
+</header>
+
+<div id="nabVyprava" class="nabidka" hidden>
+  <button class="tl" data-prikaz="nova">✚ Nová výprava…</button>
+  <button class="tl" data-prikaz="ukazka">✨ Ukázková výprava (vyplněná)</button>
+  <hr>
+  <div class="titulek">Uložené v prohlížeči</div>
+  <div id="seznamVyprav"></div>
+  <hr>
+  <button class="tl" data-prikaz="ulozSoubor">💾 Uložit do souboru (.json)</button>
+  <button class="tl" data-prikaz="nactiSoubor">📂 Načíst ze souboru…</button>
+  <button class="tl" data-prikaz="duplikat">⧉ Udělat kopii</button>
+  <button class="tl" data-prikaz="smaz">🗑️ Smazat tuto výpravu</button>
+</div>
+
+<nav class="kroky" role="tablist" id="kroky" aria-label="Kroky průvodce">
+  <button role="tab" data-krok="pribeh" aria-selected="true"><span class="c">1</span> Příběh</button>
+  <button role="tab" data-krok="stanoviste"><span class="c">2</span> Stanoviště a šifry</button>
+  <button role="tab" data-krok="mapa"><span class="c">3</span> Mapa pokladu</button>
+  <button role="tab" data-krok="kontrola"><span class="c">4</span> Kontrola</button>
+  <button role="tab" data-krok="tisk"><span class="c">5</span> Tisk a příprava</button>
+  <button role="tab" data-krok="rady" class="rady">📜 Rady tvůrce</button>
+</nav>
+
+<main>
+  <!-- 1 PŘÍBĚH -->
+  <section class="pohled" id="v-pribeh">
+    <h2>1. Příběh – proč se hráč vydá na cestu</h2>
+    <p class="uvodni-veta">Každá dobrá výprava začíná dopisem, který hráče vtáhne. Vyberte si šablonu, upravte jména a napište, kde leží první stopa. Šablona vyplní i doporučené šifry – všechno půjde změnit.</p>
+    <div class="sloupce">
+      <div class="card">
+        <label>Šablona příběhu</label>
+        <div class="sablony" id="sablony"></div>
+        <label for="pNazev">Název výpravy</label>
+        <input type="text" id="pNazev" data-pole="nazev">
+        <div class="radek">
+          <div><label for="pHrac">Pro koho (jméno v dopise)</label><input type="text" id="pHrac" data-pole="hrac" placeholder="např. Ondro, Agente Nulo, milí piráti"></div>
+          <div><label for="pPoklad">Poklad</label><input type="text" id="pPoklad" data-pole="poklad"></div>
+        </div>
+        <div class="radek">
+          <div><label for="pVek">Hráči</label><select id="pVek" data-pole="vek"></select></div>
+          <div><label for="pMisto">Kde se hraje</label><select id="pMisto" data-pole="misto"></select></div>
+          <div><label for="pStart">Začátek hry</label><input type="time" id="pStart" data-pole="start" title="Podle něj tahák spočítá, kdy hráči asi dorazí na stanoviště"></div>
+        </div>
+        <p class="pozn" id="radaMista"></p>
+        <label for="pPrvni">Kde je první stopa</label>
+        <input type="text" id="pPrvni" data-pole="prvni" placeholder="např. pod rohožkou u zadních dveří">
+        <label for="pUvod">Úvodní dopis <span class="pozn">– {hrac}, {poklad} a {prvni} se doplní samy</span></label>
+        <textarea id="pUvod" data-pole="uvod" rows="9"></textarea>
+        <label for="pZaver">Vzkaz u pokladu</label>
+        <textarea id="pZaver" data-pole="zaver" rows="3"></textarea>
+      </div>
+      <div>
+        <div class="pergamen" id="nahledDopisu"></div>
+        <p class="pozn">Takhle bude dopis vypadat vytištěný. Na skutečný papír se hodí zestárnout čajem (viz Rady tvůrce).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 STANOVIŠTĚ -->
+  <section class="pohled" id="v-stanoviste" hidden>
+    <h2>2. Stanoviště a šifry – řetěz stop</h2>
+    <p class="uvodni-veta">Každé stanoviště je místo, kde leží karta. Rozluštěná zpráva musí poslat hráče na další místo, poslední až k pokladu. Pište zprávu otevřeně – šifru udělá dílna.</p>
+    <div class="stanoviste">
+      <div>
+        <div class="seznam-st" id="seznamSt"></div>
+        <div class="tlacitka" style="margin-top:8px">
+          <button class="tl" data-prikaz="pridejSt">✚ Stanoviště</button>
+          <button class="tl" data-prikaz="duplikujSt" title="Udělat kopii stanoviště">⧉</button>
+          <button class="tl" data-prikaz="nahoruSt" title="Posunout dřív">↑</button>
+          <button class="tl" data-prikaz="doluSt" title="Posunout později">↓</button>
+          <button class="tl" data-prikaz="smazSt" title="Smazat stanoviště">🗑️</button>
+        </div>
+      </div>
+      <div class="card" id="editorSt"></div>
+    </div>
+  </section>
+
+  <!-- 3 MAPA -->
+  <section class="pohled" id="v-mapa" hidden>
+    <h2>3. Mapa pokladu</h2>
+    <p class="uvodni-veta">Vyberte značku a klikejte do mapy. Značky jdou přetáhnout; v režimu Trasa klikáte na značky v pořadí, jak se půjde. Mřížka dává souřadnice pro úkol „Souřadnice na mapě“.</p>
+    <div class="mapa-lista">
+      <button class="tl" data-mapa-rezim="vyber" aria-pressed="true" title="Vybrat a přetáhnout značku">🖐<span class="txt"> Vybrat</span></button>
+      <button class="tl" data-mapa-rezim="trasa" aria-pressed="false" title="Klikejte na značky v pořadí cesty">〰<span class="txt"> Trasa</span></button>
+      <span class="odd"></span>
+      <span class="ikony-znacek" id="ikonyZnacek"></span>
+      <span class="odd"></span>
+      <label class="zaskrt"><input type="checkbox" data-mapa-pole="mrizka"> mřížka</label>
+      <label class="zaskrt"><input type="checkbox" data-mapa-pole="stopy"> stopy</label>
+      <label class="zaskrt"><input type="checkbox" data-mapa-pole="krajina"> krajina</label>
+    </div>
+    <div class="platno-mapy" id="platnoMapy" data-i18n="ne"></div>
+    <div class="mapa-detail">
+      <div><label for="mNazev">Název v kartuši</label><input type="text" id="mNazev"></div>
+      <div><label for="mMeritko">Měřítko</label><input type="text" id="mMeritko" placeholder="např. 50 kroků"></div>
+      <div id="detailZnacky"></div>
+    </div>
+    <div class="tlacitka" style="margin-top:8px">
+      <button class="tl" data-prikaz="mapaStanoviste" title="Přidat očíslované značky pro všechna stanoviště">① Čísla stanovišť</button>
+      <button class="tl" data-prikaz="mapaTrasaPryc">✕ Smazat trasu</button>
+      <button class="tl" data-prikaz="mapaPapir" title="Jiný okraj a skvrny papíru">🎲 Jiný pergamen</button>
+      <button class="tl" data-prikaz="mapaPng">⬇ PNG</button>
+      <button class="tl" data-prikaz="mapaSvg">⬇ SVG</button>
+    </div>
+  </section>
+
+  <!-- 4 KONTROLA -->
+  <section class="pohled" id="v-kontrola" hidden>
+    <h2>4. Kontrola – projde hráč celou cestou?</h2>
+    <p class="uvodni-veta">Dílna projde řetěz od dopisu k pokladu: vede každé řešení na další místo, jde šifra přečíst, sedí obtížnost k věku a ví hráč, kde vzít klíč? Nejlepší kontrola je ale vždy zkušební luštitel, který hru nezná.</p>
+    <div class="souhrn" id="souhrn"></div>
+    <div class="sloupce">
+      <div class="card"><h3 style="margin:0 0 4px;font-size:1rem">Cesta stop</h3><div class="retez" id="retez"></div></div>
+      <div class="card"><h3 style="margin:0 0 4px;font-size:1rem">Nálezy</h3><ul class="hlaseni" id="nalezy"></ul></div>
+    </div>
+  </section>
+
+  <!-- 5 TISK -->
+  <section class="pohled" id="v-tisk" hidden>
+    <h2>5. Tisk a příprava</h2>
+    <p class="uvodni-veta">Vyberte, co vytisknout. Karty jdou po jedné, dvou nebo čtyřech na A4 (Vzhled), nápovědy do obálek po deseti. Tahák patří jen vám – co kam schovat a jaká jsou řešení.</p>
+    <div class="card tisk-ovladani" id="vzhled" style="margin-bottom:10px">
+      <h3 style="margin:0 0 4px;font-size:1rem">🎨 Vzhled</h3>
+      <p class="pozn" style="margin:0 0 8px">Písma nabízí celá knihovna webu včetně fontů, které jste si nahráli v Převodníku písma, 3D textu nebo Písmolijně. Nový font jde přidat i tady (📂 v nabídce písma).</p>
+      <div class="mrizka-vzhledu">
+        <div><label>Písmo dopisu a karet</label><div id="vzPismo"></div></div>
+        <div><label>Písmo mapy</label><div id="vzPismoMapy"></div></div>
+        <div><label for="vzPapir">Papír</label><select id="vzPapir" data-vzhled="papir"></select></div>
+        <div><label for="vzInkoust">Inkoust</label><select id="vzInkoust" data-vzhled="inkoust"></select></div>
+        <div><label for="vzPecet">Pečeť – znak</label><input type="text" id="vzPecet" data-vzhled="pecet" maxlength="2" placeholder="✦"></div>
+        <div><label for="vzBarvaPecete">Pečeť – vosk</label><select id="vzBarvaPecete" data-vzhled="barvaPecete"></select></div>
+        <div><label for="vzKaret">Karet na list A4</label><select id="vzKaret" data-vzhled="karet"><option value="1">1 – velká (A4)</option><option value="2">2 – střední (A5)</option><option value="4">4 – malé (A6)</option></select></div>
+      </div>
+      <ul class="hlaseni" id="kontrolaPisma"></ul>
+    </div>
+    <div class="card tisk-ovladani">
+      <div class="tisk-volby" id="tiskVolby"></div>
+      <button class="tl hlavni-tl" data-prikaz="tiskni">🖨️ Tisknout</button>
+      <span class="pozn">V tiskovém dialogu zapněte „Grafika pozadí“, jinak se pergamen vytiskne bílý.</span>
+    </div>
+    <div class="archy" id="archy" style="margin-top:14px"></div>
+  </section>
+
+  <!-- RADY -->
+  <section class="pohled" id="v-rady" hidden>
+    <h2>📜 Rady tvůrce</h2>
+    <p class="uvodni-veta">Co se vyplatí vědět, než schováte první kartu. Indiana Jones měl štěstí; vy budete mít plán.</p>
+    <div class="rady-mrizka">
+      <div class="card"><h3>🏛️ Zlatá pravidla</h3><ul>
+        <li>Každá šifra má mít <b>jediné řešení</b> a hráč musí vědět, čím ji luštit.</li>
+        <li>Rozluštěná zpráva vždy jasně říká, <b>kam dál</b>. „Hledej u vody“ na zahradě se třemi sudy je past.</li>
+        <li>Začněte lehce, nejtěžší úkol dejte doprostřed, konec ať je rychlý a slavnostní.</li>
+        <li>Střídejte druhy úkolů: šifra, hledání, rekvizita, pohyb.</li>
+        <li><b>Zahrajte si to</b> – nebo ať to zkusí někdo nezasvěcený. Polovina chyb se najde až venku.</li>
+      </ul></div>
+      <div class="card"><h3>🧒 Obtížnost podle věku</h3><ul>
+        <li><b>5–8 let:</b> obrázky, zrcadlo, čísla místo písmen s proužkem abecedy, krátká slova. Do 4–5 stanovišť, 30–45 minut.</li>
+        <li><b>9–13 let:</b> zednářská šifra, Morseovka, Caesar s kolečkem, souřadnice na mapě, ptačí písmo s klíčem.</li>
+        <li><b>Teenageři a dospělí:</b> Vigenère, knižní šifra, klíč schovaný v předchozím úkolu, víc kroků za sebou.</li>
+        <li>Skupině dejte úkol, na kterém se dá pracovat ve více lidech (rozstříhaná karta, více klíčů).</li>
+      </ul></div>
+      <div class="card"><h3>📜 Rekvizity jako z filmu</h3><ul>
+        <li><b>Starý papír:</b> zmačkat, namočit do silného černého čaje nebo kávy, nechat uschnout na plechu. Okraje natrhat, ne pálit.</li>
+        <li><b>Pečeť:</b> pečetní vosk nebo kapka červené svíčky na stočeném svitku s motouzem.</li>
+        <li><b>Neviditelný inkoust:</b> citronová šťáva nebo mléko štětečkem; objeví se nad teplem. Zahřívá dospělý – žehlička přes papír, ne otevřený oheň.</li>
+        <li><b>UV fix</b> a malá UV baterka – kouzlo bez tepla, skvělé na večerní hru.</li>
+        <li><b>Zámek na kód</b> (3–4 číslice) na krabičce nebo truhle – kód je výsledek hádanky.</li>
+        <li>Svitek v láhvi, klíč na provázku, kompas, lupa – rekvizita dělá z úkolu dobrodružství.</li>
+      </ul></div>
+      <div class="card"><h3>🗺️ Kam schovávat (a kam ne)</h3><ul>
+        <li>Kartu dejte do sáčku nebo obálky – rosa a déšť ji jinak zničí.</li>
+        <li>Schovávejte <b>ve výšce očí hráčů</b> nebo níž, ať nikdo neleze po žebřících.</li>
+        <li>Nikdy na cizí pozemek, k silnici, k vodě bez dozoru, do nor a dutin, kde žijí zvířata.</li>
+        <li>V lese nic nezakopávejte do kořenů a neodlupujte kůru; v chráněném území jen po cestách.</li>
+        <li>Poznamenejte si přesná místa (tahák) – po hře vše posbírejte.</li>
+      </ul></div>
+      <div class="card"><h3>🆘 Záložní plán</h3><ul>
+        <li>Ke každé stopě obálka s nápovědou – „otevři jen v nouzi“. Dílna je vytiskne.</li>
+        <li>Mějte u sebe tahák a náhradní kopie karet.</li>
+        <li>Když se skupina zasekne na víc než 10 minut, pošlete „posla“ s nápovědou – hra nemá skončit frustrací.</li>
+        <li>Počítejte s tím, že nějaká karta zmizí (vítr, pes, soused). Proto čísla stanovišť a tahák.</li>
+      </ul></div>
+      <div class="card"><h3>⏱️ Den D</h3><ul>
+        <li>Rozmístěte karty krátce před hrou a od konce – poslední stopu jako první.</li>
+        <li>Úvodní dopis předejte dramaticky: s poštou, pod talířem, od „neznámého posla“.</li>
+        <li>Poklad nemusí být drahý – důležitý je příběh: medaile, diplom, sladkost, společný výlet.</li>
+        <li>Vyfoťte hráče u pokladu. Mapa a karty jsou krásná památka.</li>
+      </ul></div>
+    </div>
+  </section>
+</main>
+
+<div class="zprava" id="zprava" role="status" aria-live="polite" hidden></div>
+<input type="file" id="soubor" accept=".json,application/json" hidden>
+<input type="file" id="souborFontu" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" multiple hidden>
+<script src="vyprava/ui.js"></script>
+</body>
+</html>

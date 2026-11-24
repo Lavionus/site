@@ -97,4 +97,9 @@ I18N.pridej('en', {
   'Text načten z odkazu.': 'Text loaded from link.',
   'Nahrát vlastní font…': 'Load custom font…',
   'Tengwar nemá v Unicode oficiální místo – jeho znaky leží v soukromé oblasti (U+E000…) a nakreslit je umí jen font, který je zná (zde Alcarin Tengwar). Po zkopírování do chatu, e-mailu nebo dokumentu bez tohoto fontu z nich zbudou prázdná políčka. Použijte': 'Tengwar has no official place in Unicode – its characters live in the Private Use Area (U+E000…) and only a font that knows them can draw them (here Alcarin Tengwar). When copied into a chat, e-mail or document without this font, they turn into empty boxes. Use',
+  'ptáci': 'ptáci',
+  'Ptačí písmo': 'Bird script',
+  'Tengwar nemá v Unicode oficiální místo – jeho znaky leží': null,
+  'v soukromé oblasti (U+E000…) a nakreslit je umí jen font, který je zná (zde Alcarin Tengwar). Po zkopírování': null,
+  'do chatu, e-mailu nebo dokumentu bez tohoto fontu z nich zbudou prázdná políčka. Použijte': null,
 });

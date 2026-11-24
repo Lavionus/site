@@ -33,6 +33,7 @@
     { id: 'palivo', nazev: 'Pohonné hmoty', ikona: '⛽', barva: '#d9a441', cena: 0.45, dny1: 25, dny2: 255 },
     { id: 'stavebniny', nazev: 'Stavebniny', ikona: '🧱', barva: '#b5651d', cena: 0.42, dny1: 15, dny2: 255 },
     { id: 'zbozi', nazev: 'Zboží', ikona: '📦', barva: '#c38d5e', cena: 0.6, dny1: 5, dny2: 28 },
+    { id: 'voda', nazev: 'Voda', ikona: '💧', barva: '#4aa3df', cena: 0.42, dny1: 12, dny2: 80 },   // jen pro velká města (od 3 000 obyvatel)
   ];
 
   /* Průmysl. rozmer = [š, h] v polích; vyroba = co produkuje (za měsíc při 100 %), prijima = co bere.
@@ -49,6 +50,7 @@
     { id: 'farma', nazev: 'Farma', ikona: '🌾', rozmer: [3, 3], vyroba: { obili: 60, dobytek: 40 }, prijima: [], misto: 'rovina', barva: '#b3563b', vyska: 10, pole: true },
     { id: 'potravinarna', nazev: 'Potravinárna', ikona: '🥫', rozmer: [3, 2], vyroba: { potraviny: 0 }, prijima: ['obili', 'dobytek'], misto: 'mesto', barva: '#d08c5b', vyska: 14 },
     { id: 'vrt', nazev: 'Ropný vrt', ikona: '🛢️', rozmer: [2, 2], vyroba: { ropa: 70 }, prijima: [], misto: 'rovina', barva: '#38383f', vyska: 20 },
+    { id: 'vodarna', nazev: 'Vodárna', ikona: '🚰', rozmer: [3, 3], vyroba: { voda: 90 }, prijima: [], misto: 'voda', barva: '#5d8aa8', vyska: 16 },
     { id: 'rafinerie', nazev: 'Rafinerie', ikona: '⚗️', rozmer: [4, 4], vyroba: { palivo: 0 }, prijima: ['ropa'], misto: 'pobrezi', barva: '#b8bcc2', vyska: 20, komin: true },
   ];
   const PRUMYSL_PODLE_ID = Object.fromEntries(PRUMYSL.map(p => [p.id, p]));
@@ -102,6 +104,13 @@
     ['Vela L', 1998, 9999, 112, 45, 17500, 1700, 15],
     ['Elektra E', 2024, 9999, 124, 50, 24000, 1300, 18],
   ]);
+  // tramvaje: osobní silniční vozidla, jezdí jen po tramvajové koleji v silnici (m.tram), staví na zastávkách autobusu
+  rada('tram', 'bus', ['lide'], '🚋', [
+    ['Kolibri T1', 1920, 1965, 40, 60, 9800, 1100, 25],
+    ['Strela T3', 1955, 2008, 62, 95, 15500, 1500, 25],
+    ['Nova 3', 1996, 9999, 72, 160, 29000, 2100, 28],
+  ]);
+  for (const t of VOZIDLA) if (t.id.startsWith('tram_')) t.tram = true;
   rada('posta', 'nakl', ['posta'], '📮', [
     ['Kurýr P1', 1920, 1966, 48, 20, 5400, 800, 12],
     ['Kurýr P2', 1952, 2000, 72, 28, 8200, 1000, 15],
@@ -111,7 +120,7 @@
     ['sypky', ['uhli', 'ruda', 'obili'], '🚚', 'Titan K'],
     ['les', ['drevo'], '🚛', 'Lesák'],
     ['dobytek', ['dobytek'], '🚚', 'Stádník'],
-    ['cisterna', ['ropa', 'palivo'], '🚛', 'Cisterna C'],
+    ['cisterna', ['ropa', 'palivo', 'voda'], '🚛', 'Cisterna C'],
     ['skrin', ['zbozi', 'potraviny', 'ocel', 'stavebniny'], '🚚', 'Skříňák S'],
   ];
   for (const [id, nak, ik, jm] of NAKL) rada(id, 'nakl', nak, ik, [
@@ -127,17 +136,43 @@
     ['Diesel D2', 'diesel', 1955, 2002, 120, 1600, 85, 36000, 3000, 25],
     ['Diesel Taurus', 'diesel', 1984, 9999, 150, 2400, 90, 52000, 3400, 25],
     ['Rychlík R9', 'diesel', 2005, 9999, 180, 3200, 85, 78000, 4200, 25],
+    // elektrické: jen po elektrizované trati (trolej); Rapid na plnou rychlost potřebuje rychlostní kolej
+    ['Elektra E1', 'elektro', 1950, 1990, 130, 2200, 80, 45000, 3000, 25],
+    ['Elektra E3', 'elektro', 1975, 9999, 160, 3600, 85, 62000, 3300, 25],
+    ['Rapid V', 'elektro', 1990, 2025, 300, 8000, 120, 140000, 8500, 25],
+    ['Rapid V2', 'elektro', 2015, 9999, 320, 9500, 115, 175000, 9000, 25],
   ]) VOZIDLA.push({ id: 'lok_' + nazev.replace(/\W+/g, '_').toLowerCase(), nazev, druh: 'vlak', trakce, naklady: [], ikona: '🚂', od, do: do_, rychlost, vykon, hmotnost, kapacita: 0, cena, provoz, zivot });
+  /* Lodě (druh 'lod'): kotví u přístavu, kupují se v loděnici. Letadla (druh 'let'): cestující + pošta, kupují se na letišti. */
+  const lodRada = (zaklad, naklady, ikona, gen) => gen.forEach(([nazev, od, do_, rychlost, kapacita, cena, provoz, zivot]) =>
+    VOZIDLA.push({ id: 'lod_' + zaklad + '_' + (gen.indexOf(gen.find(g => g[0] === nazev)) + 1), nazev, druh: 'lod', naklady, ikona, od, do: do_, rychlost, kapacita, cena, provoz, zivot }));
+  lodRada('trajekt', ['lide'], '⛴️', [['Racek', 1920, 1975, 30, 120, 16000, 2200, 25], ['Delfín', 1965, 9999, 45, 220, 30000, 3200, 25]]);
+  lodRada('sypka', ['uhli', 'ruda', 'obili'], '🚢', [['Baltika', 1920, 1980, 24, 220, 18000, 2000, 30], ['Baltika II', 1970, 9999, 34, 380, 32000, 2800, 30]]);
+  lodRada('tanker', ['ropa', 'palivo', 'voda'], '🛳️', [['Petrol T', 1925, 1985, 24, 260, 21000, 2300, 30], ['Petrol T2', 1975, 9999, 34, 460, 38000, 3100, 30]]);
+  lodRada('kargo', ['zbozi', 'potraviny', 'stavebniny', 'ocel', 'drevo'], '🚢', [['Kargo', 1930, 1990, 26, 180, 20000, 2200, 30], ['Kargo M', 1980, 9999, 38, 320, 36000, 3000, 30]]);
+  for (const [nazev, od, do_, rychlost, lide, posta, cena, provoz, zivot] of [
+    ['Albatros A1', 1925, 1962, 220, 20, 6, 30000, 4200, 20],
+    ['Condor C4', 1948, 1985, 380, 44, 12, 52000, 6000, 20],
+    ['Jetstar J2', 1964, 2010, 820, 90, 20, 98000, 9500, 22],
+    ['Skybus S3', 1992, 9999, 880, 150, 30, 150000, 12500, 25],
+    ['Rotor H1', 1955, 1998, 180, 8, 3, 21000, 3600, 18],
+    ['Rotor H2', 1985, 9999, 260, 14, 5, 36000, 4800, 20],
+  ]) VOZIDLA.push({ id: 'let_' + nazev.replace(/\W+/g, '_').toLowerCase(), nazev, druh: 'let', naklady: ['lide', 'posta'], ikona: nazev.startsWith('Rotor') ? '🚁' : '✈️', od, do: do_, rychlost, kapacita: lide, kapacitaPosta: posta, cena, provoz, zivot,
+    ...(nazev.startsWith('Rotor') ? { vrtulnik: true } : {}), ...(/Jetstar|Skybus/.test(nazev) ? { velke: true } : {}) });
+  /* Barva typu: silniční vozidla jiného druhu než autobus mají vlastní barvu karoserie (na mapě se jinak pletou);
+     autobusy, vlaky, lodě a letadla nesou barvu firmy. */
+  const BARVY_TYPU = { tram: '#1f9e8f', posta: '#f2c12e', sypky: '#e07b22', les: '#3f8a3a', dobytek: '#8a5a2b', cisterna: '#2f6fb3', skrin: '#7b4fb0' };
+  for (const v of VOZIDLA) { const r = v.id.split('_')[0]; if (BARVY_TYPU[r]) v.barvaTypu = BARVY_TYPU[r]; }
   const VOZIDLA_PODLE_ID = Object.fromEntries(VOZIDLA.map(v => [v.id, v]));
 
   /* Vagony: kapacita jednotek, hmotnost prázdného t, tun na jednotku nákladu. */
   const VAGONY = [
     { id: 'osobni', nazev: 'Osobní vůz', naklady: ['lide'], kapacita: 40, hmotnost: 24, naJednotku: 0.08, rychlost: 140, cena: 3200, od: 1920, barva: '#3c6e4f' },
     { id: 'osobni2', nazev: 'Osobní vůz moderní', naklady: ['lide'], kapacita: 60, hmotnost: 30, naJednotku: 0.08, rychlost: 200, cena: 5200, od: 1975, barva: '#2d5d8a' },
+    { id: 'rychly', nazev: 'Rychlíkový vůz', naklady: ['lide'], kapacita: 70, hmotnost: 40, naJednotku: 0.08, rychlost: 320, cena: 9500, od: 1990, barva: '#d9dde2' },
     { id: 'posta', nazev: 'Poštovní vůz', naklady: ['posta'], kapacita: 35, hmotnost: 20, naJednotku: 0.1, rychlost: 160, cena: 3000, od: 1920, barva: '#b8a94c' },
     { id: 'vysypny', nazev: 'Výsypný vůz', naklady: ['uhli', 'ruda', 'obili'], kapacita: 30, hmotnost: 14, naJednotku: 1, rychlost: 110, cena: 2400, od: 1920, barva: '#4a4a4a' },
     { id: 'kryty', nazev: 'Krytý vůz', naklady: ['zbozi', 'potraviny', 'stavebniny', 'ocel'], kapacita: 25, hmotnost: 16, naJednotku: 1, rychlost: 120, cena: 2800, od: 1920, barva: '#8a5a3a' },
-    { id: 'cisterna', nazev: 'Cisternový vůz', naklady: ['ropa', 'palivo'], kapacita: 28, hmotnost: 15, naJednotku: 1, rychlost: 110, cena: 3000, od: 1920, barva: '#2c2c32' },
+    { id: 'cisterna', nazev: 'Cisternový vůz', naklady: ['ropa', 'palivo', 'voda'], kapacita: 28, hmotnost: 15, naJednotku: 1, rychlost: 110, cena: 3000, od: 1920, barva: '#2c2c32' },
     { id: 'klanicak', nazev: 'Klanicový vůz', naklady: ['drevo'], kapacita: 28, hmotnost: 13, naJednotku: 1, rychlost: 110, cena: 2300, od: 1920, barva: '#7a5530' },
     { id: 'dobytci', nazev: 'Dobytčí vůz', naklady: ['dobytek'], kapacita: 20, hmotnost: 15, naJednotku: 1, rychlost: 110, cena: 2600, od: 1920, barva: '#a07850' },
   ];
@@ -148,6 +183,8 @@
     silnice: 220, svah: 180, kaceni: 45,          // za pole; svah = pole s nestejnými rohy; kácení za každý strom (hustota 1–3)
     zastavka: 650, stanoviste: 800, garaz: 1600,
     kolej: 320, most: 1100, nastupiste: 950, depo: 2600, MAX_MOST: 8, navest: 350,
+    pristav: 2200, lodenice: 3500, letiste: 18000,
+    trolej: 160, vrt: 900, tunel: 1400, tram: 140, teren: 90, MAX_VYSKA: 15, podnik: { dul: 60000, elektrarna: 150000, tezba: 30000, pila: 70000, rudnydul: 70000, ocelarna: 200000, tovarna: 160000, farma: 40000, potravinarna: 110000, vrt: 80000, rafinerie: 220000, vodarna: 90000 }, boje: 600, zdymadlo: 4500, RYCHLOST_KOLEJ: 160, RYCHLOST_VRT: 320, ROK_VRT: 1985,
     demolice: 60,
   };
   const DEN_TICKU = 74;              // ticků na herní den

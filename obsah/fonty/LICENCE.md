@@ -109,3 +109,4 @@ Font Name "Eagle Lake" | SIL Open Font License 1.1 |
 | `NotoSansPhoenician-Regular.ttf` | Noto Sans Phoenician | Copyright 2022 The Noto Project Authors (https://github.com/notofonts/phoenician) | SIL Open Font License 1.1 |
 | `NotoSansOldItalic-Regular.ttf` | Noto Sans Old Italic | Copyright 2022 The Noto Project Authors (https://github.com/notofonts/old-italic) | SIL Open Font License 1.1 |
 | `NotoSansGothic-Regular.ttf` | Noto Sans Gothic | Copyright 2022 The Noto Project Authors (https://github.com/notofonts/gothic) | SIL Open Font License 1.1 |
+| `PtaciPismo-Regular.ttf` | Ptačí písmo – písmo rodové knihy z Kronik vyhnanství, vlastní font webu (generuje `tools/ptaci_pismo.js`) | Copyright 2026 Radovan Valenta | SIL Open Font License 1.1 |

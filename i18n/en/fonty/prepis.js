@@ -23,4 +23,6 @@ I18N.pridej('en', {
   'Gótské písmo': 'Gothic script',
   'Písmo Wulfilovy bible (4. století).': 'The script of Wulfila\'s Bible (4th century).',
   'Morseovka': 'Morse code',
+  'Ptačí písmo (Kroniky)': 'Bird script (Chronicles)',
+  'Písmo elfí rodové knihy z Kronik vyhnanství – každé písmeno je ptačí stopa. Znaky z knih: [narozeni], [umrti], [lovec], [korist], [merin], [shora], [zdola], [zlesa], [zvody], [zhory], [zvenku].': 'The script of the elven family book from the Chronicles of Exile – every letter is a bird track. Signs from the books (Czech words in brackets): [narozeni] birth, [umrti] death, [lovec] hunter, [korist] prey, [merin] office of Merin, [shora], [zdola], [zlesa], [zvody], [zhory], [zvenku] – from above, below, the forest, the water, the mountain, outside.',
 });

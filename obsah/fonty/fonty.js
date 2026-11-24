@@ -100,6 +100,8 @@ const FONTY = (function () {
     { id: 'fenicke',    soubor: 'NotoSansPhoenician-Regular.ttf', nazev: 'Noto Sans Phoenician', druh: 'pismo', pismo: 'fenicke', pro3d: true },
     { id: 'etruske',    soubor: 'NotoSansOldItalic-Regular.ttf', nazev: 'Noto Sans Old Italic', druh: 'pismo', pismo: 'etruske', pro3d: true },
     { id: 'goticke',    soubor: 'NotoSansGothic-Regular.ttf', nazev: 'Noto Sans Gothic',  druh: 'pismo', pismo: 'goticke',   pro3d: true },
+    // vlastní písmo webu (tools/ptaci_pismo.js) – kreslí latinku ptačími stopami
+    { id: 'ptaci',      soubor: 'PtaciPismo-Regular.ttf',     nazev: 'Ptačí písmo (Kroniky)', druh: 'pismo', pro3d: true },
   ];
 
   const DRUHY = {
@@ -338,6 +340,7 @@ const FONTY = (function () {
          filtr: f => true,                // které fonty nabídnout
          poznamka: f => '',               // štítek na kartě (např. „tenké“)
          doporucene: () => 'latinka',     // písmo, které se nabídne jako první
+         onNahled: id => {},              // živý náhled: najetí na kartu (id), odjetí / zavření (null)
        });
        v.nastav(fonty, vybraneId);  v.hodnota;  v.obnovUkazky();          */
   function vlozStylVyberu() {
@@ -346,26 +349,26 @@ const FONTY = (function () {
     st.id = 'fv-styl';
     st.textContent = `
 .fv{position:relative}
-.fv-tlacitko{width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;
+.fv-tlacitko{width:100%;height:3.1rem;box-sizing:border-box;overflow:hidden;display:flex;align-items:center;gap:10px;padding:5px 10px;cursor:pointer;
   background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);font:inherit;text-align:left}
 .fv-tlacitko:hover{border-color:var(--accent)}
 .fv-tlacitko:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .fv-tlacitko .fv-vzor{font-size:1.55rem;line-height:1.15;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fv-tlacitko .fv-popis{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:0 0 auto;max-width:48%}
+.fv-tlacitko .fv-popis{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:0 1 auto;min-width:0;max-width:48%;line-height:1.25}
 .fv-tlacitko .fv-jmeno{font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.fv-tlacitko .fv-druh{font-size:.72rem;color:var(--text-faint)}
+.fv-tlacitko .fv-druh{font-size:.72rem;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .fv-tlacitko .fv-sipka{color:var(--text-faint);flex:0 0 auto}
 .fv-panel{position:fixed;z-index:1000;top:0;left:0;width:min(640px,calc(100vw - 24px));
   background:var(--bg-panel);border:1px solid var(--border-strong);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.45);
-  display:flex;flex-direction:column;max-height:min(72vh,640px)}
+  display:flex;flex-direction:column;overflow:hidden}
 .fv-panel[hidden]{display:none}
-.fv-hlava{display:flex;flex-direction:column;gap:8px;padding:10px;border-bottom:1px solid var(--border)}
+.fv-hlava{display:flex;flex-direction:column;gap:8px;padding:10px;border-bottom:1px solid var(--border);flex-shrink:0}
 .fv-hledat{width:100%;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);font:inherit}
 .fv-hledat:focus{outline:none;border-color:var(--accent)}
 .fv-druhy{display:flex;flex-wrap:wrap;gap:4px}
 .fv-druhy button{padding:4px 9px;border-radius:999px;border:1px solid var(--border-strong);background:var(--bg-control);color:var(--text-muted);font:inherit;font-size:.76rem;cursor:pointer}
 .fv-druhy button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.fv-mrizka{overflow:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;min-height:120px}
+.fv-mrizka{overflow:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));grid-auto-rows:max-content;align-content:start;gap:8px;min-height:0;flex:1 1 0}
 .fv-karta{position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 10px;text-align:left;cursor:pointer;min-width:0;
   background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text);font:inherit}
 .fv-karta:hover,.fv-karta:focus-visible{border-color:var(--accent);outline:none}
@@ -377,7 +380,7 @@ const FONTY = (function () {
 .fv-stitek{flex:0 0 auto;font-size:.66rem;padding:1px 6px;border-radius:999px;background:var(--bg-control);color:var(--text-faint)}
 .fv-smazat{position:absolute;top:4px;right:4px;width:24px;height:24px;border:none;border-radius:50%;background:transparent;color:var(--text-faint);cursor:pointer}
 .fv-smazat:hover{background:var(--bg-hover);color:var(--danger)}
-.fv-pata{display:flex;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-faint)}
+.fv-pata{display:flex;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-faint);flex-shrink:0}
 .fv-pata .fv-mezera{flex:1}
 .fv-pata button{padding:6px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--bg-control);color:var(--text);font:inherit;font-size:.8rem;cursor:pointer}
 .fv-pata button:hover{border-color:var(--accent)}
@@ -393,7 +396,7 @@ const FONTY = (function () {
     kontejner.classList.add('fv');
     kontejner.innerHTML = `
       <button type="button" class="fv-tlacitko" aria-haspopup="listbox" aria-expanded="false">
-        <span class="fv-vzor">Aa</span>
+        <span class="fv-vzor" data-i18n="ne">Aa</span>
         <span class="fv-popis"><span class="fv-jmeno"></span><span class="fv-druh"></span></span>
         <span class="fv-sipka" aria-hidden="true">▾</span>
       </button>
@@ -462,7 +465,7 @@ const FONTY = (function () {
         k.className = 'fv-karta'; k.tabIndex = 0; k.dataset.id = f.id;
         k.setAttribute('role', 'option');
         k.setAttribute('aria-selected', f.id === hodnota);
-        const vz = document.createElement('div'); vz.className = 'fv-k-vzor'; vz.textContent = text;
+        const vz = document.createElement('div'); vz.className = 'fv-k-vzor'; vz.dataset.i18n = 'ne'; vz.textContent = text;
         const jm = document.createElement('div'); jm.className = 'fv-k-jmeno';
         const s = document.createElement('span'); s.textContent = f.nazev; jm.appendChild(s);
         const pozn = o.poznamka && o.poznamka(f);
@@ -492,13 +495,16 @@ const FONTY = (function () {
       const vw = document.documentElement.clientWidth, vh = window.innerHeight;
       const sirka = Math.min(640, vw - 24);
       const left = Math.max(12, Math.min(r.left, vw - sirka - 12));
-      const dole = vh - r.bottom - 34, nahore = r.top - 12;
-      const nahoru = dole < 320 && nahore > dole;
-      const vyska = Math.min(640, Math.max(220, (nahoru ? nahore : dole) - 6));
+      // výška je vždy stejná (nezávisí na počtu písem ani na tom, kde je tlačítko) –
+      // panel se jen umístí pod tlačítko, nad něj, nebo když se nevejde ani jedno, do okna
+      const vyska = Math.min(500, vh - 24);
+      const dole = vh - r.bottom - 12, nahore = r.top - 12;
+      const top = dole >= vyska + 6 ? r.bottom + 6 : nahore >= vyska + 6 ? r.top - 6 - vyska : Math.max(12, Math.min(vh - vyska - 12, r.bottom + 6));
       panel.style.width = sirka + 'px';
       panel.style.left = left + 'px';
-      panel.style.maxHeight = vyska + 'px';
-      panel.style.top = nahoru ? Math.max(8, r.top - 6 - Math.min(vyska, panel.scrollHeight)) + 'px' : (r.bottom + 6) + 'px';
+      panel.style.height = vyska + 'px';
+      panel.style.maxHeight = '';
+      panel.style.top = top + 'px';
     }
     window.addEventListener('resize', umisti);
     window.addEventListener('scroll', e => { if (!panel.contains(e.target)) umisti(); }, true);
@@ -512,8 +518,11 @@ const FONTY = (function () {
       if (vyb) vyb.scrollIntoView({ block: 'nearest' });
       if (window.matchMedia('(pointer: fine)').matches) q('.fv-hledat').focus();
     }
+    let nahled = null;
+    const nahledni = id => { if (!o.onNahled || id === nahled) return; nahled = id; o.onNahled(id); };
     function zavri(fokus) {
       if (panel.hidden) return;
+      nahledni(null);
       panel.hidden = true;
       tl.setAttribute('aria-expanded', 'false');
       if (fokus) tl.focus();
@@ -532,6 +541,9 @@ const FONTY = (function () {
       druh = b.dataset.druh; kresliDruhy(); kresliMrizku();
     });
     mrizka.addEventListener('click', e => { const k = e.target.closest('.fv-karta'); if (k) vyber(k.dataset.id); });
+    mrizka.addEventListener('mouseover', e => { const k = e.target.closest('.fv-karta'); if (k) nahledni(k.dataset.id); });
+    mrizka.addEventListener('mouseleave', () => nahledni(null));
+    mrizka.addEventListener('focusin', e => { const k = e.target.closest('.fv-karta'); if (k) nahledni(k.dataset.id); });
     mrizka.addEventListener('keydown', e => {
       const k = e.target.closest('.fv-karta'); if (!k) return;
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vyber(k.dataset.id); return; }

@@ -1292,4 +1292,12 @@ I18N.pridej('en', {
   'Lehká – víš, jaká je to šifra ({n} b.)': 'Easy – you know which cipher it is ({n} pts)',
   'Střední – šifru musíš poznat ({n} b.)': 'Medium – you must identify the cipher ({n} pts)',
   'Těžká – šifru musíš poznat ({n} b.)': 'Hard – you must identify the cipher ({n} pts)',
+  'Ptačí písmo (Kroniky vyhnanství)': 'Bird script (Chronicles of Exile)',
+  'Písmo elfí rodové knihy z Kronik vyhnanství – každé písmeno je ptačí stopa prsty dolů. Samohlásky nemají zadní prst, souhlásky ano (rovný = neznělá, zahnutý = znělá); dva prsty = rty, tři = zuby, s patou = měkké; blána mezi prsty = třená souhláska; ch je jeden znak. Znaky z knih se píšou slovem v závorkách, např. [lovec]. Klíč pod zprávou je i klávesnice: když luštíte stopy z papíru, klikejte na ně a písmena se vepíšou do pole.': 'The script of the elven family book from the Chronicles of Exile – every letter is a bird track with its toes pointing down. Vowels have no back toe, consonants do (straight = voiceless, hooked = voiced); two toes = lips, three = teeth, with a heel pad = soft; a web between the toes = fricative; ch is a single sign. Signs from the books are written as a Czech word in brackets, e.g. [lovec] (hunter). The key below the message is also a keyboard: when deciphering tracks from paper, click them and the letters are typed into the field.',
+  'aábcčdďeéěfgh': 'aábcčdďeéěfgh',
+  'iíjklmnňoópqrřsštťuúůvwxyýzž0123456789': 'iíjklmnňoópqrřsštťuúůvwxyýzž0123456789',
+  'narození': 'birth',
+  'úmrtí': 'death',
+  'kořist': 'prey',
+  'Vložit „{vloz2}“': 'Insert “{vloz2}”',
 });

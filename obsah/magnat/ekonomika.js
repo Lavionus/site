@@ -64,7 +64,7 @@
     const m = h.m, nah = h.nah;
     if (nah.f() >= 0.06 * (m.W * m.H) / (128 * 128)) return null;
     const odberatel = Object.fromEntries(D.RETEZCE);
-    const vahy = { dul: 3, elektrarna: 1.2, tezba: 2.5, pila: 1, rudnydul: 1.5, ocelarna: 0.8, tovarna: 1, farma: 3, potravinarna: 1.2, vrt: 1.5, rafinerie: 0.6 };
+    const vahy = { dul: 3, elektrarna: 1.2, tezba: 2.5, pila: 1, rudnydul: 1.5, ocelarna: 0.8, tovarna: 1, farma: 3, potravinarna: 1.2, vrt: 1.5, rafinerie: 0.6, vodarna: 0.8 };
     const typ = nah.vazene(Object.entries(vahy).filter(([k]) => !odberatel[k] || aktivnich(m, odberatel[k]) > 0));
     const p = D.PRUMYSL_PODLE_ID[typ];
     for (let pokus = 0; pokus < 300; pokus++) {
@@ -89,6 +89,31 @@
     return null;
   }
 
+  /* Financování podniku hráčem: stejná pravidla místa jako u nového podniku (vhodneMisto s důvodem), pozemek i okolí bez
+     staveb hráče (úprava terénu by je posunula), cena podle druhu. (x, y) = levý horní roh. */
+  function financujPodnik(h, typ, x, y, jenCena) {
+    const m = h.m, p = D.PRUMYSL_PODLE_ID[typ], cena = D.CENY.podnik[typ];
+    if (!p || !cena) return { ok: false, chyba: 'Neznámý druh podniku' };
+    const duvod = {};
+    if (!M.vhodneMisto(m, p, x, y, m.vrch, duvod)) return { ok: false, cena, chyba: duvod.text || 'Sem podnik postavit nejde' };
+    for (let dy = -2; dy < p.rozmer[1] + 2; dy++) for (let dx = -2; dx < p.rozmer[0] + 2; dx++) {
+      if (!M.uvnitr(m, x + dx, y + dy)) continue;
+      const i = (y + dy) * m.W + x + dx;
+      if (m.cesta[i] === 2 || m.kolej[i] || m.stan[i] || m.depo[i]) return { ok: false, cena, chyba: 'Příliš blízko tvých staveb (úprava terénu by je posunula) – nech 2 pole volno' };
+    }
+    if (jenCena) return { ok: true, cena };
+    if (H.nemaNa(h, cena)) return { ok: false, cena, chyba: `Nedostatek peněz (potřeba ${H.penizeText(cena)})` };
+    const q = M.postavPrumysl(m, h.nah, p, x, y);
+    if (!q) return { ok: false, cena, chyba: 'Podnik se nepodařilo založit (terén)' };
+    return H.vysledek(h, cena, false, 'stavba', () => {
+      q.financovano = true;
+      h.prum.push({ vstup: 0, zasoba: {}, mesic: {}, minuly: {} });
+      for (const st of h.stanice) if (st) H.prepocitejPrijem(h, st);
+      H.zmena(h, x - 4, y - 4, x + p.rozmer[0] + 4, y + p.rozmer[1] + 4);
+      zprava(h, `🏭 ${h.firma.jmeno} financovala nový podnik: ${q.jmeno}`, { x: q.x, y: q.y });
+    });
+  }
+
   // hodnocení firmy městem: obsluhované stanice v dosahu přidávají, opuštěné ubírají, jinak pomalu k nule
   function hodnoceniMest(h) {
     const m = h.m;
@@ -96,7 +121,7 @@
       const cs = h.mestaStat[c.id];
       let plus = 0, minus = 0;
       for (const st of h.stanice) {
-        if (!st || H.obecU(h, st.x, st.y) !== c) continue;
+        if (!st || st.boje || H.obecU(h, st.x, st.y) !== c) continue;
         const obsl = Object.values(st.naklady).some(z => z.navst && z.dni < 30);
         if (obsl) plus++; else if (h.den - st.zalozeno > 60) minus++;
       }
@@ -124,5 +149,5 @@
     krize(h);
   }
 
-  MAG.ekonomika = { mesicni, vyrobaPodniku, novyPodnik, hodnoceniMest, krize, zrusPodnik, MAX_NASOBEK };
+  MAG.ekonomika = { financujPodnik, mesicni, vyrobaPodniku, novyPodnik, hodnoceniMest, krize, zrusPodnik, MAX_NASOBEK };
 })(globalThis.MAG = globalThis.MAG || {});

@@ -86,7 +86,8 @@
         volba('📂', 'Otevřít soubor', 'TTF, OTF, WOFF nebo projekt .pismo.json', () => { D._zavri('soubor'); }),
         volba('📚', 'Z knihovny webu', 'Upravit některé z volných písem (OFL)', () => { D._zavri('knihovna'); }),
         volba('✍️', 'Moje rukopisné písmo', 'Vytisknout šablonu, napsat, naskenovat', () => { D._zavri('rukopis'); }),
-        volba('✨', 'Generátor stylů', 'Strašidelné, metalové, Diablo, neon, pixel… jedním klikem', () => { D._zavri('generator'); })
+        volba('✨', 'Generátor stylů', 'Strašidelné, metalové, Diablo, neon, pixel… jedním klikem', () => { D._zavri('generator'); }),
+        volba('🐦', 'Ptačí písmo', 'Písmo rodové knihy z Kronik vyhnanství', () => { D._zavri('ptaci'); })
       ])
     ];
     if (projekty.length) telo.push(el('h3', { text: 'Rozpracované projekty', style: 'margin-top:14px;font-size:.9rem' }), seznam);
@@ -95,6 +96,7 @@
     if (v === 'soubor') return D.otevriSoubor();
     if (v === 'knihovna') return D.zKnihovny();
     if (v === 'rukopis') return D.rukopis();
+    if (v === 'ptaci') return D.ptaciPismo();
     if (v === 'generator') { if (!A.font) A.otevriFont(P.novyFont()); A.prepniPohled('generator'); return; }
     if (v === 'prazdny' || (!A.font && v == null)) { A.otevriFont(P.novyFont()); }
   };
@@ -181,6 +183,33 @@
       A.prepniPohled('znaky');
       A.zprava('Otevřeno: ' + f.info.rodina + ' (' + f.poradi.length + ' glyfů).');
     } catch (e) { A.zprava('Písmo se nepodařilo načíst: ' + e.message, true); }
+  };
+
+  /* ---------- Ptačí písmo (Kroniky vyhnanství) ----------
+     Font z knihovny webu (generuje tools/ptaci_pismo.js); otevře se
+     pod svým jménem a krátce se ukáže, jak je písmo postavené. */
+  D.ptaciPismo = async function () {
+    try {
+      A.otevriFont(P.nactiFont(await FONTY.data('ptaci')));
+      A.prepniPohled('znaky');
+    } catch (e) { A.zprava('Ptačí písmo se nepodařilo načíst: ' + e.message, true); if (!A.font) D.start(); return; }
+    const radek = (k, t) => el('li', {}, [el('b', { text: k + ' ' }), t]);
+    await D.okno({
+      nadpis: '🐦 Ptačí písmo', sirka: 'min(640px, 96vw)', bezFokusu: true,
+      telo: [
+        el('p', { class: 'poznamka', text: '„Znaky, oblé a uzavřené, jako stopy ptáků ve sněhu.“ Písmo elfí rodové knihy z Kronik vyhnanství. Každý znak je stopa prsty dolů; píše se česky, písmeno po písmenu.' }),
+        el('ul', { style: 'margin:8px 0 0 18px;line-height:1.55' }, [
+          radek('Samohlásky', 'nemají zadní prst; čárka nad stopou = dlouhá, tečka = ě, kroužek = ů.'),
+          radek('Souhlásky', 'mají zadní prst: rovný = neznělá, zahnutý = znělá, rozdvojený = m n ň, s kuličkou = c č x.'),
+          radek('Prsty', '⋁ dva = rty (p b f v m), Ψ tři = zuby (t d s z n), Ψ s patou = měkké (ť ď š ž č ň), prsty vpravo = k g ch h, vlevo = l r ř.'),
+          radek('Blána', 'mezi prsty (uzavřená stopa) = třená souhláska: f v s z š ž ch h.'),
+          radek('Velké písmeno', 'je větší znak – v knize jím začíná každý řádek.'),
+          radek('Číslice', 'čárky jako na listu s čárkami, pětka přeškrtnutá.'),
+          radek('Znaky z knih', 'napište slovo v hranatých závorkách: [narozeni] kroužek (také *), [umrti] křížek (také + †), [lovec], [korist], [merin], [shora], [zdola], [zlesa], [zvody], [zhory], [zvenku]. Znak „odjinud“ písmo nemá – Sael proto píše latinkou aliunde.')
+        ])
+      ],
+      tlacitka: [{ text: 'Zavřít', hodnota: null, hlavni: true }]
+    });
   };
 
   /* ---------- projekty ---------- */

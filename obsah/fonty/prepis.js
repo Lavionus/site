@@ -347,6 +347,8 @@ const PREPIS = (function () {
     { id: 'etruske',   nazev: 'Etruské písmo',              font: 'etruske' },
     { id: 'goticke',   nazev: 'Gótské písmo',               font: 'goticke',
       popis: 'Písmo Wulfilovy bible (4. století).' },
+    { id: 'ptaci',     nazev: 'Ptačí písmo (Kroniky)',      font: 'ptaci',
+      popis: 'Písmo elfí rodové knihy z Kronik vyhnanství – každé písmeno je ptačí stopa. Znaky z knih: [narozeni], [umrti], [lovec], [korist], [merin], [shora], [zdola], [zlesa], [zvody], [zhory], [zvenku].' },
     { id: 'morse',     nazev: 'Morseovka',                  font: 'libsans' },
   ];
   // přepisy, které mají vlastní znaky (a tedy i vlastní font)

@@ -10,7 +10,7 @@
   const KLIC = 'webapp_hra_magnat_nastaveni';
 
   // --- nastavení (jen pohodlí; bez úložiště hra funguje) ----------------------
-  let nast = { opt: { ...M.VYCHOZI }, kod: null, mrizka: false, minimapa: true, popisky: true, prumPopisky: false, vrstva: 'teren' };
+  let nast = { opt: { ...M.VYCHOZI }, kod: null, mrizka: false, minimapa: true, popisky: true, prumPopisky: false, vrstva: 'teren', noc: false, nalozeni: false, staniceJm: true };
   try { nast = { ...nast, ...JSON.parse(localStorage.getItem(KLIC) || '{}') }; } catch (e) { /* bez úložiště */ }
   const ulozNast = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch (e) { /* bez úložiště */ } };
 
@@ -21,7 +21,7 @@
   let zoomI = 2;                       // index v G.ZOOMY (1×)
   let najeto = null;                   // pole pod myší
   let platnoW = 0, platnoH = 0, dpr = 1;
-  let spinave = true, chybi = false;
+  let spinave = true, chybi = false, vykreslenaMapa = null, animuje = false;
   const platno = $('platno'), g = platno.getContext('2d');
   const Z = () => G.ZOOMY[zoomI];
 
@@ -112,7 +112,7 @@
     if (simuluj(t || performance.now())) spinave = true;
     if (obnovMinimapu && hra && hra.tick === 0) { obnovMinimapu = false; pripravMinimapu(); }
     if (!mapa || (!spinave && !chybi)) return;
-    spinave = false;
+    spinave = false; vykreslenaMapa = mapa; animuje = !!(U.animuje && U.animuje());
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.fillStyle = '#1c2530'; g.fillRect(0, 0, platno.width, platno.height);
     chybi = kreslic.kresli(g, platnoW, platnoH, kamera, Z());
@@ -142,6 +142,20 @@
       const sx = wx * z + ox, sy = wy * z + oy - 30 * z;
       if (sx < -150 || sx > platnoW + 150 || sy < -20 || sy > platnoH + 20) continue;
       stitek(`${D.PRUMYSL_PODLE_ID[q.typ].ikona} ${q.jmeno}`, sx, sy, 'rgba(40,30,20,.78)', '#f3e2c8', 11);
+    }
+    // cedulky stanic: jméno a čekající náklad (barva firmy)
+    if (nast.staniceJm && hra && z >= 0.5) {
+      const IK = { vlak: '🚉', bus: '🚏', nakl: '🚚', lod: '⚓', let: '✈️' };
+      for (const st of hra.stanice) {
+        if (!st || st.boje) continue;
+        const [wx, wy] = kreslic.stredPole(st.x, st.y);
+        const sx = wx * z + ox, sy = wy * z + oy - 20 * z;
+        if (sx < -150 || sx > platnoW + 150 || sy < -20 || sy > platnoH + 20) continue;
+        const druh = ['vlak', 'let', 'lod', 'nakl', 'bus'].find(d => st.casti.some(c => c.druh === d));
+        const ceka = Object.entries(st.naklady).filter(([, x]) => x.ceka > 0).sort((a, b) => b[1].ceka - a[1].ceka).slice(0, 3)
+          .map(([k, x]) => `${D.NAKLADY_PODLE_ID[k].ikona}${x.ceka}`).join(' ');
+        stitek(`${IK[druh] || '🚏'} ${st.jmeno}${ceka && z >= 1 ? '  ' + ceka : ''}`, sx, sy, hra.firma.barva, '#ffffff', 10.5);
+      }
     }
     if (nast.popisky) for (const c of mapa.mesta) {
       const [wx, wy] = kreslic.stredPole(c.x, c.y);
@@ -307,6 +321,8 @@
 
   // --- klávesnice --------------------------------------------------------------------
   const drzene = new Set();
+  // posun mapy i klávesami W A S D (podle fyzické klávesy – funguje i v jiném rozložení klávesnice)
+  const WASD = { KeyW: 'arrowup', KeyA: 'arrowleft', KeyS: 'arrowdown', KeyD: 'arrowright' };
   document.addEventListener('keydown', ev => {
     if (ev.target.closest('input, textarea') || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (!$('dlgNova').hidden) { if (ev.key === 'Escape') zavriDialog(); return; }
@@ -314,6 +330,7 @@
     const k = ev.key;
     if (U.klavesa && U.klavesa(ev)) { ev.preventDefault(); return; }
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) { drzene.add(k.toLowerCase()); ev.preventDefault(); }
+    else if (!ev.shiftKey && WASD[ev.code]) { drzene.add(WASD[ev.code]); ev.preventDefault(); }
     else if (k === '+' || k === '=') priblizeni(1);
     else if (k === '-' || k === '_') priblizeni(-1);
     else if (k === 'g' || k === 'G') prepni('mrizka');
@@ -323,7 +340,7 @@
     else if (k === ' ') { nastavRychlost(rychlost ? 0 : 1); ev.preventDefault(); }
     else if (k === 'Escape') { if (U.nastroj) U.zrusNastroj(); else zavriHorniOkno(); }
   });
-  document.addEventListener('keyup', ev => drzene.delete(ev.key.toLowerCase()));
+  document.addEventListener('keyup', ev => { drzene.delete(ev.key.toLowerCase()); if (WASD[ev.code]) drzene.delete(WASD[ev.code]); });
   window.addEventListener('blur', () => drzene.clear());
   let posledni = performance.now();
   (function posun(t) {
@@ -350,6 +367,9 @@
     $('miMinimapa').setAttribute('aria-pressed', String(!!nast.minimapa));
     $('miPopisky').setAttribute('aria-pressed', String(!!nast.popisky));
     $('miPrumPopisky').setAttribute('aria-pressed', String(!!nast.prumPopisky));
+    $('miNoc').setAttribute('aria-pressed', String(!!nast.noc));
+    $('miNalozeni').setAttribute('aria-pressed', String(!!nast.nalozeni));
+    $('miStaniceJm').setAttribute('aria-pressed', String(!!nast.staniceJm));
   }
 
   // --- okna ------------------------------------------------------------------------------
@@ -361,36 +381,52 @@
     if (!o) {
       o = document.createElement('section');
       o.className = 'okno'; o.setAttribute('role', 'dialog');
-      o.innerHTML = '<div class="ok-hlava"><span></span><button aria-label="Zavřít">✕</button></div><div class="ok-telo"></div>';
+      // zavírací tlačítko je v DOM první (háčky jinde hledají „.ok-hlava button“), sbalení se řadí před něj přes CSS order
+      o.innerHTML = '<div class="ok-hlava"><span></span><button class="zavrit" aria-label="Zavřít" title="Zavřít (Esc)">✕</button><button class="sbalit" aria-label="Sbalit" title="Sbalit / rozbalit (dvojklik na záhlaví)">▁</button></div><div class="ok-telo"></div>';
       plocha.appendChild(o);
       okna.set(id, o);
-      o.querySelector('button').addEventListener('click', () => zavriOkno(id));
+      o.querySelector('.zavrit').addEventListener('click', () => zavriOkno(id));
+      const sbal = () => { o.classList.toggle('sbalene'); o.querySelector('.sbalit').textContent = o.classList.contains('sbalene') ? '▢' : '▁'; };
+      o.querySelector('.sbalit').addEventListener('click', sbal);
       const hlava = o.querySelector('.ok-hlava');
+      hlava.addEventListener('dblclick', ev => { if (!ev.target.closest('button')) sbal(); });
+      // poloha se pamatuje podle druhu okna (vozidlo, stanice, garáž…), ne podle konkrétního
+      const druh = id.replace(/\d+$/, '');
       let t = null;
       hlava.addEventListener('pointerdown', ev => {
         if (ev.target.closest('button')) return;
         hlava.setPointerCapture(ev.pointerId);
-        t = { x: ev.clientX - o.offsetLeft, y: ev.clientY - o.offsetTop };
+        t = { x: ev.clientX - o.offsetLeft, y: ev.clientY - o.offsetTop, posunuto: false };
       });
       hlava.addEventListener('pointermove', ev => {
         if (!t) return;
+        t.posunuto = true;
         o.style.left = Math.max(0, Math.min(plocha.clientWidth - 60, ev.clientX - t.x)) + 'px';
         o.style.top = Math.max(0, Math.min(plocha.clientHeight - 30, ev.clientY - t.y)) + 'px';
       });
-      hlava.addEventListener('pointerup', () => { t = null; });
+      hlava.addEventListener('pointerup', () => {
+        if (t && t.posunuto) { nast.okna = { ...(nast.okna || {}), [druh]: [o.offsetLeft, o.offsetTop] }; ulozNast(); }
+        t = null;
+      });
       o.addEventListener('pointerdown', () => { o.style.zIndex = ++zOkna; });
-      const [x, y] = kde || [plocha.clientWidth / 2 - 130, 60];
-      o.style.left = Math.max(6, Math.min(plocha.clientWidth - 250, x + 16)) + 'px';
-      o.style.top = Math.max(6, Math.min(plocha.clientHeight - 160, y + 10)) + 'px';
+      // zapamatovaná poloha druhu, jinak zadaná, jinak kaskádou; víc oken stejného druhu se posune, ať se nekryjí přesně
+      const stejnych = [...okna.keys()].filter(k => k !== id && k.replace(/\d+$/, '') === druh).length;
+      const zapam = nast.okna && nast.okna[druh];
+      const posun = (zapam ? stejnych : (okna.size - 1)) % 7 * 28;
+      let x, y;
+      if (zapam) { [x, y] = zapam; x += posun; y += posun; }
+      else { [x, y] = kde || [plocha.clientWidth / 2 - 130, 60]; x += 16 + (kde ? 0 : posun); y += 10 + (kde ? 0 : posun); }
+      o.style.left = Math.max(6, Math.min(plocha.clientWidth - 250, x)) + 'px';
+      o.style.top = Math.max(6, Math.min(plocha.clientHeight - 160, y)) + 'px';
     }
-    o.style.zIndex = ++zOkna;
+    if (!U.obnova) o.style.zIndex = ++zOkna;   // živé obnovení okno nevytahuje navrch
     o.querySelector('.ok-hlava span').textContent = titulek;
     const t = o.querySelector('.ok-telo');
     t.replaceChildren();
     if (typeof telo === 'string') t.innerHTML = telo; else t.appendChild(telo);
     return o;
   }
-  function zavriOkno(id) { const o = okna.get(id); if (o) { o.remove(); okna.delete(id); } }
+  function zavriOkno(id) { const o = okna.get(id); if (o) { o.remove(); okna.delete(id); prekresli(); } }   // překreslit: trasa vozidla, oblast stanice
   function zavriVsechnaOkna() { for (const id of [...okna.keys()]) zavriOkno(id); }
   function zavriHorniOkno() {
     let nej = null, z = -1;
@@ -418,19 +454,45 @@
       ${mesto ? `<tr><td>Nejbližší město</td><td>${esc(mesto.jmeno)} (${Math.round(Math.hypot(mesto.x - x, mesto.y - y))} polí)</td></tr>` : ''}
     </table>`, kde);
   }
+  const lista = (...t) => { const d = document.createElement('div'); d.className = 'lista'; d.append(...t.filter(Boolean)); return d; };
   function infoMesto(c, kde, dum) {
     const domy = mapa.domy.filter(d => d.mesto === c.id);
     const tel = document.createElement('div');
-    tel.innerHTML = `<table>
+    tel.append(lista(tlacitko('🎯 Ukázat', () => naPole(c.x, c.y))));
+    tel.insertAdjacentHTML('beforeend', `<table>
       <tr><td>Obyvatel</td><td><b>${c.obyv.toLocaleString('cs-CZ')}</b></td></tr>
       <tr><td>Domů</td><td>${domy.length}</td></tr>
       <tr><td>Střed</td><td>${c.x}, ${c.y}</td></tr>
       ${dum ? `<tr><td>Tenhle dům</td><td>${dum.obyv ? dum.obyv + ' obyvatel' : 'kostel'}</td></tr>` : ''}
       ${statMesta(c)}
-    </table>`;
-    const r = document.createElement('div'); r.className = 'radek-tl';
-    r.append(tlacitko('🎯 Ukázat', () => naPole(c.x, c.y)));
-    tel.append(r);
+    </table>`);
+    // vlastní stanice ve městě (klik = okno stanice)
+    const sts = hra ? hra.stanice.filter(st => st && st.mesto === c.id) : [];
+    if (sts.length && U.oknoStanice) {
+      const sez = document.createElement('div'); sez.className = 'seznam';
+      for (const st of sts) { const b = tlacitko('', () => U.oknoStanice(st.id)); b.innerHTML = `<span>🚏 ${esc(st.jmeno)}</span><small>${Object.entries(st.naklady).filter(([, z]) => z.ceka).map(([k, z]) => `${U.ikN ? U.ikN(k, 14) : ''}${z.ceka}`).join(' ')}</small>`; sez.append(b); }
+      tel.insertAdjacentHTML('beforeend', `<div class="nadpis-roz">Moje stanice (${sts.length})</div>`); tel.append(sez);
+    }
+    // akce u obce (kampaň, výstavba, dar)
+    const cs = hra && hra.mestaStat && hra.mestaStat[c.id];
+    if (cs) {
+      tel.insertAdjacentHTML('beforeend', '<div class="nadpis-roz">Akce u obce</div>');
+      const box = document.createElement('div'); box.className = 'akce-obce';
+      for (const [id, a] of Object.entries(H.AKCE_OBCE)) {
+        const r = H.akceObce(hra, c.id, id, true);
+        const bezi = a.bonus ? cs.kampan && cs.kampan.do > hra.den && `běží ještě ${cs.kampan.do - hra.den} dní` : id === 'vystavba' ? cs.vystavbaDo > hra.den && `běží ještě ${cs.vystavbaDo - hra.den} dní` : '';
+        const b = tlacitko(`${a.ikona} ${a.nazev} · ${H.penizeText(r.cena || 0)}`, () => {
+          const x = H.akceObce(hra, c.id, id);
+          if (!x.ok) { if (U.zprava) U.zprava(x.chyba, null, true); return; }
+          if (U.poKroku) U.poKroku(hra, true);
+          infoMesto(c, null, dum);
+        });
+        b.title = a.bonus ? `Na ${a.dni} dní zvedne hodnocení tvých stanic ve městě (víc cestujících a nákladu)` : id === 'vystavba' ? 'Rok rychlejšího růstu města' : 'Zlepší hodnocení firmy obcí (povolení stavět a bourat)';
+        if (bezi) { b.disabled = true; b.textContent += ` – ${bezi}`; }
+        box.append(b);
+      }
+      tel.append(box);
+    }
     okno('mesto' + c.id, `🏘️ ${c.jmeno}`, tel, kde);
   }
   // hodnocení firmy a minulý měsíc (cestující, pošta, potraviny) – jen když běží hra
@@ -439,10 +501,11 @@
     if (!cs) return '';
     const mm = cs.minuly || {}, pct = (a, b) => b ? Math.round(a / b * 100) + ' %' : '–';
     const n = cs.hodn, barva = n >= 100 ? 'var(--ok,#2e9e55)' : n < -100 ? 'var(--danger,#e5533d)' : 'inherit';
-    return `<tr><td>Hodnocení firmy</td><td style="color:${barva}"><b>${H.hodnoceniText(n)}</b> (${n})</td></tr>
+    return `<tr><td>Hodnocení firmy</td><td style="color:${barva}"><span class="hodn" style="--h:${Math.round((n + 1000) / 20)}%"><b>${H.hodnoceniText(n)}</b></span> <small>(${n})</small></td></tr>
       <tr><td>Cestující min. měsíc</td><td>${mm.lideOdv || 0} z ${mm.lide || 0} odvezeno (${pct(mm.lideOdv, mm.lide)})</td></tr>
       <tr><td>Pošta min. měsíc</td><td>${mm.postaOdv || 0} z ${mm.posta || 0} (${pct(mm.postaOdv, mm.posta)})</td></tr>
       ${c.obyv > 1500 ? `<tr><td>Potraviny</td><td>${mm.dodano_potraviny ? `dovezeno ${mm.dodano_potraviny} t ✓` : '<b>potřebuje dovoz potravin</b> (jinak roste pomalu)'}</td></tr>` : ''}
+      ${c.obyv > 3000 ? `<tr><td>Voda</td><td>${mm.dodano_voda ? `dovezeno ${mm.dodano_voda} t ✓` : '<b>potřebuje dovoz vody z vodárny</b>'}</td></tr>` : ''}
       ${mm.dodano_zbozi ? `<tr><td>Zboží</td><td>dovezeno ${mm.dodano_zbozi}</td></tr>` : ''}`;
   }
   const nakladText = id => { const n = D.NAKLADY.find(n => n.id === id); return n ? n.nazev : id; };
@@ -452,16 +515,14 @@
     const vyr = Object.entries(q.vyroba).filter(([, v]) => v > 0);
     const zpracuje = Object.keys(p.vyroba).filter(k => !p.vyroba[k]);
     const tel = document.createElement('div');
-    tel.innerHTML = `<table>
+    tel.append(lista(tlacitko('🎯 Ukázat', () => naPole(q.x + (q.w >> 1), q.y + (q.h >> 1)))));
+    tel.insertAdjacentHTML('beforeend', `<table>
       ${vyr.length ? `<tr><td>Těží / pěstuje</td><td>${vyr.map(([k, v]) => `<span class="stitek">${nakladHtml(k)} ${v} t/měs.</span>`).join(' ')}</td></tr>` : ''}
       ${p.prijima.length ? `<tr><td>Přijímá</td><td>${p.prijima.map(k => `<span class="stitek">${nakladHtml(k)}</span>`).join(' ')}</td></tr>` : ''}
       ${zpracuje.length ? `<tr><td>Vyrábí</td><td>${zpracuje.map(k => `<span class="stitek">${nakladHtml(k)}</span>`).join(' ')}<br><small>podle dovezených surovin</small></td></tr>` : ''}
       ${statPodniku(q)}
       <tr><td>Poloha</td><td>${q.x}, ${q.y} · ${q.w} × ${q.h} polí</td></tr>
-    </table>`;
-    const r = document.createElement('div'); r.className = 'radek-tl';
-    r.append(tlacitko('🎯 Ukázat', () => naPole(q.x + (q.w >> 1), q.y + (q.h >> 1))));
-    tel.append(r);
+    </table>`);
     okno('prum' + q.id, `${p.ikona} ${q.jmeno}`, tel, kde);
   }
   function statPodniku(q) {
@@ -480,7 +541,8 @@
     const tel = document.createElement('div'); tel.className = 'seznam';
     for (const c of [...mapa.mesta].sort((a, b) => b.obyv - a.obyv)) {
       const b = tlacitko('', () => { naPole(c.x, c.y); infoMesto(c); });
-      b.innerHTML = `<span>${esc(c.jmeno)}</span><small>${c.obyv.toLocaleString('cs-CZ')}</small>`;
+      const hd = hra && hra.mestaStat && hra.mestaStat[c.id] ? hra.mestaStat[c.id].hodn : null;
+      b.innerHTML = `<span>${esc(c.jmeno)}${hd ? `<br><small>${H.hodnoceniText(hd)}</small>` : ''}</span><small>${c.obyv.toLocaleString('cs-CZ')}</small>`;
       tel.append(b);
     }
     const celkem = mapa.mesta.reduce((a, c) => a + c.obyv, 0);
@@ -491,7 +553,9 @@
     const aktivni = mapa.prumysl.filter(q => !q.zrusen);
     for (const q of aktivni.sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs'))) {
       const b = tlacitko('', () => { naPole(q.x + (q.w >> 1), q.y + (q.h >> 1)); infoPrumysl(q); });
-      b.innerHTML = `<span>${D.PRUMYSL_PODLE_ID[q.typ].ikona} ${esc(q.jmeno)}</span>`;
+      const mm = hra && hra.prum && hra.prum[q.id] ? hra.prum[q.id].minuly || {} : {};
+      const vyr = Object.keys(mm).filter(k => k.startsWith('vyrobeno_')).reduce((a, k) => a + mm[k], 0), odv = Object.keys(mm).filter(k => k.startsWith('odvezeno_')).reduce((a, k) => a + mm[k], 0);
+      b.innerHTML = `<span>${D.PRUMYSL_PODLE_ID[q.typ].ikona} ${esc(q.jmeno)}</span>${vyr ? `<small title="Odvezeno minulý měsíc">odvoz ${Math.round(odv / vyr * 100)} %</small>` : ''}`;
       tel.append(b);
     }
     okno('seznamPrum', `🏭 Průmysl (${aktivni.length})`, tel, [10, 10]);
@@ -542,6 +606,9 @@
   $('miMinimapa').addEventListener('click', () => prepni('minimapa'));
   $('miPopisky').addEventListener('click', () => prepni('popisky'));
   $('miPrumPopisky').addEventListener('click', () => prepni('prumPopisky'));
+  $('miNoc').addEventListener('click', () => prepni('noc'));
+  $('miNalozeni').addEventListener('click', () => prepni('nalozeni'));
+  $('miStaniceJm').addEventListener('click', () => prepni('staniceJm'));
   $('miMesta').addEventListener('click', seznamMest);
   $('miPrumysl').addEventListener('click', seznamPrumyslu);
   $('miNapoveda').addEventListener('click', () => $('napoveda').showModal());
@@ -555,6 +622,7 @@
   nastavRychlost(1);
   // obrázky z atlasů: po načtení překreslit vše (do té doby kreslí kód)
   G.nactiAtlasy(() => { if (kreslic) kreslic.zneplatni(); prekresli(); if (U.poAtlasech) U.poAtlasech(); });
+  G.nactiVozidla(() => { prekresli(); if (U.poAtlasech) U.poAtlasech(); });
   const novaZeSeedu = () => nactiMapu((nast.kod && MAG.seedZKodu(nast.kod)) ?? MAG.seedDne(new Date()), nast.opt);
   // rozehraná hra z automatického uložení, jinak nová
   (U.nactiAuto ? U.nactiAuto() : Promise.resolve(null)).then(h => { if (h) zacniHru(h.hra, h.kamera); else novaZeSeedu(); }).catch(novaZeSeedu);
@@ -562,11 +630,11 @@
   // defineProperties (ne assign) – gettery musí zůstat živé
   Object.defineProperties(U, Object.getOwnPropertyDescriptors({
     get hra() { return hra; }, get mapa() { return mapa; }, get kreslic() { return kreslic; }, get zoom() { return Z(); },
-    get platnoW() { return platnoW; }, get platnoH() { return platnoH; }, get rychlost() { return rychlost; },
+    get platnoW() { return platnoW; }, get platnoH() { return platnoH; }, get rychlost() { return rychlost; }, get noc() { return !!nast.noc; }, get nalozeni() { return !!nast.nalozeni; },
     kamera, naPole, prekresli, okno, zavriOkno, esc, tlacitko, zacniHru, nastavRychlost, infoMesto, infoPrumysl, pripravMinimapu,
     naSvet, zavriVsechnaOkna, otevriDialog, okna,
   }));
   // pro testy
   window.MAG_UI = { get mapa() { return mapa; }, get hra() { return hra; }, kamera, naPole, priblizeni, infoPole, seznamMest, seznamPrumyslu, nactiMapu,
-    zacniHru, nastavRychlost, get zoom() { return Z(); }, get hotovo() { return !!mapa && !chybi && !spinave; } };
+    zacniHru, nastavRychlost, get zoom() { return Z(); }, get hotovo() { return !!mapa && vykreslenaMapa === mapa && !chybi && (!spinave || animuje); } };   // bloky dokreslené (animace kouře / vozidel překreslují stále)
 })();

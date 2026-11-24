@@ -44,7 +44,7 @@
     }
     return null;
   }
-  const modelRoku = (h, druh, naklad) => D.VOZIDLA.filter(t => t.druh === druh && t.naklady.includes(naklad) && t.od <= H.rok(h) && t.do >= H.rok(h)).pop();
+  const modelRoku = (h, druh, naklad) => D.VOZIDLA.filter(t => t.druh === druh && !t.tram && t.naklady.includes(naklad) && t.od <= H.rok(h) && t.do >= H.rok(h)).pop();
 
   // autobusová linka mezi dvěma co největšími městy 14–40 polí od sebe; vrací {a, b, sa, sb, trasa} nebo {chyba}
   function autobusovaLinka(h, pocet = 3) {
@@ -184,7 +184,7 @@
       }
       if (!g) return { chyba: 'depo' };
       const rok = H.rok(h);
-      const lok = D.VOZIDLA.filter(t => t.druh === 'vlak' && t.od <= rok && t.do >= rok).pop();
+      const lok = D.VOZIDLA.filter(t => t.druh === 'vlak' && t.trakce !== 'elektro' && t.od <= rok && t.do >= rok).pop();
       r = H.kup(h, g.id, lok.id);
       if (!r.ok) return { chyba: 'lokomotiva: ' + r.chyba };
       const v = h.vozidla[h.vozidla.length - 1];

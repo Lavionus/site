@@ -130,6 +130,12 @@ code{font-family:ui-monospace,monospace;font-size:.92em;background:var(--bg-inpu
 .sf-obr svg{width:38px;height:38px}
 .sf-obr .semafor svg{width:54px;height:62px}
 .sf-obr .sf-pismeno{display:inline-flex;flex-direction:column;align-items:center;font-size:.7rem;color:var(--text-faint)}
+@font-face{font-family:'Ptaci pismo';src:url(fonty/PtaciPismo-Regular.ttf) format('truetype');font-display:swap}
+.sf-ptaci{width:100%;font-family:'Ptaci pismo',serif;font-size:2.6rem;line-height:1.5;color:var(--text);word-break:break-word}
+.sf-ptaci-klic{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;width:100%;margin-top:6px}
+.sf-ptaci-klic button{display:flex;flex-direction:column;align-items:center;background:var(--bg-control);border:1px solid var(--border);border-radius:6px;color:var(--text-faint);font-size:.72rem;padding:2px 0 4px;cursor:pointer}
+.sf-ptaci-klic button span{font-family:'Ptaci pismo',serif;font-size:1.9rem;line-height:1.25;color:var(--text)}
+.sf-ptaci-klic button.zvl{grid-column:span 2}
 .ro-luste{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0}
 .ro-luste label{display:inline-flex;align-items:center;gap:5px;margin:0;font-size:.82rem;color:var(--text-muted)}
 .ro-luste input{width:auto}
@@ -743,7 +749,7 @@ tr.klik:hover td{background:var(--bg-hover)}
     <div class="row">
       <div><label for="sfTyp">Šifra</label><select id="sfTyp">
         <option value="zednarska">Zednářská (pigpen)</option><option value="a1z26">A1Z26 (číslo písmene v abecedě)</option><option value="tukaci">Ťukací kód (vězeňský)</option>
-        <option value="braille">Braillovo písmo</option><option value="multitap">Telefon – opakované stisky (SMS)</option><option value="t9">Telefon – T9 (jen číslice)</option><option value="semafor">Vlajková semaforová abeceda</option></select></div>
+        <option value="braille">Braillovo písmo</option><option value="multitap">Telefon – opakované stisky (SMS)</option><option value="t9">Telefon – T9 (jen číslice)</option><option value="semafor">Vlajková semaforová abeceda</option><option value="ptaci">Ptačí písmo (Kroniky vyhnanství)</option></select></div>
     </div>
     <label for="sfText">Text nebo zápis šifry</label>
     <textarea id="sfText">Sejdeme se u studny</textarea>
@@ -7037,13 +7043,30 @@ tr.klik:hover td{background:var(--bg-hover)}
     t9: { sif: t => S.telefonT9(t), pozn: 'T9 zapisuje každé písmeno jedinou číslicí klávesy – zpětné čtení je nejednoznačné (luští se slovníkem), proto tu jen šifrování.' },
     semafor: { sif: t => S.jenPismena(t).split('').map(c => c + ' ' + S.semaforPolohy(c).join('/')).join('  '), des: t => S.semaforCti ? t.split(/\s*[,;|]\s*|\s{2,}/).map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/(\d)\D+(\d)/); return m ? S.semaforCti([+m[1], +m[2]]) : '?'; }).join('') : '',
       obr: t => slovaObr(t, c => semaforSvg(S.semaforPolohy(c)), 'semafor'),
-      pozn: 'Vlajková semaforová abeceda: poloha každé ruky v krocích po 45° (0 = dolů, 2 = vlevo, 4 = nahoru, 6 = vpravo z pohledu pozorovatele). Červená = levá ruka signalisty, žlutá = pravá. „Přečíst“ bere dvojice poloh, např. „1/0, 2/0“.' }
+      pozn: 'Vlajková semaforová abeceda: poloha každé ruky v krocích po 45° (0 = dolů, 2 = vlevo, 4 = nahoru, 6 = vpravo z pohledu pozorovatele). Červená = levá ruka signalisty, žlutá = pravá. „Přečíst“ bere dvojice poloh, např. „1/0, 2/0“.' },
+    ptaci: { sif: () => '', obr: ptaciObr, bezVystupu: true,
+      pozn: 'Písmo elfí rodové knihy z Kronik vyhnanství – každé písmeno je ptačí stopa prsty dolů. Samohlásky nemají zadní prst, souhlásky ano (rovný = neznělá, zahnutý = znělá); dva prsty = rty, tři = zuby, s patou = měkké; blána mezi prsty = třená souhláska; ch je jeden znak. Znaky z knih se píšou slovem v závorkách, např. [lovec]. Klíč pod zprávou je i klávesnice: když luštíte stopy z papíru, klikejte na ně a písmena se vepíšou do pole.' }
   };
+  // Ptačí písmo z Kronik: font kreslí latinku stopami, klíč pod zprávou je zároveň klávesnice pro čtení
+  const PTACI_KLIC = [...'aábcčdďeéěfgh', 'ch', ...'iíjklmnňoópqrřsštťuúůvwxyýzž0123456789'];
+  const PTACI_ZNAKY = [['narozeni', 'narození'], ['umrti', 'úmrtí'], ['lovec', 'lovec'], ['korist', 'kořist'], ['merin', 'Merin'], ['shora', 'shora'], ['zdola', 'zdola'], ['zlesa', 'z lesa'], ['zvody', 'z vody'], ['zhory', 'z hory'], ['zvenku', 'zvenku']];
+  function ptaciObr(t) {
+    const tl = (vloz, znak, popis, zvl) => `<button type="button" class="${zvl ? 'zvl' : ''}" data-vloz="${esc(vloz)}" title="Vložit „${esc(vloz)}“"><span>${esc(znak)}</span>${esc(popis)}</button>`;
+    return `<div class="sf-ptaci" data-i18n="ne">${esc(t)}</div><div class="sf-ptaci-klic" data-i18n="ne">`
+      + PTACI_KLIC.map(c => tl(c, c, c)).join('') + PTACI_ZNAKY.map(([k, n]) => tl(`[${k}]`, `[${k}]`, n, true)).join('') + '</div>';
+  }
+  $('sfObr').addEventListener('click', e => {
+    const b = e.target.closest('[data-vloz]'), ta = $('sfText');
+    if (!b) return;
+    const a = ta.selectionStart, z = ta.selectionEnd;
+    ta.value = ta.value.slice(0, a) + b.dataset.vloz + ta.value.slice(z);
+    ta.selectionStart = ta.selectionEnd = a + b.dataset.vloz.length;
+  });
   function slovaObr(t, kresli, trida = '') {
     return S.bezDiakritiky(t).toUpperCase().split(/\s+/).filter(Boolean).map(sl => [...sl.replace(/[^A-Z]/g, '')].map(c => `<span class="sf-pismeno ${trida}" title="${c}">${kresli(c)}</span>`).join('')).join('<span class="mezera"></span>');
   }
   function sfTyp() {
-    const T = SF[$('sfTyp').value]; $('sfPozn').textContent = T.pozn; $('sfDes').hidden = !T.des; $('sfObr').innerHTML = ''; $('sfVystup').textContent = '';
+    const T = SF[$('sfTyp').value]; $('sfPozn').textContent = T.pozn; $('sfDes').hidden = !T.des; $('sfVystup').hidden = !!T.bezVystupu; $('sfObr').innerHTML = ''; $('sfVystup').textContent = '';
   }
   $('sfTyp').onchange = sfTyp;
   $('sfSif').onclick = () => {
