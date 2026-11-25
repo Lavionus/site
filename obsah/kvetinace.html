@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Samozavlažovací květináče – 3D generátor</title>
+  <meta name="description" content="Generátor květináčů pro 3D tisk bez podpor: samozavlažovací sada (nádoba se zásobníkem vody a vložka na substrát s knotovou nohou nebo otvory na knot, plnicí šachta nebo hrdlo, vodoznak průzorem nebo plovákem, přepad), obyčejný květináč s drenáží a podmiskou, samozavlažovací vložka do vlastního obalu a samostatná podmiska. Tvar kužel, zaoblený, čtvercový, mnohoúhelník; povrch hladký, žebra, zkrut, fazety. Objem substrátu a zásoby vody měřený ze sítě, výdrž zásoby, hmotnost, výkres řezem, kusovník. Export STL a 3MF.">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="gen3d/gui.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="gen3d/gui.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/three.r128.min.js"></script>
+  <script src="lib/jspdf.umd.min.js" defer></script>
+  <script src="gen3d/zaklad.js"></script>
+  <script src="gen3d/scena.js"></script>
+  <script src="gen3d/koty.js"></script>
+  <script src="gen3d/aplikace.js"></script>
+  <script src="gen3d/predavka.js"></script>
+  <script src="krabicky/jadro.js"></script>
+  <script src="kvetinace/jadro.js"></script>
+  <script src="kvetinace/vykres.js"></script>
+  <script src="knofliky/nahled.js"></script>
+  <script src="../tvary.js"></script>
+  <style>
+    :root { --sloupec: 330px; }
+    button, select, input { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    #platno { position: absolute; inset: 0; }
+    .stav3d { position: absolute; left: 10px; top: 56px; font-size: 0.8rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: calc(100% - 20px); z-index: 2; }
+    .stav3d:empty { display: none; }
+    .stav3d.chyba { color: var(--danger); border-color: var(--danger); }
+    label, .popisek { display: block; font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 3px; }
+    .aplikace input[type="text"], .aplikace select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 6px 8px; font-size: 0.9rem; min-width: 0;
+    }
+    .aplikace input:focus, .aplikace select:focus { outline: none; border-color: var(--accent); }
+    input.spatne { border-color: var(--danger) !important; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0 10px; align-items: end; }
+    .pole { min-width: 0; position: relative; }
+    .jedn { position: absolute; right: 9px; bottom: 7px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .pole input.mm { padding-right: 34px; }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+    .ok-t { color: var(--ok); } .mez-t { color: var(--warn); } .chyba-t { color: var(--danger); }
+    .tabulka { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
+    .tabulka th, .tabulka td { text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .tabulka th { color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; }
+    .tabulka td.c, .tabulka th.c { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+    .tabulka tr.nakup td:first-child::before { content: '🛒 '; }
+    .tabulka tr.tisk td:first-child::before { content: '🖨 '; }
+    kbd { font-family: inherit; font-size: 0.72rem; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg-elevated); color: var(--text); }
+    .skryty { display: none; }
+    dialog.napoveda-dlg { margin: auto; max-width: min(760px, 94vw); max-height: 86vh; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-panel); color: var(--text); padding: 0; }
+    dialog.napoveda-dlg::backdrop { background: color-mix(in srgb, var(--bg-deep) 70%, transparent); }
+    .napoveda-dlg .hlava { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-panel); }
+    .napoveda-dlg .hlava h2 { font-size: 1rem; margin: 0; }
+    .napoveda-dlg .telo { padding: 6px 18px 16px; font-size: 0.84rem; line-height: 1.55; color: var(--text-muted); }
+    .napoveda-dlg .telo b { color: var(--text); }
+    #canvas-container { position: relative; overflow: hidden; touch-action: none; cursor: grab; border-radius: 8px; border: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--bg-elevated) 92%, var(--accent) 8%) 0%, var(--bg-input) 72%); }
+    #canvas-container:active { cursor: grabbing; }
+    .rezimy { position: absolute; left: 10px; top: 10px; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: calc(100% - 20px);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 4px; font-size: 0.78rem; }
+    .rezimy button { border: 1px solid transparent; background: none; color: var(--text-muted); border-radius: 6px; padding: 5px 10px; min-height: 30px; cursor: pointer; font-size: 0.78rem; }
+    .rezimy button:hover { background: var(--bg-hover); color: var(--text); }
+    .rezimy button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+    @media (max-width: 600px) { .stav3d { top: 96px; } }
+    @media (min-width: 1001px) { .stred .box-obecne { flex: 0 0 40%; max-height: 40%; } }
+    .karta3d { position: absolute; right: 10px; top: 56px; z-index: 2; font-size: 0.74rem; line-height: 1.45; color: var(--text-muted);
+      background: color-mix(in srgb, var(--bg-panel) 90%, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+      max-width: min(250px, 55%); pointer-events: none; }
+    .karta3d:empty { display: none; }
+    .karta3d b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .karta3d .titul { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+    .legenda-rezu { position: absolute; left: 10px; bottom: 10px; z-index: 2; font-size: 0.72rem; color: var(--text-muted); background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+    .legenda-rezu i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #c0504d; vertical-align: -1px; margin-right: 4px; }
+    .box-obecne { max-height: 46%; }
+    .zalozky .souhrn-zal { font-weight: 400; color: var(--text-faint); font-size: 0.7rem; }
+    .zalozky .souhrn-zal:empty { display: none; }
+    .pol[aria-pressed="true"]::before { content: '✓ '; color: var(--accent); }
+    .pol[aria-pressed="false"]::before { content: '✓ '; visibility: hidden; }
+    .nab-pole input { width: 100%; box-sizing: border-box; }
+    .sloupec-nab { display: flex; flex-direction: column; }
+    .lista-stav .odznak { background: none; border: 0; padding: 2px 4px; font: inherit; cursor: pointer; color: var(--text-muted); border-radius: 4px; }
+    .lista-stav .odznak:hover { background: var(--bg-hover); }
+    .odznak.ok { color: var(--ok); } .odznak.mez { color: var(--warn); } .odznak.chyba { color: var(--danger); }
+    .box-telo .tl, .zalozka-telo .tl { background: var(--bg-control, var(--bg-elevated)); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font: inherit; font-size: 0.82rem; color: var(--text); cursor: pointer; }
+    .box-telo .tl:hover, .zalozka-telo .tl:hover { background: var(--bg-hover); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    @media (max-width: 600px) { .karta3d { display: none; } }
+    .vykres-nahled { margin-top: 8px; overflow: auto; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 6px; }
+    .vykres-nahled svg { display: block; width: 100%; height: auto; min-width: 520px; background: #fff; }
+    .nab-skupina { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); padding: 6px 10px 2px; }
+    .typy button span:first-child { font-size: 1.15rem; }
+  </style>
+</head>
+<body>
+  <div class="aplikace">
+    <header class="lista" role="menubar" aria-label="Hlavní nabídka">
+      <h1 title="Samozavlažovací květináče"><span aria-hidden="true">🪴</span><span class="jmeno"> Květináče</span></h1>
+      <div class="lista-menu">
+        <div class="menu">
+          <button class="tl" data-nabidka="nabSoubor" aria-haspopup="true" aria-expanded="false">📁 Soubor<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabSoubor" role="menu" hidden>
+            <div class="nab-pole"><label for="f_nazev">Název projektu <span class="pozn">i pro jména souborů</span></label>
+              <input id="f_nazev" type="text" data-p="nazev" data-typ="text" maxlength="120"></div>
+            <hr>
+            <button class="pol" id="btnVychozi" role="menuitem">✨ Výchozí hodnoty</button>
+            <button class="pol" id="btnUlozit" role="menuitem">💾 Uložit projekt <span class="pozn">JSON</span></button>
+            <button class="pol" id="btnNacist" role="menuitem">📂 Načíst projekt…</button>
+            <button class="pol" role="menuitem" onclick="TrubkyGui.otevriZalozku('tvary')">🗂 Moje květináče…</button>
+            <button class="pol" id="btnSdilet" role="menuitem">🔗 Sdílet odkazem <span class="pozn">celé nastavení v adrese</span></button>
+            <hr>
+            <div class="nab-nadpis">Export pro 3D tisk (tisková poloha)</div>
+            <button class="pol" id="btnStl" role="menuitem">⬇ STL – všechny díly <span class="pozn">Ctrl+S</span></button>
+            <button class="pol" id="btn3mf" role="menuitem">⬇ 3MF – všechny díly</button>
+            <div class="sloupec-nab" id="exportDilu"></div>
+            <hr>
+            <button class="pol" id="btnPng" role="menuitem">🖼 Obrázek náhledu <span class="pozn">PNG</span></button>
+            <button class="pol" id="btnModelar" role="menuitem">🧊 Otevřít v Modeláři <span class="pozn">další úpravy</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPredvolby" aria-haspopup="true" aria-expanded="false">✨ Předvolby<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPredvolby" role="menu" hidden>
+            <div class="nab-nadpis">Přepíše tvar a výbavu (tisk a výpočty zůstanou)</div>
+            <div class="sloupec-nab" id="seznamPredvoleb"></div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabZobrazeni" aria-haspopup="true" aria-expanded="false">👁 Zobrazení<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabZobrazeni" role="menu" hidden>
+            <button class="pol" id="tHrany" role="menuitemcheckbox" aria-pressed="true">✏️ Obrysové hrany <span class="pozn">H</span></button>
+            <button class="pol" id="tTisk" role="menuitemcheckbox" aria-pressed="false">🖨 Tisková poloha <span class="pozn">M</span></button>
+            <button class="pol" id="tPrevisy" role="menuitemcheckbox" aria-pressed="true">🟥 Převisy barevně <span class="pozn">P · v tiskové poloze</span></button>
+            <button class="pol" id="tRez" role="menuitemcheckbox" aria-pressed="false">✂ Řez <span class="pozn">R</span></button>
+            <button class="pol" id="tPravitka" role="menuitemcheckbox" aria-pressed="false">📏 Pravítka (mm) <span class="pozn">L</span></button>
+            <button class="pol" id="tKontext" role="menuitemcheckbox" aria-pressed="true">🏺 Váš obal v sestavě <span class="pozn">C · jen u vložky do obalu</span></button>
+            <div class="nab-tip">Řez ukáže zásobník pod vložkou, knotovou nohu a hladinu přepadu. Převisy se barví v tiskové poloze.</div>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabPohled" aria-haspopup="true" aria-expanded="false">🧭 Pohled<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabPohled" role="menu" hidden>
+            <button class="pol" data-pohled="iso" role="menuitem">◇ Izometrie <span class="pozn">1</span></button>
+            <button class="pol" data-pohled="shora" role="menuitem">▭ Shora <span class="pozn">2</span></button>
+            <button class="pol" data-pohled="zepredu" role="menuitem">▤ Zepředu <span class="pozn">3</span></button>
+            <button class="pol" data-pohled="zboku" role="menuitem">▥ Zboku <span class="pozn">4</span></button>
+            <button class="pol" data-pohled="zespodu" role="menuitem">◌ Zespodu – dno <span class="pozn">5</span></button>
+          </div>
+        </div>
+        <div class="menu">
+          <button class="tl" data-nabidka="nabVykres" aria-haspopup="true" aria-expanded="false">📐 Výkres<span class="sipka"> ▾</span></button>
+          <div class="nabidka" id="nabVykres" role="menu" hidden>
+            <button class="pol" id="btnVykresZobraz" role="menuitem">📐 Zobrazit <span class="pozn">záložka Výkres</span></button>
+            <button class="pol" id="btnVykresSvg" role="menuitem">⬇ SVG</button>
+            <button class="pol" id="btnVykresPdf" role="menuitem">⬇ PDF <span class="pozn">A4 naležato, 100 %</span></button>
+          </div>
+        </div>
+        <button class="tl" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+        <button class="tl" id="btnZnovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+        <button class="tl" id="btnNap" title="Nápověda (F1)">❓<span class="jmeno"> Nápověda</span></button>
+      </div>
+      <div class="lista-stav"><button class="odznak" id="stavOdznak" title="Výsledek kontrol – otevře záložku Kontrola">…</button></div>
+    </header>
+    <input type="file" id="soubor" accept=".json,application/json" class="skryty">
+
+    <nav class="prepinac-boxu" aria-label="Části nastavení">
+      <button data-ukaz="in" class="je-vstup">◎ Plášť</button>
+      <button data-ukaz="obecne" class="aktivni">🪴 Náhled</button>
+      <button data-ukaz="out" class="je-vystup">Výbava ⚙</button>
+    </nav>
+
+    <main class="plocha" data-zobrazeno="obecne">
+      <aside class="box box-in" id="boxPlast" data-box="in" aria-label="Druh dílu, tvar a rozměry">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">◎</span><h2>Tvar a rozměry</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <div class="typy" id="paletaDruhu" role="group" aria-label="Druh dílu">
+            <button type="button" data-dlazdice="sada" aria-pressed="true" title="Nádoba se zásobníkem vody a vložka na substrát"><span aria-hidden="true">💧</span><span>Samozavlažovací sada</span></button>
+            <button type="button" data-dlazdice="kvetinac" aria-pressed="false" title="Obyčejný květináč s drenáží a podmiskou"><span aria-hidden="true">🪴</span><span>Květináč + podmiska</span></button>
+            <button type="button" data-dlazdice="vlozka" aria-pressed="false" title="Samozavlažovací vložka do obalu, který už máte"><span aria-hidden="true">🏺</span><span>Vložka do obalu</span></button>
+            <button type="button" data-dlazdice="podmiska" aria-pressed="false" title="Samostatná podmiska podle dna květináče"><span aria-hidden="true">🍽️</span><span>Jen podmiska</span></button>
+          </div>
+          <details class="oddil" data-oddil="tvar" open>
+            <summary><span class="oddil-nazev" id="nTvar">Plášť</span><span class="souhrn" id="sTvar"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_tvar">Tvar</label><select id="f_tvar" data-p="plast.tvar" data-typ="text"></select></div>
+                <div class="pole" data-vid="maNadobu"><label for="f_zadani">Zadání</label><select id="f_zadani" data-p="plast.zadani" data-typ="text"></select></div>
+                <div class="pole" data-vid="objem"><label for="f_objem">Substrát</label><input type="text" inputmode="decimal" class="mm" id="f_objem" data-p="plast.objem" data-krok="0.1" title="Objem substrátu po úroveň pod okrajem – průměry a výška se zvětší ve stejném poměru"><span class="jedn">l</span></div>
+                <div class="pole" data-vid="maNadobu"><label for="f_dh" id="lDh">Průměr nahoře</label><input type="text" inputmode="decimal" class="mm" id="f_dh" data-p="plast.prumerH" title="Vnější rozměr u okraje (u hranatých přes plochy)"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="maNadobu"><label for="f_dd" id="lDd">Průměr dna</label><input type="text" inputmode="decimal" class="mm" id="f_dd" data-p="plast.prumerD" title="Vnější rozměr u dna – stejný jako nahoře = válec"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="maNadobu"><label for="f_h">Výška</label><input type="text" inputmode="decimal" class="mm" id="f_h" data-p="plast.vyska"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="vlozka"><label for="f_oh">Obal uvnitř nahoře</label><input type="text" inputmode="decimal" class="mm" id="f_oh" data-p="obal.prumerH" title="Vnitřní rozměr vašeho obalu u okraje – změřte posuvkou"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="vlozka"><label for="f_od">Obal uvnitř u dna</label><input type="text" inputmode="decimal" class="mm" id="f_od" data-p="obal.prumerD" title="Vnitřní rozměr obalu u dna"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="vlozka"><label for="f_ov">Vnitřní výška obalu</label><input type="text" inputmode="decimal" class="mm" id="f_ov" data-p="obal.vyska"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="podmiska"><label for="f_pp">Dno květináče</label><input type="text" inputmode="decimal" class="mm" id="f_pp" data-p="podmiska.prumer" title="Vnější průměr (šířka přes plochy) dna květináče, pod který podmiska patří"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="mnoho"><label for="f_stran">Stran</label><input type="text" inputmode="numeric" class="mm" id="f_stran" data-p="plast.stran"><span class="jedn">ks</span></div>
+                <div class="pole" data-vid="hran"><label for="f_roh">Poloměr rohů</label><input type="text" inputmode="decimal" class="mm" id="f_roh" data-p="plast.roh"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="neVlozka"><label for="f_stena">Stěna</label><input type="text" inputmode="decimal" class="mm" id="f_stena" data-p="plast.stena" data-krok="0.1" title="Na vodotěsný zásobník aspoň 3 perimetry"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="neVlozka"><label for="f_dno">Dno</label><input type="text" inputmode="decimal" class="mm" id="f_dno" data-p="plast.dno" data-krok="0.1"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napTvar"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="povrch" open data-vid="maNadobu">
+            <summary><span class="oddil-nazev">Povrch pláště</span><span class="souhrn" id="sPovrch"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_povrch">Povrch</label><select id="f_povrch" data-p="plast.povrch" data-typ="text"></select></div>
+                <div class="pole" data-vid="zebra"><label for="f_zeber">Žeber</label><input type="text" inputmode="numeric" class="mm" id="f_zeber" data-p="plast.zeber"><span class="jedn">ks</span></div>
+                <div class="pole" data-vid="zebra"><label for="f_vz">Výška žebra</label><input type="text" inputmode="decimal" class="mm" id="f_vz" data-p="plast.vyskaZebra" data-krok="0.1"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="zkrut"><label for="f_zkrut">Zkrut</label><input type="text" inputmode="decimal" class="mm" id="f_zkrut" data-p="plast.zkrut" data-krok="5" title="O kolik stupňů se žebra pootočí na výšku pláště; záporný = opačný směr"><span class="jedn">°</span></div>
+                <div class="pole" data-vid="fazety"><label for="f_fazet">Fazet po obvodu</label><input type="text" inputmode="numeric" class="mm" id="f_fazet" data-p="plast.fazet"><span class="jedn">ks</span></div>
+              </div>
+              <p class="napoveda" id="napPovrch"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="podmiska" open data-vid="maPodmisku">
+            <summary><span class="oddil-nazev">Podmiska</span><span class="souhrn" id="sPodmiska"></span></summary>
+            <div class="oddil-telo">
+              <label class="zaskrt" data-vid="kvetinac"><input type="checkbox" id="f_pzap" data-p="podmiska.zap" data-typ="bool"> Vytisknout i podmisku</label>
+              <div class="mrizka" data-vid="podmiskaZap">
+                <div class="pole"><label for="f_pv">Vůle kolem dna</label><input type="text" inputmode="decimal" class="mm" id="f_pv" data-p="podmiska.vule" data-krok="0.5" title="Na poloměr mezi dnem květináče a stěnou podmisky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_ph">Výška okraje</label><input type="text" inputmode="decimal" class="mm" id="f_ph" data-p="podmiska.vyska"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt" data-vid="podmiskaZap"><input type="checkbox" id="f_pz" data-p="podmiska.zebra" data-typ="bool"> Žebra na dně (květináč nestojí ve vodě)</label>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="drenaz" open data-vid="kvetinac">
+            <summary><span class="oddil-nazev">Drenáž dna</span><span class="souhrn" id="sDrenaz"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_dp">Otvorů v kruhu</label><input type="text" inputmode="numeric" class="mm" id="f_dp" data-p="drenaz.pocet" title="K nim vždy jeden středový"><span class="jedn">ks</span></div>
+                <div class="pole"><label for="f_dpr">Průměr otvoru</label><input type="text" inputmode="decimal" class="mm" id="f_dpr" data-p="drenaz.prumer"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt"><input type="checkbox" id="f_dk" data-p="drenaz.kanalky" data-typ="bool"> Drážky pod dnem (voda odteče i z rovné plochy)</label>
+              <p class="napoveda">Nožky pod dnem by při tisku dnem dolů potřebovaly podpory – místo nich jsou pode dnem drážky se stříškou a žebra v podmisce.</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+      <section class="stred">
+        <div id="canvas-container" aria-label="3D náhled">
+          <div id="platno"></div>
+          <div class="rezimy" role="group" aria-label="Co náhled ukazuje">
+            <button type="button" data-rezim="sestava" aria-pressed="true" title="Díly v sobě, plovák při plné zásobě">Sestava</button>
+            <button type="button" data-rezim="tisk" aria-pressed="false" title="Díly na podložce, jak se tisknou (klávesa M)">Tisk</button>
+          </div>
+          <div class="stav3d" id="stav3d">Načítám geometrické jádro…</div>
+          <div class="karta3d" id="karta3d" aria-live="polite"></div>
+          <div class="legenda-rezu" id="legRez" hidden><i></i>vnitřní plochy v řezu</div>
+          <div class="g3d-legenda" id="legPrevisy" hidden><span><i class="most"></i>strop / most</span><span><i class="previs"></i>převis – potřebuje podporu</span></div>
+          <div class="nahled-tip">tažení = otáčení · pravé tl. = posun · kolečko = zoom</div>
+        </div>
+        <div class="box box-obecne" aria-label="Výsledky, výpočty, tisk a kontrola">
+          <div class="zalozky" role="tablist">
+            <button role="tab" data-zalozka="vysledky" aria-selected="true">📊 Výsledky</button>
+            <button role="tab" data-zalozka="vypocty" aria-selected="false">💧 Výpočty</button>
+            <button role="tab" data-zalozka="tisk" aria-selected="false">🖨 Tisk</button>
+            <button role="tab" data-zalozka="kusovnik" aria-selected="false">📋 Kusovník</button>
+            <button role="tab" data-zalozka="kontrola" aria-selected="false">✔ Kontrola <span class="souhrn-zal" id="sKontrola"></span></button>
+            <button role="tab" data-zalozka="vykres" aria-selected="false">📐 Výkres</button>
+            <button role="tab" data-zalozka="tvary" aria-selected="false">💾 Moje květináče</button>
+          </div>
+          <div class="zalozka-telo" data-telo="vysledky" role="tabpanel"><div class="vysledky" id="vVysledky"></div><table class="tabulka" id="tabRozmery"></table></div>
+          <div class="zalozka-telo" data-telo="vypocty" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole" data-vid="maVlozku"><label for="selRostlina">Rostlina <span class="pozn">orientační spotřeba</span></label><select id="selRostlina"></select></div>
+              <div class="pole" data-vid="maVlozku"><label for="f_spotreba">Spotřeba vody</label><input type="text" inputmode="decimal" class="mm" id="f_spotreba" data-p="vypocty.spotreba" data-krok="5" title="Kolik vody rostlina spotřebuje za den – zjistíte vážením květináče po dvou dnech"><span class="jedn">ml/den</span></div>
+              <div class="pole"><label for="f_hs">Hustota substrátu</label><input type="text" inputmode="decimal" class="mm" id="f_hs" data-p="vypocty.substrat" data-krok="0.1" title="Vlhký pokojový substrát asi 0,6–0,9 kg/l, suchý 0,3–0,5 kg/l"><span class="jedn">kg/l</span></div>
+              <div class="pole"><label for="f_okraj">Substrát pod okrajem</label><input type="text" inputmode="decimal" class="mm" id="f_okraj" data-p="vypocty.okraj" title="Zálivkový okraj – po něj se počítá objem substrátu"><span class="jedn">mm</span></div>
+            </div>
+            <div class="vysledky" id="vVypocty" style="margin-top:8px"></div>
+            <p class="napoveda" id="napVypocty"></p>
+          </div>
+          <div class="zalozka-telo" data-telo="tisk" role="tabpanel" hidden>
+            <div class="mrizka">
+              <div class="pole"><label for="f_material">Materiál</label><select id="f_material" data-p="tisk.material" data-typ="text"></select></div>
+              <div class="pole"><label for="f_vrstva">Výška vrstvy</label><input type="text" inputmode="decimal" class="mm" id="f_vrstva" data-p="tisk.vrstva" data-krok="0.05"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_ext">Šířka extruze</label><input type="text" inputmode="decimal" class="mm" id="f_ext" data-p="tisk.extruze" data-krok="0.05" title="Šířka jedné dráhy trysky (tryska 0,4 → asi 0,45)"><span class="jedn">mm</span></div>
+              <div class="pole"><label for="f_per">Perimetrů</label><input type="text" inputmode="numeric" class="mm" id="f_per" data-p="tisk.perimetru" title="Počet obvodových drah ve sliceru – na vodotěsnou nádobu aspoň 3"><span class="jedn">ks</span></div>
+              <div class="pole"><label for="f_uhelt">Největší převis</label><input type="text" inputmode="decimal" class="mm" id="f_uhelt" data-p="tisk.uhel" title="Úhel od svislice, který tiskárna zvládne bez podpor – podle něj se sklání dno vložky, límec i stříšky otvorů"><span class="jedn">°</span></div>
+              <div class="pole"><label for="f_pod">Podložka</label><input type="text" inputmode="decimal" class="mm" id="f_pod" data-p="tisk.podlozka" title="Kratší strana tiskové plochy"><span class="jedn">mm</span></div>
+            </div>
+            <div class="vysledky" id="vTisk" style="margin-top:8px"></div>
+            <p class="napoveda">Všechny díly se tisknou <b>dnem dolů bez podpor</b>: dno vložky je kužel pod povoleným převisem a sbíhá se do knotové nohy, límec má kuželový spodek,
+              přepad je kapka a okénka mají stříšku. <b>Vodotěsnost nádoby:</b> stěna aspoň 3 perimetry, dno aspoň 5 vrstev, o 5–10 °C vyšší teplota trysky a průtok bez mezer;
+              šev nenechávat v jedné přímce nad sebou. Před osazením nechte nádobu přes noc napuštěnou. Plovák tiskněte se 2 perimetry a nízkou výplní, tyčku naležato.</p>
+          </div>
+          <div class="zalozka-telo" data-telo="kusovnik" role="tabpanel" hidden><div id="kusovnik"></div></div>
+          <div class="zalozka-telo" data-telo="kontrola" role="tabpanel" hidden>
+            <ul class="hlaseni" id="hlaseni"></ul>
+            <div class="vysledky" id="vSit" style="margin-top:8px"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="vykres" role="tabpanel" hidden>
+            <div class="tlacitka"><button type="button" class="tl" id="btnVykresSvg2">⬇ SVG</button><button type="button" class="tl" id="btnVykresPdf2">⬇ PDF</button></div>
+            <div class="vykres-nahled" id="vykresNahled" data-i18n="ne"></div>
+          </div>
+          <div class="zalozka-telo" data-telo="tvary" role="tabpanel" hidden><div id="tvary"></div></div>
+        </div>
+      </section>
+
+      <aside class="box box-out" id="boxVybava" data-box="out" aria-label="Vložka, zásobník a výbava">
+        <div class="box-hlava"><span class="box-znak" aria-hidden="true">⚙</span><h2>Vložka a zásobník</h2><span class="box-chyba" aria-hidden="true">!</span></div>
+        <div class="box-telo">
+          <p class="napoveda" data-vid="bezVlozky" style="padding:10px 12px">Vložka, zásobník vody a vodoznak patří k samozavlažovací sadě a k vložce do obalu. Tento druh má jen tvar, drenáž a podmisku v levém panelu.</p>
+          <details class="oddil" data-oddil="vlozka" open data-vid="maVlozku">
+            <summary><span class="oddil-nazev">Vložka na substrát</span><span class="souhrn" id="sVlozka"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_vule">Vůle ke stěně</label><input type="text" inputmode="decimal" class="mm" id="f_vule" data-p="vlozka.vule" data-krok="0.1" title="Na poloměr mezi vložkou a nádobou (obalem)"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_vst">Stěna vložky</label><input type="text" inputmode="decimal" class="mm" id="f_vst" data-p="vlozka.stena" data-krok="0.1"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_vzl">Vzlínání</label><select id="f_vzl" data-p="vlozka.vzlinani" data-typ="text"></select></div>
+                <div class="pole" data-vid="noha"><label for="f_ulo">Uložení</label><select id="f_ulo" data-p="vlozka.ulozeni" data-typ="text"></select></div>
+                <div class="pole" data-vid="lemCizi"><label for="f_lem">Přesah límce</label><input type="text" inputmode="decimal" class="mm" id="f_lem" data-p="vlozka.lem" title="O kolik límec přesahuje vnitřní hranu obalu"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napVlozka"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="zasobnik" open data-vid="maVlozku">
+            <summary><span class="oddil-nazev">Zásobník vody</span><span class="souhrn" id="sZasobnik"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_zv">Výška zásobníku</label><input type="text" inputmode="decimal" class="mm" id="f_zv" data-p="zasobnik.vyska" title="Ode dna nádoby po dno substrátové části vložky"><span class="jedn">mm</span></div>
+                <div class="pole"><label for="f_zr">Mezera nad hladinou</label><input type="text" inputmode="decimal" class="mm" id="f_zr" data-p="zasobnik.rezerva" title="O kolik je nejvyšší hladina (přepad) pod dnem substrátové části – kořeny nestojí ve vodě"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="noha"><label for="f_np">Knotová noha Ø</label><input type="text" inputmode="decimal" class="mm" id="f_np" data-p="noha.prumer" title="Dutý sloupek vložky se štěrbinami, sahá do vody a plní se substrátem"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="noha"><label for="f_ns">Šířka štěrbin</label><input type="text" inputmode="decimal" class="mm" id="f_ns" data-p="noha.sterbina" data-krok="0.5"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="knot"><label for="f_kp">Knotů</label><input type="text" inputmode="numeric" class="mm" id="f_kp" data-p="knot.pocet"><span class="jedn">ks</span></div>
+                <div class="pole" data-vid="knot"><label for="f_kd">Otvor na knot</label><input type="text" inputmode="decimal" class="mm" id="f_kd" data-p="knot.prumer"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="prepad"><label for="f_ppr">Přepad Ø</label><input type="text" inputmode="decimal" class="mm" id="f_ppr" data-p="prepad.prumer"><span class="jedn">mm</span></div>
+              </div>
+              <label class="zaskrt" data-vid="sada"><input type="checkbox" id="f_pzp" data-p="prepad.zap" data-typ="bool"> Přepad – otvor ve stěně omezí nejvyšší hladinu</label>
+              <p class="napoveda" id="napZasobnik"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="plneni" open data-vid="maVlozku">
+            <summary><span class="oddil-nazev">Plnění vodou</span><span class="souhrn" id="sPlneni"></span></summary>
+            <div class="oddil-telo">
+              <div class="mrizka">
+                <div class="pole"><label for="f_pt">Kudy</label><select id="f_pt" data-p="plneni.typ" data-typ="text"></select></div>
+                <div class="pole" data-vid="plneni"><label for="f_pd">Průměr otvoru</label><input type="text" inputmode="decimal" class="mm" id="f_pd" data-p="plneni.prumer"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napPlneni"></p>
+            </div>
+          </details>
+          <details class="oddil" data-oddil="vodoznak" open data-vid="maVlozku">
+            <summary><span class="oddil-nazev">Vodoznak</span><span class="souhrn" id="sVodoznak"></span></summary>
+            <div class="oddil-telo">
+              <label for="f_wt">Druh</label>
+              <select id="f_wt" data-p="vodoznak.typ" data-typ="text"></select>
+              <div class="mrizka">
+                <div class="pole" data-vid="plovak"><label for="f_wp">Plovák Ø</label><input type="text" inputmode="decimal" class="mm" id="f_wp" data-p="vodoznak.plovak"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="plovak"><label for="f_wv">Výška plováku</label><input type="text" inputmode="decimal" class="mm" id="f_wv" data-p="vodoznak.vyskaPlovaku" title="Výška válcové části; nad ní je kužel s kapsou na tyčku"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="plovak"><label for="f_wy">Tyčka (čtverec)</label><input type="text" inputmode="decimal" class="mm" id="f_wy" data-p="vodoznak.tycka" data-krok="0.5" title="Strana čtvercové tyčky – tiskne se naležato"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="plovak"><label for="f_wu">Vůle kapsy</label><input type="text" inputmode="decimal" class="mm" id="f_wu" data-p="vodoznak.vule" data-krok="0.05" title="Na stranu mezi tyčkou a kapsou v plováku – tyčka má držet natěsno"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="plovak"><label for="f_wi">Výplň plováku</label><input type="text" inputmode="decimal" class="mm" id="f_wi" data-p="vodoznak.vypln" data-krok="5" title="Výplň ve sliceru – podle ní se odhaduje ponor"><span class="jedn">%</span></div>
+                <div class="pole" data-vid="pruzor"><label for="f_ws">Šířka průzoru</label><input type="text" inputmode="decimal" class="mm" id="f_ws" data-p="vodoznak.sirka"><span class="jedn">mm</span></div>
+                <div class="pole" data-vid="pruzor"><label for="f_wl">Tenká stěna</label><input type="text" inputmode="decimal" class="mm" id="f_wl" data-p="vodoznak.tloustka" data-krok="0.05" title="Tloušťka stěny v průzoru – 2 perimetry z průhledného filamentu"><span class="jedn">mm</span></div>
+              </div>
+              <p class="napoveda" id="napVodoznak"></p>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+<dialog class="napoveda-dlg" id="dlgNapoveda">
+  <div class="hlava"><h2>Samozavlažovací květináče – nápověda</h2><button class="tl" id="btnZavritNap" aria-label="Zavřít">✕</button></div>
+  <div class="telo">
+    <p><b>Co to je.</b> Květináče na míru pro 3D tisk: <b>samozavlažovací sada</b> (vnější nádoba = zásobník vody, uvnitř vložka se substrátem),
+      <b>obyčejný květináč</b> s drenáží a podmiskou, <b>vložka</b> do obalu, který už máte, a samostatná <b>podmiska</b>.</p>
+    <p><b>Jak samozavlažování funguje.</b> Pod vložkou je voda. Do ní sahá <b>knotová noha</b> – dutý sloupek se štěrbinami plný substrátu, kterým voda vzlíná vzhůru –
+      nebo <b>šňůrový knot</b> provlečený otvory ve dně. <b>Přepad</b> ve stěně drží hladinu pod dnem substrátové části, takže kořeny nestojí ve vodě.
+      Vodu doléváte <b>šachtou</b> ve vložce nebo <b>hrdlem</b> z boku nádoby; kolik jí zbývá, ukáže <b>plovák s tyčkou</b> nebo <b>průzor</b> (tenká stěna pro průhledný filament).</p>
+    <p><b>Tvar.</b> Kužel nebo válec, zaoblený plášť, čtverec se zaoblenými rohy nebo mnohoúhelník; povrch hladký, žebra, zkroucená žebra nebo fazety (jen kulatý plášť).
+      Rozměry zadáte přímo, nebo <b>objemem substrátu</b> v litrech – plášť se zvětší ve stejném poměru.</p>
+    <p><b>Tisk.</b> Všechno dnem dolů bez podpor. Dno vložky je kužel pod povoleným převisem, límec má kuželový spodek, vodorovné otvory jsou kapky.
+      Vložka na nožkách stojí na dně nádoby; zavěšená za límec sedí v kuželovém sražení okraje. Kontrola hlídá převisy zkrutu a fazet.</p>
+    <p><b>Vodotěsnost.</b> Stěna nádoby aspoň 3 perimetry (při šířce extruze 0,45 mm tedy 1,35 mm, raději 2,4 mm), dno aspoň 5 vrstev, PETG nebo ASA.
+      Nádobu před osazením nechte přes noc napuštěnou; drobné prosakování zastaví vyšší teplota trysky a průtok, případně nátěr epoxidem zevnitř.</p>
+    <p><b>Výpočty</b> (💧). Objem substrátu a zásoby vody se měří přímo ze sítě modelu po úroveň přepadu. Výdrž zásoby vychází ze spotřeby rostliny – předvolby jsou
+      jen <b>orientační</b> (stav 11/2026), skutečnou spotřebu zjistíte zvážením květináče po dvou dnech. Hmotnost naplněného květináče sčítá tisk, vlhký substrát a vodu.</p>
+    <p><b>Klávesy:</b> <kbd>1</kbd>–<kbd>5</kbd> pohledy, <kbd>H</kbd> hrany, <kbd>M</kbd> tisková poloha, <kbd>P</kbd> převisy, <kbd>R</kbd> řez, <kbd>L</kbd> pravítka, <kbd>C</kbd> obal v sestavě, <kbd>K</kbd> kapky,
+      <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> zpět/znovu, <kbd>Ctrl+S</kbd> STL, <kbd>Ctrl+Shift+S</kbd> projekt, <kbd>F1</kbd> nápověda.</p>
+  </div>
+</dialog>
+<script src="kvetinace/ui.js"></script>
+</body>
+</html>

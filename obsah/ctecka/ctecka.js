@@ -129,7 +129,7 @@
     $('rSirka').value = n.sirkaPct; $('oSirka').value = n.sirkaPct + ' %';
     document.querySelectorAll('#nabZobrazeni .vzorek').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.prikaz === 'motiv-' + n.motiv)));
     document.querySelectorAll('#nabZobrazeni .prep').forEach(b => {
-      const [co, hodnota] = b.dataset.prikaz.split('-');
+      const [co, ...zbytek] = b.dataset.prikaz.split('-'), hodnota = zbytek.join('-');
       b.setAttribute('aria-pressed', String(co === 'motiv' ? n.motiv === hodnota : co === 'pismo' ? n.pismo === hodnota : co === 'bublina' ? n.bublina === hodnota : !!n[co]));
     });
     if (bloky.length) skocNaBlok(blok, false);

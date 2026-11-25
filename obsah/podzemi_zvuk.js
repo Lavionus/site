@@ -357,6 +357,11 @@ const PodzemiZvuk = (function () {
       sumVrstva(a, tt, out, 'lowpass', kolem(R, 800, 0.2), 0.9, 0.5, 0.002, 0.09);
       sumVrstva(a, tt + 0.006, out, 'bandpass', kolem(R, 650, 0.2), 3, 0.35, 0.004, 0.07, 380);   // mlasknutí
       cvak(a, tt + 0.004, 1500 + R() * 500, 0.16, 0.025, out);
+      // účinnost zásahu je slyšet: slabina = jasné zazvonění navíc, odolnost = tupé zadunění, imunita = kovové cinknutí
+      const u = o && o.ucinnost;
+      if (u > 1) { cvak(a, tt + 0.03, 2600 + R() * 300, 0.2, 0.06, out); cvak(a, tt + 0.09, 3400 + R() * 300, 0.14, 0.07, out); }
+      else if (u === 0) cvak(a, tt + 0.02, 900 + R() * 100, 0.22, 0.12, out);
+      else if (u < 1) dunivy(a, tt + 0.02, kolem(R, 70, 0.1), 40, 0.2, 0.6, out);
     },
     // hráč dostal ránu: úder a zachrčení „uh"
     zranen(a, b, t, R) {

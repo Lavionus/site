@@ -1693,7 +1693,8 @@
     [/^(l|litr\w*)$/, 1000], [/^(dl|decilitr\w*|deci)$/, 100], [/^(cl)$/, 10], [/^(ml|mililitr\w*)$/, 1],
     [/^(lžíce|lžíc[eíi]?|lžic\w*|pl|polévkov\w*)$/, 15, 'lžíce'], [/^(lžička|lžičk\w*|lžiček|čl|kl|kávov\w*)$/, 5, 'lžička'],
     [/^(hrn[eí]?[kč]\w*|šál[eo]?k\w*)$/, 250, 'hrnek'], [/^(špet\w*|štipk\w*)$/, 0.5, 'špetka'],
-    [/^(hrst\w*)$/, 30, 'hrst'], [/^(svaz\w*|svazeč\w*)$/, 30, 'svazek'], [/^(plát\w*)$/, 20, 'plátek'],
+    [/^(hrst\w*)$/, 30, 'hrst'], [/^(svaz\w*|svazeč\w*)$/, 30, 'svazek'], [/^(plát\w*)$/, 20, 'plátek'], [/^(kraj[ií]c\w*|krajíč\w*)$/, null, 'krajíc'],
+    [/^(sklenic\w*|sklenk\w*|sklenič\w*)$/, null, 'sklenice'], [/^(kelím\w*)$/, null, 'kelímek'], [/^(porc[eií]|porcí)$/, null, 'porce'],
     [/^(stroužk?\w*|stroužek)$/, 4, 'stroužek'], [/^(ks|kus\w*|kousk\w*)$/, null, 'kus'],
     [/^(balení|bal|balíč\w*|sáč\w*|konzerv\w*|plechovk\w*|kostk\w*|kostič\w*)$/, null, 'balení'],
   ];
@@ -1748,6 +1749,7 @@
       const k = (kon, nah) => { if (s.length > kon.length + 2 && s.endsWith(kon)) v.add(s.slice(0, -kon.length) + nah); };
       k('ych', 'e'); k('ych', 'y'); k('ych', 'a'); k('ich', 'i'); k('iho', 'i'); k('eho', 'e'); k('eho', 'y'); k('ou', 'a'); k('ek', 'ky');
       k('y', 'a'); k('u', ''); k('a', 'o'); k('a', ''); k('e', ''); k('i', 'e'); k('i', 'a');
+      k('em', ''); k('em', 'o'); k('ami', 'y'); k('ami', 'a');   // 7. pád: „s máslem“, „s bramborami“
       return [...v];
     };
     const t0 = tvary(slova[0] || ''), t1 = slova[1] ? tvary(slova[1]) : [''];
@@ -1756,9 +1758,127 @@
     for (const a of t0) vys.add(a);
     return [...vys].slice(0, 24);
   }
+  /* ---------- zápis jídla volným textem („2 rohlíky, jogurt a banán“, i nadiktované) ----------
+     Text se rozdělí na položky (řádky, čárky, „a“, „plus“, „s/se“), číslovky slovy se převedou na čísla
+     a každá položka se čte stejně jako řádek receptu. bezCisla = množství neuvedeno (doplní se obvyklé). */
+  const CISLA_SLOVY = { jeden: 1, jedna: 1, jedno: 1, jednu: 1, dva: 2, dve: 2, tri: 3, ctyri: 4, pet: 5, sest: 6, sedm: 7, osm: 8, devet: 9, deset: 10 };
+  function rozeberZapis(text) {
+    const vys = [];
+    const kusy = String(text || '').split(/\r?\n|;|(?<!\d),|,(?!\d)|\s+(?:a|i|plus|se?)\s+|\s*\+\s*/i);
+    for (let kus of kusy) {
+      kus = (kus || '').trim().replace(/^(k tomu|potom|pak|ještě|měl jsem|měla jsem|dal jsem si|dala jsem si|snědl jsem|snědla jsem|vypil jsem|vypila jsem)\s+/i, '').replace(/[.!?]+$/, '');
+      if (!kus) continue;
+      const m = kus.match(/^(\S+)\s+(.*)$/);
+      if (m) {
+        const w = norm(m[1]);
+        if (vlastniKlic(CISLA_SLOVY, w)) kus = CISLA_SLOVY[w] + ' ' + m[2];
+        else if (w === 'pul' || w === 'pulka' || w === 'pulku') kus = '½ ' + m[2];
+        else if (w === 'ctvrt') kus = '¼ ' + m[2];
+        // „krajíc chleba“, „sklenice mléka“, „plátek sýra“ = jeden kus té míry
+        else if (!/^\d|^[½¼¾⅓⅔]/.test(kus) && JEDNOTKY_RECEPTU.some(([re, gr]) => (gr === null || gr === 20) && (re.test(w) || re.test(m[1].toLowerCase())))) kus = '1 ' + kus;
+      }
+      const r = rozeberSuroviny(kus)[0];
+      if (!r) continue;
+      r.bezCisla = r.mnozstvi === null || r.mnozstvi === undefined;
+      vys.push(r);
+    }
+    return vys;
+  }
+
+  /* ---------- „co ještě dnes sníst“: z nabídnutých potravin ty, které se vejdou do zbytku dne ----------
+     kandidati: [{ f, g, porce?, bonus? }] s obvyklým množstvím; zbyva: { kcal, bilkoviny, vlaknina, sul, nasycene, cukry }
+     (zbytek do cíle / limitu, null = nehlídá se). Porce větší než zbytek energie se zmenší (nejvýš na polovinu). */
+  function navrhyDoZbytku(kandidati, zbyva, limit) {
+    if (!zbyva || !(zbyva.kcal >= 40)) return [];
+    const vys = [], vid = new Set();
+    const mezB = zbyva.bilkoviny > 5 ? zbyva.bilkoviny : 0, mezV = zbyva.vlaknina > 2 ? zbyva.vlaknina : 0;
+    for (const x of kandidati || []) {
+      const f = x && x.f;
+      if (!f || !f.n || !(f.n.kcal > 0) || !(x.g > 0) || vid.has(f.id) || (f.n.alk || 0) > 0.5 || f.skupina === 'koreni') continue;
+      let g = x.g, porce = x.porce || null;
+      const k0 = f.n.kcal * g / 100;
+      if (k0 > zbyva.kcal * 1.05) {
+        const pomer = zbyva.kcal / k0;
+        if (pomer < 0.5) continue;
+        g = Math.max(5, Math.round(g * pomer / 5) * 5); porce = null;
+      }
+      const v = zivinyZa(f.n, g);
+      // limity (sůl, nasycené, cukry) nesmí návrh překročit o víc než desetinu limitu dne
+      const pres = kl => Number.isFinite(zbyva[kl]) && Number.isFinite(v[kl]) && v[kl] > Math.max(0, zbyva[kl]) + (zbyva[kl + 'Limit'] || 0) * 0.1;
+      if (pres('sul') || pres('nasycene') || pres('cukry')) continue;
+      const cB = mezB ? Math.min(1, (v.bilkoviny || 0) / mezB) : 0, cV = mezV ? Math.min(1, (v.vlaknina || 0) / mezV) : 0, cK = Math.min(1, (v.kcal || 0) / zbyva.kcal);
+      // znatelný příspěvek: aspoň 15 % toho, co chybí, nebo 15 g bílkovin / 5 g vlákniny
+      const jeB = !!mezB && (cB >= 0.15 || (v.bilkoviny || 0) >= 15), jeV = !!mezV && (cV >= 0.2 || (v.vlaknina || 0) >= 5);
+      vid.add(f.id);
+      vys.push({ f, g, porce, ziv: v, skore: cB * 2 + cV + cK * 0.5 + (x.bonus || 0), duvod: jeB && cB >= cV ? 'bilkoviny' : jeV ? 'vlaknina' : jeB ? 'bilkoviny' : 'energie', zdroj: x.zdroj || null });
+    }
+    return vys.sort((a, b) => b.skore - a.skore).slice(0, limit || 6);
+  }
+
+  /* ---------- týdenní bilance energie (po–ne): o kolik jsou zapsané dny týdne nad / pod cílem ---------- */
+  function bilanceTydne(stav, k, cileFn) {
+    const po = posunDen(k, -((zKlice(k).getDay() + 6) % 7));
+    const v = { od: po, dni: 0, rozdil: 0, zbyvaDni: 7 - rozdilDni(po, k), dnes: null, omezeno: false };
+    for (let d = po; d < k; d = posunDen(d, 1)) {
+      const den = stav.dny[d];
+      if (!den || !den.z.length) continue;
+      const c = cileFn ? cileFn(d) : null;
+      if (!c || !c.kcal) continue;
+      const s = souhrnDne(stav, d);
+      v.rozdil += (s.celkem.kcal || 0) - (c.kcal + (stav.nastaveni.pohybKCili ? s.pohyb : 0));
+      v.dni++;
+    }
+    const c = cileFn ? cileFn(k) : null;
+    if (c && c.kcal && v.dni) {
+      // vyrovnání rozložené do zbytku týdne, nejvýš ±20 % denního cíle (žádné hladovění ani přejídání „za trest“)
+      const chci = c.kcal - v.rozdil / v.zbyvaDni;
+      v.dnes = Math.min(c.kcal * 1.2, Math.max(c.kcal * 0.8, chci));
+      v.omezeno = Math.abs(v.dnes - chci) > 1;
+    }
+    return v;
+  }
+
+  /* ---------- okno jídla: první a poslední zápis s energií v daném dni (podle času zápisu) ---------- */
+  function casyJidel(stav, k) {
+    const d = stav.dny[k], vys = [];
+    if (!d) return vys;
+    for (const z of d.z) {
+      const f = stav.potraviny[z.p];
+      if (!f || !(z.t > 0) || !((f.n.kcal || 0) * z.g / 100 >= 5)) continue;   // voda a černá káva okno neotevírají
+      if (datumKlic(new Date(z.t)) !== k) continue;                              // zapsáno zpětně jiný den – čas neznáme
+      vys.push(z.t);
+    }
+    return vys.sort((a, b) => a - b);
+  }
+  // { od, do (minuty od půlnoci), minuty } nebo null (méně než dva zápisy aspoň 30 minut od sebe)
+  function oknoJidla(stav, k) {
+    const t = casyJidel(stav, k);
+    if (t.length < 2) return null;
+    const min = x => { const d = new Date(x); return d.getHours() * 60 + d.getMinutes(); };
+    const od = min(t[0]), dO = min(t[t.length - 1]);
+    return dO - od >= 30 ? { od, do: dO, minuty: dO - od, pocet: t.length } : null;
+  }
+  // průměr okna za `dni` dní končících dnem k (jen dny, kde okno známe)
+  function prumerOkna(stav, k, dni) {
+    let n = 0, od = 0, dO = 0;
+    for (let i = 0; i < (dni || 14); i++) {
+      const o = oknoJidla(stav, posunDen(k, -i));
+      if (o) { n++; od += o.od; dO += o.do; }
+    }
+    return n ? { dni: n, od: Math.round(od / n), do: Math.round(dO / n), minuty: Math.round((dO - od) / n) } : null;
+  }
+  // čas (ms) posledního zápisu s energií za dnešek a včerejšek, nebo null
+  function posledniJidlo(stav, dnes) {
+    const t = casyJidel(stav, dnes).concat(casyJidel(stav, posunDen(dnes, -1)));
+    return t.length ? Math.max(...t) : null;
+  }
+
   // potravina pro řádek receptu: nejdřív obecné suroviny (a vlastní potraviny), syrové před tepelně upravenými;
   // když nic nesedí, výrobky z databáze
-  function najdiSurovinu(indexSurovin, indexVse, nazev) {
+  // volby.min = nejmenší přijatelné skóre (výchozí 1,8), volby.bezZalohy = bez závěrečného volného hledání
+  // (pro hledání jen mezi oblíbenými a častými potravinami – tam musí shoda sedět jistě)
+  function najdiSurovinu(indexSurovin, indexVse, nazev, volby) {
+    volby = volby || {};
     let nej = null, nejB = 0, nejUpr = false, syr = null, syrB = 0;
     const slova = norm(nazev).split(' ').filter(Boolean).slice(0, 3);
     const kmeny = slova.map(w => tvaryNazvu(w).filter(x => !x.includes(' ')).map(x => x.slice(0, Math.max(3, x.length - 2))));
@@ -1813,8 +1933,9 @@
     // recept počítá se syrovou vahou: dobře sedící syrová surovina má přednost před upravenou („kuřecí prsa bez kůže“)
     if (nejUpr && syr && syrB >= 3) { nej = syr; nejB = syrB; nejUpr = false; }
     // výrobky jen když obecná surovina nesedí dobře (nebo sedí jen tepelně upravená – v receptu bývá syrová)
-    if (!(nej && nejB >= 3.5 && !nejUpr)) ohodnot(indexVse, 0.5);
-    if (nej && nejB >= 1.8) return nej;
+    if (!(nej && nejB >= 3.5 && !nejUpr) && indexVse) ohodnot(indexVse, 0.5);
+    if (nej && nejB >= (volby.min || 1.8)) return nej;
+    if (volby.bezZalohy || !indexVse) return null;
     const nal = hledej(indexVse, nazev, { limit: 6 });
     return nal.find(f => Number.isFinite(f.n.kcal)) || null;
   }
@@ -1835,6 +1956,7 @@
       p = porce.find(x => /balení/.test(x.n)) || (/^kost/.test(norm(r.jednotka || '')) && porce.find(x => /^kostka/.test(x.n)));
     }
     else if (r.druh === 'stroužek') p = porce.find(x => /stroužek/.test(x.n));
+    else if (r.druh === 'porce' && porce.some(x => /^porce/.test(x.n))) p = porce.find(x => /^porce/.test(x.n));
     else {
       // „2 cm zázvoru“ podle porce „kousek (2 cm)“; „2 bobkové listy“, „1 hlávka“ podle porce stejného slova
       const text = norm((r.radek || r.nazev).replace(RE_KRAJENI, ' '));
@@ -2750,7 +2872,7 @@
       if (!['100', '112', '125', '140'].includes(s.nastaveni.pismo)) delete s.nastaveni.pismo;
       if (s.nastaveni.energie !== 'kj') delete s.nastaveni.energie;
       if (s.nastaveni.spravce !== true) delete s.nastaveni.spravce;
-      for (const k of ['online', 'obrazky', 'mikro', 'pohybKCili', 'napojeDoVody', 'infoOnline', 'infoPlocha', 'bezHodnot', 'cipyOblibenych', 'tydenSouhrn']) {
+      for (const k of ['online', 'obrazky', 'mikro', 'pohybKCili', 'napojeDoVody', 'infoOnline', 'infoPlocha', 'bezHodnot', 'cipyOblibenych', 'tydenSouhrn', 'tydenBilance', 'oknoJidla']) {
         if (k in s.nastaveni && typeof s.nastaveni[k] !== 'boolean') { if (k in novyStav().nastaveni) s.nastaveni[k] = novyStav().nastaveni[k]; else delete s.nastaveni[k]; }
       }
       for (const k of ['zaloha', 'uklid']) if (k in s.nastaveni && !(typeof s.nastaveni[k] === 'string' && zKlice(s.nastaveni[k]))) delete s.nastaveni[k];
@@ -2865,7 +2987,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-11-23b', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-11-25a', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -2873,6 +2995,7 @@
     zivinyZa, secti, energieSedi, energieZMaker, podilEnergie,
     vytvorIndex, hledej, jeOblibena, prepniOblibenou, oblibeneSablony, idPohybu, MAX_OBLIBENYCH,
     posunOblibenou, obvykleMnozstvi, nastavObvykleMnozstvi, oblibeneVJidle, navrhyOblibenych, souhrnTydne,
+    rozeberZapis, navrhyDoZbytku, bilanceTydne, oknoJidla, prumerOkna, posledniJidlo,
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
     kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, tipyNaZiviny, rozeberSuroviny, gramySuroviny, tvaryNazvu, najdiSurovinu,

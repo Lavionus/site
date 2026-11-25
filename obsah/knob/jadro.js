@@ -197,7 +197,6 @@
       o.rSroub = o.rV(o.zs);
       o.stenaSroubu = o.rSroub - mo.kSroubu;
       o.ven = Math.max(...Array.from({ length: 21 }, (_, i) => o.rV(o.zs - st.d + i * st.d / 10))) + 2;
-      const delka = o.stenaSroubu + 0.5;
       o.delkaStav = K.delkaSroubu([3, 4, 5, 6, 8, 10, 12, 16], o.stenaSroubu, 0.5).L;   // bez hlavy – raději kratší než vyčnívající
     }
     o.vyska = o.zt;
@@ -300,6 +299,9 @@
     return { gramy: V3 / 1000 * mat.hustota, metru: V3 / (Math.PI * 0.875 * 0.875) / 1000, minut: (V3 / 7 + vyska / 0.2 * 1.5) / 60 * 1.1 };
   }
 
+  /** Výška zkušebního kroužku: spodek knobu se zapuštěním a celým otvorem šroubku (aspoň 8 mm). */
+  function vyskaZkousky(o) { return Math.min(o.vyska, Math.max(8, o.zs !== undefined ? o.zs + o.staveci.d + 2 : 0)); }
+
   /* ---------- kusovník ---------- */
   function kusovnik(p, o) {
     const out = [], st = o.staveci, velikost = K.jmenoSroubu(p);
@@ -362,7 +364,7 @@
 
   const API = {
     VERZE_FORMATU, ZAPUSTENI, ROZMERY_ZAPUSTENI, UCHYCENI, MATERIALY, VYCHOZI, ROZSAHY, PREDVOLBY,
-    normalizuj, zPredvolby, nahodnyKnob, obrysOtvoru, miryOtvoru, odvozene, kontroly, pevnost, maskaMostu, rozborTisku, odhadTisku, kusovnik,
+    normalizuj, zPredvolby, nahodnyKnob, obrysOtvoru, miryOtvoru, odvozene, kontroly, pevnost, maskaMostu, rozborTisku, odhadTisku, vyskaZkousky, kusovnik,
     ulozProjekt, nactiProjekt, popis, fmt,
   };
   if (typeof module !== 'undefined') module.exports = API; else window.KNOB = API;

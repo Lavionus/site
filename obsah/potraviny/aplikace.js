@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-11-23b';
+  const VERZE_KODU = '2026-11-25a';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -812,6 +812,16 @@
         h('div', {}, 'Cíl ', h('b', { text: fc(E(c.kcal)) }), ' ' + ej()),
         pohybKcal ? h('div', {}, '+ pohyb ', h('b', { text: fc(E(pohybKcal)) }), ' ' + ej()) : null,
         h('div', {}, 'Snědeno ', h('b', { text: fc(E(snedeno)) }), ' ' + ej()));
+      // týdenní bilance: o kolik jsou předchozí dny týdne nad / pod cílem a kolik dnes, aby týden vyšel
+      if (S.nastaveni.tydenBilance !== false) {
+        const tb = J.bilanceTydne(S, aktivniDen, k => ({ kcal: cileDne(k).kcal }));
+        if (tb.dni && Math.abs(tb.rozdil) >= 100) {
+          const vyrovnano = tb.dnes !== null && tb.zbyvaDni > 0;
+          bil.appendChild(h('div', { class: 'tyden-bilance', title: 'Součet rozdílů proti cíli za zapsané dny tohoto týdne (po–ne). Vyrovnání se rozkládá do zbytku týdne a nikdy nejde o víc než 20 % denního cíle.' },
+            '📅 Týden: ', h('b', { text: en(Math.abs(tb.rozdil)) }), h('span', { text: tb.rozdil > 0 ? ' nad cílem' : ' pod cílem' }), ' ', h('span', { text: '(' + J.pocet(tb.dni, 'den', 'dny', 'dní') + ')' }),
+            vyrovnano ? h('div', { class: 'slabe' }, 'aby týden vyšel: dnes asi ', h('b', { text: en(tb.dnes + pohybKcal) }), tb.omezeno ? h('span', { text: ' (víc najednou nedoháněj)' }) : null) : null));
+        }
+      }
     } else {
       pridat(bil, h('div', {}, 'Snědeno ', h('b', { text: fc(E(snedeno)) }), ' ' + ej()),
         h('div', { class: 'slabe' }, 'Vyplň profil a uvidíš svůj denní cíl. '),
@@ -876,8 +886,20 @@
           return h('button', { class: 'btn mini', type: 'button', title: 'Přidat ' + ff.nazev + ' (' + mn + ') do jídla ' + nazevJidla(vychoziJidlo()),
             onclick: () => rychlePridej(ff, x.g, x.porce, aktivniDen, vychoziJidlo()) }, '+ ' + ikonaNapoje(J.druhNapoje(ff)) + ' ', h('span', { class: 'napoj-n', text: ff.nazev }), ' ', h('small', { text: mn }));
         })) : null));
-    el.appendChild(h('div', { class: 'radek', style: { marginTop: '12px' } },
+    // okno jídla: první a poslední zápis dne, dnes i doba od posledního jídla
+    if (S.nastaveni.oknoJidla !== false) {
+      const okno = J.oknoJidla(S, aktivniDen), dnesK = J.datumKlic(new Date());
+      const posl = aktivniDen === dnesK ? J.posledniJidlo(S, dnesK) : null;
+      const odPosl = posl ? Math.round((Date.now() - posl) / 60000) : null;
+      if (okno || (odPosl !== null && odPosl >= 60)) {
+        el.appendChild(h('div', { class: 'okno-jidla', title: 'Podle času, kdy byly položky zapsané. Voda a nápoje bez energie se nepočítají.' },
+          okno ? h('div', {}, '🕐 Okno jídla ', h('b', { text: hodMin(okno.od) + '–' + hodMin(okno.do) }), ' · ' + trvani(okno.minuty)) : null,
+          odPosl !== null && odPosl >= 60 ? h('div', { class: 'slabe' }, 'od posledního jídla ', h('b', { text: trvani(odPosl) })) : null));
+      }
+    }
+    el.appendChild(h('div', { class: 'radek', style: { marginTop: '12px', flexWrap: 'wrap' } },
       h('button', { class: 'btn mini', type: 'button', onclick: () => detailDne(aktivniDen) }, '🔬 Všechny živiny'),
+      cilKcal && cilKcal - snedeno >= 40 ? h('button', { class: 'btn mini', type: 'button', id: 'coJeste', title: 'Co z oblíbených a častých potravin se ještě vejde do dnešního cíle', onclick: () => coJesteSnist(aktivniDen) }, '💡 Co ještě sníst?') : null,
       soub.pocet ? h('span', { class: 'slabe', text: J.pocet(soub.pocet, 'položka', 'položky', 'položek') }) : null));
     if (c.poznamky.length) el.appendChild(h('p', { class: 'slabe', style: { marginTop: '8px' }, text: c.poznamky.join(' ') }));
   }
@@ -889,6 +911,7 @@
     const sablony = Object.values(S.sablony);
     const pol = [
       { text: '⚡ Rychlý záznam (jen kalorie)', akce: () => rychlyZaznam(jid) },
+      { text: '✍️ Zapsat textem („2 rohlíky, jogurt…“)', akce: () => zapisTextem(den, jid) },
       ...(sablony.length ? [{ text: '📋 Přidat uložené jídlo…', akce: () => vyberSablonu(den, jid) }] : []),
       { text: '📋 Zkopírovat ze včerejška' + (vceraPocet ? ' (' + vceraPocet + ')' : ''), akce: () => {
         if (!vceraPocet) { D.info('Včera v tomto jídle nic nebylo.'); return; }
@@ -1267,9 +1290,19 @@
   // přepne oblíbenost, uloží, ohlásí; vrací nový stav
   function prepniOblibenou(id, nazev) {
     let je;
+    const misto = S.oblibene.indexOf(id);
     try { je = J.prepniOblibenou(S, id); } catch (e) { D.chyba(e.message); return J.jeOblibena(S, id); }
-    uloz();
-    D.info(je ? '♥ Přidáno do oblíbených: ' + nazev : 'Odebráno z oblíbených: ' + nazev);
+    if (je) { uloz(); D.info('♥ Přidáno do oblíbených: ' + nazev); }
+    else {
+      // odebrání jde vrátit lištou – i s původním místem v pořadí (lišta je pod otevřeným oknem skrytá → navíc hlášení)
+      if (vrstvy.length) D.info('Odebráno z oblíbených: ' + nazev);
+      ulozSListou('Odebráno z oblíbených: ' + nazev, () => {
+        if (!J.jeOblibena(S, id)) S.oblibene.splice(Math.min(misto, S.oblibene.length), 0, id);
+        uloz();
+        if (pohled === 'potraviny') vykresliPotraviny(); else if (pohled === 'denik') vykresliDenik();
+        document.dispatchEvent(new CustomEvent('denik-oblibene', { detail: { id, je: true } }));
+      });
+    }
     // panel přidávání je nad pohledem – karta oblíbených v Potravinách se obnoví hned
     if (pohled === 'potraviny') vykresliPotraviny();
     document.dispatchEvent(new CustomEvent('denik-oblibene', { detail: { id, je } }));
@@ -1316,6 +1349,78 @@
     }
   });
 
+  // 7:05, 19:40 z minut od půlnoci; „11 h 35 min“
+  function hodMin(m) { return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+  function trvani(m) { const hh = Math.floor(m / 60), mm = m % 60; return hh ? hh + ' h' + (mm ? ' ' + mm + ' min' : '') : mm + ' min'; }
+  // zbytek dne do cílů a limitů
+  function zbyvaDne(den) {
+    const c = cileDne(den), soub = J.souhrnDne(S, den), e = soub.celkem;
+    if (!c.kcal) return null;
+    const z = (cil, kl) => Number.isFinite(cil) ? cil - (e[kl] || 0) : null;
+    return { kcal: c.kcal + (S.nastaveni.pohybKCili ? soub.pohyb : 0) - (e.kcal || 0),
+      bilkoviny: z(c.zivinyCil.bilkoviny, 'bilkoviny'), vlaknina: z(c.zivinyCil.vlaknina, 'vlaknina'),
+      sul: z(c.limity.sul, 'sul'), sulLimit: c.limity.sul, nasycene: z(c.limity.nasycene, 'nasycene'), nasyceneLimit: c.limity.nasycene,
+      cukry: z(c.limity.cukry, 'cukry'), cukryLimit: c.limity.cukry };
+  }
+  // „Co ještě sníst?“ – oblíbené, časté a pár tipů z databáze, které se vejdou do zbytku dne
+  function coJesteSnist(den) {
+    den = den || aktivniDen;
+    let jidlo = vychoziJidlo();
+    const vyberJ = h('select', { class: 'vstup', 'aria-label': 'Jídlo', style: { maxWidth: '170px' } },
+      ...S.nastaveni.jidla.map(j => h('option', { value: j.id, selected: j.id === jidlo ? true : null }, j.nazev)));
+    vyberJ.addEventListener('change', () => { jidlo = vyberJ.value; });
+    const hlava = h('p', { 'aria-live': 'polite', style: { marginBottom: '8px' } });
+    const ul = h('ul', { class: 'vysledky', role: 'group', 'aria-label': 'Návrhy', style: { border: '0' } });
+    const POPIS = { bilkoviny: 'doplní bílkoviny', vlaknina: 'doplní vlákninu', energie: 'vejde se do cíle' };
+    const ZDROJ = { oblibene: '♥ oblíbené', caste: 'často zapisuješ', databaze: 'tip z databáze' };
+    function vykresli() {
+      ul.textContent = ''; hlava.textContent = '';
+      const zb = zbyvaDne(den);
+      if (!zb) { hlava.textContent = 'Nejdřív vyplň profil – bez denního cíle není co doplňovat.'; return; }
+      if (zb.kcal < 40) { hlava.textContent = zb.kcal < 0 ? 'Dnešní cíl energie už je překročený.' : 'Dnešní cíl energie je splněný. 👍'; return; }
+      pridat(hlava, 'Do cíle zbývá ', h('b', { text: en(zb.kcal) }),
+        zb.bilkoviny > 5 ? ' · bílkoviny ' + fc(zb.bilkoviny, 0) + ' g' : '', zb.vlaknina > 2 ? ' · vláknina ' + fc(zb.vlaknina, 0) + ' g' : '');
+      const d = S.dny[den], uz = new Set((d ? d.z : []).map(z => (S.potraviny[z.p] || {}).id));
+      const kand = [], tipy = [], vid = new Set();
+      const pridej = (f, zdroj, bonus, g, porce) => {
+        if (!f || !f.id || vid.has(f.id) || uz.has(f.id) || f.typ === 'q' || !Number.isFinite(f.n && f.n.kcal)) return;
+        const ai = alergenInfo(f);
+        if (ai && (ai.obsahuje.length || ai.slova.length)) return;   // alergeny a vyhýbané složky se nenavrhují
+        vid.add(f.id);
+        const m = g ? { g, porce: porce || null } : mnozstviProPridani(f);
+        (zdroj === 'databaze' ? tipy : kand).push({ f, g: m.g, porce: m.porce, zdroj, bonus });
+      };
+      // z databáze jen to, co se dá rovnou sníst (ne suché luštěniny, syrové maso, mouka, kakao…)
+      const kJidlu = f => !/such|syrov|mouk|kakao|prasek|susen|instant|drozdi|zelatin|otrub|klick|skrob|seminka|semena/.test(J.norm(f.nazev));
+      for (const id of S.oblibene) pridej(potravina(id), 'oblibene', 0.3);
+      for (const x of J.caste(S, 40)) pridej(potravina(x.f.id) || x.f, 'caste', 0.15);
+      if (DB.nacteno) {
+        const hotove = DB.suroviny.filter(kJidlu);
+        if (zb.bilkoviny > 5) for (const x of J.nejlepsiZdroje(hotove, 'bilkoviny', 6)) pridej(x.f, 'databaze', 0, x.g);
+        if (zb.vlaknina > 2) for (const x of J.nejlepsiZdroje(hotove, 'vlaknina', 6)) pridej(x.f, 'databaze', 0, x.g);
+      }
+      // nejdřív vlastní (oblíbené a časté) potraviny, na konec nejvýš tři tipy z databáze na to, co chybí
+      const tipyVse = J.navrhyDoZbytku(tipy, zb, 12);
+      const tipyB = tipyVse.filter(x => x.duvod === 'bilkoviny').slice(0, 2), tipyV = tipyVse.filter(x => x.duvod === 'vlaknina').slice(0, 3 - Math.min(2, tipyB.length));
+      const navrhy = J.navrhyDoZbytku(kand, zb, 6).concat(tipyB, tipyV);
+      if (!navrhy.length) { ul.appendChild(h('li', { class: 'prazdny', text: 'Z oblíbených a častých potravin se do zbytku dne nic rozumně nevejde.' })); return; }
+      for (const x of navrhy) {
+        const mn = x.porce && x.porce.pocet ? fc(x.porce.pocet, 2) + ' × ' + x.porce.n : fc(x.g) + ' ' + jedn(x.f);
+        ul.appendChild(h('li', { class: 'vysledek navrh-zbytku' },
+          h('div', { class: 'nazev' }, h('div', {}, ...znakPotraviny(x.f), x.f.nazev),
+            h('div', { class: 'detail', text: [mn, 'B ' + fc(x.ziv.bilkoviny || 0, 0) + ' g', Number.isFinite(x.ziv.vlaknina) && x.ziv.vlaknina >= 1 ? 'vláknina ' + fc(x.ziv.vlaknina, 0) + ' g' : '', POPIS[x.duvod], ZDROJ[x.zdroj]].filter(Boolean).join(' · ') })),
+          h('div', { class: 'kc' }, fc(E(x.ziv.kcal || 0)), h('small', { text: ej() })),
+          h('button', { class: 'btn ikona plus', type: 'button', title: 'Přidat do jídla', 'aria-label': 'Přidat ' + x.f.nazev + ', ' + mn,
+            onclick: () => { rychlePridej(x.f, x.g, x.porce, den, jidlo); vykresli(); } }, '+')));
+      }
+    }
+    const v = otevriVrstvu({ titulek: '💡 Co ještě sníst?', hlavickaNavic: vyberJ,
+      telo: h('div', { class: 'sheet-telo' }, hlava, ul,
+        h('p', { class: 'slabe', style: { marginTop: '8px', fontSize: '.8rem' }, text: 'Návrhy vybírám z tvých oblíbených a častých potravin podle toho, co ti dnes chybí (energie, bílkoviny, vláknina) a co nepřekročí limity soli, cukrů a nasycených tuků. Je to nápověda, ne jídelníček.' })),
+      pata: h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zavřít'))), sirka: '600px' });
+    vykresli();
+    return v;
+  }
   // čipy oblíbených pod jídlem: oblíbené používané v tomto jídle; prázdné jídlo bez nich → první oblíbené v pořadí uživatele
   function cipyOblibenych(jid, maZaznamy, uz, vynechat) {
     if (S.nastaveni.cipyOblibenych === false || !S.oblibene.length) return [];
@@ -1489,6 +1594,7 @@
     const pata = h('div', { class: 'sheet-pata' },
       h('button', { class: 'btn mini', type: 'button', onclick: () => editorPotraviny({}, f => vybrano(f)) }, '+ Nová potravina'),
       rezimVyber ? null : h('button', { class: 'btn mini', type: 'button', onclick: () => { v.zavri(); rychlyZaznam(jidlo); } }, '⚡ Rychlý záznam'),
+      rezimVyber ? null : h('button', { class: 'btn mini', type: 'button', title: 'Napiš nebo nadiktuj, co jsi jedl(a) – třeba „2 rohlíky, jogurt a banán“', onclick: () => { v.zavri(); zapisTextem(den, jidlo); } }, '✍️ Textem'),
       h('span', { class: 'vpravo slabe', text: rezimVyber ? '' : J.popisDne(den, J.datumKlic(new Date())) }));
     const v = otevriVrstvu({
       titulek: rezimVyber ? (volby.titulek || 'Vybrat surovinu') : 'Přidat do jídla',
@@ -3359,18 +3465,60 @@
     setTimeout(() => (nazev.value ? pole.kcal : nazev).focus(), 30);
   }
 
+  function zapisTextem(den, jidlo) { vlozSeznamSurovin(null, { denik: { den: den || aktivniDen, jidlo: jidlo || vychoziJidlo() } }); }
+
   /* ----- editor receptu ----- */
   // vložený text receptu → řádky se spárovanou potravinou a gramy; uživatel zkontroluje a přidá
-  function vlozSeznamSurovin(naPridani) {
-    const pole = h('textarea', { class: 'vstup', rows: '8', style: { width: '100%' }, 'aria-label': 'Seznam surovin',
-      placeholder: '500 g hladké mouky\n2 vejce\n3 lžíce oleje\n½ l mléka\n2 stroužky česneku\nsůl dle chuti' });
+  // volby.denik = { den, jidlo }: zápis jídla volným textem do deníku („2 rohlíky se šunkou, jogurt a banán“)
+  function vlozSeznamSurovin(naPridani, volby) {
+    const denik = volby && volby.denik ? volby.denik : null;
+    let jidloZapisu = denik ? denik.jidlo || vychoziJidlo() : null;
+    const pole = h('textarea', { class: 'vstup', rows: denik ? '4' : '8', style: { width: '100%' }, 'aria-label': denik ? 'Co jsi jedl(a)' : 'Seznam surovin',
+      placeholder: denik ? '2 rohlíky se šunkou, jogurt a banán\n150 g tvarohu' : '500 g hladké mouky\n2 vejce\n3 lžíce oleje\n½ l mléka\n2 stroužky česneku\nsůl dle chuti' });
     const vysledky = h('div', {});
     let radky = [];
+    // deník: nejdřív oblíbené a často zapisované potraviny (shoda musí sedět jistě), pak obecná databáze
+    let indexOsobni = null;
+    const najdiOsobni = nazev => {
+      if (!indexOsobni) {
+        const m = new Map();
+        for (const id of S.oblibene) { const f = potravina(id); if (f && f.n && Number.isFinite(f.n.kcal)) m.set(f.id, f); }
+        for (const x of J.caste(S, 60)) { const f = potravina(x.f.id) || x.f; if (!m.has(f.id)) m.set(f.id, f); }
+        indexOsobni = J.vytvorIndex([...m.values()]);
+      }
+      if (!indexOsobni.length) return null;
+      const zkus = n => J.najdiSurovinu(indexOsobni, null, n, { min: 3.4, bezZalohy: true });
+      // množné číslo („rohlíky“, „jogurty“) – názvy potravin bývají v jednotném
+      return zkus(nazev) || (/[yi]$/.test(nazev.split(' ')[0]) && nazev.split(' ').length === 1 ? zkus(nazev.slice(0, -1)) : null);
+    };
+    // gramy pro zápis do deníku: uvedené → počet × kus → obvyklé (📌) / naposledy použité → první rozumná porce → 100 g (odhad)
+    const gramyZapisu = (r, f) => {
+      if (r.g !== null && r.g !== undefined) return { g: r.g, odhad: false };
+      const obv = J.obvykleMnozstvi(S, f.id), pos = obv || J.nedavne(S, 300).find(x => x.f.id === f.id);
+      const kus = J.gramySuroviny({ ...r, mnozstvi: r.bezCisla ? 1 : r.mnozstvi, druh: r.druh || 'kus' }, f);
+      if (r.bezCisla) {
+        if (pos) return { g: pos.g, odhad: false };
+        // bez množství a bez historie jen odhad (uživatel ho před zápisem vidí označený):
+        // tuky a koření nejmenší kuchyňskou mírou („s máslem“ není kostka), jinak porce k jídlu, ne lžíce / hrnek / celé balení
+        const vse = f.porce || [];
+        if (f.skupina === 'tuky' || f.skupina === 'koreni') {
+          const m = vse.filter(x => /^(plátek|lžíce|lžička|špetka)/.test(x.n)).sort((a, b) => a.g - b.g)[0];
+          return { g: m ? m.g : 10, odhad: true };
+        }
+        const por = vse.filter(x => x.g <= 500 && !/^(hrnek|lžíce|lžička|špetka|balení|kostka|velký|malý|velmi)/.test(x.n));
+        const p = por.find(x => /^(porce|střední kus|kus|kelímek|plátek|krajíc|sklenice|rohlík|houska)/.test(x.n)) || por[0];
+        return { g: p ? p.g : 100, odhad: true };
+      }
+      if (kus.g && !kus.odhad) return kus;
+      if (pos) return { g: J.zaokrouhli(r.mnozstvi * (pos.porce && pos.porce.pocet ? pos.g / pos.porce.pocet : pos.g), 1), odhad: false };
+      return kus;
+    };
     // obecné suroviny + vlastní potraviny + doplňky mají přednost před výrobky
     let indexSurovin = null;
     const najdi = nazev => {
-      if (!indexSurovin) indexSurovin = J.vytvorIndex(DB.suroviny.concat(Object.values(S.vlastni), DB.doplnky || []));
-      return J.najdiSurovinu(indexSurovin, DB.vse.length ? DB.vse : DB.indexUziv, nazev);
+      if (!indexSurovin) indexSurovin = J.vytvorIndex(DB.suroviny.concat(Object.values(S.vlastni), DB.doplnky || [],
+        denik ? Object.values(S.recepty).map(J.receptJakoPotravina) : []));
+      return (denik && najdiOsobni(nazev)) || J.najdiSurovinu(indexSurovin, DB.vse.length ? DB.vse : DB.indexUziv, nazev);
     };
     function vykresli() {
       vysledky.textContent = '';
@@ -3392,30 +3540,55 @@
       vysledky.appendChild(ul);
       obnovTl();
     }
-    const pridatTl = h('button', { class: 'btn primary', type: 'button' }, 'Přidat do receptu');
-    const obnovTl = () => { const n = radky.filter(x => x.vybrano && x.f && x.g > 0).length; pridatTl.textContent = 'Přidat do receptu (' + n + ')'; pridatTl.disabled = !n; };
+    const pridatTl = h('button', { class: 'btn primary', type: 'button' }, denik ? 'Zapsat do deníku' : 'Přidat do receptu');
+    const souhrnZapisu = h('div', { class: 'slabe', 'aria-live': 'polite', style: { margin: '6px 0 0' } });
+    const obnovTl = () => {
+      const vyb = radky.filter(x => x.vybrano && x.f && x.g > 0), n = vyb.length;
+      pridatTl.textContent = (denik ? 'Zapsat do deníku (' : 'Přidat do receptu (') + n + ')'; pridatTl.disabled = !n;
+      if (denik) {
+        const kcalCelkem = vyb.reduce((a, x) => a + (x.f.n.kcal || 0) * x.g / 100, 0), bilkCelkem = vyb.reduce((a, x) => a + (x.f.n.bilkoviny || 0) * x.g / 100, 0);
+        souhrnZapisu.textContent = '';
+        if (n) pridat(souhrnZapisu, h('span', { text: 'Celkem:' }), ' ' + en(kcalCelkem) + ' · ', h('span', { text: 'bílkoviny ' + fc(bilkCelkem, 0) + ' g' }));
+      }
+    };
     const rozpoznat = h('button', { class: 'btn', type: 'button' }, '🔎 Rozpoznat');
     rozpoznat.addEventListener('click', () => {
       if (!DB.nacteno) { D.info('Databáze se ještě načítá, zkus to za chvíli.'); return; }
-      radky = J.rozeberSuroviny(pole.value).map(r => {
+      radky = (denik ? J.rozeberZapis(pole.value) : J.rozeberSuroviny(pole.value)).map(r => {
         const f = najdi(r.nazev);
-        const gg = f ? J.gramySuroviny(r, f) : { g: r.g, odhad: false };
+        const gg = f ? (denik ? gramyZapisu(r, f) : J.gramySuroviny(r, f)) : { g: r.g, odhad: false };
         return { ...r, f, g: gg.g, odhad: gg.odhad, vybrano: !!(f && gg.g > 0) };
       });
-      if (!radky.length) D.info('V textu jsem nenašel žádné suroviny – dej každou na samostatný řádek.');
+      if (!radky.length) D.info(denik ? 'V textu jsem nenašel žádné jídlo – napiš třeba „2 rohlíky, jogurt a banán“.' : 'V textu jsem nenašel žádné suroviny – dej každou na samostatný řádek.');
       vykresli();
+    });
+    // Ctrl+Enter (v deníku i samotný Enter na konci jednořádkového textu) = rozpoznat
+    pole.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || (denik && !e.shiftKey && !pole.value.includes('\n')))) { e.preventDefault(); rozpoznat.click(); }
     });
     pridatTl.addEventListener('click', () => {
       const nove = radky.filter(x => x.vybrano && x.f && x.g > 0).map(x => ({ f: x.f, g: J.zaokrouhli(x.g, 1) }));
       if (!nove.length) return;
+      if (denik) {
+        const jid = jidloZapisu;
+        v.zavri();
+        sVracenim(nazevJidla(jid) + ' · ' + J.pocet(nove.length, 'položka', 'položky', 'položek') + ' · zapsáno z textu', () => { for (const x of nove) J.pridejZaznam(S, denik.den, jid, x.f, x.g); });
+        if (denik.poPridani) denik.poPridani();
+        return;
+      }
       naPridani(nove);
       v.zavri();
     });
     pridatTl.disabled = true;
+    const vyberJidlaZapisu = denik ? h('select', { class: 'vstup', 'aria-label': 'Jídlo', style: { maxWidth: '170px' } },
+      ...S.nastaveni.jidla.map(j => h('option', { value: j.id, selected: j.id === jidloZapisu ? true : null }, j.nazev))) : null;
+    if (vyberJidlaZapisu) vyberJidlaZapisu.addEventListener('change', () => { jidloZapisu = vyberJidlaZapisu.value; });
     const telo = h('div', { class: 'sheet-telo' },
-      h('p', { class: 'slabe', style: { marginBottom: '6px' }, text: 'Vlož seznam surovin (každou na samostatný řádek). Rozpoznám množství (g, kg, dkg, ml, l, lžíce, lžička, hrnek, kus, stroužek…) a najdu potraviny v databázi.' }),
-      pole, h('div', { class: 'radek', style: { margin: '8px 0' } }, rozpoznat), vysledky);
-    const v = otevriVrstvu({ titulek: '📋 Vložit seznam surovin', telo, pata: h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'), pridatTl)), sirka: '640px' });
+      h('p', { class: 'slabe', style: { marginBottom: '6px' }, text: denik
+        ? 'Napiš nebo nadiktuj, co jsi jedl(a) – položky odděl čárkou, „a“ nebo řádkem. Bez množství doplním tvoje obvyklé; před zápisem vše zkontroluješ.'
+        : 'Vlož seznam surovin (každou na samostatný řádek). Rozpoznám množství (g, kg, dkg, ml, l, lžíce, lžička, hrnek, kus, stroužek…) a najdu potraviny v databázi.' }),
+      pole, h('div', { class: 'radek', style: { margin: '8px 0' } }, rozpoznat), vysledky, souhrnZapisu);
+    const v = otevriVrstvu({ titulek: denik ? '✍️ Zapsat textem' : '📋 Vložit seznam surovin', hlavickaNavic: vyberJidlaZapisu, telo, pata: h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'), pridatTl)), sirka: '640px' });
     setTimeout(() => pole.focus(), 30);
   }
   function editorReceptu(r) {
@@ -3826,6 +3999,11 @@
       if (pit > 0) radek('💧', 'Pitný režim', [fc(pit / 1000, 1) + ' l denně', cilV ? 'doporučeno cca ' + fc(cilV / 1000, 1) + ' l' : null].filter(Boolean),
         !cilV ? '' : pit < 0.7 * cilV ? 'piješ málo' : 'v pořádku', !cilV ? 'slabe-st' : pit < 0.7 * cilV ? 'pozor' : 'ok', 'ziviny');
     }
+    // okno jídla (průměr za období)
+    if (S.nastaveni.oknoJidla !== false) {
+      const po = J.prumerOkna(S, J.datumKlic(new Date()), obdobi);
+      if (po && po.dni >= 3) radek('🕐', 'Okno jídla', [hodMin(po.od) + '–' + hodMin(po.do), 'průměrně ' + trvani(po.minuty)], J.pocet(po.dni, 'den', 'dny', 'dní'), 'slabe-st', 'denik');
+    }
     // hmotnost
     radek('⚖️', 'Hmotnost', zmena !== null ? (zmena > 0 ? '+' : '') + fc(zmena, 1) + ' kg za období' : 'málo vážení v období',
       zmena === null ? 'zapiš vážení' : Math.abs(zmena) < 0.3 ? 'drží se' : zmena < 0 ? 'klesá' : 'stoupá', 'slabe-st', 'telo');
@@ -4055,6 +4233,8 @@
     $('#nBezHodnot').checked = !!S.nastaveni.bezHodnot;
     $('#nCipyOblibenych').checked = S.nastaveni.cipyOblibenych !== false;
     $('#nTydenSouhrn').checked = S.nastaveni.tydenSouhrn !== false;
+    $('#nTydenBilance').checked = S.nastaveni.tydenBilance !== false;
+    $('#nOknoJidla').checked = S.nastaveni.oknoJidla !== false;
     $('#nKartaPridani').value = S.nastaveni.kartaPridani || 'nedavne';
     $('#nPitny').value = S.nastaveni.pitnyRezim || 'bezny';
     $('#nPitny').disabled = S.nastaveni.napojeDoVody === false;
@@ -4826,22 +5006,27 @@
     const t = J.souhrnTydne(S, minuly, k => { const c = cileDne(k); return { kcal: c.kcal, vodaMl: c.vodaMl, bilkoviny: c.zivinyCil.bilkoviny }; });
     if (!t.dni) return;
     const dm = k => { const d = J.zKlice(k); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
+    // hodnota = části v samostatných uzlech (překladač větu slepenou z podmínek nepozná)
+    const dniText = n => J.pocet(n, 'den', 'dny', 'dní');
+    const cilEnergie = t.cilKcal ? '(cíl ' + en(t.cilKcal) + ', ' + fc(100 * t.kcal / t.cilKcal, 0) + ' %)' : null;
+    const cilBilkovin = t.cilBilkoviny ? '(cíl ' + fc(t.cilBilkoviny, 0) + ' g)' : null;
     const radky = [
-      ['📝', 'Zapisováno', t.dni + ' ze 7 dní' + (t.dni === 7 ? ' – celý týden! 🎉' : '')],
-      ['🔥', 'Energie', en(t.kcal) + ' denně' + (t.cilKcal ? ' (cíl ' + en(t.cilKcal) + ', ' + fc(100 * t.kcal / t.cilKcal, 0) + ' %)' : '')],
+      ['📝', 'Zapisováno', [t.dni + ' ze 7 dní', t.dni === 7 ? '– celý týden! 🎉' : null]],
+      ['🔥', 'Energie', [en(t.kcal) + ' denně', cilEnergie]],
     ];
-    if (t.cilKcal) radky.push(['🎯', 'V cíli (±10 %)', J.pocet(t.dnyCil, 'den', 'dny', 'dní') + ' z ' + t.dni]);
-    radky.push(['🥚', 'Bílkoviny', fc(t.bilkoviny, 0) + ' g denně' + (t.cilBilkoviny ? ' (cíl ' + fc(t.cilBilkoviny, 0) + ' g)' : '')]);
-    radky.push(['💧', 'Pitný režim', fc(t.voda / 1000, 1) + ' l denně' + (t.cilKcal ? ' · v normě ' + J.pocet(t.dnyVoda, 'den', 'dny', 'dní') : '')]);
-    if (t.dnyPohyb) radky.push(['🏃', 'Pohyb', J.pocet(t.dnyPohyb, 'den', 'dny', 'dní') + ' · +' + en(t.pohybKcal)]);
-    if (t.vahaDo !== null) radky.push(['⚖️', 'Hmotnost', (t.vahaOd !== null ? fc(t.vahaOd, 1) + ' → ' : '') + fc(t.vahaDo, 1) + ' kg' +
-      (t.vahaOd !== null && t.vahaOd !== t.vahaDo ? ' (' + (t.vahaDo > t.vahaOd ? '+' : '−') + fc(Math.abs(t.vahaDo - t.vahaOd), 1) + ' kg)' : '')]);
+    if (t.cilKcal) radky.push(['🎯', 'V cíli (±10 %)', [t.dnyCil + ' z ' + t.dni + ' dní']]);
+    radky.push(['🥚', 'Bílkoviny', [fc(t.bilkoviny, 0) + ' g denně', cilBilkovin]]);
+    radky.push(['💧', 'Pitný režim', [fc(t.voda / 1000, 1) + ' l denně', t.cilKcal ? '· v normě' : null, t.cilKcal ? dniText(t.dnyVoda) : null]]);
+    if (t.dnyPohyb) radky.push(['🏃', 'Pohyb', [dniText(t.dnyPohyb), '· +' + en(t.pohybKcal)]]);
+    if (t.vahaDo !== null) radky.push(['⚖️', 'Hmotnost', [(t.vahaOd !== null ? fc(t.vahaOd, 1) + ' → ' : '') + fc(t.vahaDo, 1) + ' kg' +
+      (t.vahaOd !== null && t.vahaOd !== t.vahaDo ? ' (' + (t.vahaDo > t.vahaOd ? '+' : '−') + fc(Math.abs(t.vahaDo - t.vahaOd), 1) + ' kg)' : '')]]);
     kont.appendChild(h('section', { class: 'karta tyden-souhrn', 'aria-label': 'Souhrn minulého týdne' },
-      h('div', { class: 'jidlo-hl' }, h('h2', { text: '📅 Minulý týden (' + dm(minuly) + '–' + dm(J.posunDen(minuly, 6)) + ')' }),
+      h('div', { class: 'jidlo-hl' }, h('h2', {}, h('span', { text: '📅 Minulý týden' }), ' ', h('span', { class: 'slabe', 'data-i18n': 'ne', text: '(' + dm(minuly) + '–' + dm(J.posunDen(minuly, 6)) + ')' })),
         h('button', { class: 'btn ikona plain', type: 'button', 'aria-label': 'Zavřít souhrn týdne', title: 'Zavřít (ukáže se zase příští pondělí)', onclick: () => {
           S.nastaveni.tydenZavreno = minuly; uloz(); vykresliDenik();
         } }, '✕')),
-      h('div', { class: 'tyden-radky' }, ...radky.map(([i, n, v]) => h('div', { class: 'tyden-radek' }, h('span', { 'aria-hidden': 'true', text: i }), h('span', { class: 'slabe', text: n }), h('b', { text: v })))),
+      h('div', { class: 'tyden-radky' }, ...radky.map(([i, n, v]) => h('div', { class: 'tyden-radek' }, h('span', { 'aria-hidden': 'true', text: i }), h('span', { class: 'slabe', text: n }),
+        h('b', {}, ...v.filter(Boolean).map((x, k) => h('span', { text: (k ? ' ' : '') + x })))))),
       h('div', { class: 'tyden-pata' }, h('button', { class: 'btn mini', type: 'button', onclick: () => { prepni('statistiky'); } }, '📊 Podrobně ve Statistikách'))));
   }
   function nabidkaPlochy(kont) {
@@ -4969,7 +5154,7 @@
       uloz(); vykresliJidlaNastaveni();
     });
     const prep = (id, kl, poZmene) => $(id).addEventListener('change', e => { S.nastaveni[kl] = e.target.checked; uloz(); if (poZmene) poZmene(); });
-    prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nBezHodnot', 'bezHodnot'); prep('#nCipyOblibenych', 'cipyOblibenych'); prep('#nTydenSouhrn', 'tydenSouhrn');
+    prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nBezHodnot', 'bezHodnot'); prep('#nCipyOblibenych', 'cipyOblibenych'); prep('#nTydenSouhrn', 'tydenSouhrn'); prep('#nTydenBilance', 'tydenBilance'); prep('#nOknoJidla', 'oknoJidla');
     $('#nKartaPridani').addEventListener('change', e => { S.nastaveni.kartaPridani = e.target.value; uloz(); }); prep('#nPohyb', 'pohybKCili'); prep('#nNapoje', 'napojeDoVody', () => { $('#nPitny').disabled = S.nastaveni.napojeDoVody === false; vykresliDenik(); });
     $('#nPitny').addEventListener('change', e => { S.nastaveni.pitnyRezim = e.target.value; uloz(); vykresliDenik(); });
     $('#importTl').addEventListener('click', () => $('#importJson').click());
@@ -5084,7 +5269,7 @@
     spusteno: false, verze: VERZE_KODU,
     _tydenVzdy(x) { tydenVzdy = !!x; vykresliDenik(); },
     _doplnky(d) { nactiDoplnky(d); vykresliPohled(); },   // test: podvržený soubor doplňků
-    get stav() { return S; }, DB, prepni, otevriPridani, vyberPohybu, detailPotraviny, zpracujKod, editorPotraviny, editorReceptu,
+    get stav() { return S; }, DB, prepni, otevriPridani, vyberPohybu, zapisTextem, coJesteSnist, detailPotraviny, zpracujKod, editorPotraviny, editorReceptu,
     vykresliVse, get aktivniDen() { return aktivniDen; }, set aktivniDen(k) { aktivniDen = k; vykresliDenik(); }, uloz,
     // test: simulace půlnoci – stránka „si myslí“, že je včera, a sleduje včerejšek
     _testPulnoc() { znamyDnes = J.posunDen(J.datumKlic(new Date()), -1); aktivniDen = znamyDnes; vykresliDenik(); zkontrolujDen(); },

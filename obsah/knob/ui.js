@@ -28,7 +28,7 @@
     doModelare: () => { const d = dil(); return d ? { data: KRAB.soubor3mf(d, app.p.nazev || 'Knob'), pripona: '.3mf' } : null; },
     // náhodný knob: vlastní název nechat
     nahodny: q => { const r = N.nahodnyKnob(q); if (!q.nazev || /^Knob/.test(q.nazev)) r.nazev = `Knob ${N.popis(r).split(',')[0]}`; return r; },
-    zkratky: { r: 'btnNahoda', m: 'tTisk', p: 'tPrevisy', v: 'tPrevisy', h: 'tHrany', l: 'tPravitka' },
+    zkratky: { r: 'btnNahoda', x: 'tRez', m: 'tTisk', p: 'tPrevisy', v: 'tPrevisy', h: 'tHrany', l: 'tPravitka' },
     // hlášení s polem bez [data-p] (tvary = segmentová tlačítka) skočí vlastní cestou
     hlaseniNavic: (li, x) => {
       if (!x.pole.length || document.querySelector(`[data-p="${x.pole[0]}"]`)) return;
@@ -53,8 +53,10 @@
     zmen(x => { x.otvor.typ = r.typ; x.otvor.rozmer = r.rozmer; if (r.ploska) x.otvor.ploska = r.ploska; });
     naplnFormular(); e.target.value = '';
   });
+  // tlačítko tvaru = silueta skutečného obrysu (kreslí siluety() při přepočtu); generátor a skica mají navíc značku
   const segment = (id, obj, cesta) => {
-    $(id).innerHTML = Object.entries(obj).map(([k, v]) => `<button type="button" data-seg="${cesta}" data-hodnota="${k}"><span aria-hidden="true">${v.znak || ''}</span>${esc(v.nazev)}</button>`).join('');
+    $(id).innerHTML = Object.entries(obj).map(([k, v]) => `<button type="button" data-seg="${cesta}" data-hodnota="${k}" title="${esc(v.nazev)}" aria-label="${esc(v.nazev)}">`
+      + `<svg aria-hidden="true"><path/></svg>${k === 'generator' || k === 'vlastni' ? `<span class="znacka" aria-hidden="true">${v.znak}</span>` : ''}</button>`).join('');
   };
   segment('segHlava', K.TVARY_KNOBU, 'knob.tvar');
   segment('segKrcek', K.TVARY_KRCKU, 'krcek.tvar');
@@ -185,7 +187,7 @@
     TrubkyGui.souhrn('sKrcek', `Ø ${fmt(q.krcek)} × ${fmt(p.krcek.delka)}, ${K.TVARY_KRCKU[p.krcek.tvar].nazev.toLowerCase()}`);
     TrubkyGui.souhrn('sOdsazeni', o.maOdsazeni ? `Ø ${fmt(p.odsazeni.prumer)} × ${fmt(p.odsazeni.vyska)}` : 'bez');
     $('pGenerator').textContent = q.tvar === 'generator' ? `Tvar č. ${q.seminko}: ${K.tvarZeSeminka(q.seminko).popis}. Stejné semínko dá vždy stejný tvar.` : '';
-    nahledProfilu(o); vykres(o);
+    siluety(); nahledProfilu(o); vykres(o);
     if (edHlava && !$('oddilSkica').hidden && !edHlava.tahne()) { edHlava.kresli(); TrubkyGui.souhrn('sSkica', `${q.vlastni.body.length} bodů`); }
     if (edKrcek && p.krcek.tvar === 'vlastni' && !edKrcek.tahne()) edKrcek.kresli();
     // hlášení
@@ -217,10 +219,28 @@
     for (const b of o.prof.body) out.push(b);
     return out;
   }
+  /** Obrys obou stran jako cesta SVG (y dolů, vrchol v y = 0). */
+  const cestaObrysu = (ob, H) => 'M' + [[0, 0]].concat(ob, ob.slice().reverse().map(([r, z]) => [-r, z])).map(([r, z]) => `${n(r)} ${n(H - z)}`).join('L') + 'Z';
+  /** Siluety ve výběru tvaru: jak by knob vypadal s daným tvarem při současných rozměrech (u krčku výřez krčku se spodkem hlavy). */
+  let klicSiluet = '';
+  function siluety() {
+    const klic = JSON.stringify([p.knob, p.krcek, p.odsazeni]);
+    if (klic === klicSiluet) return;
+    klicSiluet = klic;
+    for (const b of document.querySelectorAll('[data-seg]')) {
+      const x = K.kopie(p); K.poloz(x, b.dataset.seg, b.dataset.hodnota);
+      const o = N.odvozene(x), ob = obrys(o), H = o.vyska, svg = b.firstElementChild;
+      svg.firstElementChild.setAttribute('d', cestaObrysu(ob, H));
+      if (b.dataset.seg === 'knob.tvar') { const R = o.rMax + 2; svg.setAttribute('viewBox', `${n(-R)} -2 ${n(2 * R)} ${n(H + 4)}`); }
+      else {
+        const zVrch = o.zHlavy + 0.3 * p.knob.hlava, R = Math.max(...ob.filter(c => c[1] <= o.zHlavy + 1e-6).map(c => c[0]), o.rn) + 3;
+        svg.setAttribute('viewBox', `${n(-R)} ${n(H - zVrch)} ${n(2 * R)} ${n(zVrch + 2)}`);
+      }
+    }
+  }
   function nahledProfilu(o) {
     const ob = obrys(o), R = Math.max(...ob.map(b => b[0])), H = o.vyska, q = p.knob;
-    const bok = [[0, 0]].concat(ob, ob.slice().reverse().map(([r, z]) => [-r, z]));
-    const d1 = 'M' + bok.map(([r, z]) => `${n(r)} ${n(H - z)}`).join('L') + 'Z';
+    const d1 = cestaObrysu(ob, H);
     const pud = []; for (let i = 0; i < 144; i++) { const f = 2 * Math.PI * i / 144, rr = q.prumer / 2 * K.pudorysKnobu(q, f, 1); pud.push([rr * Math.cos(f), rr * Math.sin(f)]); }
     const d2 = 'M' + pud.map(([x, y]) => `${n(x)} ${n(y)}`).join('L') + 'Z';
     const P = q.prumer / 2 + 3;
@@ -247,7 +267,18 @@
     if (o.zs !== undefined) kota(o.zs, `${fmt(o.zs)} šroubek`, xk + 18);
     // průměry dole
     g += `<text x="${n(-R)}" y="${n(H + 5)}">hlava Ø ${fmt(p.knob.prumer)} · krček Ø ${fmt(p.knob.krcek)}${o.maOdsazeni ? ` · odsazení Ø ${fmt(p.odsazeni.prumer)}` : ''}</text>`;
-    $('vykres').innerHTML = `<svg viewBox="${n(-R - 4)} -4 ${n(2 * R + 50)} ${n(H + 12)}" role="img" aria-label="Výkres knobu">${g}</svg>`;
+    // pohled zespodu: šroubek míří doprava jako v řezu, tedy (x, y) knobu → (−y, x) výkresu
+    const Rb = o.rMax, cx = R + 48 + Rb, cy = H - Rb, q = p.knob, kruh = (r, tr) => `<circle class="${tr}" cx="${n(cx)}" cy="${n(cy)}" r="${n(r)}"/>`;
+    const mnoho = body => body.map(([x, yy]) => `${n(cx - yy)},${n(cy + x)}`).join(' ');
+    const pud = []; for (let i = 0; i < 144; i++) { const f = 2 * Math.PI * i / 144, rr = q.prumer / 2 * K.pudorysKnobu(q, f, 1); pud.push([rr * Math.cos(f), rr * Math.sin(f)]); }
+    g += `<polygon class="tvar" points="${mnoho(pud)}"/>` + kruh(o.prof.podstava, 'rez') + (o.maOdsazeni ? kruh(o.rO, o.rO > o.prof.podstava ? 'rez' : 'kota') : '');
+    if (o.hloubkaDiry > 0) g += `<polygon class="dira" points="${mnoho(o.otvor.obrys)}"/>`;
+    if (o.zs !== undefined) { const r = o.staveci.d / 2; g += `<path class="skryta" d="M${n(cx + o.otvor.kSroubu)} ${n(cy - r)}H${n(cx + o.rSroub)}M${n(cx + o.otvor.kSroubu)} ${n(cy + r)}H${n(cx + o.rSroub)}"/>`; }
+    g += `<path class="osa" d="M${n(cx - Rb - 3)} ${n(cy)}H${n(cx + Rb + 3)}M${n(cx)} ${n(cy - Rb - 3)}V${n(cy + Rb + 3)}"/>`;
+    const popisZespodu = o.hloubkaDiry > 0 ? `zespodu · ${N.ZAPUSTENI[p.otvor.typ].nazev} ${fmt(p.otvor.rozmer, 2)}, vůle ${fmt(p.otvor.vule, 2)}` : 'zespodu';
+    g += `<text x="${n(cx - Rb)}" y="${n(H + 5)}">${esc(popisZespodu)}</text>`;
+    const y0 = Math.min(-4, cy - Rb - 4);
+    $('vykres').innerHTML = `<svg viewBox="${n(-R - 4)} ${n(y0)} ${n(cx + Rb + 8 + R)} ${n(H + 8 - y0)}" role="img" aria-label="Výkres knobu">${g}</svg>`;
   }
 
   /* ---------- nabídky, export ---------- */
@@ -278,6 +309,14 @@
   }
   function exportStl() { const d = dil(); if (d) app.stahni(KRAB.stlBinarni(d, 'knob - github_site'), app.jmeno('.stl'), 'model/stl'); }
   $('btnStl').addEventListener('click', exportStl);
+  /** Zkušební kroužek: jen spodek se zapuštěním a šroubkem – ověří vůli na hřídeli dřív než celý tisk. */
+  $('btnStlZkouska').addEventListener('click', () => {
+    if (!dil()) return;
+    if (!model.o.hloubkaDiry) { Dialog.info('Knob nemá zapuštění – není co zkoušet.'); return; }
+    const h = N.vyskaZkousky(model.o), sit = KNOB_GEOM.postav(wasm, p, model.o, h);
+    app.stahni(KRAB.stlBinarni([{ jmeno: 'zkouska', poz: sit.poz, idx: sit.idx }], 'knob zkouska - github_site'), app.jmeno('_zkouska.stl'), 'model/stl');
+    Dialog.info(`Zkušební kroužek: spodních ${fmt(h)} mm knobu. Vytiskněte ho, nasaďte na hřídel a podle toho dolaďte vůli.`);
+  });
   $('btn3mf').addEventListener('click', () => { const d = dil(); if (d) app.stahni(KRAB.soubor3mf(d, p.nazev || 'Knob'), app.jmeno('.3mf'), 'model/3mf'); });
   /** Výkres jako samostatné SVG 1:1 (souřadnice jsou v mm), barvy natvrdo místo proměnných stránky. */
   $('btnVykresSvg').addEventListener('click', () => {
@@ -285,7 +324,7 @@
     const k = svg.cloneNode(true), vb = svg.viewBox.baseVal;
     k.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); k.setAttribute('width', vb.width + 'mm'); k.setAttribute('height', vb.height + 'mm');
     k.insertAdjacentHTML('afterbegin', '<style>.tvar{fill:#d5e3f8;stroke:#2a6bd1;stroke-width:.35}.rez{fill:#9dbdec;stroke:#2a6bd1;stroke-width:.35}'
-      + '.dira{fill:#fff;stroke:#555;stroke-width:.3}.osa{stroke:#888;stroke-width:.25;stroke-dasharray:3 1 .6 1}.kota{stroke:#444;stroke-width:.22;fill:none}'
+      + '.dira{fill:#fff;stroke:#555;stroke-width:.3}.skryta{stroke:#555;stroke-width:.25;stroke-dasharray:1.2 .8;fill:none}.osa{stroke:#888;stroke-width:.25;stroke-dasharray:3 1 .6 1}.kota{stroke:#444;stroke-width:.22;fill:none}'
       + 'text{fill:#222;font-size:2.6px;font-family:sans-serif}</style>');
     app.stahni(new XMLSerializer().serializeToString(k), app.jmeno('_vykres.svg'), 'image/svg+xml');
   });
@@ -313,8 +352,13 @@
     naplnFormular();
   });
   const legenda = () => { $('legPrevisy').hidden = !(model && nahled.stav.tisk && nahled.stav.previsy); };
-  for (const [id, co] of [['tHrany', 'hrany'], ['tTisk', 'tisk'], ['tPrevisy', 'previsy'], ['tPravitka', 'pravitka']])
-    app.prepinac(id, h => { if (nahled.stav[co] !== h) nahled.prepni(co, h); legenda(); });
+  nahled.scena.rovinaRezu.normal.set(1, 0, 0);   // řez rovinou osy knobu a jisticího šroubku (šroubek míří k −y)
+  for (const [id, co] of [['tHrany', 'hrany'], ['tRez', 'rez'], ['tTisk', 'tisk'], ['tPrevisy', 'previsy'], ['tPravitka', 'pravitka']])
+    app.prepinac(id, h => {
+      if (nahled.stav[co] === h) return;
+      nahled.prepni(co, h); legenda();
+      if (co === 'rez' && h) { nahled.ovl.azimut = -2.7; nahled.prekresli(); }   // čelem k rovině řezu
+    });
 
   /* ---------- start ---------- */
   app.start({

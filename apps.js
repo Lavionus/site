@@ -3467,6 +3467,34 @@ const KATALOG_SEKCE = [
         "popis": "Navrhne stojánek, kazetu nebo držák bitů s popisky velikostí",
         "stav": "vyvoj",
         "tagy": ["vrtáky", "bity", "závitníky", "ořechy", "organizér", "stojánek", "popisky", "Gridfinity", "French cleat", "dílna", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/vanocni_ozdoby.html",
+        "nazev": "🎄 Vánoční ozdoby",
+        "popis": "Navrhne vločky, hvězdy, baňky a jmenovky na dárky pro tisk bez podpor",
+        "stav": "vyvoj",
+        "tagy": ["Vánoce", "ozdoby", "vločka", "hvězda", "baňka", "vázový režim", "jmenovka", "dárek", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/dozy_zavit.html",
+        "nazev": "🍯 Dózy a víčka se závitem",
+        "popis": "Navrhne šroubovací dózu, víčko na PET láhev či kanystr a vzorek závitu",
+        "stav": "vyvoj",
+        "tagy": ["dóza", "víčko", "závit", "šroubovací", "krabička", "kelímek", "PET láhev", "PCO 1881", "kanystr", "hrdlo", "zátka", "uzávěr", "O-kroužek", "těsnění", "kalibrace závitu", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/kvetinace.html",
+        "nazev": "🪴 Samozavlažovací květináče",
+        "popis": "Navrhne samozavlažovací květináč, vložku do obalu nebo podmisku",
+        "stav": "vyvoj",
+        "tagy": ["květináč", "samozavlažovací", "zásobník vody", "vložka do obalu", "podmiska", "knot", "vodoznak", "rostliny", "zahrada", "3D tisk", "STL", "3MF", "generátor"]
+      },
+      {
+        "soubor": "obsah/klipy_sacky.html",
+        "nazev": "📎 Klipy na sáčky a uzávěry",
+        "popis": "Navrhne klip, lištu, výlevku s víčkem či kolíček na načaté sáčky",
+        "stav": "vyvoj",
+        "tagy": ["klip na sáčky", "svorka na sáček", "uzávěr sáčku", "zaklapávací klip", "čepový pant", "živý pant", "západka", "násuvná lišta", "výlevka", "sypací hrdlo", "šroubovací víčko", "kolíček", "C-klip", "magnet", "očko", "print-in-place", "kuchyně", "3D tisk", "STL", "3MF", "generátor"]
       }
     ]
   },

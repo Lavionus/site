@@ -629,4 +629,11 @@ I18N.pridej('en', {
   'jídlo': 'meal',
   'značka': 'brand',
   'množství (g)': 'amount (g)',
+  'Mouka pšeničná hladká': 'Plain wheat flour',
+  'mouka, mouky, hladká mouka, pšeničná mouka': 'flour, plain flour, wheat flour',
+  'pór, pórky, pórku, pórků': 'leek, leeks',
+  'Neplatná položka.': 'Invalid item.',
+  'Oblíbených může být nejvýš {MAX_OBLIBENYCH}.': 'There can be at most {MAX_OBLIBENYCH} favourites.',
+  'krajíc': 'slice',
+  'kelímek': 'pot',
 });

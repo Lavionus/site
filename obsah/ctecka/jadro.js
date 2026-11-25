@@ -321,6 +321,14 @@ ${obr.map((o, i) => `<item id="${o.obalka ? 'obalka' : 'o' + i}" href="img/${o.j
     { id: 'modra', nazev: 'Modrá', h: 214, s: 38 },
     { id: 'levandule', nazev: 'Levandule', h: 262, s: 28 },
     { id: 'ruzova', nazev: 'Růžová', h: 340, s: 34 },
+    { id: 'terakota', nazev: 'Terakota', h: 14, s: 38 },
+    { id: 'jantar', nazev: 'Jantar', h: 44, s: 62 },
+    { id: 'olivova', nazev: 'Olivová', h: 66, s: 26 },
+    { id: 'smaragd', nazev: 'Smaragd', h: 150, s: 30 },
+    { id: 'petrolej', nazev: 'Petrolej', h: 196, s: 36 },
+    { id: 'indigo', nazev: 'Indigo', h: 236, s: 34 },
+    { id: 'svestka', nazev: 'Švestka', h: 292, s: 24 },
+    { id: 'vinova', nazev: 'Vínová', h: 352, s: 42 },
   ];
   const STUPNE_MOTIVU = [
     { nazev: 'tmavé', l: 8 }, { nazev: 'mírně tmavé', l: 20 }, { nazev: 'střední', l: 64 },

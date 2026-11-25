@@ -19,13 +19,10 @@
       --bg-input:     var(--bg);
       --bg-alt:       var(--bg-panel);
       --bg-hover:     #3a3a3a;
-      --border:       var(--border);
       --border-sub:   var(--bg-hover);
-      --text:         var(--text);
       --text-muted:   var(--text-faint);
       --text-dim:     var(--border-strong);
       --text-btn:     var(--text-muted);
-      --accent:       var(--accent);
       --accent-bg:    #354a6e;
       --accent-dark:  #1e3a5e;
       --tab-bg:       var(--bg-hover);
@@ -1475,12 +1472,15 @@ function createTable(name, cols = [], x, y) {
   tables.push(t);
   renderSidebar();
   render();
+  markDirty();
   return t;
 }
 
 function deleteTable(id) {
   tables = tables.filter(t => t.id !== id);
   relations = relations.filter(r => r.fromTable !== id && r.toTable !== id);
+  // sloupce, které mířily do smazané tabulky, už cizím klíčem nejsou
+  tables.forEach(t => t.columns.forEach(c => { if (c.fk && !relations.some(r => r.fromCol === c.id)) c.fk = false; }));
   if (selectedTableId === id) selectedTableId = null;
   renderSidebar();
   renderRelations();
@@ -1504,6 +1504,7 @@ function addColumn(tableId) {
   t.columns.push({ id: colUid(), name: 'new_column', type: 'VARCHAR(255)', pk: false, fk: false, nn: false, unique: false });
   if (selectedTableId === tableId) showProps(tableId);
   render();
+  markDirty();
 }
 
 // ─── SIMPLE GRID FALLBACK ───────────────────────────────────────────────────
@@ -1635,6 +1636,8 @@ function parseSql(sql) {
       part = part.trim();
       if (!part) return;
 
+      // „CONSTRAINT jméno“ před omezením (tak ho píše i vlastní export) se přeskočí
+      part = part.replace(/^CONSTRAINT\s+[`"'\[]?\w+[`"'\]]?\s+(?=PRIMARY\s+KEY|FOREIGN\s+KEY)/i, '');
       const upperPart = part.toUpperCase();
 
       // Table-level constraints
@@ -1648,7 +1651,7 @@ function parseSql(sql) {
         return;
       }
 
-      if (upperPart.match(/^(?:CONSTRAINT\s+\w+\s+)?FOREIGN\s+KEY/)) {
+      if (upperPart.match(/^FOREIGN\s+KEY/)) {
         const fkMatch = part.match(/FOREIGN\s+KEY\s*\(([^)]+)\)\s*REFERENCES\s+[`"']?(\w+)[`"']?\s*\(([^)]+)\)/i);
         if (fkMatch) {
           tableConstraints.push({
@@ -1664,7 +1667,7 @@ function parseSql(sql) {
       if (upperPart.match(/^(?:UNIQUE|INDEX|KEY|CHECK|CONSTRAINT)/)) return;
 
       // Column definition
-      const colMatch = part.match(/^[`"']?(\w+)[`"']?\s+([\w()]+(?:\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\s+UNSIGNED)?)/i);
+      const colMatch = part.match(/^[`"']?(\w+)[`"']?\s+(\w+(?:\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\s+UNSIGNED)?)/i);
       if (!colMatch) return;
 
       const colName = colMatch[1];
@@ -1820,10 +1823,8 @@ function topoSort() {
     result.push(id);
   }
   tables.forEach(t => visit(t.id));
-  // result is in reverse-post-order: referenced tables last → reverse it
-  // Actually with DFS post-order, referenced tables come AFTER the tables that depend on them
-  // So reverse to get referenced first
-  return result.reverse().map(id => tables.find(t => t.id === id)).filter(Boolean);
+  // DFS post-order: odkazovaná tabulka se zapíše dřív než ta, která na ni odkazuje
+  return result.map(id => tables.find(t => t.id === id)).filter(Boolean);
 }
 
 // ─── SQL DDL GENERATOR ───────────────────────────────────────────────────────
@@ -1896,7 +1897,8 @@ function generateSql(opts = {}) {
 
   sortedTables.forEach(t => {
     lines.push(`-- Table: ${t.name}`);
-    const ifNEStr = ifNE ? ' IF NOT EXISTS' : '';
+    const ifNEStr = ifNE && dialect !== 'mssql' ? ' IF NOT EXISTS' : '';
+    if (ifNE && dialect === 'mssql') lines.push(`IF OBJECT_ID(N'${t.name.replace(/'/g, "''")}', N'U') IS NULL`);
     lines.push(`CREATE TABLE${ifNEStr} ${wrap(t.name)} (`);
 
     const colDefs = [];
@@ -1917,7 +1919,7 @@ function generateSql(opts = {}) {
       }
 
       let def = `    ${wrap(col.name)} ${mappedType}${autoInc}`;
-      if ((col.nn || col.pk) && dialect !== 'sqlite') def += ' NOT NULL';
+      if (col.pk ? dialect !== 'sqlite' : col.nn) def += ' NOT NULL';
       if (col.unique && !col.pk) def += ' UNIQUE';
       if (col.default !== undefined && col.default !== '') def += ` DEFAULT ${col.default}`;
       colDefs.push(def);
@@ -2100,9 +2102,8 @@ function showProps(tableId) {
 
   panel.innerHTML = html;
 
-  document.getElementById('btnAddCol').addEventListener('click', () => { addColumn(tableId); showProps(tableId); });
-
-  document.getElementById('btnSaveProps').addEventListener('click', () => {
+  // převezme do modelu, co je právě vyplněné ve formuláři
+  function readPropsForm() {
     t.name = document.getElementById('propTableName').value.trim() || t.name;
     const rows = document.querySelectorAll('#colList .column-row');
     rows.forEach((row, i) => {
@@ -2113,6 +2114,12 @@ function showProps(tableId) {
       col.pk = row.querySelector('.col-flag.pk').classList.contains('active');
       col.nn = row.querySelector('.col-flag:not(.pk)').classList.contains('active') || col.pk;
     });
+  }
+
+  document.getElementById('btnAddCol').addEventListener('click', () => { readPropsForm(); addColumn(tableId); renderSidebar(); });
+
+  document.getElementById('btnSaveProps').addEventListener('click', () => {
+    readPropsForm();
     render(); renderSidebar(); renderRelations();
     markDirty();
     showNotification('Změny uloženy', 'success');
@@ -2126,8 +2133,11 @@ function showProps(tableId) {
   // Delete column buttons
   panel.querySelectorAll('.column-row .icon-btn.del').forEach((btn, i) => {
     btn.addEventListener('click', () => {
-      t.columns.splice(i, 1);
-      render(); showProps(tableId);
+      readPropsForm();
+      const [smazany] = t.columns.splice(i, 1);
+      relations = relations.filter(r => r.fromCol !== smazany.id && r.toCol !== smazany.id);
+      render(); renderSidebar(); renderRelations(); showProps(tableId);
+      markDirty();
     });
   });
 }
@@ -2166,6 +2176,7 @@ function renderRelations() {
         if (!stillUsed) fc.fk = false;
       }
       renderRelations(); render();
+      markDirty();
     });
     list.appendChild(row);
   });
@@ -2458,6 +2469,7 @@ document.getElementById('btnDoImportJson').addEventListener('click', () => {
       if (num >= nextId) nextId = num + 1;
     }));
     renderSidebar(); renderRelations(); render();
+    markDirty();
     closeModal('modalImportJson');
     showNotification(`Importováno ${tables.length} tabulek`, 'success');
     document.querySelector('[data-tab="diagram"]').click();

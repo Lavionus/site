@@ -2,7 +2,8 @@
    Sestava = díly na dveřích (dveře, zámek a čtyřhran průhledně), vzhled kovu / plastu;
    tisková poloha = díly na podložce, převisy barevně; pravítka; měřítko dole uprostřed.
    nastav({montaz: [{poz, idx, role}], tisk: [{poz, idx, tridy, role}], duchove: [{druh, min, max}], klic} | null)
-   prepni('duchove' | 'tisk' | 'hrany' | 'previsy' | 'pravitka' | 'vzhled', h), pohled(jak), png(), barvy(…), stav */
+   prepni('duchove' | 'tisk' | 'hrany' | 'previsy' | 'pravitka' | 'vzhled' | 'rez', h), pohled(jak), png(), barvy(…), stav;
+   řez (jen sestava) = s.rovinaRezu, vnitřní plochy červeně – stránka si může natočit normálu roviny */
 /* global THREE, G3D */
 (function () {
   'use strict';
@@ -40,7 +41,7 @@
     s.scena.onAfterRender = obnovMeritko;   // po každém snímku scény (otáčení, zoom, pohledy)
 
     let model = null, prvni = true, box = null;
-    const stav = { duchove: true, tisk: false, hrany: true, previsy: true, pravitka: false, vzhled: 'plast' };
+    const stav = { duchove: true, tisk: false, hrany: true, previsy: true, pravitka: false, vzhled: 'plast', rez: false };
     const rgb = hex => { const c = new THREE.Color(hex); return [c.r, c.g, c.b]; };
 
     /** Obal dílů (bez hran a duchů) v souřadnicích scény. */
@@ -61,7 +62,11 @@
       const m = model;
       if (!m) { s.prekresli(); return; }
       const vz = stav.tisk ? VZHLEDY.plast : VZHLEDY[stav.vzhled] || VZHLEDY.plast;
-      matDil.metalness = vz.kov; matDil.roughness = vz.drsnost; matDil.clearcoat = vz.kov > 0.5 ? 0.6 : 0.3; matDil.needsUpdate = true;
+      matDil.metalness = vz.kov; matDil.roughness = vz.drsnost; matDil.clearcoat = vz.kov > 0.5 ? 0.6 : 0.3;
+      const rez = stav.rez && !stav.tisk;
+      matDil.clippingPlanes = s.matHrany.clippingPlanes = rez ? [s.rovinaRezu] : [];
+      matDil.side = rez ? THREE.FrontSide : THREE.DoubleSide;   // v řezu kreslí vnitřek s.matVnitrek
+      matDil.needsUpdate = s.matHrany.needsUpdate = true;
       for (const d of stav.tisk ? m.tisk : m.montaz) {
         const zaklad = rgb(vz.barvy[d.role === 'hlavni' ? 'hlavni' : 'deska']), tridy = stav.tisk && stav.previsy ? d.tridy : null;
         const mesh = new THREE.Mesh(s.geometrie(d.poz, d.idx, { uhel: 32, barvaTroj: t => (tridy && (tridy[t] === 1 || tridy[t] === 2) ? G3D.BARVY_TRID[tridy[t]] : zaklad) }), matDil);
@@ -70,6 +75,7 @@
         h.visible = stav.hrany; h.userData.hrany = true; h.userData.model = false;
         if (!stav.tisk) for (const o of [mesh, h]) { o.matrixAutoUpdate = false; o.matrix.copy(MONTAZ); }
         s.skupina.add(mesh, h);
+        if (rez) { const vn = new THREE.Mesh(mesh.geometry, s.matVnitrek); vn.matrixAutoUpdate = false; vn.matrix.copy(MONTAZ); vn.userData.model = false; s.skupina.add(vn); }
       }
       if (!stav.tisk) for (const d of m.duchove) {
         const g = new THREE.BoxGeometry(d.max[0] - d.min[0], d.max[1] - d.min[1], d.max[2] - d.min[2]);
@@ -98,7 +104,7 @@
     }
     function prepni(co, h) {
       stav[co] = h;
-      if (co === 'tisk' || co === 'previsy' || co === 'vzhled' || co === 'pravitka') { sestav(); if (co === 'tisk') pohled('iso'); return; }
+      if (co === 'tisk' || co === 'previsy' || co === 'vzhled' || co === 'pravitka' || co === 'rez') { sestav(); if (co === 'tisk') pohled('iso'); return; }
       for (const o of s.skupina.children) {
         if (o.userData.hrany) o.visible = stav.hrany;
         else if (o.userData.duch) o.visible = stav.duchove;

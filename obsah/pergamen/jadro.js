@@ -66,12 +66,17 @@
     pecetSeed: 0, pecetObr: null, pecetInv: false, pecetHloubka: 55,
     // další listy, rub, obálka (střih)
     dalsi: [], rub: null, obalka: null,
+    // sazba: sloupce textu, odsazení 1. řádku a mezera odstavců (em), prostrkání (setiny em), číslování dalších listů
+    sloupce: 1, odsazeni: 0, mezeraOdst: 0.8, prostrkani: 0, cislovani: 'zadne',
+    // výstup: rozlišení PNG/PDF, jen inkoust bez papíru; hromadné listiny: tabulka jako text (první řádek = sloupce)
+    vystupDpi: 300, bezPapiru: false, dataText: '',
     obrazky: []   // [{id, x, y, w (mm), rot (°), op (0–1), blend 'normal'|'multiply', vrstva 'pred'|'za'}]
   });
   /* Vzhled bez textu – co se ukládá do vlastní šablony vzhledu. */
   P.KLICE_VZHLEDU = ['pismo', 'pismoNadpisu', 'pismoIniciala', 'velikost', 'radkovani', 'zarovnani', 'inicialy', 'format', 'papir', 'okraj', 'starnuti',
     'inkoust', 'inkoustStari', 'preklad', 'zmackani', 'kanky', 'diry', 'roh', 'foxing', 'otisk', 'vybledle', 'ramecek', 'pecet', 'znakPecete', 'vosk', 'pecetStyl', 'pecetVel', 'stuha', 'okrajNahore', 'okrajDole', 'okrajBoky',
-    'voda', 'pripaleni', 'trhliny', 'mastnota', 'ozehnuti', 'pero', 'rozpiti', 'rukopis', 'vodoznak', 'vodoznakSila', 'pecetInv', 'pecetHloubka'];
+    'voda', 'pripaleni', 'trhliny', 'mastnota', 'ozehnuti', 'pero', 'rozpiti', 'rukopis', 'vodoznak', 'vodoznakSila', 'pecetInv', 'pecetHloubka',
+    'sloupce', 'odsazeni', 'mezeraOdst', 'prostrkani', 'cislovani'];
   P.vzhled = d => Object.fromEntries(P.KLICE_VZHLEDU.map(k => [k, d[k]]));
   /* ---------- poničení listu ----------
      Vrací { prekryv: SVG přes celý list (lomy, zmačkání, kaňky, otisk, skvrnky, vybledlé místo,
@@ -332,6 +337,53 @@
   };
   P.PECETI = { kapka: 'Rozteklý vosk', kulata: 'Kulatá', vroubkovana: 'Vroubkovaná' };
   P.STUHY = { zadna: 'Bez stuhy', cervena: ['Červená stuha', '#9c1f1f', '#5e0f0f'], modra: ['Modrá stuha', '#24427a', '#122445'], zlata: ['Zlatá stuha', '#c9a03c', '#7a5a14'], zelena: ['Zelená stuha', '#2f6a3a', '#173a1e'], cerna: ['Černá stuha', '#2a2a2a', '#0c0c0c'] };
+  /* Číslování dalších listů (první list se nečísluje). */
+  P.CISLOVANI = { zadne: 'bez čísel', arabske: '– 2 –', rimske: 'II' };
+  P.rimske = function (n) {
+    let s = '';
+    for (const [h, z] of [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]) while (n >= h) { s += z; n -= h; }
+    return s;
+  };
+  P.cisloListu = (druh, n) => (druh === 'rimske' ? P.rimske(n) : druh === 'arabske' ? `– ${n} –` : '');
+
+  /* ---------- hromadné listiny ----------
+     Tabulka jako text: z Excelu tabulátory, CSV středníkem nebo čárkou (podle prvního řádku), uvozovky
+     kolem buněk s oddělovačem. První řádek = názvy sloupců, prázdné řádky se vynechají, nejvýš 500 záznamů. */
+  P.rozeberData = function (text) {
+    const t = String(text || '').replace(/\r\n?/g, '\n'), prvni = t.split('\n')[0];
+    const odd = prvni.includes('\t') ? '\t' : prvni.includes(';') ? ';' : ',';
+    const radky = []; let bunka = '', radek = [], uvoz = false;
+    const konecRadku = () => { radek.push(bunka.trim()); radky.push(radek); radek = []; bunka = ''; };
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (uvoz) { if (c !== '"') bunka += c; else if (t[i + 1] === '"') { bunka += '"'; i++; } else uvoz = false; }
+      else if (c === '"' && !bunka) uvoz = true;
+      else if (c === odd) { radek.push(bunka.trim()); bunka = ''; }
+      else if (c === '\n') konecRadku();
+      else bunka += c;
+    }
+    konecRadku();
+    const plne = radky.filter(r => r.some(Boolean)), sloupce = (plne.shift() || []).map(x => x.slice(0, 40));
+    return { sloupce, radky: plne.slice(0, 500).map(r => sloupce.map((_, i) => r[i] || '')) };
+  };
+  /* Dosadí pole {sloupec} hodnotou i-tého záznamu (na velikosti písmen nezáleží). {číslo} = pořadí
+     záznamu, {počet} = počet záznamů. Neznámé pole zůstane, jak je. */
+  const POLE = /\{([^{}\n]{1,40})\}/g, klicPole = x => String(x).trim().toLowerCase();
+  const CISLO = ['číslo', 'cislo', 'number'], POCET = ['počet', 'pocet', 'count'];   // vestavěná pole (i anglicky – rozhraní je přeložené)
+  P.dosad = function (text, tab, i) {
+    const t = String(text == null ? '' : text), r = tab && tab.radky[i];
+    if (!r || t.indexOf('{') < 0) return t;
+    return t.replace(POLE, (cele, n) => {
+      const k = klicPole(n), sl = tab.sloupce.findIndex(x => x && klicPole(x) === k);
+      return sl >= 0 ? r[sl] : CISLO.includes(k) ? String(i + 1) : POCET.includes(k) ? String(tab.radky.length) : cele;
+    });
+  };
+  /* Pole z textu, která v tabulce chybí (překlep v názvu sloupce). */
+  P.neznamaPole = function (text, tab) {
+    const zname = new Set([...tab.sloupce.map(klicPole), ...CISLO, ...POCET]);
+    return [...new Set([...String(text || '').matchAll(POLE)].map(m => m[1].trim()))].filter(n => !zname.has(klicPole(n)));
+  };
+
   P.normalizuj = function (x) {
     const d = Object.assign(P.vychozi(), x || {});
     if (!P.FORMATY[d.format]) d.format = 'a4';
@@ -367,10 +419,19 @@
     d.rub = d.rub && typeof d.rub === 'object' ? { html: htmlListu(d.rub) } : null;
     d.obalka = d.obalka && typeof d.obalka === 'object' ? { html: htmlListu(d.obalka), pecet: d.obalka.pecet !== false } : null;
     d.otisk = !!d.otisk; d.seedPosk = (+d.seedPosk >>> 0) || 3;
+    d.sloupce = Math.max(1, Math.min(3, Math.round(+d.sloupce || 1)));
+    d.odsazeni = Math.max(0, Math.min(4, +d.odsazeni || 0));
+    d.mezeraOdst = Math.max(0, Math.min(3, d.mezeraOdst == null || isNaN(+d.mezeraOdst) ? 0.8 : +d.mezeraOdst));
+    d.prostrkani = Math.max(-5, Math.min(30, +d.prostrkani || 0));
+    if (!P.CISLOVANI[d.cislovani]) d.cislovani = 'zadne';
+    d.vystupDpi = [150, 300, 600].includes(+d.vystupDpi) ? +d.vystupDpi : 300;
+    d.bezPapiru = !!d.bezPapiru;
+    d.dataText = typeof d.dataText === 'string' ? d.dataText.slice(0, 200000) : '';
     // obrázky z IndexedDB (id) a kresby perem (kresba – šipky, kroužky…, poznámka s textem)
     d.obrazky = (Array.isArray(d.obrazky) ? d.obrazky : []).filter(o => o && (typeof o.id === 'string' || P.KRESBY[o.kresba])).map(o => {
       const x = { x: +o.x || 0, y: +o.y || 0, w: Math.max(3, +o.w || 40), rot: +o.rot || 0,
         op: Math.max(0.05, Math.min(1, o.op == null ? 1 : +o.op)), blend: o.blend === 'normal' ? 'normal' : 'multiply', vrstva: o.vrstva === 'za' ? 'za' : 'pred' };
+      if (o.zamek) x.zamek = true;   // zamčená poloha – nejde táhnout
       if (P.KRESBY[o.kresba]) Object.assign(x, { kresba: o.kresba, seed: (+o.seed >>> 0) || 1, text: String(o.text || '').slice(0, 500), vel: Math.max(5, Math.min(40, +o.vel || 11)) });
       else x.id = o.id;
       return x;

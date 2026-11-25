@@ -1303,6 +1303,14 @@ I18N.pridej('en', {
   "Klín pod dveře, zarážka s magnetem a aretace okna nebo dvířek": "Door wedge, magnetic door stop and window or cabinet door catch",
   "Organizér vrtáků a bitů": "Drill and Bit Organizer",
   "Navrhne stojánek, kazetu nebo držák bitů s popisky velikostí": "Designs a stand, case or bit holder with size labels",
+  "Vánoční ozdoby": "Christmas Ornaments",
+  "Navrhne vločky, hvězdy, baňky a jmenovky na dárky pro tisk bez podpor": "Designs snowflakes, stars, baubles and gift tags that print without supports",
+  "Dózy a víčka se závitem": "Threaded Jars and Lids",
+  "Navrhne šroubovací dózu, víčko na PET láhev či kanystr a vzorek závitu": "Designs a screw-top jar, a lid for a PET bottle or jerry can and a thread sample",
+  "Samozavlažovací květináče": "Self-Watering Planters",
+  "Navrhne samozavlažovací květináč, vložku do obalu nebo podmisku": "Designs a self-watering planter, cover-pot insert or saucer",
+  "Klipy na sáčky a uzávěry": "Bag Clips and Closures",
+  "Navrhne klip, lištu, výlevku s víčkem či kolíček na načaté sáčky": "Designs a clip, rail, pour spout with lid or peg for opened bags",
 });
 
 I18N.pridejTagy('en', {
@@ -1924,4 +1932,8 @@ I18N.pridejTagy('en', {
   "obsah/civka_filamentu.html": ["spool", "filament", "adapter", "hub", "spool holder", "roller stand", "bearing", "608", "dry box", "filament guide", "ptfe", "pulley", "3d printing", "stl", "3mf", "generator"],
   "obsah/zarazky_dveri.html": ["door stop", "door", "wedge", "magnet", "neodymium", "catch", "window", "ventilation", "restrictor", "stop", "drawer", "3d printing", "stl", "3mf", "generator"],
   "obsah/organizer_vrtaku.html": ["drills", "bits", "taps", "sockets", "organizer", "stand", "labels", "gridfinity", "french cleat", "workshop", "3d printing", "stl", "3mf", "generator"],
+  "obsah/vanocni_ozdoby.html": ["christmas", "ornaments", "snowflake", "star", "bauble", "vase mode", "gift tag", "3d printing", "stl", "3mf", "generator"],
+  "obsah/dozy_zavit.html": ["jar", "lid", "cap", "thread", "screw top", "container", "pot", "pet bottle", "pco 1881", "jerry can", "neck", "plug", "closure", "o-ring", "gasket", "thread calibration", "3d printing", "stl", "3mf", "generator"],
+  "obsah/kvetinace.html": ["planter", "flower pot", "self-watering", "water reservoir", "cover pot insert", "saucer", "wick", "water level indicator", "plants", "garden", "3d printing", "stl", "3mf", "generator"],
+  "obsah/klipy_sacky.html": ["bag clip", "bag clamp", "bag closure", "snap clip", "pin hinge", "living hinge", "latch", "slide-on rail", "pour spout", "pouring neck", "screw lid", "peg", "c-clip", "magnet", "eyelet", "print-in-place", "kitchen", "3d printing", "stl", "3mf", "generator"],
 });

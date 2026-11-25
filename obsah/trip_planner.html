@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
     <link rel="stylesheet" href="lib/maplibre/maplibre-gl.css" />
     <link rel="stylesheet" href="lib/fontawesome/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="lib/gfonts/trip_planner.css">
     <link rel="stylesheet" href="../common.css">
     <style>
         :root {
@@ -1419,50 +1419,8 @@
         // ========== PWA / SERVICE WORKER ==========
         let deferredPrompt = null;
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // Register inline service worker via blob
-                const swCode = `
-                    const CACHE_NAME = 'tripplanner-v7';
-                    const ASSETS = [
-                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css',
-                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
-                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-                        'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap'
-                    ];
-
-                    self.addEventListener('install', e => {
-                        e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
-                        self.skipWaiting();
-                    });
-
-                    self.addEventListener('fetch', e => {
-                        if (e.request.url.includes('tiles.openfreemap.org') ||
-                            e.request.url.includes('arcgisonline.com') ||
-                            e.request.url.includes('opentopomap.org') ||
-                            e.request.url.includes('cartocdn.com')) {
-                            e.respondWith(
-                                caches.open('map-tiles-v1').then(cache => 
-                                    cache.match(e.request).then(cached => {
-                                        const fetched = fetch(e.request).then(response => {
-                                            if (response.ok) cache.put(e.request, response.clone());
-                                            return response;
-                                        }).catch(() => cached);
-                                        return cached || fetched;
-                                    })
-                                )
-                            );
-                            return;
-                        }
-                        e.respondWith(
-                            caches.match(e.request).then(cached => cached || fetch(e.request))
-                        );
-                    });
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
-            });
-        }
+        // Offline se stará service worker celého webu (../sw.js). Dřív tu byla registrace
+        // workeru z blob: adresy – tu prohlížeče odmítají, takže nikdy neběžela.
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -1553,8 +1511,8 @@
                     mapZoom: 8
                 };
 
+                this.loadFromStorage();   // před initMap – ta potřebuje uloženou vrstvu mapy
                 this.initMap();
-                this.loadFromStorage();
                 this.checkUrlParams();
                 this.restoreRoutes();
                 this.restoreUISettings();
@@ -1566,9 +1524,11 @@
 
             // ========== HELPER METHODS ==========
             renumberPoints(route) {
+                // přečísluje jen automatické názvy „N. místo“ a „Bod N“; vlastní název zůstává
                 route.points.forEach((p, idx) => {
-                    const nameParts = p.name.split('. ');
-                    p.name = nameParts.length > 1 ? `${idx + 1}. ${nameParts.slice(1).join('. ')}` : `Bod ${idx + 1}`;
+                    const cislovany = p.name.match(/^\d+\. (.*)$/);
+                    if (cislovany) p.name = `${idx + 1}. ${cislovany[1]}`;
+                    else if (/^Bod \d+$/.test(p.name)) p.name = `Bod ${idx + 1}`;
                 });
             }
 
@@ -2100,7 +2060,7 @@
                     p: route.points.map(pt => [
                         Math.round(pt.lat * 1e6) / 1e6,
                         Math.round(pt.lng * 1e6) / 1e6,
-                        pt.name.split('. ').slice(1).join('. ') || '',
+                        /^Bod \d+$/.test(pt.name) ? '' : pt.name.replace(/^\d+\. /, ''),
                         pt.icon || ''
                     ])
                 };
@@ -2146,6 +2106,7 @@
                         this.routes.push(route);
                         this.recalculateDistances(route);
                         this.selectedRouteId = route.id;
+                        this.saveToStorage();   // parametr z adresy hned mizí, trasa musí zůstat
                         this.showNotification('Sdílená trasa načtena!', 'success');
                         window.history.replaceState({}, '', window.location.pathname);
                     }
@@ -2227,7 +2188,7 @@
                     dark: openFreeMapLayer('dark')
                 };
 
-                this.currentLayer = this.layers[this.settings.mapLayer];
+                this.currentLayer = this.layers[this.settings.mapLayer] || this.layers.osm;
                 this.currentLayer.addTo(this.map);
                 this.updateLayerButtons();
 
@@ -3121,22 +3082,15 @@
             }
 
             parseCoordinate(str) {
-                const decimal = parseFloat(str.replace(',', '.'));
-                if (!isNaN(decimal)) return decimal;
-
-                const dmsMatch = str.match(/(\d+)[°]\s*(\d+)?[']?\s*(\d+(?:\.\d+)?)?[""]?\s*([NSEW])?/i);
-                if (dmsMatch) {
-                    let deg = parseFloat(dmsMatch[1]) || 0;
-                    let min = parseFloat(dmsMatch[2]) || 0;
-                    let sec = parseFloat(dmsMatch[3]) || 0;
-                    let dir = (dmsMatch[4] || '').toUpperCase();
-                    
-                    let result = deg + min / 60 + sec / 3600;
-                    if (dir === 'S' || dir === 'W') result = -result;
-                    return result;
+                // stupně a minuty (49°44'37"N) dřív než desetinné číslo – parseFloat by z nich vzal jen „49“
+                const dms = str.replace(/,/g, '.').match(/(-?\d+(?:\.\d+)?)\s*°\s*(?:(\d+(?:\.\d+)?)\s*['′])?\s*(?:(\d+(?:\.\d+)?)\s*["″])?\s*([NSEW])?/i);
+                if (dms) {
+                    const deg = parseFloat(dms[1]);
+                    const result = Math.abs(deg) + (parseFloat(dms[2]) || 0) / 60 + (parseFloat(dms[3]) || 0) / 3600;
+                    const dir = (dms[4] || '').toUpperCase();
+                    return deg < 0 || dir === 'S' || dir === 'W' ? -result : result;
                 }
-
-                return NaN;
+                return parseFloat(str.replace(',', '.'));
             }
 
             fitMapToAllRoutes() {

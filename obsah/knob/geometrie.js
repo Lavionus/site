@@ -1,12 +1,13 @@
 /* Knob – stavba tělesa přes manifold-3d: rotační síť hlavy a krčku (s půdorysem), odsazení,
    zapuštění zespodu, otvor jisticího šroubku (matice / vložka / závit / samořezný vrut).
-   postav(w, p, o) → {poz, idx, objem, plocha, rod} v souřadnicích knobu (z = osa, 0 = spodek). */
+   postav(w, p, o, vyskaZkousky) → {poz, idx, objem, plocha, rod} v souřadnicích knobu (z = osa, 0 = spodek);
+   vyskaZkousky = jen spodek do té výšky (zkušební kroužek na ověření vůle). */
 (function () {
   'use strict';
   const K = typeof module !== 'undefined' ? require('../kliky/jadro.js') : window.KLIKY;
   const KG = typeof module !== 'undefined' ? require('../kliky/geometrie.js') : window.KLIKY_GEOM;
 
-  function postav(w, p, o) {
+  function postav(w, p, o, vyskaZkousky) {
     const { Manifold: M, CrossSection: CS } = w;
     const smaz = [], k = x => { smaz.push(x); return x; };
     const segKruh = r => Math.max(24, Math.min(96, Math.ceil(2 * Math.PI * r / 0.7 / 4) * 4));
@@ -69,6 +70,7 @@
         }
       }
       if (od.length) tel = k(M.difference([tel, ...od]));
+      if (vyskaZkousky) tel = k(M.intersection([tel, kuzelZ(o.rMax + 1, o.rMax + 1, -1, vyskaZkousky)]));
       const st = tel.status();
       if (st !== 'NoError') throw new Error('manifold hlásí ' + st);
       if (tel.isEmpty()) throw new Error('výsledné těleso je prázdné');
