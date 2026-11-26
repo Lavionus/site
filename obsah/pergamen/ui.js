@@ -214,7 +214,7 @@
     $('hPecetHloubka').textContent = d.pecetHloubka + ' %';
     $('tlListy').classList.toggle('aktivni', !!(d.dalsi.length || d.rub || d.obalka));
     const posk = d.preklad !== 'zadne' || d.zmackani || d.kanky || d.diry || d.roh !== 'zadny' || d.foxing || d.otisk || d.vybledle
-      || d.voda || d.mastnota || d.ozehnuti || d.pripaleni || d.trhliny;
+      || d.voda || d.mastnota || d.ozehnuti || d.pripaleni || d.trhliny || d.ponic.length;
     $('tlPoskozeni').classList.toggle('aktivni', !!posk);
     $('vzorInkoustu').style.background = d.inkoust;
     $('tlSifra').classList.toggle('aktivni', sifrovano());
@@ -399,11 +399,11 @@
   const maskaStyl = m => (m ? `;-webkit-mask-image:url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(m)}');mask-image:url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(m)}');-webkit-mask-size:100% 100%;mask-size:100% 100%` : '');
   /* Filtr inkoustu pro text jednoho listu (vlastní id – vodní skvrny jsou na každém listu jinde). */
   function filtrListu(fid, F, dd, rub) {
-    if (!P.inkoustEfekty(d)) return '';
-    const vs = d.voda ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(P.vodaMaskaSvg(dd, F.w, F.h, rub)) : '';
-    return P.filtrInkoustu(d.inkoustStari, d.seed, { pero: d.pero, rozpiti: d.rozpiti, rukopis: d.rukopis, voda: d.voda, vodaSvg: vs, ox: d.okrajBoky * PX_MM, oy: d.okrajNahore * PX_MM, w: F.w * PX_MM, h: F.h * PX_MM, id: fid });
+    if (!P.inkoustEfekty(dd)) return '';
+    const voda = P.vodaSila(dd), vs = voda ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(P.vodaMaskaSvg(dd, F.w, F.h, rub)) : '';
+    return P.filtrInkoustu(d.inkoustStari, d.seed, { pero: d.pero, rozpiti: d.rozpiti, rukopis: d.rukopis, voda, vodaSvg: vs, ox: d.okrajBoky * PX_MM, oy: d.okrajNahore * PX_MM, w: F.w * PX_MM, h: F.h * PX_MM, id: fid });
   }
-  const obsahStyl = fid => `inset:${d.okrajNahore}mm ${d.okrajBoky}mm ${d.okrajDole}mm${P.inkoustEfekty(d) ? `;filter:url(#${fid})` : ''}`;
+  const obsahStyl = (fid, dd) => `inset:${d.okrajNahore}mm ${d.okrajBoky}mm ${d.okrajDole}mm${P.inkoustEfekty(dd) ? `;filter:url(#${fid})` : ''}`;
   /* Místo, datum, podpis a klíč dole – na posledním listu s textem. */
   function pataHtml() {
     const datum = pole('span', 'datum', 'datum', 'Místo a datum', `font-family:${esc(pismo(d.pismo))}`), podpis = pole('span', 'podpis', 'podpis', 'Podpis', `font-family:${esc(pismo(d.pismoNadpisu))}`);
@@ -428,10 +428,11 @@
     const nadpis = pole('h1', 'nadpis', 'nadpis', 'Nadpis', `font-family:${esc(pismo(d.pismoNadpisu))};text-align:${d.nadpisZar}`);
     // poničení: přes list překryv (lomy, zmačkání, kaňky…), díry a utržený roh maskou – je jimi vidět skrz
     const pk = P.poskozeni(d, F.w, F.h, { id: 'hl' });
-    return `<div class="list${e ? ' upravy' : ''}${tridaVystupu()}" id="hlavniList" style="${styl}${maskaStyl(pk.maska)}" data-i18n="ne">${filtrListu('inkoustStary', F, d)}${ozdoby()}<div class="obsah" style="${obsahStyl('inkoustStary')}">${nadpis}`
+    objektyPoniceni = pk.objekty;
+    return `<div class="list${e ? ' upravy' : ''}${tridaVystupu()}" id="hlavniList" style="${styl}${maskaStyl(pk.maska)}" data-i18n="ne">${filtrListu('inkoustStary', F, d)}${ozdoby()}<div class="obsah" style="${obsahStyl('inkoustStary', d)}">${nadpis}`
       + `<div class="telo${ini}${tridyTela(true, e)}" id="telo"${e ? ' contenteditable="true" spellcheck="true" lang="cs"' : ''} style="${stylTela(d.zarovnani, true)}">${telo}</div>`
       + (d.dalsi.length ? '' : pataHtml()) + '</div>'
-      + prvkyHtml(F) + pk.prekryv + '</div>';
+      + prvkyHtml(F) + pk.prekryv + (rucni && e ? ponicUchyty() : '') + '</div>';
   }
   /* Další list (pokračování textu), rub hlavního listu (papír i poničení zrcadlově, inkoust
      z líce jen prosvítá) a obálka – střih C6 na A4 s adresou a pečetí na horní chlopni. */
@@ -441,7 +442,7 @@
   function vedlejsiListHtml(druh, i) {
     const e = upravy(), obalka = druh === 'obalka', rub = druh === 'rub', dalsi = druh === 'dalsi';
     const F = obalka ? { w: P.OBALKA.w, h: P.OBALKA.h } : (P.FORMATY[d.format] || P.FORMATY.a4);
-    const dd = dalsi ? Object.assign({}, d, { seedPosk: d.seedPosk + 17 * (i + 1) }) : d;
+    const dd = dalsi ? Object.assign({}, d, { seedPosk: d.seedPosk + 17 * (i + 1), ponic: [], posuny: {} }) : d;   // další list = jiný kus papíru, ruční poničení hlavního na něj nepatří (rub ano)
     const pap = P.papirDataUrl(Object.assign({}, d, obalka ? { format: 'a4', okraj: 'rovny', vodoznak: 'zadny', seed: d.seed + 77 } : { seed: d.seed + (dalsi ? 101 * (i + 1) : 0), zrcadlit: rub }));
     const klic = dalsi ? 'dalsi-' + i : druh, zdroj = dalsi ? d.dalsi[i] : d[druh], fid = 'inkoust-' + klic;
     const html = doplnObrazky(e ? zdroj.html : dalsi ? sifrovanyHtml(dosadHtml(zdroj.html), startSifry(i)) : dosadHtml(zdroj.html));
@@ -455,7 +456,7 @@
     } else {
       const pk = P.poskozeni(dd, F.w, F.h, { rub, id: klic });
       maska = pk.maska;
-      vnitrek = filtrListu(fid, F, dd, rub) + (dalsi ? ozdoby() : '') + `<div class="obsah" style="${obsahStyl(fid)}">${telo}${dalsi && i === d.dalsi.length - 1 ? pataHtml() : ''}</div>`
+      vnitrek = filtrListu(fid, F, dd, rub) + (dalsi ? ozdoby() : '') + `<div class="obsah" style="${obsahStyl(fid, dd)}">${telo}${dalsi && i === d.dalsi.length - 1 ? pataHtml() : ''}</div>`
         + (dalsi && d.cislovani !== 'zadne' ? `<div class="cislo-listu" style="bottom:${Math.max(3, d.okrajDole / 2 - 2)}mm;font-family:${esc(pismo(d.pismo))}">${P.cisloListu(d.cislovani, i + 2)}</div>` : '') + pk.prekryv;
     }
     const popisek = e ? `<div class="popisek-listu">${esc(dalsi ? `📄 ${i + 2}. list` : NAZVY_LISTU[druh])}<button class="tl" data-odebrat-list="${klic}" title="Odebrat tento list">🗑 Odebrat</button></div>` : '';
@@ -567,7 +568,7 @@
     const N = $('nahled');
     if ((e.button !== 0 && e.button !== 1) || e.pointerType === 'touch' || (e.button === 0 && e.target.closest('.list')) || (N.scrollWidth <= N.clientWidth && N.scrollHeight <= N.clientHeight)) return;
     if (e.button === 1) e.preventDefault();
-    tah = { x: e.clientX, y: e.clientY, l: N.scrollLeft, t: N.scrollTop }; N.setPointerCapture(e.pointerId); N.classList.add('tahne');
+    tah = { x: e.clientX, y: e.clientY, l: N.scrollLeft, t: N.scrollTop }; try { N.setPointerCapture(e.pointerId); } catch (x) { /* syntetická událost */ } N.classList.add('tahne');
   });
   $('nahled').addEventListener('pointermove', e => { if (tah) { const N = $('nahled'); N.scrollLeft = tah.l - (e.clientX - tah.x); N.scrollTop = tah.t - (e.clientY - tah.y); } });
   const konecTahu = () => { tah = null; $('nahled').classList.remove('tahne'); };
@@ -583,7 +584,7 @@
     }
     kresleny = zaznam;
     $('listy').innerHTML = html;
-    stavPasu(); stavPrvku();
+    stavPasu(); stavPrvku(); stavPonic();
     $('listy').style.display = 'flex'; $('listy').style.flexDirection = 'column'; $('listy').style.gap = '22px';
     const F = P.FORMATY[d.format] || P.FORMATY.a4;
     $('tiskStyl').textContent = `@media print{@page{size:${F.w}mm ${F.h}mm;margin:0}@page obalka{size:210mm 297mm;margin:0}@page listek{size:148mm 105mm;margin:0}}`;
@@ -1059,6 +1060,7 @@
   });
 
   /* ---------- kresby perem a poznámky na okraj ---------- */
+  const IKONY_PONICENI = { kanka: '🖋', dira: '🔥', voda: '💧', mastnota: '🧈', pripaleni: '🕯️', otisk: '👆' };
   const IKONY_KRESEB = { poznamka: '📝', sipka: '→', sipkaOblouk: '↷', krouzek: '◯', vlnovka: '〰', zavorka: '{', krizek: '✗', hvezda: '✶', ruka: '☞' };
   $('nabKresby').innerHTML = '<div class="titulek">Kresba perem na list</div>'
     + Object.entries(P.KRESBY).map(([k, [n]]) => `<button class="tl" data-kresba="${k}"><span style="display:inline-block;width:1.4em;text-align:center">${IKONY_KRESEB[k]}</span> ${esc(n)}</button>`).join('')
@@ -1109,6 +1111,115 @@
     else if (vybrany.typ === 'obr' && v !== 'volne') vlozDoTextu(vybrany.i, v);
   });
 
+  /* ---------- ruční poničení ----------
+     Režim ✋: nad každým objektem poničení na hlavním listu (kaňka, díra, vodní a mastná skvrna, připálení,
+     otisk) je kroužek. Táhnutím se přesouvá, tečkou na kroužku nebo posuvníkem mění velikost.
+     Ručně přidané objekty jsou v d.ponic, zásah do vygenerovaného se píše do d.posuny (jadro: P.poskozeni). */
+  let rucni = false, ponicVybrany = null, objektyPoniceni = [];
+  const meritkoUchytu = typ => (typ === 'pripaleni' ? 1.5 : typ === 'kanka' ? 1.3 : 1);   // kroužek kolem celé stopy, ne jen jádra
+  const polomerUchytu = o => Math.max(3.5, o.r * meritkoUchytu(o.typ));
+  const ponicUchyty = () => objektyPoniceni.map(o => {
+    const r = polomerUchytu(o);
+    return `<div class="ponic-uchyt${o.klic === ponicVybrany ? ' vybrany' : ''}" data-ponic="${o.klic}" style="left:${o.x - r}mm;top:${o.y - r}mm;width:${2 * r}mm;height:${2 * r}mm"><span class="ponic-roh" data-ponic-roh></span></div>`;
+  }).join('');
+  const ponicNajdi = klic => objektyPoniceni.find(o => o.klic === klic);
+  function ponicZmen(klic, zmena) {
+    const o = ponicNajdi(klic); if (!o) return;
+    const [, , min, max] = P.PONICENI_DRUHY[o.typ];
+    if (zmena.r != null) zmena.r = Math.max(min, Math.min(max, Math.round(zmena.r * 2) / 2));
+    if (o.rucni) Object.assign(d.ponic[+klic.slice(2)], zmena);
+    else d.posuny[klic] = Object.assign({ x: o.x, y: o.y, r: o.r }, d.posuny[klic], zmena);
+    Object.assign(o, zmena);
+  }
+  function ponicSmaz(klic) {
+    const o = ponicNajdi(klic); if (!o) return;
+    if (o.rucni) d.ponic.splice(+klic.slice(2), 1); else d.posuny[klic] = { skryt: true };
+    ponicVybrany = null; uloz(); vse();
+  }
+  /* Jiný tvar: ručnímu stačí nové semínko; vygenerovaný sdílí náhodu s ostatními, proto se skryje a nahradí ručním. */
+  function ponicTvar(klic) {
+    const o = ponicNajdi(klic); if (!o) return;
+    if (o.rucni) d.ponic[+klic.slice(2)].seed = nahodne();
+    else { d.posuny[klic] = { skryt: true }; d.ponic.push({ typ: o.typ, x: o.x, y: o.y, r: o.r, seed: nahodne() }); ponicVybrany = 'r:' + (d.ponic.length - 1); }
+    uloz(); vse();
+  }
+  /* Nový objekt na místě x, y (mm); bez místa doprostřed viditelné části hlavního listu. */
+  function ponicPridej(typ, x, y) {
+    if (!P.PONICENI_DRUHY[typ]) return;
+    if (d.ponic.length >= 60) return zprava('Ručně přidaných poničení může být nejvýš 60.');
+    const F = P.FORMATY[d.format] || P.FORMATY.a4, L = $('hlavniList');
+    if (x == null && L) {
+      const l = L.getBoundingClientRect(), n = $('nahled').getBoundingClientRect(), k = meritko * PX_MM;
+      x = ((Math.max(l.left, n.left) + Math.min(l.right, n.right)) / 2 - l.left) / k;
+      y = ((Math.max(l.top, n.top) + Math.min(l.bottom, n.bottom)) / 2 - l.top) / k;
+    }
+    const vListu = (v, max) => (v >= 0 && v <= max ? Math.round(v * 2) / 2 : max / 2);
+    d.ponic.push({ typ, x: vListu(x, F.w), y: vListu(y, F.h), r: P.PONICENI_DRUHY[typ][1], seed: nahodne() });
+    rucni = true; pohled = 'text'; ponicVybrany = 'r:' + (d.ponic.length - 1);
+    if (vybrany) vyberPrvek(null);
+    uloz(); vse();
+  }
+  function nastavRucni(zap) {
+    rucni = zap; ponicVybrany = null;
+    if (zap) { pohled = 'text'; if (vybrany) vyberPrvek(null); }
+    vykresli();
+    if (zap) zprava(objektyPoniceni.length ? 'Táhněte kroužky na listu; nové poničení přidáte z pásu nebo pravým tlačítkem.' : 'Na listu zatím nic není – přidejte kaňku, díru nebo skvrnu z pásu.');
+  }
+  function stavPonic() {
+    const zap = rucni && upravy(), o = zap && ponicNajdi(ponicVybrany);
+    $('pasPonic').classList.toggle('neviditelny', !zap); $('pasPonic').inert = !zap;
+    $('tlRucni').setAttribute('aria-pressed', String(rucni));
+    $('ponicVybrane').hidden = !o;
+    if (!o) return;
+    const [nazev, , min, max] = P.PONICENI_DRUHY[o.typ], v = $('ponicVel');
+    $('ponicNazev').textContent = nazev; v.min = min; v.max = max;
+    if (document.activeElement !== v) v.value = o.r;
+  }
+  function oznacPonic(klic) {   // bez překreslení listu – kurzor v textu zůstane
+    ponicVybrany = klic;
+    document.querySelectorAll('#hlavniList .ponic-uchyt').forEach(u => u.classList.toggle('vybrany', u.dataset.ponic === klic));
+    stavPonic();
+  }
+  let tahPonic = null, ponicSnimek = 0;
+  $('listy').addEventListener('pointerdown', e => {
+    if (!rucni || !upravy() || e.button !== 0) return;
+    const u = e.target.closest('.ponic-uchyt'), o = u && ponicNajdi(u.dataset.ponic);
+    if (!o) { if (ponicVybrany && e.target.closest('#hlavniList')) oznacPonic(null); return; }
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.isContentEditable) document.activeElement.blur();
+    oznacPonic(o.klic);
+    tahPonic = { klic: o.klic, x0: e.clientX, y0: e.clientY, x: o.x, y: o.y, velikost: !!e.target.closest('[data-ponic-roh]'), pohyb: false };
+    try { $('listy').setPointerCapture(e.pointerId); } catch (x) { /* syntetická událost */ }
+  });
+  $('listy').addEventListener('pointermove', e => {
+    if (!tahPonic) return;
+    const t = tahPonic, k = meritko * PX_MM;
+    if (!t.pohyb && Math.hypot(e.clientX - t.x0, e.clientY - t.y0) < 3) return;
+    t.pohyb = true;
+    if (t.velikost) {   // tečka leží na kroužku: poloměr = vzdálenost ukazatele od středu
+      const l = $('hlavniList').getBoundingClientRect(), o = ponicNajdi(t.klic);
+      ponicZmen(t.klic, { r: Math.hypot((e.clientX - l.left) / k - t.x, (e.clientY - l.top) / k - t.y) / meritkoUchytu(o.typ) });
+    } else ponicZmen(t.klic, { x: Math.round((t.x + (e.clientX - t.x0) / k) * 2) / 2, y: Math.round((t.y + (e.clientY - t.y0) / k) * 2) / 2 });
+    if (!ponicSnimek) ponicSnimek = requestAnimationFrame(() => { ponicSnimek = 0; vykresli(); });   // poničení se kreslí při tažení
+  });
+  const konecTahuPonic = () => { if (!tahPonic) return; const pohyb = tahPonic.pohyb; tahPonic = null; if (pohyb) { uloz(); vykresli(); } };
+  $('listy').addEventListener('pointerup', konecTahuPonic); $('listy').addEventListener('pointercancel', konecTahuPonic);
+  $('pasPonic').addEventListener('click', e => {
+    const p = e.target.closest('[data-ponic-pridej]'), a = e.target.closest('[data-ponic-akce]');
+    if (p) ponicPridej(p.dataset.ponicPridej);
+    else if (a && ponicVybrany) (a.dataset.ponicAkce === 'tvar' ? ponicTvar : ponicSmaz)(ponicVybrany);
+  });
+  $('ponicVel').addEventListener('input', e => { if (ponicVybrany) { ponicZmen(ponicVybrany, { r: +e.target.value }); uloz(); vykresli(); } });
+  document.addEventListener('keydown', e => {
+    const kde = document.activeElement;
+    if (!rucni || !upravy() || /^(INPUT|TEXTAREA|SELECT)$/.test(kde.tagName) || kde.isContentEditable || document.querySelector('.po-zavoj, dialog[open], .nabidka:not([hidden])')) return;
+    if (e.key === 'Escape') return nastavRucni(false);
+    const o = ponicNajdi(ponicVybrany); if (!o) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return ponicSmaz(o.klic); }
+    const sipky = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (sipky) { e.preventDefault(); const k = e.shiftKey ? 5 : 0.5; ponicZmen(o.klic, { x: o.x + sipky[0] * k, y: o.y + sipky[1] * k }); uloz(); vykresli(); }
+  });
+
   /* ---------- kontextová nabídka (pravé tlačítko) v celém náhledu ----------
      Prohlížečová nabídka je v náhledu vypnutá; obsah se řídí místem kliknutí:
      obrázek / pečeť, text (formát, schránka), prázdný list a okolí (list, vložit, náhled, výstup). */
@@ -1120,6 +1231,13 @@
     const t = (k, txt, zap, klav) => p.push(`<button class="tl" role="menuitem" data-k="${k}"${zap === false ? ' disabled' : ''}>${txt}${klav ? ` <kbd>${klav}</kbd>` : ''}</button>`);
     const hr = () => p.push('<hr>'), nad = txt => p.push(`<div class="titulek">${txt}</div>`);
     const v = vybrany;
+    const ponicTady = () => { if (!upravy()) return; hr(); nad(kontextMisto ? 'Poničit tady' : 'Přidat poničení'); p.push('<div class="kontext-rad">' + Object.entries(IKONY_PONICENI).map(([k, z]) => `<button class="tl ik" data-k="ponic+:${k}" title="${esc(P.PONICENI_DRUHY[k][0])}" aria-label="${esc(P.PONICENI_DRUHY[k][0])}">${z}</button>`).join('') + '</div>'); };
+    if (typ === 'ponic') {
+      t('ponicTvar', '🎲 Jiný tvar');
+      p.push('<div class="kontext-rad"><button class="tl" data-k="ponicMensi" title="Menší">−</button><button class="tl" data-k="ponicVetsi" title="Větší">+</button></div>');
+      hr(); t('ponicSmaz', '🗑️ Odstranit', true, 'Delete'); t('rucniPoniceni', '✓ Ukončit ruční poničení', true, 'Esc');
+      return p.join('');
+    }
     const zarovnani = () => { nad('Zarovnat'); p.push('<div class="kontext-rad">' + [['zarL', '⇤', 'K levému okraji textu'], ['zarS', '↔', 'Na střed listu vodorovně'], ['zarP', '⇥', 'K pravému okraji textu'],
       ['zarN', '⤒', 'K hornímu okraji textu'], ['zarU', '↕', 'Na střed listu svisle'], ['zarD', '⤓', 'K dolnímu okraji textu']].map(([k, z, tit]) => `<button class="tl ik" data-k="${k}" title="${tit}" aria-label="${tit}">${z}</button>`).join('') + '</div>'); };
     const poradi = o => { t('vys', '▲ O úroveň výš (nad ostatní prvky)', v.i < d.obrazky.length - 1); t('niz', '▼ O úroveň níž', v.i > 0); t('zamek', o.zamek ? '🔓 Odemknout polohu' : '🔒 Zamknout polohu'); };
@@ -1167,12 +1285,13 @@
         p.push('<div class="kontext-rad">'
           + `<button class="tl ik" data-k="justifyLeft" title="Vlevo">⯇</button><button class="tl ik" data-k="justifyCenter" title="Na střed">≡</button><button class="tl ik" data-k="justifyRight" title="Vpravo">⯈</button><button class="tl ik" data-k="justifyFull" title="Do bloku">☰</button></div>`);
         t('blok-p', 'Normální odstavec'); t('blok-h2', 'Mezititulek'); t('blok-blockquote', 'Citát');
-        if (aktivni.id === 'telo') { hr(); t('obrazekSem', '🖼️ Vložit obrázek sem…'); }
+        if (aktivni.id === 'telo') { hr(); t('obrazekSem', '🖼️ Vložit obrázek sem…'); ponicTady(); }
       }
     } else {   // prázdný list, okolí náhledu, zašifrovaný pohled
       if (jinyPohled()) { t('pohled', pohled !== 'text' ? '✍️ Upravit text' : sifrovano() ? '🔐 Ukázat šifru' : '👁 Ukázat výsledek'); hr(); }
       if (upravy()) { t('obrazekVolne', '🖼️ Vložit obrázek…'); t('menu:nabKresby', '✒️ Kresba perem…'); t('pecetPrepni', d.pecet ? '🔏 Odebrat pečeť' : '🔏 Přidat pečeť'); hr(); }
       if (upravy() && kontextList && kontextList !== 'hlavni') { t('odebratList', '🗑 Odebrat tento list'); hr(); }
+      if (kontextList === 'hlavni' || !kontextList) { p.pop(); ponicTady(); t('rucniPoniceni', rucni ? '✓ Ukončit ruční poničení' : '✋ Ruční poničení – posouvat kaňky, díry, skvrny'); hr(); }
       nad('List');
       t('menu:nabPapir', '📄 Papír, okraj a rámeček…'); t('menu:nabPoskozeni', '💥 Poničení…'); t('menu:nabPismo', '🔤 Výchozí písmo…'); t('menu:nabSifra', '🔐 Šifra a klíč…'); t('menu:nabListy', '📑 Listy, rub, obálka…'); t('jinyPapir', '🎲 Jiné natržení a skvrny');
       hr(); nad('Náhled');
@@ -1184,36 +1303,72 @@
     }
     return p.join('');
   }
-  $('nahled').addEventListener('contextmenu', e => {
-    e.preventDefault();   // v celém náhledu jen vlastní nabídka
+  /* Otevře nabídku na místě x, y. cil = prvek pod ukazatelem (pravé tlačítko, dlouhý stisk);
+     bez něj (tlačítko ⋯ v pásu) se obsah řídí tím, co je vybrané nebo kde je kurzor. */
+  let kontextMisto = null;
+  function otevriKontext(x, y, cil) {
     if (exportuje) return;
-    const vt = e.target.closest('#telo img[data-obr]'), pr = e.target.closest('#hlavniList .prvek');
-    const ed = upravy() && e.target.closest(EDITORY);
-    if (upravy() && (vt || pr)) {
+    kontextMisto = null;
+    const uprav = upravy();
+    const vt = cil && cil.closest('#telo img[data-obr]'), pr = cil && cil.closest('#hlavniList .prvek'), pu = cil && rucni && cil.closest('.ponic-uchyt');
+    const ed = uprav && (cil ? cil.closest(EDITORY) : !vybrany && jeEditor(aktivni) && aktivni);
+    if (uprav && pu && ponicNajdi(pu.dataset.ponic)) { oznacPonic(pu.dataset.ponic); kontextTyp = 'ponic'; }
+    else if (uprav && !cil && rucni && ponicNajdi(ponicVybrany)) kontextTyp = 'ponic';
+    else if (uprav && (vt || pr)) {
       if (vt) vyberPrvek({ typ: 'txt', el: vt });
       else vyberPrvek(pr.dataset.prvek === 'pecet' ? { typ: 'pecet' } : { typ: 'obr', i: +pr.dataset.i });
       kontextTyp = 'prvek';
-    } else if (ed) {
+    } else if (uprav && !cil && vybrany) kontextTyp = 'prvek';
+    else if (ed) {
       if (vybrany) vyberPrvek(null);
-      // klik mimo označení přesune kurzor (jako v textovém editoru), klik do označení ho nechá
-      const sel = getSelection();
-      const vOznaceni = sel.rangeCount && !sel.isCollapsed && [...sel.getRangeAt(0).getClientRects()].some(r => e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
-      if (!vOznaceni) { const r = kurzorZBodu(e.clientX, e.clientY); if (r && ed.contains(r.startContainer)) { ed.focus(); sel.removeAllRanges(); sel.addRange(r); } }
-      aktivni = ed; ulozRozsah();
+      if (cil) {   // klik mimo označení přesune kurzor (jako v textovém editoru), klik do označení ho nechá
+        const sel = getSelection();
+        const vOznaceni = sel.rangeCount && !sel.isCollapsed && [...sel.getRangeAt(0).getClientRects()].some(r => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+        if (!vOznaceni) { const r = kurzorZBodu(x, y); if (r && ed.contains(r.startContainer)) { ed.focus(); sel.removeAllRanges(); sel.addRange(r); } }
+        aktivni = ed; ulozRozsah();
+      } else obnovVyber();
       kontextTyp = 'text';
     } else kontextTyp = 'list';
-    const kl = e.target.closest('.list'); kontextList = kl ? kl.dataset.list || 'hlavni' : null;
+    const kl = cil && cil.closest('.list'); kontextList = kl ? kl.dataset.list || 'hlavni' : null;
+    if (kl && kl.id === 'hlavniList') { const l = kl.getBoundingClientRect(), k = meritko * PX_MM; kontextMisto = { x: (x - l.left) / k, y: (y - l.top) / k }; }
     zavriNabidky();
     kontext.innerHTML = polozky(kontextTyp); kontext.hidden = false;
     const w = kontext.offsetWidth, h = kontext.offsetHeight;
-    kontext.style.left = Math.max(6, Math.min(e.clientX, innerWidth - w - 6)) + 'px';
-    kontext.style.top = Math.max(6, Math.min(e.clientY, innerHeight - h - 6)) + 'px';
+    kontext.style.left = Math.max(6, Math.min(x, innerWidth - w - 6)) + 'px';
+    kontext.style.top = Math.max(6, Math.min(y, innerHeight - h - 6)) + 'px';
     if (kontextTyp !== 'text') { const prvni = kontext.querySelector('button:not(:disabled)'); if (prvni) prvni.focus(); }   // u textu zůstane fokus (a výběr) v listu
+  }
+  $('nahled').addEventListener('contextmenu', e => {
+    e.preventDefault();   // v celém náhledu jen vlastní nabídka
+    if (Date.now() - stiskCas > 800) otevriKontext(e.clientX, e.clientY, e.target);   // dlouhý stisk ji už otevřel (Android pošle i contextmenu)
   });
+  /* Tablet a telefon pravé tlačítko nemají: nabídku otevře dlouhý stisk prstem nebo perem
+     (Safari na iPadu událost contextmenu neposílá) a tlačítko ⋯ v pásu. */
+  let stisk = null, stiskCas = 0;
+  const zrusStisk = () => { if (stisk) { clearTimeout(stisk.cas); stisk = null; } };
+  $('nahled').addEventListener('pointerdown', e => {
+    zrusStisk();
+    if (e.pointerType === 'mouse' || !e.isPrimary || exportuje) return;
+    const x = e.clientX, y = e.clientY, cil = e.target;
+    stisk = { x, y, cas: setTimeout(() => { stisk = null; stiskCas = Date.now(); tahPrvku = tahTextu = tahPonic = null; otevriKontext(x, y, cil); }, 550) };
+  });
+  $('nahled').addEventListener('pointermove', e => { if (stisk && Math.hypot(e.clientX - stisk.x, e.clientY - stisk.y) > 8) zrusStisk(); });
+  for (const u of ['pointerup', 'pointercancel', 'scroll']) $('nahled').addEventListener(u, zrusStisk);
+  $('tlVice').addEventListener('mousedown', e => e.preventDefault());   // výběr v listu zůstane
+  $('tlVice').addEventListener('click', e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); otevriKontext(r.left, r.bottom + 4, null); });
   kontext.addEventListener('mousedown', e => e.preventDefault());   // tlačítko nesmí vzít fokus z textu
   kontext.addEventListener('click', async e => {
     const b = e.target.closest('[data-k]'); if (!b || b.disabled) return;
     const k = b.dataset.k; zavriKontext();
+    if (k.startsWith('ponic+:')) return kontextMisto ? ponicPridej(k.slice(7), kontextMisto.x, kontextMisto.y) : ponicPridej(k.slice(7));
+    if (kontextTyp === 'ponic') {
+      const o = ponicNajdi(ponicVybrany);
+      if (k === 'rucniPoniceni') return nastavRucni(false);
+      if (!o) return;
+      if (k === 'ponicTvar') return ponicTvar(o.klic);
+      if (k === 'ponicSmaz') return ponicSmaz(o.klic);
+      ponicZmen(o.klic, { r: o.r * (k === 'ponicVetsi' ? 1.25 : 0.8) }); uloz(); return vykresli();
+    }
     if (kontextTyp === 'text') return akceTextu(k, b);
     if (kontextTyp === 'list') return akceListu(k);
     const v = vybrany; if (!v) return;
@@ -1503,12 +1658,15 @@
     zoomSirka: () => nastavZoom('sirka'), zoomStranka: () => nastavZoom('stranka'),
     vlozObrazek: () => $('souborObrazku').click(),
     pecetZpet: () => { d.pecetX = d.pecetY = null; uloz(); vykresli(); },
-    jinePoskozeni: () => { d.seedPosk = 1 + Math.floor(Math.random() * 1e6); uloz(); vykresli(); },
-    bezPoskozeni: () => { Object.assign(d, BEZ_PONICENI); uloz(); vse(); },
+    jinePoskozeni: () => { d.seedPosk = 1 + Math.floor(Math.random() * 1e6); d.posuny = {}; ponicVybrany = null; uloz(); vykresli(); },   // nové rozmístění = ruční posuny vygenerovaných pryč
+    bezPoskozeni: () => { Object.assign(d, BEZ_PONICENI, { posuny: {}, ponic: [] }); ponicVybrany = null; uloz(); vse(); },
+    rucniPoniceni: () => nastavRucni(!rucni),
+    mobilInfoZavrit: () => { data.mobilInfo = true; $('mobilInfo').hidden = true; const zm = d.zmeneno; uloz(); d.zmeneno = zm; prizpusobMeritko(); },
     nahodnePoskozeni: () => {
       const r = Math.random, kdyz = (p, fn) => (r() < p ? fn() : 0), proc = () => 15 + Math.round(r() * 60), kus = n => () => 1 + Math.floor(r() * n), z = o => { const k = Object.keys(o); return k[Math.floor(r() * k.length)]; };
       Object.assign(d, { preklad: z(P.PREKLADY), roh: r() < 0.3 ? z(P.ROHY) : 'zadny', zmackani: kdyz(0.6, proc), voda: kdyz(0.3, proc), kanky: kdyz(0.4, proc), mastnota: kdyz(0.3, proc),
-        diry: kdyz(0.3, kus(3)), pripaleni: kdyz(0.25, kus(2)), trhliny: kdyz(0.4, kus(3)), ozehnuti: kdyz(0.25, proc), foxing: kdyz(0.6, proc), vybledle: kdyz(0.4, proc), otisk: r() < 0.3, seedPosk: nahodne() });
+        diry: kdyz(0.3, kus(3)), pripaleni: kdyz(0.25, kus(2)), trhliny: kdyz(0.4, kus(3)), ozehnuti: kdyz(0.25, proc), foxing: kdyz(0.6, proc), vybledle: kdyz(0.4, proc), otisk: r() < 0.3, seedPosk: nahodne(), posuny: {} });
+      ponicVybrany = null;
       uloz(); vse();
     },
     zpetDokument, znovuDokument,
@@ -1598,6 +1756,8 @@
   /* Okraje textu čárkovaně (jen při úpravách). */
   function nastavVoditka() { $('listy').classList.toggle('s-okraji', !!data.voditka); $('tlVoditka').setAttribute('aria-pressed', String(!!data.voditka)); }
   nastavVoditka();
+  // upozornění, že stránka je dělaná pro počítač – jen na dotykovém nebo úzkém displeji, dokud ho uživatel nezavře
+  $('mobilInfo').hidden = !!data.mobilInfo || !matchMedia('(pointer: coarse), (max-width: 820px)').matches;
   /* Zvláštní znaky: klik vloží znak na místo kurzoru; nabídka zůstane otevřená. */
   const ZNAKY = { 'Interpunkce a značky': '„“‚‘»«–—…·•§¶†‡№', 'Kříže a ozdoby': '✠☩✝♱❧☙❦⁂※✶❖⚜☘⚔☠⚓', 'Staré litery a zkratky': 'ſßæœðþꝛ⁊℞℣℟Æ', 'Čísla a míry': '½⅓¼¾°×÷ⅠⅤⅩⅬⅭⅮⅯ', 'Nebe a směry': '☉☽★♂♀☿♃♄→←↑↓☞☜' };
   $('nabZnaky').innerHTML = Object.entries(ZNAKY).map(([n, z]) => `<div class="titulek">${n}</div><div class="znaky" data-i18n="ne">${[...z].map(c => `<button class="tl" data-znak="${c}">${c}</button>`).join('')}</div>`).join('')
@@ -1687,7 +1847,7 @@
     const u = e.target.closest('[data-ukazka]');
     if (u) { zavriNabidky(); zahodNedotceny(); d = novy(u.dataset.ukazka); uloz(); obnovVybery(); vse(); novaHistorie(); return; }
     const pv = e.target.closest('[data-poniceni]');   // nabídka zůstane otevřená – je vidět, co předvolba nastavila
-    if (pv && PONICENI[pv.dataset.poniceni]) { Object.assign(d, BEZ_PONICENI, PONICENI[pv.dataset.poniceni], { seedPosk: nahodne() }); uloz(); vse(); return; }
+    if (pv && PONICENI[pv.dataset.poniceni]) { Object.assign(d, BEZ_PONICENI, PONICENI[pv.dataset.poniceni], { seedPosk: nahodne(), posuny: {} }); ponicVybrany = null; uloz(); vse(); return; }   // ručně přidané zůstávají
     const b = e.target.closest('[data-prikaz]');
     if (b && !b.disabled && PRIKAZY[b.dataset.prikaz]) { if (!b.hasAttribute('data-nech-nabidku')) zavriNabidky(); return PRIKAZY[b.dataset.prikaz](); }
     // cesta události místo closest: tlačítko, které se po kliknutí překreslí (filtr písem), už v DOM není
@@ -1717,7 +1877,7 @@
   addEventListener('beforeprint', () => { if (!exportuje) rezimExportu(maData() ? 'vse' : true); });
   addEventListener('afterprint', () => rezimExportu(false));
 
-  window.PERGAMEN_APP = { obrazkyListu, get dokument() { return d; }, get meritko() { return meritko; }, get pohled() { return pohled; }, get vybrany() { return vybrany; }, obrazky, vlozObrazek, vykresli, cisty, sifrovanyHtml, prizpusob, nastavZoom, PRIKAZY };
+  window.PERGAMEN_APP = { get objektyPoniceni() { return objektyPoniceni; }, get rucni() { return rucni; }, ponicPridej, otevriKontext, obrazkyListu, get dokument() { return d; }, get meritko() { return meritko; }, get pohled() { return pohled; }, get vybrany() { return vybrany; }, obrazky, vlozObrazek, vykresli, cisty, sifrovanyHtml, prizpusob, nastavZoom, PRIKAZY };
   obnovVybery(); vse(); novaHistorie();
   nactiObrazky().then(() => { uklidObrazku(); if (idObrazku(d).length) vykresli(); });
   document.fonts.ready.then(prizpusobMeritko);

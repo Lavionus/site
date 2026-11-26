@@ -70,6 +70,8 @@
     sloupce: 1, odsazeni: 0, mezeraOdst: 0.8, prostrkani: 0, cislovani: 'zadne',
     // výstup: rozlišení PNG/PDF, jen inkoust bez papíru; hromadné listiny: tabulka jako text (první řádek = sloupce)
     vystupDpi: 300, bezPapiru: false, dataText: '',
+    // ruční poničení: přidané objekty [{typ, x, y, r (mm), seed}] a posuny vygenerovaných {'dira:0': {x, y, r, skryt}}
+    ponic: [], posuny: {},
     obrazky: []   // [{id, x, y, w (mm), rot (°), op (0–1), blend 'normal'|'multiply', vrstva 'pred'|'za'}]
   });
   /* Vzhled bez textu – co se ukládá do vlastní šablony vzhledu. */
@@ -81,6 +83,9 @@
   /* ---------- poničení listu ----------
      Vrací { prekryv: SVG přes celý list (lomy, zmačkání, kaňky, otisk, skvrnky, vybledlé místo,
      ohořelé okraje děr), maska: SVG pro CSS mask (díry a utržený roh – je jimi vidět skrz) }. */
+  /* Druhy poničení, které jde přidat a posouvat ručně: [název, výchozí poloměr, nejmenší, největší] v mm. */
+  P.PONICENI_DRUHY = { kanka: ['Kaňka inkoustu', 5, 1.5, 20], dira: ['Propálená díra', 6, 2, 30], voda: ['Vodní skvrna', 22, 6, 70],
+    mastnota: ['Mastná skvrna', 14, 5, 50], pripaleni: ['Připálení svíčkou', 6, 2, 25], otisk: ['Otisk prstu', 10, 5, 20] };
   P.PREKLADY = { zadne: 'Nepřeložený', pul: 'Napůl', tretiny: 'Na třetiny (dopis)', ctvrtky: 'Na čtvrtky' };
   P.ROHY = { zadny: 'Žádný', lh: 'Levý horní', ph: 'Pravý horní', ld: 'Levý dolní', pd: 'Pravý dolní' };
   /* Inkoustová kaňka: kruh s náhodnými výběžky (cákanci), hladce spojený. */
@@ -95,17 +100,27 @@
     }
     return dd + 'Z';
   }
-  /* Vodní skvrny (stejné pro překryv i pro rozpitý inkoust ve filtru textu): [{d, cx, cy}]. */
+  /* Vodní skvrny (stejné pro překryv i pro rozpitý inkoust ve filtru textu): [{d, cx, cy, r, klic}]
+     – vygenerované podle posuvníku (s ručními posuny) a ručně přidané; menší „zátoka“ vedle klíč nemá. */
   P.vodniSkvrny = function (d, w, h) {
-    const k = (+d.voda || 0) / 100; if (!k) return [];
-    const rng = P.rng(((d.seedPosk || 3) * 977 + 5) >>> 0), out = [];
-    for (let i = 0, n = 1 + Math.round(k * 2.4); i < n; i++) {
-      const cx = 10 + rng() * (w - 20), cy = 10 + rng() * (h - 20), r = 10 + rng() * (14 + 26 * k);
-      out.push({ d: kanka(cx, cy, r, rng), cx, cy });
-      if (rng() < 0.6) { const u = rng() * 6.3, x = cx + Math.cos(u) * r * 0.7, y = cy + Math.sin(u) * r * 0.7; out.push({ d: kanka(x, y, r * (0.35 + rng() * 0.35), rng), cx: x, cy: y }); }
+    const k = (+d.voda || 0) / 100, out = [], posuny = d.posuny || {};
+    const skvrna = (klic, cx, cy, r, rng, rucni, skryt) => {
+      const kus = [{ d: kanka(cx, cy, r, rng), cx, cy, r, klic, rucni }];
+      if (rng() < 0.6) { const u = rng() * 6.3, x = cx + Math.cos(u) * r * 0.7, y = cy + Math.sin(u) * r * 0.7; kus.push({ d: kanka(x, y, r * (0.35 + rng() * 0.35), rng), cx: x, cy: y }); }
+      if (!skryt) out.push(...kus);
+    };
+    if (k) {
+      const rng = P.rng(((d.seedPosk || 3) * 977 + 5) >>> 0);
+      for (let i = 0, n = 1 + Math.round(k * 2.4); i < n; i++) {
+        const cx = 10 + rng() * (w - 20), cy = 10 + rng() * (h - 20), r = 10 + rng() * (14 + 26 * k), p = posuny['voda:' + i] || {};
+        skvrna('voda:' + i, p.x == null ? cx : p.x, p.y == null ? cy : p.y, p.r == null ? r : p.r, rng, false, p.skryt);
+      }
     }
+    (d.ponic || []).forEach((o, j) => { if (o.typ === 'voda') skvrna('r:' + j, o.x, o.y, o.r, P.rng(o.seed), true); });
     return out;
   };
+  /* Síla rozpití textu vodou: posuvník, u ručně přidaných skvrn bez posuvníku střední. */
+  P.vodaSila = d => +d.voda || ((d.ponic || []).some(o => o.typ === 'voda') ? 50 : 0);
   /* Maska vodních skvrn pro filtr textu (bílé = rozpité). */
   P.vodaMaskaSvg = (d, w, h, rub) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" preserveAspectRatio="none"><filter id="m"><feGaussianBlur stdDeviation="1.2"/></filter><g filter="url(#m)" fill="#fff"${rub ? ` transform="translate(${w} 0) scale(-1 1)"` : ''}>${P.vodniSkvrny(d, w, h).map(v => `<path d="${v.d}"/>`).join('')}</g></svg>`;
   /* volby.rub = zadní strana listu: všechno zrcadlově a inkoust z líce jen prosvítá. */
@@ -159,37 +174,63 @@
       if (d.preklad === 'tretiny') s += nasirku ? lom(w / 3, 0, w / 3, h) + lom(w * 2 / 3, 0, w * 2 / 3, h) : lom(0, h / 3, w, h / 3) + lom(0, h * 2 / 3, w, h * 2 / 3);
       if (d.preklad === 'ctvrtky') s += lom(w / 2, 0, w / 2, h) + lom(0, h / 2, w, h / 2);
     }
+    /* Objekty poničení, které jde vzít do ruky (kaňka, otisk, vodní a mastná skvrna, připálení, díra):
+       vygenerované mají klíč „druh:pořadí“ a v d.posuny ruční místo, velikost nebo skrytí (tvar zůstává –
+       náhoda se čerpá stejně); ručně přidané (d.ponic) mají klíč „r:pořadí“ a vlastní semínko tvaru. */
+    const objekty = [], posuny = d.posuny || {};
+    const misto = (typ, i, x, y, r) => {
+      const klic = typ + ':' + i, p = posuny[klic] || {};
+      const o = { klic, typ, x: p.x == null ? x : p.x, y: p.y == null ? y : p.y, r: p.r == null ? r : p.r, skryt: !!p.skryt };
+      if (!o.skryt) objekty.push(o);
+      return o;
+    };
+    const rucni = typ => (d.ponic || []).map((o, j) => ({ klic: 'r:' + j, typ: o.typ, x: o.x, y: o.y, r: o.r, rucni: true, rng: P.rng(o.seed) })).filter(o => o.typ === typ).map(o => { objekty.push(o); return o; });
     // kaňky a cákance inkoustu
+    const kresliKanku = (o, g) => {
+      let out = `<path d="${cakanec(o.x, o.y, o.r, g)}" fill="${ink}" opacity="${f((0.78 + g() * 0.17) * ik)}"/>`;
+      const u0 = g() * Math.PI * 2;
+      for (let j = 0, m = 4 + Math.floor(g() * 10); j < m; j++) {   // cákance hlavně jedním směrem
+        const u = u0 + (g() - 0.5) * 1.6, vz = o.r * (1.2 + g() * 2.2);
+        out += `<circle cx="${f(o.x + Math.cos(u) * vz)}" cy="${f(o.y + Math.sin(u) * vz)}" r="${f(0.15 + g() * g() * o.r * 0.25)}" fill="${ink}" opacity="${f(0.85 * ik)}"/>`;
+      }
+      return out;
+    };
     if (d.kanky) {
       const pocet = Math.max(1, Math.round(d.kanky / 100 * 5));
       for (let i = 0; i < pocet; i++) {
         const x = 15 + rng() * (w - 30), y = 15 + rng() * (h - 30), r = 2 + rng() * (3 + d.kanky / 100 * 6);
-        s += `<path d="${cakanec(x, y, r, rng)}" fill="${ink}" opacity="${f((0.78 + rng() * 0.17) * ik)}"/>`;
-        const u0 = rng() * Math.PI * 2;
-        for (let j = 0, m = 4 + Math.floor(rng() * 10); j < m; j++) {   // cákance hlavně jedním směrem
-          const u = u0 + (rng() - 0.5) * 1.6, vz = r * (1.2 + rng() * 2.2);
-          s += `<circle cx="${f(x + Math.cos(u) * vz)}" cy="${f(y + Math.sin(u) * vz)}" r="${f(0.15 + rng() * rng() * r * 0.25)}" fill="${ink}" opacity="${f(0.85 * ik)}"/>`;
-        }
+        const o = misto('kanka', i, x, y, r), out = kresliKanku(o, rng);
+        if (!o.skryt) s += out;
       }
     }
-    // otisk prstu od inkoustu – soustředné přerušované elipsy
-    if (d.otisk) {
-      const x = 20 + rng() * (w - 40), y = 20 + rng() * (h - 40), rot = Math.round(rng() * 360);
-      defs += `<clipPath id="pkPrst"><ellipse cx="0" cy="0" rx="7.5" ry="10"/></clipPath>`;
+    for (const o of rucni('kanka')) s += kresliKanku(o, o.rng);
+    // otisk prstu od inkoustu – soustředné přerušované elipsy (poloměr 10 = skutečná velikost)
+    const kresliOtisk = (o, g, rot) => {
       let kr = '';
       for (let i = 1; i <= 14; i++) {
-        const dash = `${f(1.5 + rng() * 6)} ${f(0.3 + rng() * 0.8)}`;
-        kr += `<ellipse cx="${f((rng() - 0.5) * 0.6)}" cy="${f(1 + (rng() - 0.5) * 0.6)}" rx="${f(i * 0.62)}" ry="${f(i * 0.78)}" fill="none" stroke="${ink}" stroke-width=".28" stroke-dasharray="${dash}"/>`;
+        const dash = `${f(1.5 + g() * 6)} ${f(0.3 + g() * 0.8)}`;
+        kr += `<ellipse cx="${f((g() - 0.5) * 0.6)}" cy="${f(1 + (g() - 0.5) * 0.6)}" rx="${f(i * 0.62)}" ry="${f(i * 0.78)}" fill="none" stroke="${ink}" stroke-width=".28" stroke-dasharray="${dash}"/>`;
       }
-      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${rot})" opacity="${f(0.45 * ik)}" clip-path="url(#pkPrst)">${kr}</g>`;
+      return `<g transform="translate(${f(o.x)} ${f(o.y)}) rotate(${rot})${o.r === 10 ? '' : ` scale(${f(o.r / 10)})`}" opacity="${f(0.45 * ik)}" clip-path="url(#pkPrst)">${kr}</g>`;
+    };
+    const otiskyRucni = rucni('otisk');
+    if (d.otisk || otiskyRucni.length) defs += `<clipPath id="pkPrst"><ellipse cx="0" cy="0" rx="7.5" ry="10"/></clipPath>`;
+    if (d.otisk) {
+      const x = 20 + rng() * (w - 40), y = 20 + rng() * (h - 40), rot = Math.round(rng() * 360);
+      const o = misto('otisk', 0, x, y, 10), out = kresliOtisk(o, rng, rot);
+      if (!o.skryt) s += out;
     }
+    for (const o of otiskyRucni) s += kresliOtisk(o, o.rng, Math.round(o.rng() * 360));
     const uplnyFiltr = (id, sd) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
     // voda: zaschlé skvrny s tmavším okrajem (zátokou), uvnitř druhý slabší okraj
     const vody = P.vodniSkvrny(d, w, h);
     if (vody.length) {
       defs += uplnyFiltr('pkVoda', 0.35);
-      for (const v of vody) s += `<path d="${v.d}" fill="#9a7a40" opacity=".06"/><g filter="url(#pkVoda)" fill="none" stroke="#7a5424"><path d="${v.d}" stroke-width=".55" opacity=".4"/>`
-        + `<path d="${v.d}" stroke-width=".3" opacity=".18" transform="translate(${f(v.cx)} ${f(v.cy)}) scale(.9) translate(${f(-v.cx)} ${f(-v.cy)})"/></g>`;
+      for (const v of vody) {
+        if (v.klic) objekty.push({ klic: v.klic, typ: 'voda', x: v.cx, y: v.cy, r: v.r, rucni: v.rucni });
+        s += `<path d="${v.d}" fill="#9a7a40" opacity=".06"/><g filter="url(#pkVoda)" fill="none" stroke="#7a5424"><path d="${v.d}" stroke-width=".55" opacity=".4"/>`
+          + `<path d="${v.d}" stroke-width=".3" opacity=".18" transform="translate(${f(v.cx)} ${f(v.cy)}) scale(.9) translate(${f(-v.cx)} ${f(-v.cy)})"/></g>`;
+      }
     }
     // ožehnutí jedné strany od plamene: soustředné vrstvy od kraje dovnitř, nepravidelná hranice
     if (d.ozehnuti) {
@@ -210,22 +251,34 @@
       }).join('') + '</g>';
     }
     // připálení od svíčky: zhnědlé místo bez díry, ke středu tmavší
+    const kresliPripaleni = (o, g) => `<path d="${kanka(o.x, o.y, o.r * 2.3, g)}" fill="#a8742e" opacity=".16" filter="url(#pkPal1)"/>`
+      + `<path d="${kanka(o.x, o.y, o.r * 1.5, g)}" fill="#7a4416" opacity=".26" filter="url(#pkPal2)"/>`
+      + `<path d="${kanka(o.x, o.y, o.r, g)}" fill="#3e1c06" opacity=".42" filter="url(#pkPal2)"/>`
+      + `<path d="${kanka(o.x, o.y, o.r * 0.5, g)}" fill="#1a0a02" opacity=".5" filter="url(#pkPal3)"/>`;
+    const palRucni = rucni('pripaleni');
+    if (d.pripaleni || palRucni.length) defs += uplnyFiltr('pkPal1', 2.2) + uplnyFiltr('pkPal2', 1) + uplnyFiltr('pkPal3', 0.45);
     if (d.pripaleni) {
       const r2 = P.rng(((d.seedPosk || 3) * 389 + 13) >>> 0);
-      defs += uplnyFiltr('pkPal1', 2.2) + uplnyFiltr('pkPal2', 1) + uplnyFiltr('pkPal3', 0.45);
       for (let i = 0; i < d.pripaleni; i++) {
         const x = 15 + r2() * (w - 30), y = 15 + r2() * (h - 30), r = 3 + r2() * 6;
-        s += `<path d="${kanka(x, y, r * 2.3, r2)}" fill="#a8742e" opacity=".16" filter="url(#pkPal1)"/>`
-          + `<path d="${kanka(x, y, r * 1.5, r2)}" fill="#7a4416" opacity=".26" filter="url(#pkPal2)"/>`
-          + `<path d="${kanka(x, y, r, r2)}" fill="#3e1c06" opacity=".42" filter="url(#pkPal2)"/>`
-          + `<path d="${kanka(x, y, r * 0.5, r2)}" fill="#1a0a02" opacity=".5" filter="url(#pkPal3)"/>`;
+        const o = misto('pripaleni', i, x, y, r), out = kresliPripaleni(o, r2);
+        if (!o.skryt) s += out;
       }
     }
+    for (const o of palRucni) s += kresliPripaleni(o, o.rng);
     // mastná skvrna: zažloutlá, průsvitnější (v masce šedě) se zřetelnějším okrajem
     const mastne = [];
     if (d.mastnota) {
       const k = d.mastnota / 100, r2 = P.rng(((d.seedPosk || 3) * 241 + 17) >>> 0);
-      for (let i = 0, n = 1 + Math.round(k); i < n; i++) mastne.push(kanka(15 + r2() * (w - 30), 15 + r2() * (h - 30), 7 + r2() * (6 + 14 * k), r2));
+      for (let i = 0, n = 1 + Math.round(k); i < n; i++) {
+        const x = 15 + r2() * (w - 30), y = 15 + r2() * (h - 30), r = 7 + r2() * (6 + 14 * k);
+        const o = misto('mastnota', i, x, y, r), tvar = kanka(o.x, o.y, o.r, r2);
+        if (!o.skryt) mastne.push(tvar);
+      }
+    }
+    for (const o of rucni('mastnota')) mastne.push(kanka(o.x, o.y, o.r, o.rng));
+    if (mastne.length) {
+      const k = d.mastnota ? d.mastnota / 100 : 0.6;   // jen ručně přidané: střední síla
       defs += uplnyFiltr('pkMast', 0.8);
       for (const m of mastne) s += `<path d="${m}" fill="#c9a14a" opacity="${f(0.1 + k * 0.1)}" filter="url(#pkMast)"/><path d="${m}" fill="none" stroke="#a07a2a" stroke-width=".6" opacity=".22" filter="url(#pkMast)"/>`;
     }
@@ -256,8 +309,10 @@
     const otvory = [];
     for (let i = 0; i < d.diry; i++) {
       const x = 18 + rng() * (w - 36), y = 18 + rng() * (h - 36), r = 2.5 + rng() * 6;
-      otvory.push(kanka(x, y, r, rng));
+      const o = misto('dira', i, x, y, r), tvar = kanka(o.x, o.y, o.r, rng);
+      if (!o.skryt) otvory.push(tvar);
     }
+    for (const o of rucni('dira')) otvory.push(kanka(o.x, o.y, o.r, o.rng));
     if (d.roh !== 'zadny') {
       const vel = Math.min(w, h) * (0.12 + rng() * 0.08), [cx, cy, sx, sy] = { lh: [0, 0, 1, 1], ph: [w, 0, -1, 1], ld: [0, h, 1, -1], pd: [w, h, -1, -1] }[d.roh];
       let p = `M${cx - sx * 2} ${cy - sy * 2}L${f(cx + sx * vel)} ${cy - sy * 2}`;
@@ -266,13 +321,21 @@
       otvory.push(p);
     }
     if (otvory.length || trhliny.length || mastne.length) {
-      // spálenina jako ofset okraje „do ztracena“: soustředné tahy od světle hnědé po černou u okraje
-      // (vnitřní polovina tahů leží v díře a maska ji odřízne); oblast rozmazání = celý list, ať nevznikne čtverec
-      if (otvory.length) defs += uplnyFiltr('pkOhor', 0.7);
-      const vrstvy = [['#9a6428', 18, 0.07], ['#8a5220', 13, 0.1], ['#6e3c12', 9, 0.15], ['#4e260a', 6, 0.24], ['#2e1405', 3.6, 0.4], ['#180a02', 1.9, 0.62]];
-      for (const o of otvory) {
-        s += `<g filter="url(#pkOhor)" stroke-linejoin="round" fill="none">${vrstvy.map(([c, sw, op]) => `<path d="${o}" stroke="${c}" stroke-width="${sw}" opacity="${op}"/>`).join('')}</g>`
-          + `<path d="${o}" fill="none" stroke="#100702" stroke-width=".6" opacity=".9" stroke-linejoin="round"/>`;
+      /* Spálenina kolem otvorů: soustředné tahy po okraji (vnitřní půlku odřízne maska) od širokého
+         světle hnědého lemu po zuhelnatělý kraj. Každá vrstva má vlastní rozmazání úměrné šířce, takže
+         barvy přecházejí plynule – žádná ostrá černá linka na měkkém lemu. Široké vrstvy navíc pokřiví
+         a zeslabí šum, ať lem není všude stejně široký. Oblast filtrů = celý list (jinak vznikne čtverec). */
+      if (otvory.length) {
+        const vrstvy = [['#b08a4e', 24, 0.1, 4, 1], ['#96642c', 16, 0.16, 2.6, 1], ['#74441a', 10.5, 0.25, 1.7, 1], ['#50290d', 6.6, 0.38, 1.05, 0],
+          ['#2f1507', 4, 0.54, 0.62, 0], ['#170a03', 2.3, 0.74, 0.34, 0], ['#0b0401', 1.1, 0.88, 0.16, 0]];
+        const cesta = otvory.join(''), sem = (d.seedPosk || 3) % 89;
+        vrstvy.forEach(([c, sw, op, sd, sum], i) => {
+          defs += `<filter id="pkOhor${i}" filterUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}">`
+            + (sum ? `<feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="3" seed="${sem + i}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${f(sw * 0.3)}" xChannelSelector="R" yChannelSelector="G" result="p"/>`
+              + `<feGaussianBlur in="p" stdDeviation="${sd}" result="b"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 1.7 0 0 -0.1" result="a"/><feComposite in="b" in2="a" operator="in"/>`
+              : `<feGaussianBlur stdDeviation="${sd}"/>`) + '</filter>';
+          s += `<path d="${cesta}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linejoin="round" opacity="${op}" filter="url(#pkOhor${i})"/>`;
+        });
       }
       // maska pracuje s alfou: list = plocha, díry = otvory v jedné cestě (evenodd)
       // mastná místa jsou v masce šedá (průsvitná) – maska v masce, díry zůstanou úplně průhledné
@@ -280,12 +343,12 @@
       const mm = mastne.length ? `<defs><filter id="mf"><feGaussianBlur stdDeviation="1"/></filter><mask id="mm" maskUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="#fff"/><g filter="url(#mf)" fill="#c8c8c8">${mastne.map(m => `<path d="${m}"/>`).join('')}</g></mask></defs>` : '';
       maska = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}mm" height="${h}mm" preserveAspectRatio="none">${mm}<g${zrc}><path fill="#fff" fill-rule="evenodd"${mm ? ' mask="url(#mm)"' : ''} d="M0 0H${w}V${h}H0Z${otvory.join('')}${trhliny.join('')}"/></g></svg>`;
     }
-    if (!s) return { prekryv: '', maska };
+    if (!s) return { prekryv: '', maska, objekty };
     if (rub) s = `<g transform="translate(${w} 0) scale(-1 1)">${s}</g>`;
     const prekryv = `<svg xmlns="http://www.w3.org/2000/svg" class="poskozeni-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs>${defs}</defs>${s}</svg>`;
     // volby.id = předpona id – víc listů v jedné stránce nesmí sdílet id přechodů a filtrů
     const px = volby && volby.id ? String(volby.id).replace(/[^\w-]/g, '') : '';
-    return { prekryv: px ? prekryv.replace(/(id="|url\(#)pk/g, `$1pk${px}-`) : prekryv, maska };
+    return { prekryv: px ? prekryv.replace(/(id="|url\(#)pk/g, `$1pk${px}-`) : prekryv, maska, objekty };
   };
 
   /* Filtr inkoustu (SVG pro CSS filter na textu listu). st = stáří 0–100 (roztřepený tah, vybledlá
@@ -293,7 +356,7 @@
      rukopis (neklidná ruka – vlnité řádky, rozkolísaná písma), voda + vodaSvg (data URL masky vodních
      skvrn, text v nich rozmazaný a vybledlý), ox, oy, w, h = poloha textu v listu a list v px }. */
   const k01 = x => Math.max(0, Math.min(100, +x || 0)) / 100;
-  P.inkoustEfekty = d => !!(d.inkoustStari || d.pero || d.rozpiti || d.rukopis || d.voda);
+  P.inkoustEfekty = d => !!(d.inkoustStari || d.pero || d.rozpiti || d.rukopis || P.vodaSila(d));
   P.filtrInkoustu = function (st, seed, v) {
     v = v || {};
     const k = k01(st), sem = (seed || 1) >>> 0, kp = k01(v.pero), kr = k01(v.rozpiti), kh = k01(v.rukopis), kv = k01(v.voda);
@@ -427,6 +490,21 @@
     d.vystupDpi = [150, 300, 600].includes(+d.vystupDpi) ? +d.vystupDpi : 300;
     d.bezPapiru = !!d.bezPapiru;
     d.dataText = typeof d.dataText === 'string' ? d.dataText.slice(0, 200000) : '';
+    d.ponic = (Array.isArray(d.ponic) ? d.ponic : []).filter(o => o && P.PONICENI_DRUHY[o.typ]).slice(0, 60).map(o => {
+      const [, vych, min, max] = P.PONICENI_DRUHY[o.typ];
+      return { typ: o.typ, x: +o.x || 0, y: +o.y || 0, r: Math.max(min, Math.min(max, +o.r || vych)), seed: (+o.seed >>> 0) || 1 };
+    });
+    const posuny = {};
+    for (const [k, v] of Object.entries(d.posuny && typeof d.posuny === 'object' ? d.posuny : {}).slice(0, 200)) {
+      const typ = k.split(':')[0];
+      if (!/^[a-z]+:\d{1,2}$/.test(k) || !P.PONICENI_DRUHY[typ] || !v || typeof v !== 'object') continue;
+      const o = {}, [, , min, max] = P.PONICENI_DRUHY[typ];
+      if (v.skryt) o.skryt = true;
+      for (const a of ['x', 'y']) if (v[a] != null && isFinite(+v[a])) o[a] = +v[a];
+      if (v.r != null && isFinite(+v.r)) o.r = Math.max(min, Math.min(max, +v.r));
+      posuny[k] = o;
+    }
+    d.posuny = posuny;
     // obrázky z IndexedDB (id) a kresby perem (kresba – šipky, kroužky…, poznámka s textem)
     d.obrazky = (Array.isArray(d.obrazky) ? d.obrazky : []).filter(o => o && (typeof o.id === 'string' || P.KRESBY[o.kresba])).map(o => {
       const x = { x: +o.x || 0, y: +o.y || 0, w: Math.max(3, +o.w || 40), rot: +o.rot || 0,

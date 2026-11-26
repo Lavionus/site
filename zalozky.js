@@ -131,7 +131,22 @@ const Zalozky = (function () {
       el.appendChild(x);
     }
 
+    // dotyk/pero: dlouhý stisk = kontextová nabídka (iPad contextmenu nepošle, draggable by z něj udělal tažení)
+    let drz = null, drzXY = null, poDrzeni = false;
+    const pust = () => { clearTimeout(drz); drz = null; };
+    el.addEventListener('pointerdown', e => {
+      poDrzeni = false;
+      el.draggable = !k.domu && e.pointerType === 'mouse';
+      if (e.pointerType === 'mouse' || e.target.closest('.z-zavri')) return;
+      drzXY = [e.clientX, e.clientY];
+      pust();
+      drz = setTimeout(() => { drz = null; poDrzeni = true; otevriNabidku(k, drzXY[0], drzXY[1]); }, 500);
+    });
+    el.addEventListener('pointermove', e => { if (drz && Math.hypot(e.clientX - drzXY[0], e.clientY - drzXY[1]) > 10) pust(); });
+    el.addEventListener('pointerup', pust);
+    el.addEventListener('pointercancel', pust);
     el.addEventListener('click', e => {
+      if (poDrzeni) { poDrzeni = false; return; }
       if (e.target.closest('.z-zavri')) { zavri(k); return; }
       zameritRam = true;
       prejdiNa(k);
@@ -139,7 +154,7 @@ const Zalozky = (function () {
     // prostřední tlačítko zavírá (mousedown jen kvůli automatickému posunu stránky)
     el.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
     el.addEventListener('auxclick', e => { if (e.button === 1) { e.preventDefault(); zavri(k); } });
-    el.addEventListener('contextmenu', e => { e.preventDefault(); otevriNabidku(k, e.clientX, e.clientY); });
+    el.addEventListener('contextmenu', e => { e.preventDefault(); if (!nabidka) otevriNabidku(k, e.clientX, e.clientY); });
     el.addEventListener('keydown', e => {
       if (e.altKey || e.ctrlKey || e.metaKey) return;
       const i = karty.indexOf(k);
@@ -726,8 +741,18 @@ const Zalozky = (function () {
 
     nadpis(t('Otevřené záložky'));
     karty.forEach(k => {
-      const stavy = (k.pin && !k.domu ? '📌' : '') + (!k.iframe && !k.domu ? '💤' : '') + (k.zvuk ? '🔊' : '');
-      radek(k, k.page, stavy, () => { zameritRam = true; prejdiNa(k); }, k.domu ? null : () => zavri(k));
+      const stavy = (!k.iframe && !k.domu ? '💤' : '') + (k.zvuk ? '🔊' : '');
+      const r = radek(k, k.page, stavy, () => { zameritRam = true; prejdiNa(k); }, k.domu ? null : () => zavri(k));
+      if (!r || k.domu) return;
+      // připínání i bez kontextové nabídky (dotykové displeje)
+      const pin = document.createElement('button');
+      pin.type = 'button';
+      pin.className = 'z-zavri z-pin' + (k.pin ? ' zapnuto' : '');
+      pin.textContent = '📌';
+      pin.title = t(k.pin ? 'Odepnout záložku' : 'Připnout záložku');
+      pin.setAttribute('aria-pressed', String(!!k.pin));
+      pin.addEventListener('click', e => { e.stopPropagation(); pripni(k); vykresliPrehled(); });
+      r.insertBefore(pin, r.querySelector('.z-zavri:not(.z-pin)'));
     });
 
     const videno = new Set(karty.map(k => zaklad(k.page)));

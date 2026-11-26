@@ -3707,6 +3707,14 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/excel_vzorce.html",
+        "nazev": "📊 Vzorce v Excelu – kurz",
+        "popis": "Interaktivní kurz vzorců: rozklad krok za krokem, úlohy, tahák",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["excel", "vzorce", "funkce", "tabulkový procesor", "kurz", "výuka", "SUMA", "KDYŽ", "SVYHLEDAT", "XLOOKUP", "COUNTIF", "SUMIF", "INDEX", "POZVYHLEDAT", "absolutní odkaz", "$", "vyhodnotit vzorec", "LibreOffice Calc", "Google Tabulky", "spreadsheet"]
+      },
+      {
         "soubor": "obsah/md_table.html",
         "nazev": "📋 Markdown tabulky",
         "popis": "Vyplňte tabulku a získejte ji v Markdownu, třeba do README",

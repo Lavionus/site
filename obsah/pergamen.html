@@ -59,6 +59,16 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
 /* vlastnosti vybraného prvku: plovoucí panel pod pásem – nezabírá místo, takže pás nemění výšku a nic neposkočí */
 .pas-skup.pas-obrazek{position:absolute;top:100%;left:10px;z-index:40;flex-wrap:wrap;row-gap:3px;max-width:calc(100% - 20px);background:var(--bg-panel);border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px;padding:4px 8px;box-shadow:var(--shadow)}
 .pas-obrazek.neviditelny{visibility:hidden}
+.pas-skup.pas-ponic{left:auto;right:10px}
+.ponic-vybrane{display:inline-flex;align-items:center;gap:3px;padding-left:8px;margin-left:4px;border-left:1px solid var(--border)}
+/* rozbalená nabídka poničení je průsvitná – pod ní je vidět, co ovladače s listem dělají */
+#nabPoskozeni{background:color-mix(in srgb,var(--bg-panel) 64%,transparent);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:0 2px 10px rgba(0,0,0,.25);transition:background .15s}
+#nabPoskozeni label,#nabPoskozeni .pozn{color:var(--text);text-shadow:0 0 3px var(--bg-panel),0 0 3px var(--bg-panel)}
+/* při tažení posuvníku panel skoro zprůhlední – je vidět, co se s listem děje */
+#nabPoskozeni:has(input[type=range]:active){background:color-mix(in srgb,var(--bg-panel) 16%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#nabPoskozeni:has(input[type=range]:active) > :not(:has(input[type=range]:active)){opacity:.25}
+.mobil-info{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--accent-soft);border-bottom:1px solid var(--border);font-size:.82rem;flex-shrink:0}
+.mobil-info span{flex:1}
 .pas-obrazek label{display:flex;align-items:center;gap:3px;font-size:.8rem;color:var(--text-muted)}
 .pas-obrazek.pecet .ne-pecet{display:none}
 .pas-obrazek input[type=number]{width:56px;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:2px 4px}
@@ -98,7 +108,12 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
 .list .prvek.za{z-index:0}
 .list .obsah{z-index:1}
 .list .prvek img,.list .prvek svg{display:block;width:100%;height:auto;pointer-events:none;user-select:none}
-.list.upravy .prvek{cursor:move}
+.list.upravy .prvek{cursor:move;touch-action:none}   /* prstem se prvek táhne, list se neposouvá */
+/* ruční poničení: kroužek = objekt poničení, který jde vzít do ruky */
+.list .ponic-uchyt{position:absolute;z-index:6;box-sizing:border-box;border-radius:50%;border:.35mm dashed rgba(47,125,225,.95);background:rgba(47,125,225,.07);cursor:move;touch-action:none}
+.list .ponic-uchyt.vybrany{border-style:solid;background:rgba(47,125,225,.16);box-shadow:0 0 0 .4mm rgba(255,255,255,.75)}
+.list .ponic-roh{position:absolute;right:14.6%;bottom:14.6%;transform:translate(50%,50%);width:3.6mm;height:3.6mm;border-radius:50%;background:var(--accent);border:.4mm solid #fff;cursor:nwse-resize;display:none}
+.list .ponic-uchyt.vybrany .ponic-roh{display:block}
 .list.upravy .prvek.vybrany{outline:.35mm dashed var(--accent);outline-offset:1mm}
 .list .uchyt{position:absolute;right:-2.2mm;bottom:-2.2mm;width:3.4mm;height:3.4mm;border-radius:50%;background:var(--accent);border:.4mm solid #fff;cursor:nwse-resize;display:none}
 .list.upravy .prvek.vybrany .uchyt{display:block}
@@ -203,7 +218,7 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
 @media print{
   @page{margin:0}
   body{background:#fff;height:auto;overflow:visible;display:block;padding:0 !important}
-  .lista,.pas,.stav,.uchyt,.voditko,[id^="autor-podpis"],.verze-stranky,#zprava{display:none !important}
+  .lista,.pas,.stav,.mobil-info,.uchyt,.voditko,.ponic-uchyt,[id^="autor-podpis"],.verze-stranky,#zprava{display:none !important}
   .prostor{display:block}
   .nahled{display:block;padding:0;background:none;overflow:visible}
   .meritko{width:auto !important;height:auto !important}
@@ -219,7 +234,8 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
 .stav{display:flex;flex-wrap:wrap;align-items:center;gap:3px 12px;padding:3px 10px;min-height:28px;box-sizing:border-box;background:var(--bg-elevated);border-top:1px solid var(--border);font-size:.78rem;color:var(--text-muted);flex-shrink:0}
 .stav .tl{padding:1px 8px;font-size:.78rem}
 .stav .stav-varovani{border-color:var(--warn);color:var(--warn)}
-.stav-zaznam{display:inline-flex;align-items:center;gap:2px}
+.stav-zaznam,.stav-zoom{display:inline-flex;align-items:center;gap:2px}
+.stav .tl[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .stav-pruzina{flex:1}
 .stav-ulozeni.ceka{color:var(--text-faint)}
 /* zvláštní znaky */
@@ -252,23 +268,22 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
   <div class="skup" role="group" aria-label="List"><span class="skup-nazev" aria-hidden="true">List</span><div class="skup-tl">
     <button class="tl" data-nabidka="nabListy" id="tlListy" title="Další listy, přelití textu, rub listu, obálka k vystřižení">📑<span class="txt"> Listy</span> ▾</button>
     <button class="tl" data-nabidka="nabPapir" title="Formát, druh papíru, okraj, stárnutí, rámeček, vodoznak">📄<span class="txt"> Papír</span> ▾</button>
-    <button class="tl" data-nabidka="nabPoskozeni" id="tlPoskozeni" title="Poničení – přeložení, zmačkání, voda, kaňky, propálené díry, připálení, natržení, mastnota, ožehnutí, utržený roh, skvrnky, otisk prstu, vybledlé místo">💥<span class="txt"> Poničení</span> ▾</button>
     <button class="tl" data-nabidka="nabPismo" title="Výchozí písmo, velikost, řádkování, iniciála">🔤<span class="txt"> Písmo</span> ▾</button>
     <button class="tl" data-nabidka="nabInkoust" title="Inkoust celého listu – barva, stáří, dochází inkoust, rozpíjení, neklidná ruka"><span class="vzor-inkoustu" id="vzorInkoustu"></span><span class="txt"> Inkoust</span> ▾</button>
     <button class="tl" data-nabidka="nabSifra" id="tlSifra" title="Šifra, přepis do jiného písma a šifrovací klíč">🔐<span class="txt"> Šifra</span> ▾</button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Poničení"><span class="skup-nazev" aria-hidden="true">Poničení</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabPoskozeni" id="tlPoskozeni" title="Poničení – přeložení, zmačkání, voda, kaňky, propálené díry, připálení, natržení, mastnota, ožehnutí, utržený roh, skvrnky, otisk prstu, vybledlé místo">💥<span class="txt"> Poničení</span> ▾</button>
+    <button class="tl" data-prikaz="nahodnePoskozeni" data-nech-nabidku title="Náhodná směs poničení – každé kliknutí jiná" aria-label="Náhodné poničení">🎲<span class="txt"> Náhodně</span></button>
+    <button class="tl" data-prikaz="jinePoskozeni" data-nech-nabidku title="Stejné poničení, jiná místa – kaňky, díry, skvrny a otisk se rozmístí jinak" aria-label="Jinak rozmístit">🔀<span class="txt"> Jinak</span></button>
+    <button class="tl" data-prikaz="jinyPapir" data-nech-nabidku title="Jiný papír – jiné natržení okraje a skvrny stáří" aria-label="Jiné natržení a skvrny papíru">🍂<span class="txt"> Jiný papír</span></button>
+    <button class="tl" data-prikaz="rucniPoniceni" id="tlRucni" aria-pressed="false" title="Ruční poničení – kaňku, díru, skvrnu nebo otisk přidat, posunout, zvětšit a odebrat přímo na listu" aria-label="Ruční poničení">✋<span class="txt"> Ručně</span></button>
   </div></div>
   <div class="skup" role="group" aria-label="Výstup"><span class="skup-nazev" aria-hidden="true">Výstup</span><div class="skup-tl">
     <button class="tl hlavni-tl" data-prikaz="tisk" title="Vytisknout ve skutečné velikosti">🖨️<span class="txt"> Tisk</span></button>
     <button class="tl" data-prikaz="png" title="Stáhnout jako obrázek (asi 300 DPI) – každý list zvlášť">⬇ PNG</button>
     <button class="tl" data-prikaz="pdf" title="Stáhnout PDF ve skutečné velikosti">⬇ PDF</button>
     <button class="tl" data-nabidka="nabVystup" title="Nastavení výstupu – rozlišení, tisk jen inkoustu na vlastní papír, kopie do schránky" aria-label="Nastavení výstupu">⚙▾</button>
-  </div></div>
-  <div class="skup" role="group" aria-label="Náhled"><span class="skup-nazev" aria-hidden="true">Náhled</span><div class="skup-tl">
-    <button class="tl" data-prikaz="zoomMinus" title="Oddálit (Ctrl −, Ctrl + kolečko)" aria-label="Oddálit">−</button>
-    <button class="tl" data-prikaz="zoom100" id="zoomHodnota" title="Skutečná velikost (100 %)" style="min-width:56px">100 %</button>
-    <button class="tl" data-prikaz="zoomPlus" title="Přiblížit (Ctrl +, Ctrl + kolečko)" aria-label="Přiblížit">+</button>
-    <button class="tl" data-prikaz="zoomSirka" id="zoomSirka" title="Na šířku plochy (Ctrl 0)" aria-pressed="true">↔<span class="txt"> Šířka</span></button>
-    <button class="tl" data-prikaz="zoomStranka" id="zoomStranka" title="Celý list" aria-pressed="false">▣<span class="txt"> Stránka</span></button>
   </div></div>
   <span class="vpravo">
     <button class="tl" data-prikaz="prizpusob" title="Najít největší velikost písma, při které se text vejde">⤢<span class="txt"> Vejít se</span></button>
@@ -316,6 +331,23 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
     <button class="tl ik ne-v-textu ne-pecet" data-prvek="kopie" title="Kopie (Ctrl+D)">⎘</button>
     <button class="tl ik" data-prvek="smazat" title="Odstranit (Delete)">🗑️</button>
   </div>
+  <div class="pas-skup pas-obrazek pas-ponic neviditelny" id="pasPonic" inert>
+    <span class="pas-nazev">✋ Přidat:</span>
+    <button class="tl ik" data-ponic-pridej="kanka" title="Kaňka inkoustu" aria-label="Kaňka inkoustu">🖋</button>
+    <button class="tl ik" data-ponic-pridej="dira" title="Propálená díra" aria-label="Propálená díra">🔥</button>
+    <button class="tl ik" data-ponic-pridej="voda" title="Vodní skvrna – text se v ní rozpije" aria-label="Vodní skvrna">💧</button>
+    <button class="tl ik" data-ponic-pridej="mastnota" title="Mastná skvrna" aria-label="Mastná skvrna">🧈</button>
+    <button class="tl ik" data-ponic-pridej="pripaleni" title="Připálení svíčkou" aria-label="Připálení svíčkou">🕯️</button>
+    <button class="tl ik" data-ponic-pridej="otisk" title="Otisk prstu" aria-label="Otisk prstu">👆</button>
+    <span class="ponic-vybrane" id="ponicVybrane" hidden>
+      <b class="pas-nazev" id="ponicNazev"></b>
+      <label title="Velikost">⌀ <input type="range" id="ponicVel" step="0.5"></label>
+      <button class="tl ik" data-ponic-akce="tvar" title="Jiný tvar" aria-label="Jiný tvar">🎲</button>
+      <button class="tl ik" data-ponic-akce="smazat" title="Odstranit (Delete)" aria-label="Odstranit">🗑️</button>
+    </span>
+    <button class="tl hlavni-tl" data-prikaz="rucniPoniceni" title="Ukončit ruční poničení (Esc)">✓ Hotovo</button>
+  </div>
+  <button class="tl ik" id="tlVice" title="Nabídka akcí – totéž co pravé tlačítko myši. Na tabletu ji otevře i dlouhý stisk." aria-label="Nabídka akcí" aria-haspopup="menu">⋯</button>
   <button class="tl pas-pohled" id="pasPohled" hidden></button>
 </div>
 
@@ -392,9 +424,10 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
   <label class="zaskrt"><input type="checkbox" id="pOtisk" data-pole="otisk"> Otisk prstu od inkoustu</label>
   <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
     <button class="tl" data-prikaz="jinePoskozeni" data-nech-nabidku title="Jiné rozmístění kaněk, děr, skvrnek a otisku">🎲 Jinak rozmístit</button>
+    <button class="tl" data-prikaz="rucniPoniceni" title="Přidat, posunout, zvětšit a odebrat kaňku, díru, skvrnu nebo otisk přímo na listu">✋ Ručně na listu</button>
     <button class="tl" data-prikaz="bezPoskozeni" data-nech-nabidku>✕ Bez poničení</button>
   </div>
-  <p class="pozn">Dírami, natržením a utrženým rohem je vidět skrz, mastným místem napůl – v PNG zůstanou průhledné, při tisku bílé. Ve vodních skvrnách se text rozpije. Starý a docházející inkoust je v nabídce Inkoust.</p>
+  <p class="pozn">Dírami, natržením a utrženým rohem je vidět skrz, mastným místem napůl – v PNG zůstanou průhledné, při tisku bílé. Ve vodních skvrnách se text rozpije. Starý a docházející inkoust je v nabídce Inkoust. ✋ Ručně: kaňky, díry, skvrny a otisk přesunete, zvětšíte nebo přidáte přímo na listu.</p>
 </div>
 <div id="nabPismo" class="nabidka formular" hidden>
   <label>Výchozí písmo textu</label><div id="vyberPisma"></div>
@@ -486,6 +519,10 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
   </div>
 </div>
 
+<div class="mobil-info" id="mobilInfo" hidden>
+  <span>💻 Pergamen je optimalizovaný pro počítač s myší a klávesnicí. Na telefonu a tabletu některé funkce nemusí být dostupné. Nabídku akcí otevřete dlouhým stiskem nebo tlačítkem ⋯.</span>
+  <button class="tl" data-prikaz="mobilInfoZavrit" aria-label="Zavřít upozornění">✕</button>
+</div>
 <div class="prostor">
   <section class="nahled" id="nahled" aria-label="Náhled pergamenu">
     <div class="meritko" id="meritko"><div id="listy"></div></div>
@@ -500,6 +537,13 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
     <button class="tl ik" data-prikaz="zaznamDalsi" title="Další záznam" aria-label="Další záznam">▶</button>
   </span>
   <span class="stav-pruzina"></span>
+  <span class="stav-zoom" role="group" aria-label="Přiblížení náhledu">
+    <button class="tl" data-prikaz="zoomMinus" title="Oddálit (Ctrl −, Ctrl + kolečko)" aria-label="Oddálit">−</button>
+    <button class="tl" data-prikaz="zoom100" id="zoomHodnota" title="Skutečná velikost (100 %)" style="min-width:52px">100 %</button>
+    <button class="tl" data-prikaz="zoomPlus" title="Přiblížit (Ctrl +, Ctrl + kolečko)" aria-label="Přiblížit">+</button>
+    <button class="tl" data-prikaz="zoomSirka" id="zoomSirka" title="Na šířku plochy (Ctrl 0)" aria-pressed="true">↔ Šířka</button>
+    <button class="tl" data-prikaz="zoomStranka" id="zoomStranka" title="Celý list" aria-pressed="false">▣ Stránka</button>
+  </span>
   <button class="tl" id="tlVoditka" data-prikaz="voditka" aria-pressed="false" title="Ukázat okraje textu čárkovaně (jen při úpravách, netisknou se)">⬚ Okraje</button>
   <span class="stav-ulozeni" id="stavUlozeni" title="Pergamen se ukládá sám do prohlížeče">✓ Uloženo</span>
 </footer>
@@ -509,6 +553,7 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
 <dialog id="dlgNapoveda" class="napoveda-okno" aria-labelledby="napNadpis">
   <div class="nap-hlava"><b id="napNadpis">❓ Pergamen – nápověda</b><span style="flex:1"></span><button class="tl" onclick="this.closest('dialog').close()" aria-label="Zavřít">✕</button></div>
   <div class="nap-telo">
+    <p class="pozn">💻 Stránka je optimalizovaná pro počítač s myší a klávesnicí. Na mobilních zařízeních některé funkce nemusí být dostupné; nabídku akcí tam otevřete dlouhým stiskem nebo tlačítkem <kbd>⋯</kbd> v pásu.</p>
     <h3>Psaní</h3>
     <ul><li>Pište přímo do listu – nadpis, text, místo a datum i podpis. Označený text formátuje pás nástrojů nebo pravé tlačítko.</li>
       <li>Najetím na písmo v seznamu ho uvidíte na označeném textu ještě před výběrem.</li>
@@ -534,7 +579,7 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
     <table class="nap-zkratky">
       <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd> / <kbd>I</kbd> / <kbd>U</kbd></td><td>tučně, kurzíva, podtržení</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>zpět a znovu – v textu psaní, jinde celý dokument</td></tr>
-      <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd> / <kbd>−</kbd> / <kbd>0</kbd>, <kbd>Ctrl</kbd>+kolečko</td><td>přiblížení náhledu</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd> / <kbd>−</kbd> / <kbd>0</kbd>, <kbd>Ctrl</kbd>+kolečko</td><td>přiblížení náhledu (tlačítka jsou ve stavovém řádku dole)</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>tisk (vždy zašifrovaná podoba)</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>kopie vybraného obrázku nebo kresby</td></tr>
       <tr><td><kbd>F1</kbd></td><td>tato nápověda</td></tr>
@@ -547,7 +592,8 @@ body{background:var(--bg-deep);margin:0;height:100vh;display:flex;flex-direction
       <li>Ukázka, do které jste nesáhli, se při výběru jiné ukázky nahradí – v seznamu uložených zůstává jen to, co jste upravili.</li>
       <li>PNG stáhne každý list zvlášť (rub, další listy, lístek s klíčem, obálku), PDF je má jako stránky.</li>
       <li>⚙ u výstupu: rozlišení 150–600 DPI a „Jen inkoust, bez papíru“ pro tisk na vlastní pergamenový papír (PNG má průhledné pozadí).</li>
-      <li>💥 Poničení má předvolby jedním klikem a 🎲 náhodnou směs; ovladači pod nimi je doladíte.</li></ul>
+      <li>💥 Poničení má předvolby jedním klikem; 🎲 náhodná směs, 🔀 jiné rozmístění a 🍂 jiný papír jsou přímo v liště. Ovladači v nabídce je doladíte.</li>
+      <li>✋ Ruční poničení: kroužky na listu označí kaňky, díry, vodní a mastné skvrny, připálení a otisk. Táhnutím je přesunete, tečkou na kroužku nebo posuvníkem změníte velikost, 🎲 dá jiný tvar, <kbd>Delete</kbd> odstraní. Nové přidáte z pásu nebo pravým tlačítkem („Poničit tady“).</li></ul>
   </div>
 </dialog>
 <dialog id="dlgData" class="napoveda-okno" aria-labelledby="dataNadpis">

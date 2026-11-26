@@ -416,6 +416,7 @@ const KATALOG_IKONY = {
   "obsah/json_formatter.html": "pages/page-json_formatter",
   "obsah/yaml_json.html": "pages/page-yaml_json",
   "obsah/csv_json.html": "pages/page-csv_json",
+  "obsah/excel_vzorce.html": "pages/page-excel_vzorce",
   "obsah/md_table.html": "pages/page-md_table",
   "obsah/base64_encoder.html": "pages/page-base64_encoder",
   "obsah/url_builder.html": "pages/page-url_builder",

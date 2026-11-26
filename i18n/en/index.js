@@ -41,6 +41,8 @@ I18N.pridej('en', {
   '🔊 hraje zvuk': '🔊 playing audio',
   'Zavřít záložku (Alt+Shift+W)': 'Close tab (Alt+Shift+W)',
   'Zavřít záložku': 'Close tab',
+  'Připnout záložku': 'Pin tab',
+  'Odepnout záložku': 'Unpin tab',
   'Přehled záložek a naposledy otevřených ({počet} otevřeno) – Alt+Shift+O': 'Tabs and recently opened ({počet} open) – Alt+Shift+O',
   'Zavřena nejdéle nepoužitá záložka „{název}“ – vrátí ji Alt+Shift+T.': 'Closed the least recently used tab “{název}” – Alt+Shift+T brings it back.',
   'Stránka „{název}“ má neuložené změny. Opravdu ji zavřít?': '“{název}” has unsaved changes. Close it anyway?',
