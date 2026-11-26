@@ -1,5 +1,5 @@
 /* Vygenerováno: node tools/verze.mjs – neupravovat ručně. Stránka: [verze, datum poslední změny] */
-var VERZE_WEBU = 'v980';
+var VERZE_WEBU = 'v984';
 var VERZE_STRANEK = {"obsah/AI_prednaska.html":[9,"2026-11-23"],
 "obsah/AI_prednaska2.html":[2,"2026-11-23"],
 "obsah/AI_prednaska3.html":[2,"2026-11-23"],
@@ -133,7 +133,7 @@ var VERZE_STRANEK = {"obsah/AI_prednaska.html":[9,"2026-11-23"],
 "obsah/evidence_odpadu.html":[1,"2026-10-26"],
 "obsah/evoluce.html":[1,"2026-10-19"],
 "obsah/evolventni_kola.html":[2,"2026-11-13"],
-"obsah/excel_vzorce.html":[1,"2026-11-26"],
+"obsah/excel_vzorce.html":[2,"2026-11-26"],
 "obsah/exif_viewer.html":[4,"2026-10-13"],
 "obsah/expense_tracker.html":[5,"2026-10-13"],
 "obsah/fake_news_prednaska.html":[2,"2026-11-23"],

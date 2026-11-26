@@ -120,6 +120,7 @@ I18N.seznam('en', [
   'evidence_log',
   'evoluce',
   'evolventni_kola',
+  'excel_vzorce',
   'exif_viewer',
   'expense_tracker',
   'favicon_gen',

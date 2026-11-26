@@ -7,9 +7,13 @@
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
 <link rel="stylesheet" href="excel_vzorce/styl.css">
 <script src="excel_vzorce/jadro.js"></script>
 <script src="excel_vzorce/lekce.js"></script>
+<script src="excel_vzorce/rozbor.js"></script>
+<script src="excel_vzorce/procvic.js"></script>
+<script src="excel_vzorce/pruvodce.js"></script>
 </head>
 <body>
 <header class="lista" id="lista">
@@ -21,8 +25,14 @@
   </div></div>
   <div class="skup" role="group" aria-label="Režim"><span class="skup-nazev" aria-hidden="true">Režim</span><div class="skup-tl">
     <button class="tl" data-rezim="lekce" aria-pressed="true" title="Lekce s výkladem a úlohami">🎓<span class="txt"> Výuka</span></button>
+    <button class="tl" data-rezim="ucitel" aria-pressed="false" title="Sestavte vlastní sadu úloh pro žáky">👩‍🏫<span class="txt"> Učitel</span></button>
+    <button class="tl" data-rezim="procvic" aria-pressed="false" title="Nekonečné úlohy s náhodnými daty, zkouška na čas">🎯<span class="txt"> Procvičování</span></button>
+    <button class="tl" data-rezim="rozbor" aria-pressed="false" title="Vložte vlastní vzorec – vysvětlení, postup, rady a předvedení">🔬<span class="txt"> Rozbor vzorce</span></button>
     <button class="tl" data-rezim="piskoviste" aria-pressed="false" title="Volný list na zkoušení vzorců">🧪<span class="txt"> Pískoviště</span></button>
     <button class="tl" data-rezim="tahak" aria-pressed="false" title="Přehled všech funkcí česky i anglicky">📚<span class="txt"> Tahák</span></button>
+  </div></div>
+  <div class="skup" role="group" aria-label="Soubor"><span class="skup-nazev" aria-hidden="true">Soubor</span><div class="skup-tl">
+    <button class="tl" data-nabidka="nabSoubor" id="btnSoubor" title="Sešity: uložit, otevřít, import a export Excelu, sdílení">📁<span class="txt"> Soubor</span> ▾</button>
   </div></div>
   <div class="skup" role="group" aria-label="Zápis vzorců"><span class="skup-nazev" aria-hidden="true">Zápis vzorců</span><div class="skup-tl">
     <select class="tl" id="jazyk" title="České názvy funkcí a středník, nebo anglické názvy a čárka">
@@ -32,10 +42,69 @@
   </div></div>
   <span class="vpravo">
     <span class="postup" id="postup" title="Splněné úlohy ze všech lekcí"></span>
+    <button class="tl" id="btnPruvodce" title="Průvodce stránkou – ukáže, kde co najdete">🧭<span class="txt"> Průvodce</span></button>
     <button class="tl" id="btnNapoveda" title="Jak se stránka ovládá" aria-label="Nápověda">❓</button>
   </span>
 </header>
 <div id="nabLekce" class="nabidka" hidden></div>
+<div id="nabSoubor" class="nabidka" hidden>
+  <button class="tl" data-soubor="novy">📄 Nový sešit v pískovišti</button>
+  <button class="tl" data-soubor="ulozit">💾 Uložit pískoviště jako…</button>
+  <div class="titulek">Moje sešity</div>
+  <div id="mojeSesity"></div>
+  <hr>
+  <button class="tl" data-soubor="import">📥 Otevřít soubor (.xlsx, .xls, .ods, .csv)…</button>
+  <button class="tl" data-soubor="xlsx">📤 Stáhnout jako Excel (.xlsx)</button>
+  <button class="tl" data-soubor="csv">📤 Stáhnout aktivní list jako .csv</button>
+  <hr>
+  <button class="tl" data-soubor="sdilet">🔗 Sdílet sešit odkazem</button>
+</div>
+<input type="file" id="sadaVstup" accept=".json,application/json" hidden>
+<input type="file" id="souborVstup" accept=".xlsx,.xls,.xlsm,.ods,.csv" hidden>
+<div id="nabStruktura" class="nabidka" hidden>
+  <div class="titulek">Řádky a sloupce (podle výběru)</div>
+  <button class="tl" data-str="vlozR">⤒ Vložit řádky nad</button>
+  <button class="tl" data-str="smazR">✕ Odstranit řádky</button>
+  <button class="tl" data-str="vlozC">⇤ Vložit sloupce vlevo</button>
+  <button class="tl" data-str="smazC">✕ Odstranit sloupce</button>
+  <hr>
+  <div class="titulek">Seřadit podle sloupce aktivní buňky</div>
+  <button class="tl" data-str="seradA">↓ Seřadit A → Z (od nejmenšího)</button>
+  <button class="tl" data-str="seradZ">↑ Seřadit Z → A (od největšího)</button>
+  <hr>
+  <button class="tl" data-str="hledat">🔍 Najít a nahradit… <kbd>Ctrl+H</kbd></button>
+</div>
+<dialog id="dlgPodm">
+  <h2>🎨 Podmíněné formátování</h2>
+  <p class="rz-prazdne">Pravidlo obarví buňky podle jejich hodnoty. Mění jen vzhled – hodnoty i vzorce zůstávají stejné. Pozdější pravidlo má přednost.</p>
+  <div id="pfSeznam"></div>
+  <h3 style="font-size:1rem;margin:.8em 0 .2em">Nové pravidlo</h3>
+  <label class="hl-pole">Oblast <input id="pfOblast" class="vstup" autocomplete="off"></label>
+  <label class="hl-pole">Pravidlo <select id="pfTyp" class="tl"></select></label>
+  <label class="hl-pole" id="pfH1l"><span id="pfH1t">Hodnota</span> <input id="pfH1" class="vstup" autocomplete="off" placeholder="číslo, text nebo odkaz =F1"></label>
+  <label class="hl-pole" id="pfH2l">a <input id="pfH2" class="vstup" autocomplete="off"></label>
+  <label class="hl-pole" id="pfStyll">Vzhled <select id="pfStyl" class="tl"><option value="cervena">🟥 červená</option><option value="zelena">🟩 zelená</option><option value="zluta">🟨 žlutá</option><option value="modra">🟦 modrá</option><option value="tucne">𝐁 tučně</option></select></label>
+  <p class="rz-prazdne" id="pfNapoveda"></p>
+  <div class="rb-akce"><button class="btn hlavni" id="pfPridej">Přidat pravidlo</button><button class="btn" id="pfZavri">Zavřít</button></div>
+  <p class="rz-prazdne" id="pfZprava"></p>
+</dialog>
+<dialog id="dlgNazvy">
+  <h2>🏷 Správce názvů</h2>
+  <p class="rz-prazdne">Název nahradí ve vzorci adresu nebo konstantu: místo <code>=B2*$F$1</code> napíšete <code>=B2*DPH</code>. Vzorec je čitelnější a při kopírování se název neposouvá (chová se jako $).</p>
+  <div id="nazvySeznam"></div>
+  <div class="hl-pole"><label>Název <input id="nzNazev" class="vstup" autocomplete="off" placeholder="např. DPH"></label></div>
+  <div class="hl-pole"><label>Odkazuje na <input id="nzDef" class="vstup" autocomplete="off" placeholder="=List1!$F$1  nebo  =0,21"></label></div>
+  <div class="rb-akce"><button class="btn hlavni" id="nzPridej">Přidat / změnit</button><button class="btn" id="nzZavri">Zavřít</button></div>
+  <p class="rz-prazdne" id="nzZprava"></p>
+</dialog>
+<dialog id="dlgHledat" class="dlg-hledat">
+  <h2>🔍 Najít a nahradit</h2>
+  <label class="hl-pole">Najít <input id="hlText" class="vstup" autocomplete="off"></label>
+  <label class="hl-pole">Nahradit čím <input id="hlNove" class="vstup" autocomplete="off"></label>
+  <div class="hl-volby"><label><input type="checkbox" id="hlVzorce" checked> i ve vzorcích</label> <label><input type="checkbox" id="hlCela"> jen celé buňky</label> <label><input type="checkbox" id="hlVelikost"> rozlišovat velikost písmen</label></div>
+  <div class="rb-akce"><button class="btn hlavni" id="hlNajdi">Najít vše</button><button class="btn" id="hlNahrad">Nahradit vše</button><button class="btn" id="hlZavri">Zavřít</button></div>
+  <ul id="hlVysledky" class="audit-seznam"></ul>
+</dialog>
 
 <div class="rozlozeni" id="rozlozeni">
   <section class="vyklad" id="vyklad"></section>
@@ -47,28 +116,57 @@
         <button class="btn mini" id="btnObnov" title="Vrátit list do výchozího stavu">↺ Obnovit list</button>
       </span>
     </div>
+    <div class="lista-formatu" role="toolbar" aria-label="Úpravy a formát buněk">
+      <button class="tl ik" id="btnZpet" disabled aria-label="Zpět">↶</button>
+      <button class="tl ik" id="btnZnovu" disabled aria-label="Znovu">↷</button>
+      <span class="odd" aria-hidden="true"></span>
+      <select class="tl" id="fmtTyp" title="Formát čísla ve vybraných buňkách – mění jen vzhled, ne hodnotu" aria-label="Formát čísla"></select>
+      <button class="tl ik" data-fmt="mene" title="Ubrat desetinné místo" aria-label="Ubrat desetinné místo">,0←</button>
+      <button class="tl ik" data-fmt="vic" title="Přidat desetinné místo" aria-label="Přidat desetinné místo">,00→</button>
+      <button class="tl ik" data-fmt="tis" title="Oddělovač tisíců" aria-pressed="false">1 000</button>
+      <span class="odd" aria-hidden="true"></span>
+      <button class="tl ik" data-fmt="b" title="Tučně (Ctrl+B)" aria-pressed="false"><b>B</b></button>
+      <button class="tl ik" data-fmt="zl" title="Zarovnat doleva" aria-pressed="false">⇤</button>
+      <button class="tl ik" data-fmt="zc" title="Zarovnat na střed" aria-pressed="false">↔</button>
+      <button class="tl ik" data-fmt="zr" title="Zarovnat doprava" aria-pressed="false">⇥</button>
+      <button class="tl ik" data-fmt="vymaz" title="Vymazat formát">🧹</button>
+      <span class="odd" aria-hidden="true"></span>
+      <button class="tl" id="btnVzorce" aria-pressed="false" title="Zobrazit v buňkách vzorce místo výsledků (Ctrl+`)">ƒx<span class="txt"> vzorce</span></button>
+      <span class="odd" aria-hidden="true"></span>
+      <button class="tl ik" id="btnAuditPred" title="Šipky k předchůdcům – na co vzorec odkazuje (další klik = další úroveň)" aria-label="Předchůdci">⇠◻</button>
+      <button class="tl ik" id="btnAuditNasl" title="Šipky k následníkům – které vzorce na buňce závisí (další klik = další úroveň)" aria-label="Následníci">◻⇢</button>
+      <span class="odd" aria-hidden="true"></span>
+      <button class="tl" id="btnPodm" title="Podmíněné formátování – obarvit buňky podle hodnoty">🎨<span class="txt"> Podmíněné</span></button>
+      <button class="tl" id="btnNazvy" title="Správce názvů – pojmenované oblasti a konstanty (např. DPH)">🏷<span class="txt"> Názvy</span></button>
+      <button class="tl" data-nabidka="nabStruktura" title="Vložit/odstranit řádky a sloupce, seřadit, najít a nahradit (také pravé tlačítko na záhlaví)">▦<span class="txt"> Úpravy</span> ▾</button>
+      <button class="tl ik" id="btnAuditSmaz" title="Odstranit šipky" aria-label="Odstranit šipky">✕⇢</button>
+    </div>
     <div class="radek-vzorce">
-      <div class="nazev-bunky" id="nazevBunky" title="Vybraná buňka">A1</div>
+      <div class="nazev-bunky" data-i18n="ne" id="nazevBunky" title="Vybraná buňka">A1</div>
       <span class="fx" aria-hidden="true">fx</span>
       <div class="pole">
-        <pre id="zvyr" aria-hidden="true"></pre>
+        <pre id="zvyr" aria-hidden="true" data-i18n="ne"></pre>
         <input id="vzorec" spellcheck="false" autocomplete="off" aria-label="Řádek vzorců" placeholder="Hodnota nebo vzorec začínající =">
       </div>
     </div>
     <div class="napoveda-fn" id="napovedaFn" aria-live="polite"></div>
     <div class="mrizka-obal" id="mrizkaObal">
       <div class="mrizka-vnitrek" id="mrizkaVnitrek">
-        <table id="mrizka" tabindex="0" aria-label="List"></table>
+        <table id="mrizka" tabindex="0" aria-label="List" data-i18n="ne"></table>
         <div class="uchyt" id="uchyt" title="Táhněte pro zkopírování (dvojklik = dolů podle sousedního sloupce)" hidden></div>
       </div>
     </div>
-    <div class="info-dilny" id="infoDilny"></div>
+    <div class="listy-zal" id="listyZal" role="tablist" aria-label="Listy sešitu" hidden></div>
+    <div class="pod-mrizkou"><div class="info-dilny" id="infoDilny"></div><div class="stav-radek" id="stavRadek" aria-live="polite"></div></div>
 
     <div class="rozklad" id="rozklad">
       <div class="rz-hlava" role="tablist">
         <button class="zal" role="tab" data-zal="kroky" aria-selected="true">▶ Krok za krokem</button>
         <button class="zal" role="tab" data-zal="strom" aria-selected="false">🌳 Strom</button>
         <button class="zal" role="tab" data-zal="funkce" aria-selected="false">ℹ️ Funkce</button>
+        <button class="zal" role="tab" data-zal="zavislosti" aria-selected="false" title="Na co buňka odkazuje a co na ní závisí">🔗 Závislosti</button>
+        <button class="zal" role="tab" data-zal="chyby" aria-selected="false" title="Všechny chyby a podezřelá místa v listu">🐞 Kontrola <span id="pocetChyb"></span></button>
+        <button class="zal" role="tab" data-zal="kukatko" aria-selected="false" title="Sledované buňky">👁 Kukátko</button>
         <span class="zdroj" id="rzZdroj"></span>
       </div>
       <div class="rz-telo" id="rzTelo"></div>
@@ -79,12 +177,24 @@
 
 <dialog id="dlgNapoveda">
   <h2>❓ Jak se stránka ovládá</h2>
+  <p><button class="btn" id="btnPruvodceZNapovedy">🧭 Spustit průvodce stránkou</button></p>
   <ul>
     <li><b>Výuka</b>: vlevo výklad, vpravo živý list. Ukázky vzorců (rámeček se šipkou ▸) jsou klikací – vzorec se rozloží v dílně.</li>
     <li><b>Psaní</b>: vyberte buňku a začněte psát, nebo klikněte do řádku vzorců. <kbd>Enter</kbd> potvrdí, <kbd>Esc</kbd> zruší, <kbd>Tab</kbd> potvrdí a jde doprava (nebo doplní nabízenou funkci).</li>
     <li><b>Ukazování myší</b>: když při psaní vzorce stojíte za <code>=</code>, <code>(</code>, operátorem nebo oddělovačem, klikněte na buňku – vloží se její adresa. Tažením vložíte oblast.</li>
     <li><kbd>F4</kbd> na adrese v řádku vzorců přepíná <code>A1 → $A$1 → A$1 → $A1</code>.</li>
-    <li><b>Kopírování</b>: táhněte čtvereček v rohu vybrané buňky, nebo <kbd>Ctrl+C</kbd> / <kbd>Ctrl+V</kbd>. Relativní odkazy se posunou.</li>
+    <li><b>Výběr oblasti</b>: tažením myší, <kbd>Shift</kbd>+šipky, <kbd>Shift</kbd>+klik, klik na záhlaví řádku či sloupce, <kbd>Ctrl+A</kbd>. Dole se ukáže součet, průměr, počet, min a max.</li>
+    <li><b>Kopírování</b>: <kbd>Ctrl+C</kbd> / <kbd>Ctrl+X</kbd> / <kbd>Ctrl+V</kbd> i celých oblastí – relativní odkazy se posunou. Funguje i s Excelem a Calcem (vkládají se hodnoty).</li>
+    <li><b>Úchyt</b> (čtvereček v rohu výběru): táhnutím kopíruje vzorce a pokračuje v řadách (1, 2 → 3…, data, dny, měsíce, „Položka 1“). Dvojklik vyplní dolů podle sousedního sloupce.</li>
+    <li><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> Zpět a Znovu, <kbd>Delete</kbd> smaže výběr, <kbd>Ctrl+B</kbd> tučně, <kbd>Ctrl+`</kbd> zobrazí vzorce.</li>
+    <li><b>Audit</b>: tlačítka ⇠◻ a ◻⇢ kreslí šipky k předchůdcům a následníkům vybrané buňky (červená = odtud přichází chyba), každý další klik přidá úroveň. Záložky pod listem: <i>Závislosti</i>, <i>Kontrola</i> (všechny chyby listu i s původem, nekonzistentní vzorce) a <i>Kukátko</i> (sledované buňky).</li>
+    <li><b>▦ Úpravy</b> (nebo pravé tlačítko na záhlaví řádku/sloupce): vložit a odstranit řádky či sloupce – odkazy ve vzorcích se přepíšou, odkaz na smazanou buňku se změní na #ODKAZ!. Seřadit oblast (vzorce se posunou se svým řádkem). <kbd>Ctrl+H</kbd> najít a nahradit i ve vzorcích.</li>
+    <li><b>Listy</b> (v pískovišti): záložky pod listem, ＋ přidá list, dvojklik přejmenuje. Na jiný list se odkazuje <code>List2!A1</code> nebo <code>'Můj list'!A1:B5</code>. <b>🏷 Názvy</b> pojmenují buňku, oblast nebo konstantu (<code>=B2*DPH</code>).</li>
+    <li><b>📁 Soubor</b>: ukládání sešitů pod jménem, import a export Excelu (.xlsx – vzorce, hodnoty, listy, názvy, formáty čísel; tučné písmo a barvy se nepřenáší), .ods a .csv, sdílení odkazem. Před nahrazením pískoviště se jeho obsah uloží jako záloha do Mých sešitů.</li>
+    <li><b>👩‍🏫 Učitel</b>: v listu připravte data a do cílových buněk vzorová řešení, pak „Přidat úlohu z vybrané buňky“. Sadu lze vyzkoušet jako žák, stáhnout (JSON) a sdílet odkazem – žák ji najde v menu lekcí.</li>
+    <li><b>🎨 Podmíněné formátování</b>: obarví buňky podle hodnoty (větší než, mezi, obsahuje, nejvyšších N, duplicity, vlastní vzorec), datové pruhy a barevné škály.</li>
+    <li><b>Formát</b> čísla (měna, procenta, datum, desetinná místa) mění jen vzhled – vzorce počítají s uloženou hodnotou. Šířku sloupce změníte tažením okraje záhlaví.</li>
+    <li><b>🔬 Rozbor vzorce</b>: vložte jakýkoli vzorec – stránka ho vysvětlí slovy, rozepíše postup, upozorní na chyby a předvede ho na ukázkových datech.</li>
     <li><b>Rozklad</b>: <i>Krok za krokem</i> nahrazuje části vzorce výsledky ve stejném pořadí jako Excel (Vzorce → Vyhodnotit vzorec). <i>Strom</i> ukazuje, co je argumentem čeho.</li>
     <li><b>Úlohy</b> se kontrolují i se změněnými daty – opsaný výsledek místo vzorce neprojde.</li>
     <li>Přepínač <b>Zápis vzorců</b> přeloží všechny vzorce mezi českým (<code>KDYŽ(A1>1;…)</code>) a anglickým (<code>IF(A1>1,…)</code>) Excelem.</li>
