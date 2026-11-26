@@ -207,8 +207,9 @@ function umistiUchyt() {
   const u = $('uchyt'), o = obl(), t = td(X.adresa(o.r2, o.c2));
   if (!t) { u.hidden = true; return; }
   u.hidden = false;
-  u.style.left = (t.offsetLeft + t.offsetWidth - 6) + 'px';
-  u.style.top = (t.offsetTop + t.offsetHeight - 6) + 'px';
+  const p = Math.round((u.offsetWidth || 10) / 2) + 1;   /* na dotyku je úchyt větší – střed stále v rohu buňky */
+  u.style.left = (t.offsetLeft + t.offsetWidth - p) + 'px';
+  u.style.top = (t.offsetTop + t.offsetHeight - p) + 'px';
 }
 function stavovyRadek() {
   const el = $('stavRadek'), o = obl();
@@ -347,6 +348,14 @@ function vlozAdresu(text) {
   poPsani();
 }
 function oblastText(a, b) { return textObl(obl(a, b)); }
+/* klik na záhlaví: roh = celý list, písmeno = sloupec, číslo = řádek */
+function vyberZahlavi(h) {
+  const { R, C } = rozmer();
+  if (h.classList.contains('roh')) vyber('A1', true, X.adresa(R, C));
+  else if (h.dataset.c) vyber(X.adresa(1, +h.dataset.c), true, X.adresa(R, +h.dataset.c));
+  else if (h.dataset.r) vyber(X.adresa(+h.dataset.r, 1), true, X.adresa(+h.dataset.r, C));
+}
+function zacniUpravu() { vstup.focus(); vstup.setSelectionRange(vstup.value.length, vstup.value.length); edit = true; poPsani(); }
 
 mrizka.addEventListener('mousedown', e => {
   if (e.target.closest('[data-sirka]')) return;
@@ -354,10 +363,7 @@ mrizka.addEventListener('mousedown', e => {
   if (h) {
     if (edit && !potvrd()) return;
     e.preventDefault(); mrizka.focus();
-    const { R, C } = rozmer();
-    if (h.classList.contains('roh')) vyber('A1', true, X.adresa(R, C));
-    else if (h.dataset.c) vyber(X.adresa(1, +h.dataset.c), true, X.adresa(R, +h.dataset.c));
-    else if (h.dataset.r) vyber(X.adresa(+h.dataset.r, 1), true, X.adresa(+h.dataset.r, C));
+    vyberZahlavi(h);
     return;
   }
   const t = e.target.closest('td[data-a]'); if (!t) return;
@@ -383,7 +389,7 @@ mrizka.addEventListener('dblclick', e => {
   const g = e.target.closest('[data-sirka]');
   if (g) return sirkaPodleObsahu(+g.dataset.sirka);
   const t = e.target.closest('td[data-a]'); if (!t) return;
-  vstup.focus(); vstup.setSelectionRange(vstup.value.length, vstup.value.length); edit = true; poPsani();
+  zacniUpravu();
 });
 
 /* šířka sloupců */
@@ -470,13 +476,17 @@ const vListu = () => document.activeElement === mrizka;
 function zkopiruj(e, vyjmout) {
   if (!vListu()) return;
   e.preventDefault();
+  e.clipboardData.setData('text/plain', kopirujOblast(vyjmout));
+}
+/* zapamatuje oblast (vzorce + formáty) a vrátí ji jako text s tabulátory pro Excel */
+function kopirujOblast(vyjmout) {
   const o = obl(), bunky = {}, format = {};
   adresy(o).forEach(a => { bunky[a] = list.surova(a); if (list.format[a]) format[a] = list.format[a]; });
   const text = Array.from({ length: o.r2 - o.r1 + 1 }, (_, i) => Array.from({ length: o.c2 - o.c1 + 1 }, (_, j) => list.zobraz(X.adresa(o.r1 + i, o.c1 + j))).join('\t')).join('\n');
   schranka = { o, vyjmout, text, bunky, format, list };
-  e.clipboardData.setData('text/plain', text);
   oznac();
   info(`${vyjmout ? '✂ Vyjmuto' : '📋 Zkopírováno'} ${textObl(o)} – vyberte cíl a vložte Ctrl+V. ${vyjmout ? 'Obsah se přesune beze změny odkazů.' : 'Relativní odkazy ve vzorcích se posunou.'}`);
+  return text;
 }
 document.addEventListener('copy', e => zkopiruj(e, false));
 document.addEventListener('cut', e => zkopiruj(e, true));
@@ -1350,14 +1360,20 @@ $('nabStruktura').addEventListener('click', e => { const b = e.target.closest('[
 mrizka.addEventListener('contextmenu', e => {
   const h = e.target.closest('th'); if (!h || h.classList.contains('roh')) return;
   e.preventDefault();
-  const o = obl();
-  if (h.dataset.c && !(+h.dataset.c >= o.c1 && +h.dataset.c <= o.c2 && o.r1 === 1)) vyber(X.adresa(1, +h.dataset.c), true, X.adresa(rozmer().R, +h.dataset.c));
-  if (h.dataset.r && !(+h.dataset.r >= o.r1 && +h.dataset.r <= o.r2 && o.c1 === 1)) vyber(X.adresa(+h.dataset.r, 1), true, X.adresa(+h.dataset.r, rozmer().C));
-  const n = $('nabStruktura');
-  zavriNabidky(); n.hidden = false;
-  n.style.top = Math.min(e.clientY, innerHeight - n.offsetHeight - 6) + 'px';
-  n.style.left = Math.min(e.clientX, innerWidth - n.offsetWidth - 6) + 'px';
+  otevriStrukturu(h, e.clientX, e.clientY);
 });
+/* nabídka Řádky a sloupce u bodu x, y (pravé tlačítko na záhlaví, podržení prstu) */
+function otevriStrukturu(h, x, y) {
+  const o = obl();
+  if (h && h.dataset.c && !(+h.dataset.c >= o.c1 && +h.dataset.c <= o.c2 && o.r1 === 1)) vyber(X.adresa(1, +h.dataset.c), true, X.adresa(rozmer().R, +h.dataset.c));
+  if (h && h.dataset.r && !(+h.dataset.r >= o.r1 && +h.dataset.r <= o.r2 && o.c1 === 1)) vyber(X.adresa(+h.dataset.r, 1), true, X.adresa(+h.dataset.r, rozmer().C));
+  ukazNabidku($('nabStruktura'), x, y);
+}
+function ukazNabidku(n, x, y) {
+  zavriNabidky(); n.hidden = false;
+  n.style.top = Math.max(6, Math.min(y, innerHeight - n.offsetHeight - 6)) + 'px';
+  n.style.left = Math.max(6, Math.min(x, innerWidth - n.offsetWidth - 6)) + 'px';
+}
 function otevriHledani() {
   const d = $('dlgHledat');
   if (!d.open) d.show();
@@ -1419,9 +1435,9 @@ $('listyZal').addEventListener('click', async e => {
   const b = e.target.closest('[data-list]');
   if (b && sesit.listy[+b.dataset.list] !== list) prepniList(+b.dataset.list);
 });
-$('listyZal').addEventListener('dblclick', async e => {
-  const b = e.target.closest('[data-list]'); if (!b) return;
-  const l = sesit.listy[+b.dataset.list];
+$('listyZal').addEventListener('dblclick', e => { const b = e.target.closest('[data-list]'); if (b) prejmenujList(b); });
+async function prejmenujList(b) {
+  const l = sesit.listy[+b.dataset.list]; if (!l) return;
   const novy = (await Dialog.zeptej('Nový název listu:', l.nazev) || '').trim();
   if (!novy || novy === l.nazev) return;
   if (/[\\/?*[\]:!]/.test(novy) || novy.length > 31) return Dialog.chyba('Název listu nesmí obsahovat \\ / ? * [ ] : ! a může mít nejvýš 31 znaků.');
@@ -1429,7 +1445,7 @@ $('listyZal').addEventListener('dblclick', async e => {
   zmena(`přejmenování listu na ${novy}`, () => sesit.prejmenujList(l.nazev, novy));
   kresliZalozkyListu(); vyber(vybrana, true, konec);
   info(`List přejmenován na ${esc(novy)} – odkazy ve vzorcích ostatních listů se přepsaly.`);
-});
+}
 /* správce názvů */
 function kresliNazvy() {
   const n = Object.entries(sesit.nazvy);
@@ -1639,6 +1655,7 @@ $('nabSoubor').addEventListener('click', async e => {
   const b = e.target.closest('[data-soubor]'); if (!b) return;
   const akce = b.dataset.soubor;
   try {
+    if (akce === 'instalovat') return ukazInstalaci();
     if (akce === 'novy') otevriVPiskovisti(null, 'Nový prázdný sešit.');
     else if (akce === 'ulozit') {
       if (stav.rezim !== 'piskoviste') return info('Pod jménem se ukládá pískoviště – přepněte do něj (nebo stáhněte .xlsx).');
@@ -2089,6 +2106,242 @@ $('vyklad').addEventListener('change', e => {
 $('vyklad').addEventListener('keydown', e => {
   if (e.target.id === 'rbVzorec' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); rozebrat(e.target.value); }
 });
+
+
+/* ---------- dotykové ovládání (iPad, telefon) ----------
+   klepnutí = výběr buňky, klepnutí na už vybranou = úprava, podržení + tažení = oblast,
+   podržení bez pohybu = nabídka buňky, při psaní vzorce klepnutí vloží adresu (podržení + tažení oblast).
+   Lišta nad klávesnicí doplní znaky, které na klávesnici iPadu chybí nebo jsou schované. */
+const dotykLista = $('dotykLista');
+let dotyk = null, rezimOblasti = false;
+function zapniDotyk() {
+  if (document.documentElement.classList.contains('dotyk')) return;
+  document.documentElement.classList.add('dotyk');
+  dotykLista.hidden = false; obnovDotykLista(); umistiUchyt();
+}
+try { if (matchMedia('(pointer: coarse)').matches) zapniDotyk(); } catch (e) { /* starý prohlížeč */ }
+addEventListener('touchstart', zapniDotyk, { passive: true, capture: true, once: true });
+function obnovDotykLista() {
+  if (dotykLista.hidden) return;
+  dotykLista.classList.toggle('pise', document.activeElement === vstup);
+  $('dkOdd').textContent = X.oddelovac(jaz());
+  $('dkOblast').setAttribute('aria-pressed', String(rezimOblasti));
+}
+vstup.addEventListener('focus', obnovDotykLista);
+vstup.addEventListener('blur', () => setTimeout(obnovDotykLista, 0));
+/* iOS píše „chytré“ uvozovky “ ” – ve vzorci musí být rovné " (jinak #NÁZEV?) */
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!(el === vstup || el.id === 'rbVzorec') || !/^\s*=/.test(el.value) || !/[“”„‟″‘’‚‛]/.test(el.value)) return;
+  const k = el.selectionStart;
+  el.value = el.value.replace(/[“”„‟″]/g, '"').replace(/[‘’‚‛]/g, "'");
+  el.setSelectionRange(k, k);
+}, true);
+function vlozZnak(t) {
+  if (document.activeElement !== vstup) { if (!edit) zacniUpravu(); else vstup.focus(); }
+  const a = vstup.selectionStart ?? vstup.value.length, b = vstup.selectionEnd ?? a;
+  vstup.value = vstup.value.slice(0, a) + t + vstup.value.slice(b);
+  vstup.setSelectionRange(a + t.length, a + t.length); edit = true; uk = null; poPsani();
+}
+function vyplnPrvnim(smer) {
+  const o = obl();
+  if (smer === 'd' ? o.r2 > o.r1 : o.c2 > o.c1) return vyplnRadu(smer === 'd' ? { ...o, r2: o.r1 } : { ...o, c2: o.c1 }, smer, smer === 'd' ? o.r2 - o.r1 : o.c2 - o.c1);
+  info(smer === 'd' ? 'Nejdřív vyberte oblast (⬚ Oblast nebo podržet a táhnout): horní řádek se zkopíruje do řádků pod ním.' : 'Nejdřív vyberte oblast: levý sloupec se zkopíruje do sloupců vpravo.');
+}
+function dotykAkce(a, x, y) {
+  if (a !== 'struktura') zavriNabidky();
+  switch (a) {
+    case 'odd': return vlozZnak(X.oddelovac(jaz()));
+    case 'abs': {
+      if (!edit) zacniUpravu();
+      const r = X.prepniAbsolutni(vstup.value, vstup.selectionStart);
+      if (r) { vstup.value = r.text; vstup.setSelectionRange(r.kurzor, r.kurzor); uk = null; poPsani(); }
+      return;
+    }
+    case 'vlevo': case 'vpravo': {
+      const k = Math.max(0, Math.min(vstup.value.length, (vstup.selectionStart ?? 0) + (a === 'vlevo' ? -1 : 1)));
+      vstup.setSelectionRange(k, k); uk = null; napoveda(); return;
+    }
+    case 'zrus': return zrus();
+    case 'ok': if (potvrd()) { mrizka.focus({ preventScroll: true }); posunVyber(1, 0); } return;
+    case 'upravit': if (edit && !potvrd()) return; return zacniUpravu();
+    case 'novyVzorec': if (edit && !potvrd()) return; zacniUpravu(); vstup.value = '='; vstup.setSelectionRange(1, 1); uk = null; return poPsani();
+    case 'oblast':
+      rezimOblasti = !rezimOblasti; obnovDotykLista();
+      return info(rezimOblasti ? '⬚ Klepněte na buňku, kam má výběr sahat. Další klepnutí na ⬚ Oblast režim vypne.' : '');
+    case 'kopirovat': case 'vyjmout': {
+      if (edit && !potvrd()) return;
+      const t = kopirujOblast(a === 'vyjmout');
+      try { navigator.clipboard.writeText(t).catch(() => {}); } catch (e) { /* jen vnitřní schránka */ }
+      return;
+    }
+    case 'vlozit':
+      if (edit && !potvrd()) return;
+      if (schranka) return vlozSchranku();
+      try {
+        return navigator.clipboard.readText().then(t => (t ? vlozText(t) : info('Schránka je prázdná.')),
+          () => info('Prohlížeč nepovolil čtení schránky. Buňky z této stránky zkopírujte tlačítkem 📋 Kopírovat.'));
+      } catch (e) { return info('Schránka není dostupná. Buňky z této stránky zkopírujte tlačítkem 📋 Kopírovat.'); }
+    case 'smazat': if (edit && !potvrd()) return; return smazOblast();
+    case 'dolu': if (edit && !potvrd()) return; return vyplnPrvnim('d');
+    case 'vpravoVypln': if (edit && !potvrd()) return; return vyplnPrvnim('r');
+    case 'struktura': {
+      if (edit && !potvrd()) return;
+      const r = dotykLista.getBoundingClientRect();
+      return otevriStrukturu(null, x ?? r.left, y ?? r.bottom + 4);
+    }
+    case 'rozbor': {
+      const b = $('btnRozbor');
+      return b ? b.click() : info('Vybraná buňka nemá vzorec k rozboru.');
+    }
+  }
+  vlozZnak(a);   /* obyčejný znak = ( ) : $ " & + - * / ^ < > % */
+}
+/* tlačítka, která neberou fokus řádku vzorců (klávesnice iPadu zůstane otevřená) */
+function tlacitkaBezFokusu(kont, sel, fn) {
+  let start = null;
+  kont.addEventListener('mousedown', e => { if (e.target.closest(sel)) e.preventDefault(); });
+  kont.addEventListener('touchstart', e => { const t = e.touches[0]; start = [t.clientX, t.clientY]; }, { passive: true });
+  kont.addEventListener('touchend', e => {
+    const b = e.target.closest(sel), t = e.changedTouches[0]; if (!b || !start) return;
+    if (Math.hypot(t.clientX - start[0], t.clientY - start[1]) > 12) return;   /* posouvání lišty prstem */
+    e.preventDefault(); fn(b, t.clientX, t.clientY);
+  }, { passive: false });
+  kont.addEventListener('click', e => { const b = e.target.closest(sel); if (b) fn(b, e.clientX, e.clientY); });
+}
+tlacitkaBezFokusu(dotykLista, '[data-dk]', (b, x, y) => dotykAkce(b.dataset.dk, x, y));
+tlacitkaBezFokusu($('nabBunka'), '[data-dk]', (b, x, y) => dotykAkce(b.dataset.dk, x, y));
+$('napovedaFn').addEventListener('touchend', e => { const b = e.target.closest('[data-navrh]'); if (b) { e.preventDefault(); doplnNavrh(b.dataset.navrh); } }, { passive: false });
+/* podržení prstu (místo dvojkliku a pravého tlačítka) */
+function priPodrzeni(kont, sel, fn) {
+  let d = null;
+  kont.addEventListener('touchstart', e => {
+    const b = e.target.closest(sel); if (!b || e.touches.length !== 1) return;
+    const t = e.touches[0]; d = { x: t.clientX, y: t.clientY, hotovo: false };
+    d.c = setTimeout(() => { if (d) { d.hotovo = true; fn(b, d.x, d.y); } }, 500);
+  }, { passive: true });
+  kont.addEventListener('touchmove', e => { const t = e.touches[0]; if (d && !d.hotovo && Math.hypot(t.clientX - d.x, t.clientY - d.y) > 10) { clearTimeout(d.c); d = null; } }, { passive: true });
+  kont.addEventListener('touchend', e => { if (!d) return; clearTimeout(d.c); if (d.hotovo) e.preventDefault(); d = null; }, { passive: false });
+  kont.addEventListener('touchcancel', () => { if (d) clearTimeout(d.c); d = null; });
+}
+priPodrzeni($('listyZal'), '[data-list]', b => prejmenujList(b));
+/* list */
+const bunkaPod = (x, y) => document.elementFromPoint(x, y)?.closest?.('td[data-a]')?.dataset.a;
+const vOblasti = a => { const o = obl(), q = X.rozeberAdresu(a); return q.r >= o.r1 && q.r <= o.r2 && q.c >= o.c1 && q.c <= o.c2; };
+function zrusDotyk() { if (dotyk) clearTimeout(dotyk.casovac); dotyk = null; }
+function nabidkaBunky(x, y) {
+  const n = $('nabBunka');
+  const slovo = obl().r1 === obl().r2 && obl().c1 === obl().c2 ? 'Buňka' : 'Oblast';
+  $('nbTitulek').textContent = (window.I18N && I18N.t ? I18N.t(slovo) : slovo) + ' ' + textObl(obl());
+  n.querySelector('[data-dk="rozbor"]').hidden = !list.surova(vybrana).startsWith('=');
+  n.querySelector('[data-dk="vlozit"]').disabled = false;
+  ukazNabidku(n, x + 8, y + 8);
+}
+function klepnuti(el) {
+  zavriNabidky();
+  if (el.matches('th')) { if (edit && !potvrd()) return; mrizka.focus({ preventScroll: true }); return vyberZahlavi(el); }
+  const a = el.dataset.a;
+  if (lzeUkazovat()) { kotva = a; return vlozAdresu(a); }
+  if (edit && a === vybrana && document.activeElement === vstup) return;   /* klepnutí na upravovanou buňku */
+  if (edit && !potvrd()) return;
+  if (rezimOblasti) return rozsirNa(a);
+  const o = obl();
+  if (a === vybrana && o.r1 === o.r2 && o.c1 === o.c2) return zacniUpravu();   /* druhé klepnutí = psaní */
+  vyber(a); mrizka.focus({ preventScroll: true });
+}
+function podrzeni() {
+  const d = dotyk;
+  if (d.el.matches('th')) { d.hotovo = true; if (!d.el.classList.contains('roh') && !(edit && !potvrd())) otevriStrukturu(d.el, d.x, d.y); return; }
+  if (lzeUkazovat()) { d.ukaz = true; kotva = d.a; vlozAdresu(d.a); return; }
+  if (edit && !potvrd()) { d.hotovo = true; return; }
+  if (!vOblasti(d.a)) vyber(d.a);
+  mrizka.focus({ preventScroll: true });
+}
+mrizka.addEventListener('touchstart', e => {
+  zrusDotyk();
+  if (e.touches.length !== 1 || e.target.closest('[data-sirka], .uchyt')) return;
+  const t = e.touches[0], el = e.target.closest('th, td[data-a]'); if (!el) return;
+  dotyk = { x: t.clientX, y: t.clientY, el, a: el.dataset.a, posun: false, drz: false, tah: false };
+  dotyk.casovac = setTimeout(() => { if (dotyk && !dotyk.posun) { dotyk.drz = true; podrzeni(); } }, 450);
+}, { passive: true });
+mrizka.addEventListener('touchmove', e => {
+  if (!dotyk) return;
+  const t = e.touches[0];
+  if (!dotyk.drz) {
+    if (Math.hypot(t.clientX - dotyk.x, t.clientY - dotyk.y) > 10) { dotyk.posun = true; clearTimeout(dotyk.casovac); }
+    return;   /* obyčejný tah = posouvání listu */
+  }
+  e.preventDefault();   /* po podržení prst vybírá, neposouvá */
+  if (dotyk.hotovo || !dotyk.a) return;
+  const a = bunkaPod(t.clientX, t.clientY); if (!a) return;
+  if (!dotyk.tah && a === dotyk.a) return;
+  if (!dotyk.tah) { dotyk.tah = true; zavriNabidky(); if (!dotyk.ukaz) vyber(dotyk.a); }
+  if (dotyk.ukaz) vlozAdresu(oblastText(dotyk.a, a));
+  else if (a !== konec) rozsirNa(a);
+}, { passive: false });
+mrizka.addEventListener('touchend', e => {
+  if (!dotyk) return;
+  const d = dotyk; zrusDotyk();
+  if (d.posun) return;
+  e.preventDefault();   /* bez náhradních událostí myši a bez zvětšení dvojím klepnutím */
+  if (d.drz) { if (!d.tah && !d.ukaz && !d.hotovo && d.a) nabidkaBunky(d.x, d.y); return; }
+  klepnuti(d.el);
+}, { passive: false });
+mrizka.addEventListener('touchcancel', zrusDotyk);
+
+/* ---------- instalace jako aplikace (PWA) ----------
+   vlastní manifest excel_vzorce.webmanifest a service worker excel_vzorce-sw.js s rozsahem jen ./excel_vzorce */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
+  addEventListener('load', () => navigator.serviceWorker.register('excel_vzorce-sw.js', { scope: './excel_vzorce' }).catch(() => {}));
+}
+const KLIC_INSTAL = KLIC + '_instal_skryto';
+let vyzvaInstalace = null;
+const beziSamostatne = () => (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) || navigator.standalone === true;
+const vRamu = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+const jeIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const instalSkryto = () => { try { return localStorage.getItem(KLIC_INSTAL) === '1'; } catch (e) { return false; } };
+const odkazSamostatne = '<a class="btn hlavni" href="excel_vzorce.html" target="_blank" rel="noopener">↗ Otevřít samostatně</a>';
+function navodInstalace() {
+  if (beziSamostatne()) return '<p>✓ Vzorce už běží jako nainstalovaná aplikace.</p>';
+  const t = '<p>Stránku jde nainstalovat jako aplikaci: bude mít vlastní ikonu na ploše, otevře se přes celou obrazovku bez lišty prohlížeče a poběží i bez internetu. Pokrok a sešity zůstávají stejné.</p>';
+  if (vRamu) return t + '<p>Uvnitř rozcestníku se instalovat nedá – otevřete stránku samostatně a nainstalujte ji tam.</p><p>' + odkazSamostatne + '</p>';
+  if (vyzvaInstalace) return t + '<p><button class="btn hlavni" data-instaluj>📲 Nainstalovat</button></p>';
+  if (jeIOS) return t + '<p><b>iPad / iPhone (Safari):</b> klepněte na <b>Sdílet</b> (čtverec se šipkou nahoru, na iPadu vpravo nahoře) a zvolte <b>„Přidat na plochu“</b>.</p>';
+  return t + '<p><b>Android (Chrome):</b> menu ⋮ → <b>„Nainstalovat aplikaci“</b> nebo <b>„Přidat na plochu“</b>.</p>'
+    + '<p><b>Počítač (Chrome, Edge):</b> ikona instalace vpravo v adresním řádku, nebo menu → <b>„Nainstalovat stránku jako aplikaci“</b>.</p>'
+    + '<p><b>iPad / iPhone (Safari):</b> <b>Sdílet</b> → <b>„Přidat na plochu“</b>.</p>';
+}
+function kresliInstalaci() {
+  $('instalNavod').innerHTML = navodInstalace();
+  const el = $('instalBanner');
+  /* pruh jen na dotykových zařízeních (nebo když prohlížeč instalaci sám nabízí) */
+  const dotykove = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  if (beziSamostatne() || instalSkryto() || (!dotykove && !vyzvaInstalace)) { el.innerHTML = ''; return; }
+  let text, tl = '';
+  if (vRamu) { text = '📲 Vzorce si můžete dát na plochu jako aplikaci.'; tl = odkazSamostatne; }
+  else if (vyzvaInstalace) { text = '📲 Nainstalujte si Vzorce jako aplikaci – ikona na ploše, celá obrazovka, funguje i offline.'; tl = '<button class="btn hlavni" data-instaluj>Nainstalovat</button>'; }
+  else if (jeIOS) text = '📲 Na plochu iPadu: v Safari <b>Sdílet</b> → <b>Přidat na plochu</b>.';
+  else text = '📲 Do telefonu: v menu prohlížeče zvolte <b>Nainstalovat aplikaci</b> / <b>Přidat na plochu</b>.';
+  el.innerHTML = `<div class="instal-banner"><span>${text}</span>${tl}<button class="instal-zavrit" data-skryj-instal aria-label="Skrýt nabídku instalace" title="Skrýt">✕</button></div>`;
+}
+function ukazInstalaci() { kresliInstalaci(); $('dlgInstalace').showModal(); }
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); vyzvaInstalace = e; kresliInstalaci(); });
+addEventListener('appinstalled', () => { vyzvaInstalace = null; kresliInstalaci(); info('📲 Aplikace je nainstalovaná – najdete ji mezi aplikacemi a na ploše.'); });
+document.addEventListener('click', async e => {
+  if (e.target.closest('[data-instaluj]') && vyzvaInstalace) {
+    const v = vyzvaInstalace; v.prompt();
+    try { await v.userChoice; } catch (er) { /* zavřeno */ }
+    vyzvaInstalace = null; kresliInstalaci();
+  }
+  if (e.target.closest('[data-skryj-instal]')) {
+    try { localStorage.setItem(KLIC_INSTAL, '1'); } catch (er) { /* bez úložiště */ }
+    kresliInstalaci(); info('Nabídku instalace najdete kdykoli v 📁 Soubor → Nainstalovat jako aplikaci.');
+  }
+});
+kresliInstalaci();
+/* zkratky z ikony aplikace: ?rezim=rozbor / procvic / piskoviste */
+const rezimOdkazu = new URLSearchParams(location.search).get('rezim');
+if (['lekce', 'procvic', 'rozbor', 'piskoviste', 'tahak', 'ucitel'].includes(rezimOdkazu)) stav.rezim = rezimOdkazu;
 
 try { nastavRezim(stav.rezim); }
 catch (e) {   /* poškozený uložený stav: vrátit se na první lekci, aby stránka nezůstala mrtvá */
