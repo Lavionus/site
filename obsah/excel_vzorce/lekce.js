@@ -195,7 +195,7 @@ Kolik krabic potřebuji? <b>Vždy nahoru</b>: [[=ROUNDUP(107/12,0)]] = 9. Polovi
 <h3>{IF}: rozcestí</h3>
 <p><code>{IF}(podmínka{;} hodnota_když_ano{;} hodnota_když_ne)</code></p>
 <p>Excel nejdřív vyhodnotí podmínku. Podle výsledku spočítá <b>jen jednu</b> ze dvou dalších větví – druhá se vůbec nepočítá.
-Projděte si krok za krokem [[=IF(B2>=$F$1,"prospěl","neprospěl")]] a [[=IF(1>2,"x",1/0)]] – dělení nulou nevadí, protože se na něj nedojde.</p>
+Projděte si krok za krokem [[=IF(B2>=$F$1,"prospěl","neprospěl")]] a [[=IF(2>1,"x",1/0)]] – dělení nulou nevadí, protože se na něj nedojde.</p>
 <ul>
 <li>Text ve vzorci musí být v <b>uvozovkách</b>: <code>"prospěl"</code>. Bez nich hledá Excel funkci jménem prospěl → chyba #NÁZEV?.</li>
 <li>Prázdný text se píše <code>""</code>: [[=IF(B2>90,"⭐","")]].</li>
@@ -211,7 +211,7 @@ Projděte si krok za krokem [[=IF(B2>=$F$1,"prospěl","neprospěl")]] a [[=IF(1>
     { id: 'k1', cil: 'C2', kopirovat: 'C2:C7', absolutni: true, reseni: '=IF(B2>=$F$1,"prospěl","neprospěl")', vyzaduje: ['IF'],
       zadani: 'Do [[@C2]] napište vzorec, který vypíše „prospěl“, když má žák aspoň tolik bodů jako hranice v F1, jinak „neprospěl“. Zkopírujte až do C7.',
       napovedy: ['Podmínka: B2>=F1.', 'Hranice F1 se nesmí při kopírování posunout → $F$1.', '={IF}(B2>=$F$1{;}"prospěl"{;}"neprospěl")'] },
-    { id: 'k2', cil: 'D2', kopirovat: 'D2:D7', reseni: '=IF(B2>90,B2*10,0)', vyzaduje: ['IF'],
+    { id: 'k2', cil: 'D2', kopirovat: 'D2:D7', reseni: '=IF(B2>90,B2*10,0)', vyzaduje: ['IF'], varianty: [{ B5: '90' }],
       zadani: 'Do [[@D2]]: kdo má víc než 90 bodů, dostane odměnu 10 Kč za každý bod, ostatní 0. Zkopírujte do D7.',
       napovedy: ['Větev „ano“ je výpočet B2*10.', 'Víc než 90 = >90 (ne >=).'] },
   ],
@@ -328,7 +328,7 @@ ale přibližná shoda vrátí řádek s <b>největší hodnotou menší nebo ro
     { id: 's1', cil: 'F2', reseni: '=VLOOKUP(F1,A2:C6,3,FALSE)', vyzaduje: ['VLOOKUP'], varianty: [{ F1: 'S02' }, { F1: 'P05' }],
       zadani: 'Do [[@F2]] vyhledejte cenu zboží, jehož kód je v F1.',
       napovedy: ['Hledat F1, tabulka A2:C6, cena je 3. sloupec tabulky.', 'Kódy chtějí přesnou shodu: 4. argument NEPRAVDA.'] },
-    { id: 's2', cil: 'F3', reseni: '=VLOOKUP(F1,A2:C6,2,FALSE)', vyzaduje: ['VLOOKUP'], varianty: [{ F1: 'G03' }],
+    { id: 's2', cil: 'F3', reseni: '=VLOOKUP(F1,A2:C6,2,FALSE)', vyzaduje: ['VLOOKUP'], varianty: [{ F1: 'G03' }, { F1: 'S02' }],
       zadani: 'Do [[@F3]] vyhledejte název zboží podle kódu v F1.', napovedy: ['Název je 2. sloupec tabulky.'] },
     { id: 's3', cil: 'F6', reseni: '=VLOOKUP(F5,H2:I5,2,TRUE)', vyzaduje: ['VLOOKUP'], varianty: [{ F5: '999' }, { F5: '10000' }, { F5: '25000' }],
       zadani: 'Do [[@F6]] najděte slevu pro nákup v F5 podle pásem v H2:I5.',

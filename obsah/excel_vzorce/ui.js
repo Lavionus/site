@@ -3,6 +3,7 @@
 'use strict';
 const X = window.XLV, LEKCE = window.XLV_LEKCE, RB = window.XLV_ROZBOR;
 const $ = id => document.getElementById(id);
+const tvar = (n, a, b, c) => { const w = n === 1 ? a : n > 1 && n < 5 ? b : c; return `${n} ${window.I18N && I18N.t ? I18N.t(w) : w}`; };   /* 1 úloha, 3 úlohy, 5 úloh */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const KLIC = 'webapp_excel_vzorce';
 const VYCHOZI = { jazyk: 'cs', lekce: LEKCE[0].id, rezim: 'lekce', hotovo: {}, listy: {}, piskoviste: null, rozbor: null };
@@ -10,11 +11,17 @@ const VYCHOZI = { jazyk: 'cs', lekce: LEKCE[0].id, rezim: 'lekce', hotovo: {}, l
 /* ---------- stav a ukládání ---------- */
 let stav;
 try { stav = Object.assign({}, VYCHOZI, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { stav = { ...VYCHOZI }; }
-if (!LEKCE.some(l => l.id === stav.lekce) && !String(stav.lekce).startsWith('sada:')) stav.lekce = LEKCE[0].id;
+if (!LEKCE.some(l => l.id === stav.lekce) && !(String(stav.lekce).startsWith('sada:') && (stav.sady || []).some(x => 'sada:' + x.id === stav.lekce))) stav.lekce = LEKCE[0].id;
 /* návštěvník v jiném jazyce než češtině dostane výchozí anglický zápis vzorců */
 try { if (!JSON.parse(localStorage.getItem(KLIC) || '{}').jazyk && window.I18N && I18N.jazyk && I18N.jazyk !== 'cs') stav.jazyk = 'en'; } catch (e) { /* bez úložiště */ }
 if (!['lekce', 'piskoviste', 'tahak', 'rozbor', 'procvic', 'ucitel'].includes(stav.rezim)) stav.rezim = 'lekce';
-function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(stav)); } catch (e) { /* plné úložiště – pokrok se neuloží */ } }
+let varovaniUloziste = false;
+function uloz() {
+  try { localStorage.setItem(KLIC, JSON.stringify(stav)); }
+  catch (e) {   /* plné úložiště: jednou upozornit, jinak by se tiše přestalo ukládat */
+    if (!varovaniUloziste) { varovaniUloziste = true; setTimeout(() => window.Dialog && Dialog.chyba('Úložiště prohlížeče je plné – změny se neukládají. Smažte staré zálohy v 📁 Soubor → Moje sešity, nebo sešit stáhněte jako .xlsx.'), 0); }
+  }
+}
 
 const aktLekce = () => LEKCE.find(l => l.id === stav.lekce) || sadaJakoLekce(stav.lekce) || LEKCE[0];
 const jaz = () => stav.jazyk;
@@ -47,6 +54,7 @@ function sesitZDat(d, zaklad) {
 }
 const dataSesitu = () => ({ ...sesit.serializuj(), aktivni: Math.max(0, sesit.listy.indexOf(list)) });
 function ulozList() {
+  if (stav.rezim === 'tahak') return;   /* v taháku není aktivní žádný list */
   const z = dataSesitu();
   if (stav.rezim === 'procvic') { if (pv.uloha) pv.uloha.data = z; return; }
   if (stav.rezim === 'ucitel') { const sa = aktSada(); if (sa) sa.data = z; uloz(); return; }
@@ -102,7 +110,9 @@ function aktualizujZpet() {
 function resetHistorie() { historie = []; vpred = []; aktualizujZpet(); }
 function zmena(popis, fn) {
   historie.push({ ...snimek(), popis });
-  if (historie.length > 200) historie.shift();
+  /* historie: nejvýš 200 kroků a ~30 MB snímků (velké importované listy) */
+  let vel = historie.reduce((x, h) => x + h.data.length, 0);
+  while (historie.length > 1 && (historie.length > 200 || vel > 3e7)) vel -= historie.shift().data.length;
   vpred = [];
   if (sipky.length) { sipky = []; hranice = null; }   /* po změně listu šipky zmizí jako v Excelu */
   fn();
@@ -168,11 +178,13 @@ function kresliMrizku() {
     h += '</tr>';
   }
   mrizka.innerHTML = h + '</tbody>';
+  tdMapa = new Map(); mrizka.querySelectorAll('td[data-a]').forEach(t => tdMapa.set(t.dataset.a, t));
   oznac();
   if (stav.rezim === 'rozbor') aktualizujVysledekRozboru();
   kresliSipky(); obnovAudit();
 }
-const td = a => mrizka.querySelector(`td[data-a="${a}"]`);
+let tdMapa = new Map();
+const td = a => tdMapa.get(a);
 function oznac() {
   mrizka.querySelectorAll('td.vybr,td.ref,td.vypln,td.obl,td.kop').forEach(t => { t.classList.remove('vybr', 'ref', 'vypln', 'obl', 'kop'); t.style.removeProperty('--rb'); });
   mrizka.querySelectorAll('th.akt').forEach(t => t.classList.remove('akt'));
@@ -378,7 +390,7 @@ mrizka.addEventListener('dblclick', e => {
 mrizka.addEventListener('pointerdown', e => {
   const g = e.target.closest('[data-sirka]'); if (!g) return;
   e.preventDefault(); e.stopPropagation();
-  tahSirka = { c: +g.dataset.sirka, x: e.clientX, w: g.parentElement.offsetWidth, pred: { ...snimek(), popis: 'šířka sloupce' } };
+  tahSirka = { c: +g.dataset.sirka, x: e.clientX, w: g.parentElement.offsetWidth, puvodni: list.sirky?.[+g.dataset.sirka], pred: { ...snimek(), popis: 'šířka sloupce' } };
 });
 function nastavSirku(c, w) {
   list.sirky = { ...(list.sirky || {}), [c]: Math.round(w) };
@@ -393,7 +405,8 @@ document.addEventListener('pointermove', e => {
 });
 document.addEventListener('pointerup', () => {
   if (!tahSirka) return;
-  historie.push(tahSirka.pred); vpred = []; tahSirka = null;
+  if (list.sirky?.[tahSirka.c] !== tahSirka.puvodni) { historie.push(tahSirka.pred); vpred = []; }   /* jen klik bez tažení do historie nepatří */
+  tahSirka = null;
   ulozList(); aktualizujZpet(); umistiUchyt();
 });
 function sirkaPodleObsahu(c) {
@@ -460,7 +473,7 @@ function zkopiruj(e, vyjmout) {
   const o = obl(), bunky = {}, format = {};
   adresy(o).forEach(a => { bunky[a] = list.surova(a); if (list.format[a]) format[a] = list.format[a]; });
   const text = Array.from({ length: o.r2 - o.r1 + 1 }, (_, i) => Array.from({ length: o.c2 - o.c1 + 1 }, (_, j) => list.zobraz(X.adresa(o.r1 + i, o.c1 + j))).join('\t')).join('\n');
-  schranka = { o, vyjmout, text, bunky, format };
+  schranka = { o, vyjmout, text, bunky, format, list };
   e.clipboardData.setData('text/plain', text);
   oznac();
   info(`${vyjmout ? '✂ Vyjmuto' : '📋 Zkopírováno'} ${textObl(o)} – vyberte cíl a vložte Ctrl+V. ${vyjmout ? 'Obsah se přesune beze změny odkazů.' : 'Relativní odkazy ve vzorcích se posunou.'}`);
@@ -482,11 +495,14 @@ function vlozSchranku() {
     const nove = {};
     for (let ti = 0; ti < tr; ti++) for (let tj = 0; tj < tc; tj++) for (let dr = 0; dr < h; dr++) for (let dc = 0; dc < w; dc++) {
       const z = X.adresa(src.r1 + dr, src.c1 + dc), r = cil.r1 + ti * h + dr, c = cil.c1 + tj * w + dc;
-      let raw = s.bunky[z] || '';
+      const zdrojL = s.list && sesit.listy.includes(s.list) ? s.list : list;
+      let raw = s.vyjmout ? zdrojL.surova(z) : (s.bunky[z] || '');   /* přesun bere aktuální obsah zdroje */
       if (raw.startsWith('=') && !s.vyjmout) { try { raw = X.posunVzorec(raw, r - (src.r1 + dr), c - (src.c1 + dc), list.jazyk); } catch (er) { /* chybný vzorec beze změny */ } }
-      nove[X.adresa(r, c)] = { raw, f: s.format[z] };
+      nove[X.adresa(r, c)] = { raw, f: s.vyjmout ? zdrojL.format[z] : s.format[z] };
     }
-    if (s.vyjmout) adresy(src).forEach(a => { if (!(a in nove)) { list.nastav(a, ''); delete list.format[a]; } });
+    /* přesun: vymaže se zdroj na listu, odkud se vyjímalo (může to být jiný list) */
+    const zdroj = s.list && sesit.listy.includes(s.list) ? s.list : list;
+    if (s.vyjmout) adresy(src).forEach(a => { if (zdroj !== list || !(a in nove)) { zdroj.nastav(a, ''); delete zdroj.format[a]; } });
     for (const [a, x] of Object.entries(nove)) { list.nastav(a, x.raw); if (x.f) list.format[a] = x.f; else delete list.format[a]; }
   });
   const prvni = X.adresa(cil.r1, cil.c1);
@@ -591,6 +607,7 @@ function aktualizujFormat() {
   });
 }
 function nastavFormat(popis, uprav) {
+  if (edit && !potvrd()) return;   /* rozepsaný vzorec se nejdřív potvrdí */
   const o = obl();
   zmena(`${popis} (${textObl(o)})`, () => adresy(o).forEach(a => {
     const f = { ...(list.format[a] || {}) };
@@ -638,7 +655,7 @@ $('btnZpet').addEventListener('click', () => { zpet(); mrizka.focus(); });
 $('btnZnovu').addEventListener('click', () => { znovu(); mrizka.focus(); });
 document.addEventListener('keydown', e => {
   /* Zpět/Znovu i mimo list (kromě psaní do polí) */
-  if (!(e.ctrlKey || e.metaKey) || e.target === mrizka || e.target.matches('input,textarea,select') || stav.rezim === 'tahak') return;
+  if (!(e.ctrlKey || e.metaKey) || e.target === mrizka || e.target.matches?.('input,textarea,select') || stav.rezim === 'tahak' || document.querySelector('dialog[open]')) return;
   const kl = e.key.toLowerCase();
   if (kl === 'z') { e.preventDefault(); if (e.shiftKey) znovu(); else zpet(); }
   else if (kl === 'y') { e.preventDefault(); znovu(); }
@@ -762,7 +779,7 @@ function htmlFunkce() {
 function zastavPrehravani() { if (prehravani) { clearInterval(prehravani); prehravani = null; } }
 $('rozklad').addEventListener('click', e => {
   const z = e.target.closest('[data-zal]');
-  if (z) { zalozka = z.dataset.zal; return kresliRozklad(); }
+  if (z) { zastavPrehravani(); zalozka = z.dataset.zal; return kresliRozklad(); }
   if (e.target.id === 'btnVlozUkazku' && rz) { vstup.value = rz.vzorec; potvrd(); vyber(vybrana); return; }
   if (e.target.id === 'btnRozbor' && rz) {
     const bunka = rz.zdroj === 'bunka' ? vybrana : X.adresa(1, Math.min(list.sloupcu + 2, 26));
@@ -806,7 +823,11 @@ function kresliPostup() {
 function kresliVyklad() {
   const v = $('vyklad');
   if (stav.rezim === 'piskoviste') { v.innerHTML = htmlPiskoviste(); return; }
-  if (stav.rezim === 'rozbor') { v.innerHTML = htmlRozbor(); return; }
+  if (stav.rezim === 'rozbor') {
+    try { v.innerHTML = htmlRozbor(); }
+    catch (e) { stav.rozbor = null; uloz(); v.innerHTML = htmlRozbor(); info('⚠ Tento vzorec se rozebrat nepodařilo.'); }
+    return;
+  }
   if (stav.rezim === 'procvic') { v.innerHTML = htmlProcvic(); return; }
   if (stav.rezim === 'ucitel') { v.innerHTML = htmlUcitel(); return; }
   const lk = aktLekce(), i = LEKCE.indexOf(lk);
@@ -829,11 +850,20 @@ function kresliVyklad() {
     ${dal ? `<button class="btn hlavni" data-lekce="${dal.id}">${esc(dal.nazev)} ▶</button>` : '<button class="btn hlavni" data-rezim-tl="piskoviste">🧪 Do pískoviště</button>'}</div>`;
   v.innerHTML = h;
 }
+/* zadání z vlastních sad je text od uživatele: nejdřív escapovat, pak teprve značky [[@A1]], [[=…]], {FN} */
+function zpracujBezpecne(t) {
+  const zpet = x => x.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  return esc(t)
+    .replace(/\[\[@([A-Z]+\d+)\]\]/g, (m, a) => `<button class="adr" data-adr="${a}" title="Vybrat buňku ${a} v listu">${a}</button>`)
+    .replace(/\[\[(=[\s\S]*?)\]\](?!\])/g, (m, f) => cip(zpet(f)))
+    .replace(/\{;\}/g, X.oddelovac(jaz()))
+    .replace(/\{([A-Z][A-Z.]*)\}/g, (m, en) => X.FUNKCE[en] ? `<b class="fn">${esc(X.nazevFunkce(en, jaz()))}</b>` : m);
+}
 function htmlUloha(u, j) {
   const hot = !!stav.hotovo[klic(u)];
-  return `<div class="uloha${hot ? ' hotovo' : ''}" data-uloha="${u.id}">
-    <div class="u-hlava"><span>Úloha ${j + 1} · buňka <button class="adr" data-adr="${u.cil}">${u.cil}</button>${u.kopirovat ? ` · kopírovat do ${u.kopirovat}` : ''}</span>${hot ? '<span class="ok">✓ splněno</span>' : ''}</div>
-    <div class="u-zad">${zpracuj(u.zadani)}</div>
+  return `<div class="uloha${hot ? ' hotovo' : ''}" data-uloha="${esc(u.id)}">
+    <div class="u-hlava"><span>Úloha ${j + 1} · buňka <button class="adr" data-adr="${esc(u.cil)}">${esc(u.cil)}</button>${u.kopirovat ? ` · kopírovat do ${esc(u.kopirovat)}` : ''}</span>${hot ? '<span class="ok">✓ splněno</span>' : ''}</div>
+    <div class="u-zad">${u.sada ? zpracujBezpecne(u.zadani) : zpracuj(u.zadani)}</div>
     <div class="u-akce">
       <button class="btn hlavni mini" data-akce="zkontroluj">✔ Zkontrolovat</button>
       <button class="btn mini" data-akce="napoveda" ${u.napovedy?.length ? '' : 'disabled'}>💡 Nápověda</button>
@@ -868,7 +898,8 @@ function htmlPiskoviste() {
     <p>Přehled všech funkcí je v <button class="btn mini" data-rezim-tl="tahak">📚 Taháku</button>.</p>`;
 }
 function rozsahAdres(o) {
-  const [a, b] = o.split(':'), p = X.rozeberAdresu(a), q = X.rozeberAdresu(b || a), out = [];
+  const [a, b] = String(o || '').split(':'), p = X.rozeberAdresu(a), q = X.rozeberAdresu(b || a), out = [];
+  if (!p || !q) return out;   /* neplatná oblast (např. z importu) nesmí shodit stránku */
   for (let r = p.r; r <= q.r; r++) for (let c = p.c; c <= q.c; c++) out.push(X.adresa(r, c));
   return out;
 }
@@ -986,7 +1017,8 @@ function kresliMenu() {
     const p = pocty(l);
     return `<button class="tl${l.id === stav.lekce && stav.rezim === 'lekce' ? ' aktivni' : ''}" data-lekce="${l.id}">${i + 1}. ${l.emoji} ${esc(l.nazev)}<span class="n${p.hot === p.vse ? ' plne' : ''}">${p.hot === p.vse ? '✓' : p.hot + '/' + p.vse}</span></button>`;
   }).join('');
-  if (sady().length) $('nabLekce').innerHTML += '<hr><div class="titulek">Vlastní sady úloh</div>' + sady().map(x => {
+  const sadyMenu = sady().filter(x => x.ulohy.length);   /* prázdné sady (rozpracované) do menu nepatří */
+  if (sadyMenu.length) $('nabLekce').innerHTML += '<hr><div class="titulek">Vlastní sady úloh</div>' + sadyMenu.map(x => {
     const lk = { id: 'sada:' + x.id, ulohy: x.ulohy }, p = pocty(lk);
     return `<button class="tl${lk.id === stav.lekce && stav.rezim === 'lekce' ? ' aktivni' : ''}" data-lekce="${lk.id}">📝 ${esc(x.nazev)}<span class="n${p.hot === p.vse && p.vse ? ' plne' : ''}">${p.hot}/${p.vse}</span></button>`;
   }).join('');
@@ -1003,6 +1035,8 @@ function otevriLekci(id) {
 }
 function nastavRezim(r) {
   zastavPrehravani();
+  if (r !== 'procvic' && pv.zkouska) { clearInterval(pv.casovac); pv.zkouska = null; pv.uloha = null; }   /* odchod ze zkoušky ji ukončí */
+  $('btnObnov').hidden = r === 'ucitel';
   stav.rezim = r; uloz();
   document.querySelectorAll('[data-rezim]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rezim === r)));
   const tahak = r === 'tahak';
@@ -1055,7 +1089,7 @@ function nastavRezim(r) {
 }
 $('btnPred').addEventListener('click', () => { const i = LEKCE.indexOf(aktLekce()); if (i > 0) otevriLekci(LEKCE[i - 1].id); });
 $('btnDalsi').addEventListener('click', () => { const i = LEKCE.indexOf(aktLekce()); if (i < LEKCE.length - 1) otevriLekci(LEKCE[i + 1].id); });
-document.querySelectorAll('[data-rezim]').forEach(b => b.addEventListener('click', () => { if (edit) potvrd(); nastavRezim(b.dataset.rezim); }));
+document.querySelectorAll('[data-rezim]').forEach(b => b.addEventListener('click', () => { if (edit && !potvrd()) return; nastavRezim(b.dataset.rezim); }));
 $('nabLekce').addEventListener('click', e => { const b = e.target.closest('[data-lekce]'); if (b) { zavriNabidky(); otevriLekci(b.dataset.lekce); } });
 
 function zavriNabidky() {
@@ -1078,12 +1112,13 @@ addEventListener('resize', zavriNabidky);
 
 $('jazyk').value = stav.jazyk;
 $('jazyk').addEventListener('change', () => {
-  if (edit) potvrd();
+  if (edit && !potvrd()) { $('jazyk').value = stav.jazyk; return; }
   if (stav.rozbor?.vzorec) stav.rozbor.vzorec = X.prelozVzorec(stav.rozbor.vzorec, stav.jazyk, $('jazyk').value);
   stav.jazyk = $('jazyk').value;
+  /* v taháku není aktivní list – uložené listy se přeloží až při načtení */
+  if (stav.rezim === 'tahak') { uloz(); return kresliTahak($('tahakFiltr')?.value || ''); }
   if (sesit) { sesit.prepniJazyk(stav.jazyk); ulozList(); }
   uloz();
-  if (stav.rezim === 'tahak') return kresliTahak($('tahakFiltr')?.value || '');
   kresliVyklad(); kresliMrizku(); vyber(vybrana);
 });
 
@@ -1105,6 +1140,7 @@ obnov.addEventListener('click', () => {
 const nacti = $('nactiData');
 nacti.innerHTML = '<option value="">📥 Načíst list lekce…</option>' + LEKCE.map((l, i) => `<option value="${l.id}">${i + 1}. ${esc(l.nazev)}</option>`).join('');
 nacti.addEventListener('change', () => {
+  if (edit && !potvrd()) { nacti.value = ''; return; }
   const lk = LEKCE.find(l => l.id === nacti.value); nacti.value = '';
   if (!lk) return;
   const l = listZLekce(lk), nazev = sesit.volnyNazev(lk.nazev.replace(/[^\wÀ-ž]+/g, '').slice(0, 14) || 'Lekce');
@@ -1198,7 +1234,7 @@ function bfs(start, sousede) {
   uroven.delete(start);
   return uroven;
 }
-const odkazAdr = a => `<button class="adr" data-jdi="${a}">${a}</button>`;
+const odkazAdr = a => `<button class="adr" data-jdi="${esc(a)}">${esc(a)}</button>`;
 function seznamUrovni(mapa) {
   const po = {};
   for (const [a, d] of mapa) (po[d] = po[d] || []).push(a);
@@ -1262,9 +1298,9 @@ $('rozklad').addEventListener('click', e => {
   const kk = e.target.closest('[data-kuk]');
   if (kk) {
     const k = list.kukatko || [];
-    if (kk.dataset.kuk === 'pridej') list.kukatko = [...new Set([...k, ...adresy(obl()).slice(0, 30)])].slice(0, 60);
-    else list.kukatko = k.filter(a => a !== kk.dataset.a);
-    ulozList(); obnovAudit();
+    zmena(kk.dataset.kuk === 'pridej' ? 'přidání do kukátka' : 'odebrání z kukátka', () => {
+      list.kukatko = kk.dataset.kuk === 'pridej' ? [...new Set([...k, ...adresy(obl()).slice(0, 30)])].slice(0, 60) : k.filter(a => a !== kk.dataset.a);
+    });
   }
 });
 $('btnAuditPred').addEventListener('click', () => { pridejUroven('pred'); obnovAudit(); mrizka.focus(); });
@@ -1329,7 +1365,7 @@ function otevriHledani() {
 }
 const volbyHledani = () => ({ vzorce: $('hlVzorce').checked, cela: $('hlCela').checked, velikost: $('hlVelikost').checked });
 function vypisNalezy(adr, nadpis) {
-  $('hlVysledky').innerHTML = `<li><b>${esc(nadpis)}</b></li>` + adr.slice(0, 200).map(a => `<li><button class="adr" data-jdi="${a}">${a}</button> <code>${esc(list.surova(a))}</code></li>`).join('');
+  $('hlVysledky').innerHTML = `<li><b>${esc(nadpis)}</b></li>` + adr.slice(0, 200).map(a => `<li><button class="adr" data-jdi="${esc(a)}">${esc(a)}</button> <code>${esc(list.surova(a))}</code></li>`).join('');
 }
 $('hlNajdi').addEventListener('click', () => {
   const adr = list.hledej($('hlText').value, volbyHledani());
@@ -1345,7 +1381,7 @@ $('hlNahrad').addEventListener('click', () => {
 });
 $('hlText').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('hlNajdi').click(); } });
 $('hlZavri').addEventListener('click', () => $('dlgHledat').close());
-$('hlVysledky').addEventListener('click', e => { const b = e.target.closest('[data-jdi]'); if (b) vyber(b.dataset.jdi); });
+$('hlVysledky').addEventListener('click', e => { const b = e.target.closest('[data-jdi]'); if (b && !(edit && !potvrd())) vyber(b.dataset.jdi); });
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && (e.key === 'h' || e.key === 'H' || e.key === 'f' || e.key === 'F') && stav.rezim !== 'tahak' && !e.target.matches('textarea')) { e.preventDefault(); otevriHledani(); }
 });
@@ -1430,13 +1466,18 @@ $('nzZavri').addEventListener('click', () => $('dlgNazvy').close());
 const prazdnySesit = d => !d || !(d.listy || [{ bunky: d.bunky }]).some(l => Object.keys(l.bunky || {}).length);
 function zalohujPiskoviste() {
   if (prazdnySesit(stav.piskoviste)) return null;
+  /* stejný obsah už v Mých sešitech je – žádná další záloha */
+  const json = JSON.stringify(stav.piskoviste);
+  if (Object.values(stav.sesity || {}).some(x => JSON.stringify(x) === json)) return null;
   const d = new Date(), z = `Záloha ${d.getDate()}. ${d.getMonth() + 1}. ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   let n = z; for (let i = 2; stav.sesity && stav.sesity[n]; i++) n = `${z} (${i})`;
   stav.sesity = { ...(stav.sesity || {}), [n]: stav.piskoviste };
+  const zalohy = Object.keys(stav.sesity).filter(k => k.startsWith('Záloha '));   /* nejvýš 5 nejnovějších záloh */
+  while (zalohy.length > 5) delete stav.sesity[zalohy.shift()];
   return n;
 }
 function otevriVPiskovisti(data, popis) {
-  if (edit) potvrd();
+  if (edit && !potvrd()) return;
   if (stav.rezim === 'piskoviste') ulozList();
   const z = zalohujPiskoviste();
   stav.piskoviste = data; uloz();
@@ -1558,7 +1599,7 @@ async function importSoubor(soubor) {
     s.prepniJazyk(jaz());
     const nezname = new Set();
     s.listy.forEach(l => Object.values(l.bunky).forEach(raw => { if (raw.startsWith('=')) (raw.match(/[A-Z][A-Z0-9.]*(?=\()/gi) || []).forEach(f => { if (!X.ALIAS[f.toUpperCase()]) nezname.add(f.toUpperCase()); }); }));
-    otevriVPiskovisti({ ...s.serializuj(), aktivni: 0 }, `Otevřen soubor ${esc(soubor.name)}: ${s.listy.length} ${s.listy.length === 1 ? 'list' : 'listy'}, ${bunek} buněk.${oriznuto ? ' Velký soubor byl oříznut na 500 řádků × 52 sloupců.' : ''}${nezname.size ? ` ⚠ Funkce, které tato výuková verze nezná (ukážou ${esc(X.CHYBY.NAME[jaz()])}): ${esc([...nezname].slice(0, 12).join(', '))}.` : ''}`);
+    otevriVPiskovisti({ ...s.serializuj(), aktivni: 0 }, `Otevřen soubor ${esc(soubor.name)}: ${tvar(s.listy.length, 'list', 'listy', 'listů')}, ${tvar(bunek, 'buňka', 'buňky', 'buněk')}.${oriznuto ? ' Velký soubor byl oříznut na 500 řádků × 52 sloupců.' : ''}${nezname.size ? ` ⚠ Funkce, které tato výuková verze nezná (ukážou ${esc(X.CHYBY.NAME[jaz()])}): ${esc([...nezname].slice(0, 12).join(', '))}.` : ''}`);
   } catch (e) {
     Dialog.chyba('Soubor se nepodařilo otevřít: ' + e.message);
   }
@@ -1631,7 +1672,7 @@ function htmlProcvic() {
   if (!z) h += `<div class="pv-nastaveni"><b>Témata</b><div class="pv-temata">${Object.entries(PV.TEMATA).map(([k, n]) => `<label><input type="checkbox" data-pv-tema="${k}"${sp.temata.includes(k) ? ' checked' : ''}> ${esc(n)}</label>`).join('')}</div>
     <label>Obtížnost <select class="tl" id="pvObtiznost">${[1, 2, 3].map(o => `<option value="${o}"${sp.obtiznost === o ? ' selected' : ''}>${OBTIZNOST[o]}</option>`).join('')}</select></label>
     <div class="rb-akce"><button class="btn hlavni" data-pv="nova">🎲 Nová úloha</button><button class="btn" data-pv="zkouska">⏱ Zkouška (8 úloh na čas)</button></div></div>`;
-  else h += `<div class="pv-zkouska"><span>Zkouška: úloha ${z.i + 1} z ${z.n} · správně ${z.vysledky.filter(x => x.ok).length}</span><span id="pvCas">${mmss(Date.now() - z.start)}</span></div>`;
+  else h += `<div class="pv-zkouska"><span>Zkouška: úloha ${z.i + 1} z ${z.n} · správně ${z.vysledky.filter(x => x.ok).length}</span><span><span id="pvCas">${mmss(Date.now() - z.start)}</span> <button class="btn mini" data-pv="ukoncit">⏹ Ukončit</button></span></div>`;
   if (pv.souhrn) {
     const s = pv.souhrn;
     h += `<div class="uloha hotovo"><div class="u-hlava">Výsledek zkoušky</div><div class="pv-vysledek">${s.ok} / ${s.n} správně (${Math.round(100 * s.ok / s.n)} %) · ${mmss(s.cas)}</div>
@@ -1706,6 +1747,7 @@ $('vyklad').addEventListener('click', e => {
     novaUloha(); nastavRezim('procvic');
   }
   else if (a === 'konec') { pv.souhrn = null; nastavRezim('procvic'); }
+  else if (a === 'ukoncit') { clearInterval(pv.casovac); pv.zkouska = null; pv.souhrn = null; novaUloha(); nastavRezim('procvic'); info('Zkouška byla ukončena bez hodnocení.'); }
   else if (a === 'kontrola' && u) {
     if (edit && !potvrd()) return;
     u.vysledek = X.zkontroluj(list, u, list.surova(u.cil));
@@ -1737,20 +1779,39 @@ function bunkyProZaka(s) {
 function sadaJakoLekce(id) {
   if (!String(id).startsWith('sada:')) return null;
   const s = sady().find(x => x.id === id.slice(5)); if (!s) return null;
-  return { id, sada: true, emoji: '📝', nazev: s.nazev, cile: [], text: s.popis ? `<p>${esc(s.popis).replace(/\n/g, '<br>')}</p>` : '', list: { bunky: bunkyProZaka(s) }, predpovez: [], ulohy: s.ulohy.map(u => ({ ...u, napovedy: u.napovedy || [] })) };
+  try {
+    return { id, sada: true, emoji: '📝', nazev: s.nazev, cile: [], text: s.popis ? `<p>${esc(s.popis).replace(/\n/g, '<br>')}</p>` : '', list: { bunky: bunkyProZaka(s) }, predpovez: [], ulohy: s.ulohy.map(u => ({ ...u, sada: true, napovedy: [] })) };
+  } catch (e) { return null; }   /* poškozená sada nesmí shodit stránku */
 }
 const exportSady = s => ({ format: 'excel-vzorce-sada', verze: 1, nazev: s.nazev, popis: s.popis, bunky: bunkyProZaka(s), ulohy: s.ulohy, data: s.data });
+const jeAdresa = a => typeof a === 'string' && /^[A-Z]{1,3}[1-9]\d{0,6}$/i.test(a);
+const jeOblast = o => typeof o === 'string' && /^[A-Z]{1,3}[1-9]\d{0,6}:[A-Z]{1,3}[1-9]\d{0,6}$/i.test(o);
+/* import sady (soubor nebo odkaz = nedůvěryhodný vstup): ověřit každou položku */
 function importSady(d) {
   if (!d || d.format !== 'excel-vzorce-sada' || !Array.isArray(d.ulohy)) throw new Error('Soubor není sada úloh z této stránky.');
-  const s = { id: 's' + Date.now().toString(36), nazev: String(d.nazev || 'Sada'), popis: String(d.popis || ''), ulohy: d.ulohy.filter(u => u && u.cil && u.reseni).map((u, i) => ({ id: u.id || 'u' + i, cil: String(u.cil), reseni: String(u.reseni), zadani: String(u.zadani || ''), kopirovat: u.kopirovat || undefined, vyzaduje: Array.isArray(u.vyzaduje) ? u.vyzaduje : undefined, absolutni: !!u.absolutni })) };
-  if (d.data && d.data.listy) s.data = d.data;
-  else { const l = new X.List(d.bunky || {}, { jazyk: 'en' }); s.ulohy.forEach(u => l.nastav(u.cil, u.reseni)); l.prepniJazyk(jaz()); s.data = { jazyk: jaz(), listy: [{ nazev: 'List1', bunky: l.bunky, format: l.format }] }; }
+  const lzeRozebrat = f => { try { X.rozeber(f, 'en'); return true; } catch (e) { return false; } };
+  const ulohy = d.ulohy.filter(u => u && jeAdresa(u.cil) && typeof u.reseni === 'string' && u.reseni.startsWith('=') && lzeRozebrat(u.reseni)).slice(0, 100)
+    .map((u, i) => ({ id: /^[\w-]{1,40}$/.test(u.id) ? u.id : 'u' + i, cil: u.cil.toUpperCase(), reseni: u.reseni.slice(0, 2000), zadani: String(u.zadani || '').slice(0, 3000),
+      kopirovat: jeOblast(u.kopirovat) ? u.kopirovat.toUpperCase() : undefined, vyzaduje: Array.isArray(u.vyzaduje) ? u.vyzaduje.filter(f => X.FUNKCE[f]) : undefined, absolutni: !!u.absolutni }));
+  const nazev = String(d.nazev || 'Sada').slice(0, 100), popis = String(d.popis || '').slice(0, 3000);
+  /* stejná sada (třeba opakovaně otevřený odkaz) se nepřidá znovu */
+  const otisk = JSON.stringify([nazev, popis, ulohy.map(u => [u.cil, u.reseni, u.zadani, u.kopirovat || ''])]);
+  const stejna = sady().find(x => x.otisk === otisk);
+  if (stejna) return stejna;
+  const s = { id: 's' + Date.now().toString(36), nazev, popis, ulohy, otisk };
+  if (d.data && Array.isArray(d.data.listy)) s.data = { ...X.Sesit.obnov(d.data, jaz()).serializuj(), aktivni: 0 };
+  else {
+    const b = {};
+    for (const [a, v] of Object.entries(d.bunky && typeof d.bunky === 'object' ? d.bunky : {})) if (jeAdresa(a) && v !== null && v !== undefined) b[a.toUpperCase()] = typeof v === 'object' ? { v: String(v.v ?? ''), f: v.f } : String(v);
+    const l = new X.List(b, { jazyk: 'en' }); ulohy.forEach(u => l.nastav(u.cil, u.reseni)); l.prepniJazyk(jaz());
+    s.data = { ...X.Sesit.obnov({ jazyk: jaz(), listy: [{ nazev: 'List1', bunky: l.bunky, format: l.format }] }, jaz()).serializuj(), aktivni: 0 };
+  }
   sady().push(s); uloz(); return s;
 }
 function htmlUcitel() {
   const s = aktSada();
   let h = `<h2>👩‍🏫 Učitelský režim</h2><p>Sestavte vlastní sadu úloh: v listu vpravo připravte data, do cílových buněk napište vzorová řešení a každou z nich přidejte jako úlohu. Žák pak sadu dostane jako lekci – cílové buňky budou prázdné a kontrola ověří jeho vzorec i na změněných datech.</p>
-    <h3>Moje sady</h3><ul class="uc-sady">${sady().map(x => `<li class="${x === s ? 'akt' : ''}"><b>${esc(x.nazev)}</b> <span class="rz-prazdne">${x.ulohy.length} úloh</span>
+    <h3>Moje sady</h3><ul class="uc-sady">${sady().map(x => `<li class="${x === s ? 'akt' : ''}"><b>${esc(x.nazev)}</b> <span class="rz-prazdne">${tvar(x.ulohy.length, 'úloha', 'úlohy', 'úloh')}</span>
       <button class="btn mini" data-uc="upravit" data-id="${x.id}">✎ Upravit</button><button class="btn mini" data-uc="zak" data-id="${x.id}">▶ Jako žák</button>
       <button class="btn mini" data-uc="json" data-id="${x.id}">📤 JSON</button><button class="btn mini" data-uc="odkaz" data-id="${x.id}">🔗 Odkaz</button><button class="btn mini" data-uc="smazat" data-id="${x.id}" aria-label="Smazat sadu">🗑</button></li>`).join('') || '<li>Zatím žádná sada.</li>'}</ul>
     <div class="rb-akce"><button class="btn" data-uc="nova">➕ Nová sada</button><button class="btn" data-uc="import">📥 Importovat sadu (JSON)</button></div>`;
@@ -1777,7 +1838,12 @@ $('vyklad').addEventListener('input', e => {
   const s = aktSada(); if (!s) return;
   const t = e.target;
   if (t.dataset.ucPole) { s[t.dataset.ucPole] = t.value; uloz(); return; }
-  if (t.dataset.upole && t.type !== 'checkbox') { const u = s.ulohy[+t.dataset.u]; u[t.dataset.upole] = t.value.trim() || undefined; if (t.dataset.upole === 'zadani') u.zadani = t.value; uloz(); }
+  if (t.dataset.upole && t.type !== 'checkbox') {
+    const u = s.ulohy[+t.dataset.u];
+    if (t.dataset.upole === 'zadani') u.zadani = t.value;
+    if (t.dataset.upole === 'kopirovat') { const v = t.value.trim().toUpperCase(); u.kopirovat = jeOblast(v) ? v : undefined; t.classList.toggle('neplatne', !!v && !u.kopirovat); }
+    uloz();
+  }
 });
 $('vyklad').addEventListener('change', e => {
   if (stav.rezim !== 'ucitel' || e.target.type !== 'checkbox') return;
@@ -1788,13 +1854,20 @@ $('vyklad').addEventListener('change', e => {
 });
 $('vyklad').addEventListener('click', async e => {
   if (stav.rezim !== 'ucitel') return;
-  const j = e.target.closest('[data-jdi-uc]'); if (j) { vyber(j.dataset.jdiUc); return; }
+  const j = e.target.closest('[data-jdi-uc]'); if (j) { if (!(edit && !potvrd())) vyber(j.dataset.jdiUc); return; }
   const b = e.target.closest('[data-uc]'); if (!b) return;
   const a = b.dataset.uc, x = b.dataset.id ? sady().find(q => q.id === b.dataset.id) : aktSada();
   try {
     if (a === 'nova') { novaSada(); nastavRezim('ucitel'); }
     else if (a === 'upravit') { stav.ucitelSada = x.id; uloz(); nastavRezim('ucitel'); }
-    else if (a === 'smazat') { if (await Dialog.potvrd(`Smazat sadu „${x.nazev}“?`)) { stav.sady = sady().filter(q => q !== x); if (stav.ucitelSada === x.id) stav.ucitelSada = null; uloz(); nastavRezim('ucitel'); } }
+    else if (a === 'smazat') {
+      if (await Dialog.potvrd(`Smazat sadu „${x.nazev}“?`)) {
+        stav.sady = sady().filter(q => q !== x);
+        if (stav.ucitelSada === x.id) stav.ucitelSada = null;
+        if (stav.lekce === 'sada:' + x.id) stav.lekce = LEKCE[0].id;   /* smazaná sada nesmí zůstat aktivní lekcí */
+        uloz(); nastavRezim('ucitel');
+      }
+    }
     else if (a === 'zak') { stav.lekce = 'sada:' + x.id; delete stav.listy['sada:' + x.id]; uloz(); nastavRezim('lekce'); }
     else if (a === 'json') stahni(new Blob([JSON.stringify(exportSady(x), null, 1)], { type: 'application/json' }), 'sada-' + x.nazev.replace(/[^\wÀ-ž]+/g, '-') + '.json');
     else if (a === 'odkaz') {
@@ -1821,7 +1894,7 @@ $('vyklad').addEventListener('click', async e => {
 });
 $('sadaVstup').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try { const s = importSady(JSON.parse(await f.text())); stav.ucitelSada = s.id; uloz(); nastavRezim('ucitel'); info(`Importována sada „${esc(s.nazev)}“ (${s.ulohy.length} úloh).`); }
+  try { const s = importSady(JSON.parse(await f.text())); stav.ucitelSada = s.id; uloz(); nastavRezim('ucitel'); info(`Importována sada „${esc(s.nazev)}“ (${tvar(s.ulohy.length, 'úloha', 'úlohy', 'úloh')}).`); }
   catch (er) { Dialog.chyba('Sadu se nepodařilo načíst: ' + er.message); }
 });
 async function nactiSaduZOdkazu() {
@@ -1956,7 +2029,7 @@ function aktualizujVysledekRozboru() {
   const raw = list.surova(r.bunka);
   if (raw.startsWith('=') && raw !== r.vzorec) { try { X.rozeber(raw, jaz()); r.vzorec = raw; uloz(); kresliVyklad(); } catch (e) { /* rozepsaný vzorec */ } }
   const el = $('rbVysl'); if (el) el.innerHTML = `<b>${esc(list.zobraz(r.bunka) || '(prázdné)')}</b>`;
-  const p = $('rbPostup'); if (p) p.innerHTML = htmlPostupRozboru();
+  const p = $('rbPostup'); if (p) { try { p.innerHTML = htmlPostupRozboru(); } catch (e) { p.innerHTML = ''; } }
 }
 function spustPrehravani() {
   if (!rz || rz.chybaZapisu || !rz.kroky.length) return;
@@ -1980,7 +2053,12 @@ function rozebrat(text, o = {}) {
   if (o.zList) { l = new X.List({}, { jazyk: jaz() }); l.bunky = { ...o.zList.bunky }; l.format = { ...o.zList.format }; l.sirky = { ...(o.zList.sirky || {}) }; bunka = o.bunka; }
   else { l = new X.List(RB.ukazkovaData(strom, seme), { jazyk: jaz() }); bunka = RB.bunkaProVzorec(strom); }
   l.nastav(bunka, vz);
-  stav.rozbor = { vstup: text, vzorec: vz, rozpoznano: r.jazyk, bunka, seme, zListu: !!o.zList, list: { jazyk: jaz(), nazvy: o.zList && sesit ? { ...sesit.nazvy } : {}, listy: [{ nazev: 'List1', bunky: l.bunky, format: l.format, sirky: l.sirky || {} }] } };
+  /* odkazy na jiné listy (List2!A1): ukázková data dostanou i ty listy, jinak by vyšlo #REF! */
+  const cizi = new Set();
+  if (!o.zList) (function p(u) { if (!u) return; [u, u.a, u.b].forEach(x => x && x.list && cizi.add(x.list)); (u.args || []).forEach(p); p(u.l); p(u.r); p(u.x); })(strom);
+  const data = { ...l.bunky }; delete data[bunka];
+  const listy = [{ nazev: 'List1', bunky: l.bunky, format: l.format, sirky: l.sirky || {} }, ...[...cizi].filter(n => n.toLowerCase() !== 'list1').slice(0, 5).map(n => ({ nazev: n, bunky: { ...data }, format: {} }))];
+  stav.rozbor = { vstup: text, vzorec: vz, rozpoznano: r.jazyk, bunka, seme, zListu: !!o.zList, list: { jazyk: jaz(), nazvy: o.zList && sesit ? { ...sesit.nazvy } : {}, listy } };
   uloz();
   nastavRezim('rozbor');
   spustPrehravani();
@@ -2012,7 +2090,13 @@ $('vyklad').addEventListener('keydown', e => {
   if (e.target.id === 'rbVzorec' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); rozebrat(e.target.value); }
 });
 
-nastavRezim(stav.rezim);
+try { nastavRezim(stav.rezim); }
+catch (e) {   /* poškozený uložený stav: vrátit se na první lekci, aby stránka nezůstala mrtvá */
+  console.error(e);
+  stav.rezim = 'lekce'; stav.lekce = LEKCE[0].id; stav.rozbor = null; delete stav.listy[LEKCE[0].id]; uloz();
+  nastavRezim('lekce');
+  info('⚠ Uložený stav stránky byl poškozený – otevřela se první lekce.');
+}
 nactiZOdkazu(); nactiSaduZOdkazu();
 if (!stav.pruvodce && !/#(sesit|sada)=/.test(location.hash)) setTimeout(spustPruvodce, 600);
 window.XLV_UI = { spustPruvodce, get pv() { return pv; }, importSoubor, exportXlsx, sesitNaWorkbook, nactiXLSX, zabal, rozbal, nactiZOdkazu, get list() { return list; }, vyber, potvrd, nastavRezim, otevriLekci, nastavRozklad, rozebrat, zpet, znovu, vyplnRadu, prepniFormat, get rz() { return rz; }, get vyberObl() { return textObl(obl()); } };

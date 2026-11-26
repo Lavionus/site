@@ -35,22 +35,33 @@ function rozeberAdresu(a) {
 
 /* ---------- čísla a data ---------- */
 const DEN_MS = 86400000, NULA_DAT = Date.UTC(1899, 11, 30);
-const serialZData = (y, m, d) => Math.round((Date.UTC(y, m - 1, d) - NULA_DAT) / DEN_MS);
-function datumZeSerialu(n) { const d = new Date(NULA_DAT + Math.floor(n) * DEN_MS); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), dt: d.getUTCDay() }; }
+/* pořadové číslo dne jako Excel: 1 = 1. 1. 1900; Excel má navíc neexistující 29. 2. 1900 (číslo 60),
+   proto jsou data před 1. 3. 1900 o jedničku menší než prostý počet dní */
+const serialZData = (y, m, d) => { const s = Math.round((Date.UTC(y, m - 1, d) - NULA_DAT) / DEN_MS); return s < 61 ? s - 1 : s; };
+function datumZeSerialu(n) { n = Math.floor(n); const d = new Date(NULA_DAT + (n < 61 ? n + 1 : n) * DEN_MS); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), dt: d.getUTCDay() }; }
+let JAZYK_VYPOCTU = 'cs';   /* jazyk zápisu právě počítaného listu (desetinná čárka × tečka) */
 const MESICE = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
 const DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
 
 function fmtCislo(n, jazyk) {
   if (!isFinite(n)) return jazyk === 'en' ? '#NUM!' : '#ČÍSLO!';
-  let s = String(parseFloat(n.toPrecision(15)));
-  if (/e/.test(s)) s = parseFloat(n.toPrecision(6)).toExponential().replace('e', 'E');
+  const a = Math.abs(n);
+  let s;
+  if (a !== 0 && (a >= 1e15 || a < 1e-6)) {   /* vědecký zápis jako Excel: 1E+20, 1,5E-07 */
+    const [m, e] = n.toExponential(14).split('e');
+    s = String(parseFloat(m)) + 'E' + (+e < 0 ? '-' : '+') + String(Math.abs(+e)).padStart(2, '0');
+  } else s = String(parseFloat(n.toPrecision(15)));
   return jazyk === 'en' ? s : s.replace('.', ',');
 }
 function fmtDatum(n) { const d = datumZeSerialu(n); return d.d + '. ' + d.m + '. ' + d.y; }
 
 /* text → číslo (přijme desetinnou čárku i tečku a mezery jako oddělovač tisíců) */
-function textNaCislo(t) {
-  const s = String(t).trim().replace(/[  ](?=\d{3}(\D|$))/g, '');
+function textNaCislo(t, jaz = JAZYK_VYPOCTU) {
+  let s = String(t).trim();
+  if (jaz === 'en') {   /* anglicky: čárka = oddělovač tisíců (1,234.5), jinak čárka v čísle není */
+    if (/^[+-]?\d{1,3}(,\d{3})+(\.\d*)?\s?%?$/.test(s)) s = s.replace(/,/g, '');
+    else if (s.includes(',')) return null;
+  } else s = s.replace(/[  ](?=\d{3}(\D|$))/g, '');
   if (!/^[+-]?(\d+([.,]\d*)?|[.,]\d+)([eE][+-]?\d+)?\s?%?$/.test(s)) return null;
   const pct = s.endsWith('%');
   const n = parseFloat(s.replace('%', '').replace(',', '.'));
@@ -61,7 +72,8 @@ function textNaDatum(t) {
   if (!m) return null;
   const d = +m[1], mo = +m[2], y = +m[3];
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
-  return serialZData(y, mo, d);
+  const s = serialZData(y, mo, d), z = datumZeSerialu(s);
+  return z.d === d && z.m === mo ? s : null;   /* 31. 2. není datum – zůstane textem */
 }
 
 /* ---------- převody hodnot ---------- */
@@ -73,7 +85,7 @@ function skalar(v) {
 function cislo(v) {
   v = skalar(v);
   if (jeChyba(v)) throw v;
-  if (v === null || v === undefined || v === '') return 0;
+  if (v === null || v === undefined) return 0;   /* prázdná buňka = 0, ale prázdný text "" je chyba */
   if (typeof v === 'number') return v;
   if (typeof v === 'boolean') return v ? 1 : 0;
   const n = textNaCislo(v);
@@ -147,17 +159,25 @@ function vzorNaRegex(s, cele = true) {
 function kriterium(k) {
   k = skalar(k);
   if (jeChyba(k)) throw k;
-  if (typeof k === 'number' || typeof k === 'boolean') return v => v !== null && v !== undefined && porovnej(v, k) === 0;
+  if (typeof k === 'boolean') return v => v === k;
+  if (typeof k === 'number') k = String(k);
   k = k === null || k === undefined ? '' : String(k);
+  if (k === '=') return v => v === null || v === undefined;   /* "=" = jen opravdu prázdné buňky */
   const m = /^(<=|>=|<>|<|>|=)?(.*)$/s.exec(k);
   const op = m[1] || '=', zbytek = m[2];
   const n = zbytek === '' ? null : (textNaCislo(zbytek) ?? textNaDatum(zbytek));
   const test = c => op === '=' ? c === 0 : op === '<>' ? c !== 0 : op === '<' ? c < 0 : op === '>' ? c > 0 : op === '<=' ? c <= 0 : c >= 0;
-  if (n !== null) return v => typeof v === 'number' ? test(porovnej(v, n)) : op === '<>';
+  if (n !== null) return v => {
+    /* při rovnosti Excel porovná i číslo uložené jako text („7“) */
+    let x = typeof v === 'number' ? v : null;
+    if (x === null && typeof v === 'string' && (op === '=' || op === '<>')) x = textNaCislo(v);
+    return x === null ? op === '<>' : test(porovnej(x, n));
+  };
   if (zbytek === '') return op === '<>' ? (v => v !== null && v !== undefined && v !== '') : (v => v === null || v === undefined || v === '');
   if (op === '=' || op === '<>') {
+    /* textové kritérium (i se zástupnými znaky) porovnává jen text, ne čísla */
     const re = vzorNaRegex(zbytek);
-    const shoda = v => v !== null && v !== undefined && re.test(String(v));
+    const shoda = v => typeof v === 'string' ? re.test(v) : typeof v === 'boolean' ? re.test(logikaText(v, 'en')) || re.test(logikaText(v, 'cs')) : false;
     return op === '=' ? shoda : v => !shoda(v);
   }
   return v => typeof v === 'string' && test(porovnej(v, zbytek));
@@ -178,14 +198,16 @@ function formatujText(n, f, jazyk) {
     const d = datumZeSerialu(n);
     return fl.replace(/dddd|ddd|dd|d|mmmm|mmm|mm|m|yyyy|yy|rrrr|rr/g, t => String(({
       dddd: DNY[d.dt], ddd: DNY[d.dt].slice(0, 2), dd: String(d.d).padStart(2, '0'), d: d.d,
-      mmmm: MESICE[d.m - 1], mmm: MESICE[d.m - 1].slice(0, 3), mm: String(d.m).padStart(2, '0'), m: d.m,
+      mmmm: MESICE[d.m - 1], mmm: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'][d.m - 1], mm: String(d.m).padStart(2, '0'), m: d.m,
       yyyy: d.y, rrrr: d.y, yy: String(d.y).slice(2), rr: String(d.y).slice(2),
     })[t]));
   }
   const pct = f.includes('%');
   if (pct) n *= 100;
-  const des = (/[.,]([0#]+)/.exec(f) || [, ''])[1].length;
-  const tisice = /#[ ,]##0/.test(f);
+  /* desetinný oddělovač formátu podle jazyka: en „#,##0.00“, cs „# ##0,00“ (cs přijme i „0.00“) */
+  const desOdd = jazyk === 'en' ? '.' : (f.includes(',') ? ',' : '.');
+  const des = (new RegExp('\\' + desOdd + '([0#]+)').exec(f) || [, ''])[1].length;
+  const tisice = jazyk === 'en' || desOdd === '.' ? /#,##0/.test(f) || /# ##0/.test(f) : /# ##0/.test(f);
   let [cele, zl] = Math.abs(zaokr(n, des)).toFixed(des).split('.');
   if (tisice) cele = cele.replace(/\B(?=(\d{3})+(?!\d))/g, jazyk === 'en' ? ',' : ' ');
   const cis = (n < 0 && zaokr(n, des) !== 0 ? '-' : '') + cele + (zl ? (jazyk === 'en' ? '.' : ',') + zl : '');
@@ -206,7 +228,15 @@ function def(kat, en, cs, args, popis, fn, volby = {}) {
   ALIAS[en] = en; ALIAS[cs.toUpperCase()] = en;
 }
 const N = v => cislo(v), T = (v, p) => text(v, p.jazyk);
-const chybi = v => v === undefined || v === null;
+const chybi = v => v === undefined;   /* vynechaný argument; prázdný argument (null) = 0 / NEPRAVDA / "" */
+function mocnina(a, b) {
+  if (a === 0 && b === 0) chyba('NUM', '0 na nultou není definováno');
+  if (a === 0 && b < 0) chyba('DIV0', 'nula na zápornou mocninu = dělení nulou');
+  const x = Math.pow(a, b);
+  if (!isFinite(x) || isNaN(x)) chyba('NUM', 'výsledek mocniny není reálné číslo');
+  return x;
+}
+const datumArg = v => { const n = cislo(v); if (n < 0) chyba('NUM', 'záporné číslo není datum'); return datumZeSerialu(n); };
 
 def('Matematika', 'SUM', 'SUMA', ['číslo1', 'číslo2…'], 'Sečte čísla a oblasti.', a => cislaArg(a).reduce((s, x) => s + x, 0),
   { vysvetli: (a, v, p) => `sečte ${cislaArg(a).length} čísel (text a prázdné buňky v oblasti přeskočí) = ${fmtCislo(v, p.jazyk)}` });
@@ -244,7 +274,7 @@ def('Matematika', 'SUMPRODUCT', 'SOUČIN.SKALÁRNÍ', ['pole1', 'pole2…'], 'Vy
   let s = 0;
   for (let i = 0; i < n; i++) {
     let m = 1;
-    for (const x of pole) { const v = x[i]; if (jeChyba(v)) throw v; m *= typeof v === 'number' ? v : typeof v === 'boolean' && pole.length === 1 ? +v : 0; }
+    for (const x of pole) { const v = x[i]; if (jeChyba(v)) throw v; m *= typeof v === 'number' ? v : 0; }   /* logické hodnoty se nepočítají – proto se v Excelu píše -- */
     s += m;
   }
   return s;
@@ -259,7 +289,7 @@ def('Matematika', 'MOD', 'MOD', ['číslo', 'dělitel'], 'Zbytek po dělení.', 
 }, { vysvetli: (a, v, p) => `${fmtCislo(N(a[0]), p.jazyk)} ÷ ${fmtCislo(N(a[1]), p.jazyk)} = ${Math.floor(N(a[0]) / N(a[1]))} celých, zbytek ${fmtCislo(v, p.jazyk)}` });
 def('Matematika', 'ABS', 'ABS', ['číslo'], 'Absolutní hodnota (bez znaménka).', a => Math.abs(N(a[0])));
 def('Matematika', 'SQRT', 'ODMOCNINA', ['číslo'], 'Druhá odmocnina.', a => { const x = N(a[0]); if (x < 0) chyba('NUM', 'odmocnina ze záporného čísla'); return Math.sqrt(x); });
-def('Matematika', 'POWER', 'POWER', ['číslo', 'mocnina'], 'Umocní číslo (totéž co ^).', a => Math.pow(N(a[0]), N(a[1])));
+def('Matematika', 'POWER', 'POWER', ['číslo', 'mocnina'], 'Umocní číslo (totéž co ^).', a => mocnina(N(a[0]), N(a[1])));
 
 /* logické – KDYŽ, IFS, IFERROR a IFNA vyhodnocuje líně přímo vyhodnocovač */
 def('Logické', 'IF', 'KDYŽ', ['podmínka', '[hodnota_ano]', '[hodnota_ne]'], 'Když platí podmínka, vrátí první hodnotu, jinak druhou.', null);
@@ -281,6 +311,8 @@ def('Logické', 'AND', 'A', ['logická1', 'logická2…'], 'PRAVDA, jen když pl
 def('Logické', 'OR', 'NEBO', ['logická1', 'logická2…'], 'PRAVDA, když platí aspoň jedna podmínka.', a => logArgs(a).some(Boolean),
   { vysvetli: (a, v, p) => { const l = logArgs(a); return `platí ${l.filter(Boolean).length} z ${l.length} podmínek → ${logikaText(v, p.jazyk)} (NEBO stačí jedna)`; } });
 def('Logické', 'NOT', 'NE', ['logická'], 'Obrátí PRAVDA ↔ NEPRAVDA.', a => !logika(a[0]));
+def('Logické', 'TRUE', 'PRAVDA', [], 'Logická hodnota PRAVDA (stejné jako napsat PRAVDA).', () => true);
+def('Logické', 'FALSE', 'NEPRAVDA', [], 'Logická hodnota NEPRAVDA.', () => false);
 def('Logické', 'CHOOSE', 'ZVOLIT', ['index', 'hodnota1', 'hodnota2…'], 'Vybere hodnotu podle pořadového čísla.', a => {
   const i = Math.trunc(N(a[0])); if (i < 1 || i >= a.length) chyba('VALUE', 'index je mimo seznam hodnot'); return chybi(a[i]) ? 0 : a[i];
 });
@@ -360,10 +392,12 @@ def('Vyhledávání', 'MATCH', 'POZVYHLEDAT', ['hledat', 'prohledat', '[shoda]']
   const i = najdi(a[0], t.h.flat(), typ); if (i < 0) chyba('NA', 'hodnota nenalezena'); return i + 1;
 }, { vysvetli: (a, v, p) => `${literal(skalar(a[0]), p.jazyk)} je na ${v}. místě prohledávané oblasti` });
 def('Vyhledávání', 'INDEX', 'INDEX', ['pole', 'řádek', '[sloupec]'], 'Vrátí hodnotu na zadaném řádku a sloupci oblasti.', a => {
-  const t = oblast(a[0]); let r = Math.trunc(N(a[1])), c = chybi(a[2]) ? 0 : Math.trunc(N(a[2]));
-  if (chybi(a[2]) && t.h.length === 1) { c = r; r = 1; }
-  if (c === 0) c = 1;
-  if (r < 1 || c < 1 || r > t.h.length || c > t.h[0].length) chyba('REF', 'řádek nebo sloupec je mimo oblast');
+  const t = oblast(a[0]); let r = Math.trunc(N(a[1])), c = chybi(a[2]) ? null : Math.trunc(N(a[2]));
+  if (c === null) { if (t.h.length === 1) { c = r; r = 1; } else c = t.h[0].length === 1 ? 1 : 0; }
+  if (r < 0 || c < 0 || r > t.h.length || c > t.h[0].length) chyba('REF', 'řádek nebo sloupec je mimo oblast');
+  if (r === 0 && c === 0) return { h: t.h.map(x => [...x]), pole: true };
+  if (r === 0) return { h: t.h.map(x => [x[c - 1]]), pole: true };   /* řádek 0 = celý sloupec */
+  if (c === 0) return { h: [[...t.h[r - 1]]], pole: true };          /* sloupec 0 = celý řádek */
   return t.h[r - 1][c - 1];
 }, { vysvetli: (a, v, p) => `z oblasti vezme ${Math.trunc(N(a[1]))}. ${a[0].h.length === 1 ? 'položku' : 'řádek'}${chybi(a[2]) ? '' : ', ' + Math.trunc(N(a[2])) + '. sloupec'} → ${literal(v, p.jazyk)}` });
 def('Vyhledávání', 'XLOOKUP', 'XLOOKUP', ['hledat', 'prohledat', 'vrátit', '[když_nenalezeno]', '[režim_shody]', '[režim_hledání]'], 'Najde hodnotu v jedné oblasti a vrátí hodnotu ze stejné pozice druhé oblasti (Excel 2021/365).', a => {
@@ -386,8 +420,8 @@ def('Vyhledávání', 'XLOOKUP', 'XLOOKUP', ['hledat', 'prohledat', 'vrátit', '
 }, { vysvetli: (a, v, p) => `najde ${literal(skalar(a[0]), p.jazyk)} v prohledávané oblasti a vrátí hodnotu ze stejné pozice oblasti vrátit → ${literal(v, p.jazyk)}` });
 
 /* text */
-def('Text', 'LEFT', 'ZLEVA', ['text', '[počet_znaků]'], 'Prvních N znaků zleva.', (a, p) => { const n = chybi(a[1]) ? 1 : N(a[1]); if (n < 0) chyba('VALUE'); return T(a[0], p).slice(0, n); });
-def('Text', 'RIGHT', 'ZPRAVA', ['text', '[počet_znaků]'], 'Posledních N znaků zprava.', (a, p) => { const n = chybi(a[1]) ? 1 : N(a[1]); if (n < 0) chyba('VALUE'); return n === 0 ? '' : T(a[0], p).slice(-n); });
+def('Text', 'LEFT', 'ZLEVA', ['text', '[počet_znaků]'], 'Prvních N znaků zleva.', (a, p) => { const n = chybi(a[1]) ? 1 : Math.trunc(N(a[1])); if (n < 0) chyba('VALUE'); return T(a[0], p).slice(0, n); });
+def('Text', 'RIGHT', 'ZPRAVA', ['text', '[počet_znaků]'], 'Posledních N znaků zprava.', (a, p) => { const n = chybi(a[1]) ? 1 : Math.trunc(N(a[1])); if (n < 0) chyba('VALUE'); return n === 0 ? '' : T(a[0], p).slice(-n); });
 def('Text', 'MID', 'ČÁST', ['text', 'start', 'počet_znaků'], 'Část textu od pozice start (první znak = 1).', (a, p) => {
   const s = Math.trunc(N(a[1])), n = Math.trunc(N(a[2])); if (s < 1 || n < 0) chyba('VALUE', 'start musí být aspoň 1'); return T(a[0], p).substr(s - 1, n);
 }, { vysvetli: (a, v, p) => `od ${Math.trunc(N(a[1]))}. znaku vezme ${Math.trunc(N(a[2]))} znaků → ${literal(v, p.jazyk)}` });
@@ -404,16 +438,20 @@ def('Text', 'TEXTJOIN', 'TEXTJOIN', ['oddělovač', 'ignorovat_prázdné', 'text
   return c.join(odd);
 });
 def('Text', 'FIND', 'NAJÍT', ['co', 'kde', '[start]'], 'Pozice textu v textu (rozlišuje velká a malá písmena).', (a, p) => {
-  const s = chybi(a[2]) ? 1 : Math.trunc(N(a[2])), i = T(a[1], p).indexOf(T(a[0], p), s - 1); if (i < 0) chyba('VALUE', 'hledaný text tam není'); return i + 1;
+  const kde = T(a[1], p), s = chybi(a[2]) ? 1 : Math.trunc(N(a[2]));
+  if (s < 1 || s > kde.length + 1) chyba('VALUE', 'začátek hledání je mimo text');
+  const i = kde.indexOf(T(a[0], p), s - 1); if (i < 0) chyba('VALUE', 'hledaný text tam není'); return i + 1;
 }, { vysvetli: (a, v, p) => `"${T(a[0], p)}" začíná na ${v}. znaku textu "${T(a[1], p)}"` });
 def('Text', 'SEARCH', 'HLEDAT', ['co', 'kde', '[start]'], 'Pozice textu v textu (nerozlišuje velikost písmen, umí * a ?).', (a, p) => {
-  const s = chybi(a[2]) ? 1 : Math.trunc(N(a[2])), m = vzorNaRegex(T(a[0], p), false).exec(T(a[1], p).slice(s - 1));
+  const s = chybi(a[2]) ? 1 : Math.trunc(N(a[2]));
+  if (s < 1 || s > T(a[1], p).length + 1) chyba('VALUE', 'začátek hledání je mimo text');
+  const m = vzorNaRegex(T(a[0], p), false).exec(T(a[1], p).slice(s - 1));
   if (!m) chyba('VALUE', 'hledaný text tam není'); return m.index + s;
 });
 def('Text', 'SUBSTITUTE', 'DOSADIT', ['text', 'starý', 'nový', '[výskyt]'], 'Nahradí v textu jeden text jiným.', (a, p) => {
   const t = T(a[0], p), st = T(a[1], p), no = T(a[2], p); if (!st) return t;
   if (chybi(a[3])) return t.split(st).join(no);
-  const k = Math.trunc(N(a[3])); let i = -1;
+  const k = Math.trunc(N(a[3])); if (k < 1) chyba('VALUE', 'výskyt musí být aspoň 1'); let i = -1;
   for (let j = 0; j < k; j++) { i = t.indexOf(st, i + 1); if (i < 0) return t; }
   return t.slice(0, i) + no + t.slice(i + st.length);
 });
@@ -429,18 +467,27 @@ def('Informační', 'ISERROR', 'JE.CHYBA', ['hodnota'], 'PRAVDA, když je hodnot
 
 /* datum */
 def('Datum', 'TODAY', 'DNES', [], 'Dnešní datum (pořadové číslo dne).', () => { const d = new Date(); return serialZData(d.getFullYear(), d.getMonth() + 1, d.getDate()); }, { datum: true });
-def('Datum', 'DATE', 'DATUM', ['rok', 'měsíc', 'den'], 'Složí datum z roku, měsíce a dne (přetečení dopočítá: 32. 1. = 1. 2.).', a =>
-  Math.round((Date.UTC(Math.trunc(N(a[0])), Math.trunc(N(a[1])) - 1, Math.trunc(N(a[2]))) - NULA_DAT) / DEN_MS),
+def('Datum', 'DATE', 'DATUM', ['rok', 'měsíc', 'den'], 'Složí datum z roku, měsíce a dne (přetečení dopočítá: 32. 1. = 1. 2.).', a => {
+  let y = Math.trunc(N(a[0]));
+  if (y < 0 || y > 9999) chyba('NUM', 'rok musí být 0 až 9999');
+  if (y < 1900) y += 1900;   /* Excel: rok 0–1899 se přičte k 1900 */
+  const s = serialZData(y, Math.trunc(N(a[1])), Math.trunc(N(a[2])));
+  if (s < 0) chyba('NUM', 'datum před rokem 1900'); return s;
+},
 { datum: true, vysvetli: (a, v) => `${fmtDatum(v)} je ${v}. den od začátku roku 1900 – Excel ukládá datum jako číslo` });
-def('Datum', 'YEAR', 'ROK', ['datum'], 'Rok z data.', a => datumZeSerialu(N(a[0])).y);
-def('Datum', 'MONTH', 'MĚSÍC', ['datum'], 'Měsíc z data (1–12).', a => datumZeSerialu(N(a[0])).m);
-def('Datum', 'DAY', 'DEN', ['datum'], 'Den v měsíci z data (1–31).', a => datumZeSerialu(N(a[0])).d);
+def('Datum', 'YEAR', 'ROK', ['datum'], 'Rok z data.', a => datumArg(a[0]).y);
+def('Datum', 'MONTH', 'MĚSÍC', ['datum'], 'Měsíc z data (1–12).', a => datumArg(a[0]).m);
+def('Datum', 'DAY', 'DEN', ['datum'], 'Den v měsíci z data (1–31).', a => datumArg(a[0]).d);
 def('Datum', 'WEEKDAY', 'DENTÝDNE', ['datum', '[typ]'], 'Den v týdnu: typ 1 = neděle 1 … sobota 7, typ 2 = pondělí 1 … neděle 7.', a => {
-  const dt = datumZeSerialu(N(a[0])).dt, typ = chybi(a[1]) ? 1 : Math.trunc(N(a[1]));
-  return typ === 2 ? (dt + 6) % 7 + 1 : typ === 3 ? (dt + 6) % 7 : dt + 1;
+  const dt = datumArg(a[0]).dt, typ = chybi(a[1]) ? 1 : Math.trunc(N(a[1]));
+  if (typ === 1 || typ === 17) return dt + 1;
+  if (typ === 2) return (dt + 6) % 7 + 1;
+  if (typ === 3) return (dt + 6) % 7;
+  if (typ >= 11 && typ <= 16) return ((dt - (typ - 10) + 7) % 7) + 1;   /* 11 = od pondělí … 16 = od soboty */
+  chyba('NUM', 'neplatný typ – použijte 1, 2, 3 nebo 11–17');
 }, { vysvetli: (a, v) => `${fmtDatum(N(a[0]))} je ${DNY[datumZeSerialu(N(a[0])).dt]} → ${v}` });
 def('Datum', 'EOMONTH', 'EOMONTH', ['datum', 'měsíce'], 'Poslední den měsíce posunutého o N měsíců.', a => {
-  const d = datumZeSerialu(N(a[0])); return Math.round((Date.UTC(d.y, d.m + Math.trunc(N(a[1])), 0) - NULA_DAT) / DEN_MS);
+  const d = datumArg(a[0]); return serialZData(d.y, d.m + Math.trunc(N(a[1])) + 1, 0);
 }, { datum: true });
 def('Datum', 'NETWORKDAYS', 'NETWORKDAYS', ['začátek', 'konec'], 'Počet pracovních dnů (po–pá) mezi daty včetně obou.', a => {
   let z = Math.floor(N(a[0])), k = Math.floor(N(a[1])), zn = 1; if (z > k) { [z, k] = [k, z]; zn = -1; }
@@ -468,12 +515,14 @@ def('Dynamická pole', 'SORT', 'SEŘADIT', ['pole', '[index_řazení]', '[pořad
   return pole(posl ? data[0].map((_, r) => data.map(c => c[r])) : data);
 });
 def('Dynamická pole', 'UNIQUE', 'UNIKÁTNÍ', ['pole', '[podle_sloupců]', '[jen_jednou]'], 'Vrátí jedinečné řádky pole (každý jen jednou).', a => {
-  const p = radkyPole(a[0]), jen = !chybi(a[2]) && logika(a[2]);
+  const sloupce = !chybi(a[1]) && logika(a[1]), jen = !chybi(a[2]) && logika(a[2]);
+  const vstup = radkyPole(a[0]), p = sloupce ? vstup[0].map((_, c) => vstup.map(r => r[c])) : vstup;
   const klic = r => JSON.stringify(r.map(x => (typeof x === 'string' ? x.toLowerCase() : x)));
   const pocty = new Map(); p.forEach(r => pocty.set(klic(r), (pocty.get(klic(r)) || 0) + 1));
   const videne = new Set(), out = [];
   for (const r of p) { const k = klic(r); if (videne.has(k) || (jen && pocty.get(k) > 1)) continue; videne.add(k); out.push(r); }
-  if (!out.length) chyba('CALC'); return pole(out);
+  if (!out.length) chyba('CALC');
+  return pole(sloupce ? out[0].map((_, r) => out.map(c => c[r])) : out);
 }, { vysvetli: (a, v) => `z ${radkyPole(a[0]).length} řádků je jedinečných ${jePole(v) ? v.h.length : 1}` });
 def('Dynamická pole', 'SEQUENCE', 'POSLOUPNOST', ['řádky', '[sloupce]', '[začátek]', '[krok]'], 'Vytvoří pole po sobě jdoucích čísel (1, 2, 3…).', a => {
   const r = Math.trunc(N(a[0])), c = chybi(a[1]) ? 1 : Math.trunc(N(a[1])), z = chybi(a[2]) ? 1 : N(a[2]), k = chybi(a[3]) ? 1 : N(a[3]);
@@ -876,7 +925,7 @@ function binarni(op, a, b, jazyk) {
     case '-': return cislo(a) - cislo(b);
     case '*': return cislo(a) * cislo(b);
     case '/': { const d = cislo(b); if (d === 0) chyba('DIV0', 'dělí se nulou (nebo prázdnou buňkou)'); return cislo(a) / d; }
-    case '^': { const x = Math.pow(cislo(a), cislo(b)); if (!isFinite(x)) chyba('NUM'); return x; }
+    case '^': return mocnina(cislo(a), cislo(b));
     case '&': return text(a, jazyk) + text(b, jazyk);
     default: {
       const c = porovnej(a, b);
@@ -885,6 +934,13 @@ function binarni(op, a, b, jazyk) {
   }
 }
 
+/* prvek pole na pozici i, j (pole o jednom řádku/sloupci se roztáhne jako v Excelu); skalár zůstane */
+function prvekPole(x, i, j) {
+  if (!jePole(x)) return x;
+  const r = x.h[x.h.length === 1 ? 0 : i];
+  const v = r && r[x.h[0].length === 1 ? 0 : j];
+  return v === undefined ? new Chyba('NA', 'pole mají různou velikost') : v;
+}
 /* ctx: { bunka(r, c) → hodnota, jazyk, kroky: [] | null } */
 function vyhodnotUzel(u, ctx) {
   const krok = (hodnota, popis) => { if (ctx.kroky) ctx.kroky.push({ uzel: u, hodnota, popis }); return hodnota; };
@@ -947,7 +1003,18 @@ function vyhodnotUzel(u, ctx) {
       }
       /* líné funkce – vyhodnotí se jen potřebná větev */
       if (u.en === 'IF') {
-        const b = zachyt(() => logika(vyhodnotUzel(args[0], ctx)));
+        const pod = vyhodnotUzel(args[0], ctx);
+        if (jePole(pod) && pod.h.length * pod.h[0].length > 1) {   /* pole podmínek: KDYŽ pro každý prvek zvlášť */
+          const vet = (x, vych) => (!x ? vych : x.t === 'prazdny' ? 0 : vyhodnotUzel(x, ctx));
+          const ano = vet(args[1], true), ne = vet(args[2], false);
+          const h = pod.h.map((r, i) => r.map((c, j) => {
+            const b = zachyt(() => logika(c));
+            return jeChyba(b) ? b : prvekPole(b ? ano : ne, i, j);
+          }));
+          const v = { h, pole: true };
+          return krok(v, `${nazev}: podmínka je pole – rozhoduje se pro každý prvek zvlášť → ${L(v)}`);
+        }
+        const b = zachyt(() => logika(pod));
         if (jeChyba(b)) return krok(b, `${nazev}: podmínka je chyba nebo není logická hodnota → ${L(b)}`);
         const vetev = b ? args[1] : args[2];
         const v = !vetev ? b : vetev.t === 'prazdny' ? 0 : vyhodnotUzel(vetev, ctx);
@@ -974,6 +1041,13 @@ function vyhodnotUzel(u, ctx) {
       }
       if (u.en === 'IFERROR' || u.en === 'IFNA') {
         const v = vyhodnotUzel(args[0], ctx);
+        const zachytit = x => jeChyba(x) && (u.en === 'IFERROR' || x.kod === 'NA');
+        if (jePole(v) && v.h.length * v.h[0].length > 1) {   /* pole: chyby se nahradí po prvcích */
+          if (!v.h.some(r => r.some(zachytit))) return krok(v, `${nazev}: v poli není žádná chyba → vrací ho beze změny`);
+          const n = args[1].t === 'prazdny' ? 0 : vyhodnotUzel(args[1], ctx);
+          const w = { h: v.h.map((r, i) => r.map((x, j) => (zachytit(x) ? prvekPole(n, i, j) : x))), pole: true };
+          return krok(w, `${nazev}: chybné prvky pole nahradí ${L(n)} → ${L(w)}`);
+        }
         const sv = jePole(v) ? v.h[0][0] : v;
         if (jeChyba(sv) && (u.en === 'IFERROR' || sv.kod === 'NA')) {
           const n = args[1].t === 'prazdny' ? 0 : vyhodnotUzel(args[1], ctx);
@@ -997,6 +1071,7 @@ function vyhodnotUzel(u, ctx) {
   throw new Error('neznámý uzel ' + u.t);
 }
 
+let SONDA = 0, KONTAMINACE = false;   /* zkušební výpočty při hledání zdroje rozlití */
 /* ---------- formáty buněk ----------
    formát = { t: 'obecny'|'cislo'|'mena'|'proc'|'datum'|'text', d: desetinná místa, tis: oddělovač tisíců, b: tučné, z: 'l'|'c'|'r' } */
 function normFormat(f) {
@@ -1004,7 +1079,7 @@ function normFormat(f) {
   if (typeof f === 'object') return f;
   return { '%': { t: 'proc' }, kc: { t: 'mena', d: 2, tis: true }, datum: { t: 'datum' }, '0,00': { t: 'cislo', d: 2 } }[f] || null;
 }
-const vzorFormatu = (d, tis) => (tis ? '# ##0' : '0') + (d > 0 ? ',' + '0'.repeat(d) : '');
+const vzorFormatu = (d, tis, jazyk = 'cs') => jazyk === 'en' ? (tis ? '#,##0' : '0') + (d > 0 ? '.' + '0'.repeat(d) : '') : (tis ? '# ##0' : '0') + (d > 0 ? ',' + '0'.repeat(d) : '');
 
 /* ---------- řady pro úchyt: 1, 2 → 3, 4…; datum +1; „Položka 1“ → „Položka 2“; dny a měsíce ---------- */
 const SEZNAMY = [
@@ -1076,9 +1151,11 @@ class List {
     return {
       jazyk: this.jazyk, kroky,
       bunka: (r, c, l) => {
-        if (!l || (this.nazev && l.toUpperCase() === this.nazev.toUpperCase())) return this.hodnota(adresa(r, c));
+        /* buňka, ze které se rozlévá pole, se jako jednotlivá buňka chová jako jeho první prvek */
+        const prvni = v => (jePole(v) && v.rozlitiZ ? v.h[0][0] : v);
+        if (!l || (this.nazev && l.toUpperCase() === this.nazev.toUpperCase())) return prvni(this.hodnota(adresa(r, c)));
         const jiny = this.sesit && this.sesit.list(l);
-        return jiny ? jiny.hodnota(adresa(r, c)) : new Chyba('REF', `list „${l}“ neexistuje`);
+        return jiny ? prvni(jiny.hodnota(adresa(r, c))) : new Chyba('REF', `list „${l}“ neexistuje`);
       },
       nazev: jm => this.sesit ? this.sesit.nazvy[jm.toUpperCase()] : undefined,
     };
@@ -1088,6 +1165,8 @@ class List {
     if (v && typeof v === 'object') { if (v.f) this.format[a] = normFormat(v.f); v = v.v ?? ''; }
     v = v === null || v === undefined ? '' : String(v);
     if (v === '') delete this.bunky[a]; else this.bunky[a] = v;
+    /* „50%“ zapsané do buňky: Excel buňce sám nastaví procentní formát */
+    if (!this.format[a] && /^\s*[+-]?\d[\d\s.,]*\s?%\s*$/.test(v)) this.format[a] = { t: 'proc' };
     this.zneplatni();
     const p = rozeberAdresu(a);
     if (p) { this.radku = Math.max(this.radku, p.r); this.sloupcu = Math.max(this.sloupcu, p.c); }
@@ -1095,7 +1174,7 @@ class List {
   surova(a) { return this.bunky[a.toUpperCase()] ?? ''; }
   konstanta(s) {
     if (s.startsWith("'")) return s.slice(1);
-    const n = textNaCislo(s); if (n !== null) return n;
+    const n = textNaCislo(s, this.jazyk); if (n !== null) return n;
     const d = textNaDatum(s); if (d !== null) return d;
     const u = s.trim().toUpperCase();
     if (u === 'PRAVDA' || u === 'TRUE') return true;
@@ -1105,6 +1184,7 @@ class List {
   hodnota(a, kroky = null) {
     a = a.toUpperCase();
     if (!kroky && this.cache.has(a)) return this.cache.get(a);
+    JAZYK_VYPOCTU = this.jazyk;
     const s = this.surova(a);
     let v;
     if (!s) v = this.rozliti(a).v;
@@ -1112,7 +1192,7 @@ class List {
     else if (!s.startsWith('=')) v = this.konstanta(s);
     else {
       const pocita = this.sesit ? this.sesit.pocita : this.pocita, klic = (this.nazev || '') + '!' + a;
-      if (pocita.has(klic)) return new Chyba('CIRC', `buňka ${a} (i oklikou) odkazuje sama na sebe`);
+      if (pocita.has(klic)) { if (SONDA > 0) KONTAMINACE = true; return new Chyba('CIRC', `buňka ${a} (i oklikou) odkazuje sama na sebe`); }
       pocita.add(klic);
       try {
         v = vyhodnotUzel(rozeber(s, this.jazyk), this.kontext(kroky));
@@ -1121,6 +1201,7 @@ class List {
         else if (e.syntaxe) v = new Chyba('NAME', 'chyba zápisu: ' + e.message);
         else throw e;
       } finally { pocita.delete(klic); }
+      if (v === null || v === undefined) v = 0;   /* vzorec odkazující na prázdnou buňku ukáže 0 */
       if (jePole(v) && !kroky) v = this.rozlij(a, v);
     }
     if (!kroky) this.cache.set(a, v);
@@ -1184,16 +1265,32 @@ class List {
       const b = adresa(p.r + i, p.c + j);
       if (this.surova(b) !== '') return new Chyba('SPILL', `výsledek ${R} × ${C} se nemá kam rozlít – buňka ${b} není prázdná`);
     }
-    return { ...v, rozlitiZ: a };
+    return { ...v, h: v.h.map(r => r.map(x => (x === null || x === undefined ? 0 : x))), rozlitiZ: a };
+  }
+  /* může vzorec vrátit pole? (oblast, funkce dynamických polí, název) – jen takové se zkoumají jako zdroj rozlití */
+  mozneRozliti(raw) {
+    if (/:|FILTR|FILTER|SEŘADIT|SORT|UNIKÁTNÍ|UNIQUE|POSLOUPNOST|SEQUENCE|INDEX|IFERROR|IFNA|KDYŽ|IF\(/i.test(raw)) return true;
+    const n = this.sesit ? Object.keys(this.sesit.nazvy) : [];
+    const u = raw.toUpperCase();
+    return n.some(x => u.includes(x));
   }
   /* hodnota prázdné buňky, do které se rozlilo pole z jiné buňky: {v, zdroj} */
   rozliti(a) {
-    const p = rozeberAdresu(a);
+    const p = rozeberAdresu(a), pocita = this.sesit ? this.sesit.pocita : this.pocita;
     for (const [b, raw] of Object.entries(this.bunky)) {
       if (!raw.startsWith('=')) continue;
       const q = rozeberAdresu(b);
-      if (q.r > p.r || q.c > p.c) continue;
-      const v = this.hodnota(b);
+      if (q.r > p.r || q.c > p.c || !this.mozneRozliti(raw) || pocita.has((this.nazev || '') + '!' + b)) continue;
+      let v;
+      if (this.cache.has(b)) v = this.cache.get(b);
+      else {
+        /* zkušební výpočet: když narazí na rozpracovanou buňku (falešný cyklus), nic z něj se neuloží */
+        const pred = this.cache.size, k0 = KONTAMINACE;
+        SONDA++; KONTAMINACE = false;
+        try { v = this.hodnota(b); } finally { SONDA--; }
+        const vadne = KONTAMINACE; KONTAMINACE = k0 || (SONDA > 0 && vadne);
+        if (vadne) { [...this.cache.keys()].slice(pred).forEach(x => this.cache.delete(x)); continue; }
+      }
       if (jePole(v) && v.rozlitiZ) {
         const i = p.r - q.r, j = p.c - q.c;
         if (i < v.h.length && j < v.h[0].length) { const x = v.h[i][j]; return { v: x === undefined ? null : x, zdroj: b }; }
@@ -1233,13 +1330,13 @@ class List {
     if (typeof v === 'number') {
       const f = this.format[a.toUpperCase()] || {};
       switch (f.t) {
-        case 'cislo': return formatujText(v, vzorFormatu(f.d ?? 2, f.tis), this.jazyk);
-        case 'mena': return formatujText(v, vzorFormatu(f.d ?? 2, f.tis ?? true), this.jazyk) + ' Kč';
-        case 'proc': return (f.d === undefined ? fmtCislo(zaokr(v * 100, 2), this.jazyk) : formatujText(v * 100, vzorFormatu(f.d, false), this.jazyk)) + ' %';
+        case 'cislo': return formatujText(v, vzorFormatu(f.d ?? 2, f.tis, this.jazyk), this.jazyk);
+        case 'mena': return formatujText(v, vzorFormatu(f.d ?? 2, f.tis ?? true, this.jazyk), this.jazyk) + ' Kč';
+        case 'proc': return (f.d === undefined ? fmtCislo(zaokr(v * 100, 2), this.jazyk) : formatujText(v * 100, vzorFormatu(f.d, false, this.jazyk), this.jazyk)) + ' %';
         case 'datum': return fmtDatum(v);
       }
       if (this.jeDatum(a)) return fmtDatum(v);
-      if (f.d !== undefined || f.tis) return formatujText(v, vzorFormatu(f.d ?? 0, f.tis), this.jazyk);
+      if (f.d !== undefined || f.tis) return formatujText(v, vzorFormatu(f.d ?? 0, f.tis, this.jazyk), this.jazyk);
       return fmtCislo(v, this.jazyk);
     }
     return v;
@@ -1488,19 +1585,47 @@ class Sesit {
   serializuj() {
     return { jazyk: this.jazyk, nazvy: { ...this.nazvy }, listy: this.listy.map(l => ({ nazev: l.nazev, bunky: { ...l.bunky }, format: { ...l.format }, sirky: { ...(l.sirky || {}) }, kukatko: [...(l.kukatko || [])], pravidla: (l.pravidla || []).map(p => ({ ...p })) })) };
   }
+  /* obnova ze serializovaných dat (i ze sdíleného odkazu nebo souboru = nedůvěryhodný vstup):
+     každá hodnota se ověří a převede na povolený tvar, aby se do stránky nedostal cizí kód ani rozbitý stav */
   static obnov(d, jazyk) {
-    const s = new Sesit(d.jazyk || jazyk || 'cs');
-    for (const x of d.listy || []) {
+    d = d && typeof d === 'object' ? d : {};
+    const s = new Sesit(d.jazyk === 'en' ? 'en' : 'cs');
+    const jeAdr = a => typeof a === 'string' && /^[A-Z]{1,3}[1-9]\d{0,6}$/.test(a);
+    const TYPY_F = ['obecny', 'cislo', 'mena', 'proc', 'datum', 'text'], TYPY_P = ['vetsi', 'mensi', 'mezi', 'rovno', 'obsahuje', 'top', 'nadprumer', 'duplicita', 'vzorec', 'pruh', 'skala'];
+    const STYLY = ['cervena', 'zelena', 'zluta', 'modra', 'tucne'];
+    const cistyFormat = f => {
+      const o = {};
+      if (TYPY_F.includes(f.t)) o.t = f.t;
+      if (Number.isInteger(f.d) && f.d >= 0 && f.d <= 10) o.d = f.d;
+      if (typeof f.tis === 'boolean') o.tis = f.tis;
+      if (f.b === true) o.b = true;
+      if (['l', 'c', 'r'].includes(f.z)) o.z = f.z;
+      return o;
+    };
+    const text = (v, n) => (v === null || v === undefined ? undefined : String(v).slice(0, n));
+    for (const x of (Array.isArray(d.listy) ? d.listy : []).slice(0, 50)) {
+      if (!x || typeof x !== 'object') continue;
       const l = new List({}, { jazyk: s.jazyk });
-      l.bunky = { ...x.bunky }; l.format = { ...(x.format || {}) }; l.sirky = { ...(x.sirky || {}) }; l.kukatko = [...(x.kukatko || [])]; l.pravidla = (x.pravidla || []).map(p => ({ ...p }));
+      for (const [a, v] of Object.entries(x.bunky || {})) if (jeAdr(a) && v !== null && v !== undefined && typeof v !== 'object') l.bunky[a] = String(v).slice(0, 5000);
+      for (const [a, f] of Object.entries(x.format || {})) if (jeAdr(a) && f && typeof f === 'object') { const o = cistyFormat(f); if (Object.keys(o).length) l.format[a] = o; }
+      l.sirky = {};
+      for (const [c, w] of Object.entries(x.sirky || {})) { const n = Math.round(Number(w)); if (/^\d{1,4}$/.test(c) && n >= 20 && n <= 800) l.sirky[c] = n; }
+      l.kukatko = (Array.isArray(x.kukatko) ? x.kukatko : []).filter(jeAdr).slice(0, 60);
+      l.pravidla = (Array.isArray(x.pravidla) ? x.pravidla : []).filter(p => p && typeof p.oblast === 'string' && /^\$?[A-Za-z]{1,3}\$?\d+(:\$?[A-Za-z]{1,3}\$?\d+)?$/.test(p.oblast) && TYPY_P.includes(p.typ))
+        .slice(0, 50).map(p => ({ oblast: p.oblast.toUpperCase(), typ: p.typ, h1: text(p.h1, 500), h2: text(p.h2, 500), styl: STYLY.includes(p.styl) ? p.styl : 'cervena' }));
       for (const a of Object.keys(l.bunky)) { const p = rozeberAdresu(a); if (p) { l.radku = Math.max(l.radku, p.r); l.sloupcu = Math.max(l.sloupcu, p.c); } }
-      s.pridejList(x.nazev, l);
+      let nazev = String(x.nazev || '').replace(/[\\/?*[\]:!]/g, '_').trim().slice(0, 31);
+      if (!nazev || s.list(nazev)) nazev = s.volnyNazev();
+      s.pridejList(nazev, l);
     }
-    s.nazvy = { ...(d.nazvy || {}) };
+    for (const [n, def] of Object.entries(d.nazvy && typeof d.nazvy === 'object' ? d.nazvy : {})) {
+      if (typeof def === 'string' && !s.platnyNazev(n)) s.nazvy[n.toUpperCase()] = def.slice(0, 500);
+    }
     if (!s.listy.length) s.pridejList('List1');
     if (jazyk && jazyk !== s.jazyk) s.prepniJazyk(jazyk);
     return s;
   }
+
 }
 
 /* ---------- pomůcky pro editor ---------- */
@@ -1578,8 +1703,11 @@ function prepniAbsolutni(vzorec, kurzor) {
 
 /* ---------- kontrola úloh ---------- */
 function stejne(a, b) {
-  if (jePole(a)) a = a.h[0][0];
-  if (jePole(b)) b = b.h[0][0];
+  if (jePole(a) || jePole(b)) {   /* pole se porovnávají celá (rozměr i všechny prvky) */
+    const ha = jePole(a) ? a.h : [[a]], hb = jePole(b) ? b.h : [[b]];
+    if (ha.length !== hb.length || ha[0].length !== hb[0].length) return false;
+    return ha.every((r, i) => r.every((x, j) => stejne(x, hb[i][j])));
+  }
   if (jeChyba(a) || jeChyba(b)) return jeChyba(a) && jeChyba(b) && a.kod === b.kod;
   if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b));
   if ((a === null || a === '') && (b === null || b === '')) return true;
@@ -1591,7 +1719,12 @@ function obmenaDat(list, nahoda, chranit = []) {
   for (const [a, s] of Object.entries(list.bunky)) {
     if (s.startsWith('=') || chranit.includes(a)) continue;
     const n = textNaCislo(s);
-    if (n === null || list.jeDatum(a) || /%/.test(s)) continue;
+    if (n === null || list.jeDatum(a)) continue;
+    if (/%\s*$/.test(s)) {   /* procenta se obmění taky – jinak by prošel vzorec s natvrdo zapsanou sazbou */
+      const p0 = Math.round(n * 100); let p = Math.max(1, Math.round(p0 * (0.6 + nahoda() * 0.8)));
+      if (p === p0) p = p0 + 1;
+      l.bunky[a] = p + '%'; continue;
+    }
     const cele = Number.isInteger(n);
     let x = n * (0.6 + nahoda() * 0.8);
     x = cele ? Math.round(x) : zaokr(x, 2);

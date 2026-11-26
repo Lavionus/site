@@ -243,7 +243,7 @@ function vetaFunkce(u, a, d, j) {
 
 /* postup: každá funkce = jeden krok; operátory se popíšou na místě */
 function vysvetli(strom, j = 'cs') {
-  const kroky = [], EN = anglicky();
+  const kroky = [], EN = anglicky(), hotove = new Map();   /* uzel → ⟦n⟧, ať se funkce popsaná dvakrát nezapíše jako dva kroky */
   function d(u, inline) {
     switch (u.t) {
       case 'num': return X.fmtCislo(u.v, j);
@@ -264,11 +264,14 @@ function vysvetli(strom, j = 'cs') {
         return `${obal(u.l, p, inline)} ${SYMBOLY[u.op]} ${obal(u.r, p + 1, inline)}`;
       }
       case 'fn': {
-        const a = u.args.map(x => (x.t === 'prazdny' ? '' : d(x, inline)));
+        if (!inline && hotove.has(u)) return hotove.get(u);
+        /* vynechaný argument KDYŽ(podm;;x) Excel bere jako 0 */
+        const a = u.args.map(x => (x.t === 'prazdny' ? (u.en === 'IF' ? '0' : '') : d(x, inline)));
         const veta = (EN ? vetaFunkceEn : vetaFunkce)(u, a, x => d(x, inline), j);
-        if (inline) return `(${X.nazevFunkce(u.en || '', j) || u.jmeno}: ${veta})`;
+        if (inline) return `(${(u.en ? X.nazevFunkce(u.en, j) : u.jmeno)}: ${veta})`;
         kroky.push({ uzel: u, text: veta, nazev: u.en ? X.nazevFunkce(u.en, j) : u.jmeno });
-        return `⟦${kroky.length}⟧`;
+        hotove.set(u, `⟦${kroky.length}⟧`);
+        return hotove.get(u);
       }
     }
     return '';
@@ -287,7 +290,8 @@ function vysvetli(strom, j = 'cs') {
     kroky.push({ uzel: root, text: EN ? (porov ? `checks whether ${koren} → TRUE / FALSE` : `calculates ${koren}`) : (porov ? `porovná, zda ${koren} → PRAVDA / NEPRAVDA` : `spočítá ${koren}`), nazev });
   }
   const souhrn = (() => {
-    const s = d(strom, true).replace(/^\((.*)\)$/s, '$1');
+    const s0 = d(strom, true);
+    const s = root.t === 'fn' ? s0.replace(/^\((.*)\)$/s, '$1') : s0;   /* vnější závorky jen kolem funkce, (A1+B1)*(C1+D1) zůstane */
     return s.length <= 260 ? s : null;
   })();
   return { kroky, souhrn };
@@ -307,11 +311,13 @@ function podobneFunkce(jmeno, j) {
 }
 function rady(strom, j = 'cs') {
   const out = [];
-  let refy = 0, hloubkaKdyz = 0;
+  let refy = 0, hloubkaKdyz = 0, promenlive = false;
   const pridej = (typ, text) => { if (!out.some(r => r.text === text)) out.push({ typ, text }); };
-  (function pruchod(u, rodic, hlKdyz) {
+  (function pruchod(u, rodic, hlKdyz, osetreno) {
     if (!u) return;
-    if (u.t === 'ref' || u.t === 'range') refy++;
+    if (u.t === 'ref' || u.t === 'range' || u.t === 'jmeno') refy++;
+    if (u.t === 'fn' && ['TODAY', 'NOW', 'RAND', 'RANDBETWEEN'].includes(u.en)) promenlive = true;
+    if (u.t === 'fn' && ['IF', 'IFERROR', 'IFNA', 'IFS'].includes(u.en)) osetreno = true;   /* dělení uvnitř bývá už ošetřené */
     if (u.t === 'jmeno') pridej('chyba', `„${u.v}“ není funkce ani adresa → chyba ${X.CHYBY.NAME[j]}. Je-li to text, dejte ho do uvozovek: "${u.v}".`);
     if (u.t === 'fn' && !u.en) {
       const p = podobneFunkce(u.jmeno, j);
@@ -337,17 +343,17 @@ function rady(strom, j = 'cs') {
     if (u.t === 'op') {
       if (SLOVA_POROVNANI[u.op] && u.l.t === 'op' && SLOVA_POROVNANI[u.l.op])
         pridej('chyba', `Řetězené porovnání (jako 1 < x < 10) Excel nepočítá jako matematika: nejdřív vznikne PRAVDA/NEPRAVDA a ta se porovná dál. Použijte ${X.nazevFunkce('AND', j)}(…; …).`);
-      if (u.op === '/' && (u.r.t === 'ref' || u.r.t === 'fn'))
+      if (u.op === '/' && !osetreno && (u.r.t === 'ref' || u.r.t === 'fn'))
         pridej('tip', `Dělení: když bude dělitel prázdný nebo 0, vznikne ${X.CHYBY.DIV0[j]}. Ošetřit jde přes ${X.nazevFunkce('IF', j)}(dělitel=0; …) nebo ${X.nazevFunkce('IFERROR', j)}.`);
       if ('*/'.includes(u.op) && [u.l, u.r].some(x => x.t === 'num' && ![0, 1, 2, 10, 100, 1000, 12, 24, 60].includes(x.v)))
         pridej('tip', `Číslo ${X.fmtCislo([u.l, u.r].find(x => x.t === 'num' && ![0, 1, 2, 10, 100, 1000, 12, 24, 60].includes(x.v)).v, j)} je zapsané přímo ve vzorci. Když se změní (sazba, kurz…), budete přepisovat všechny vzorce – dejte ho raději do buňky a odkazujte na ni s $.`);
     }
     hloubkaKdyz = Math.max(hloubkaKdyz, hlKdyz);
-    for (const x of (u.args || [])) pruchod(x, u, hlKdyz);
-    if (u.l) pruchod(u.l, u, hlKdyz); if (u.r) pruchod(u.r, u, hlKdyz); if (u.x) pruchod(u.x, u, hlKdyz);
-  })(strom, null, 0);
+    for (const x of (u.args || [])) pruchod(x, u, hlKdyz, osetreno);
+    if (u.l) pruchod(u.l, u, hlKdyz, osetreno); if (u.r) pruchod(u.r, u, hlKdyz, osetreno); if (u.x) pruchod(u.x, u, hlKdyz, osetreno);
+  })(strom, null, 0, false);
   if (hloubkaKdyz >= 3) pridej('tip', `${hloubkaKdyz}× vnořené ${X.nazevFunkce('IF', j)} se špatně čte. Zvažte ${X.nazevFunkce('IFS', j)}, nebo tabulku hranic a ${X.nazevFunkce('VLOOKUP', j)} s přibližnou shodou.`);
-  if (!refy) pridej('tip', 'Vzorec neobsahuje žádný odkaz na buňku – výsledek se nikdy nezmění. V tabulce se obvykle počítá s buňkami.');
+  if (!refy && !promenlive) pridej('tip', 'Vzorec neobsahuje žádný odkaz na buňku – výsledek se nikdy nezmění. V tabulce se obvykle počítá s buňkami.');
   return out;
 }
 
@@ -366,12 +372,12 @@ function ukazkovaData(strom, seme = 1) {
     const r1 = Math.min(u.a.r, u.b.r), r2 = Math.min(Math.max(u.a.r, u.b.r), r1 + 39), c1 = Math.min(u.a.c, u.b.c), c2 = Math.min(Math.max(u.a.c, u.b.c), c1 + 11);
     const out = []; for (let r = r1; r <= r2; r++) { const radek = []; for (let c = c1; c <= c2; c++) radek.push(X.adresa(r, c)); out.push(radek); } return out;
   };
-  const datum = () => `${cislo(1, 28)}. ${cislo(1, 12)}. 2026`;
+  const datum = (rok = 2026) => `${cislo(1, 28)}. ${cislo(1, 12)}. ${rok}`;
   const vyplnTyp = (u, typ, extra) => {
     if (!u || (u.t !== 'ref' && u.t !== 'range')) return;
     oblastAdres(u).flat().forEach((a, i) => {
       if (typ === 'text') nastav(a, JMENA[i % JMENA.length]);
-      else if (typ === 'datum') nastav(a, datum());
+      else if (typ === 'datum') nastav(a, datum(extra));
       else if (typ === 'kategorie') { const k = [extra, ...MESTA.filter(m => m !== extra)]; nastav(a, k[(i * 3 + cislo(0, 2)) % k.length]); }
       else if (typ === 'logika') nastav(a, nahoda() < 0.5 ? 'PRAVDA' : 'NEPRAVDA');
       else if (typ === 'ano') nastav(a, nahoda() < 0.6 ? extra : 'ne');
@@ -399,7 +405,7 @@ function ukazkovaData(strom, seme = 1) {
     if (klicRef && klicRef.t === 'ref') nastav(X.adresa(klicRef.r, klicRef.c), pribl ? cislo(1500, 15000) : `K${String(Math.min(2, rows.length)).padStart(2, '0')}`);
   };
   const TEXTOVE = { LEFT: [0], RIGHT: [0], MID: [0], LEN: [0], UPPER: [0], LOWER: [0], PROPER: [0], TRIM: [0], FIND: [1], SEARCH: [1], SUBSTITUTE: [0], CONCAT: 'vse', CONCATENATE: 'vse', TEXTJOIN: 'od2', ISTEXT: [0] };
-  const DATUMOVE = { YEAR: [0], MONTH: [0], DAY: [0], WEEKDAY: [0], EOMONTH: [0], NETWORKDAYS: [0, 1] };
+  const DATUMOVE = { YEAR: [0], MONTH: [0], DAY: [0], WEEKDAY: [0], EOMONTH: [0] };
   (function pruchod(u) {
     if (!u) return;
     if (u.t === 'fn' && u.en) {
@@ -411,11 +417,13 @@ function ukazkovaData(strom, seme = 1) {
         if (en === 'XLOOKUP') vyplnTyp(a[2], 'cislo');
       }
       if (['COUNTIF', 'SUMIF', 'AVERAGEIF'].includes(en)) { const k = kritHodnota(a[1]); if (k) vyplnTyp(a[0], k.typ, k.typ === 'cislo' ? k.rozsah : k.hodnota); }
-      if (en === 'COUNTIFS' || en === 'SUMIFS') for (let i = en === 'SUMIFS' ? 1 : 0; i + 1 < a.length; i += 2) { const k = kritHodnota(a[i + 1]); if (k) vyplnTyp(a[i], k.typ, k.typ === 'cislo' ? k.rozsah : k.hodnota); }
+      if (['COUNTIFS', 'SUMIFS', 'AVERAGEIFS', 'MAXIFS', 'MINIFS'].includes(en)) for (let i = en === 'COUNTIFS' ? 0 : 1; i + 1 < a.length; i += 2) { const k = kritHodnota(a[i + 1]); if (k) vyplnTyp(a[i], k.typ, k.typ === 'cislo' ? k.rozsah : k.hodnota); }
       const t = TEXTOVE[en];
       if (t) a.forEach((x, i) => { if (t === 'vse' || (t === 'od2' && i >= 2) || (Array.isArray(t) && t.includes(i))) vyplnTyp(x, 'text'); });
       if (en === 'TEXT' && a[1] && a[1].t === 'str' && /[dmy]/i.test(a[1].v) && !/0/.test(a[1].v)) vyplnTyp(a[0], 'datum');
       const dt = DATUMOVE[en]; if (dt) dt.forEach(i => vyplnTyp(a[i], 'datum'));
+      /* od–do: začátek dřív než konec, jinak DATEDIF vrátí #NUM! */
+      if (en === 'DATEDIF' || en === 'NETWORKDAYS') { vyplnTyp(a[0], 'datum', 2024); vyplnTyp(a[1], 'datum', 2026); }
       if (en === 'AND' || en === 'OR' || en === 'NOT') a.forEach(x => vyplnTyp(x, 'logika'));
     }
     if (u.t === 'op') {
@@ -424,7 +432,8 @@ function ukazkovaData(strom, seme = 1) {
         if (u.l.t === 'str') vyplnTyp(u.r, u.op === '=' || u.op === '<>' ? 'ano' : 'text', u.l.v);
         if (u.r.t === 'num') vyplnTyp(u.l, 'cislo', [Math.max(0, Math.round(u.r.v * 0.5)), Math.round(u.r.v * 1.5) || 10]);
       }
-      if (u.op === '&') [u.l, u.r].forEach(x => vyplnTyp(x, 'text'));
+      /* ">"&F1 je kritérium – F1 má být číslo, ne jméno */
+      if (u.op === '&') { if (u.l.t === 'str' && /^(<=|>=|<>|<|>|=)$/.test(u.l.v)) vyplnTyp(u.r, 'cislo', [10, 300]); else [u.l, u.r].forEach(x => vyplnTyp(x, 'text')); }
     }
     (u.args || []).forEach(pruchod); pruchod(u.l); pruchod(u.r); pruchod(u.x);
   })(strom);
@@ -445,7 +454,7 @@ function bunkaProVzorec(strom) {
     if (u.t === 'range') { maxC = Math.max(maxC, u.a.c, u.b.c); minR = Math.min(minR, u.a.r, u.b.r); }
     (u.args || []).forEach(p); p(u.l); p(u.r); p(u.x);
   })(strom);
-  return X.adresa(minR === Infinity ? 1 : minR, Math.min(maxC + 2, 26) || 1);
+  return X.adresa(minR === Infinity ? 1 : minR, Math.max(1, maxC + 2));   /* vpravo od všech odkazů – jinak by vznikl cyklus */
 }
 
 koren.XLV_ROZBOR = { anglicky, rozpoznej, vysvetli, rady, ukazkovaData, bunkaProVzorec, popisKriteria };

@@ -9,6 +9,11 @@ const TEMATA = {
 };
 const JMENA = ['Adam', 'Bára', 'Cyril', 'Dana', 'Emil', 'Fanny', 'Gustav', 'Hana', 'Igor', 'Jana', 'Karel', 'Lenka'];
 const PRIJMENI = ['Novák', 'Svoboda', 'Dvořák', 'Černá', 'Procházka', 'Kučerová', 'Veselý', 'Horák', 'Němcová', 'Marek'];
+/* celé jméno se shodou rodu: Hana Nováková, Emil Černý */
+const ZENSKE = { Novák: 'Nováková', Svoboda: 'Svobodová', Dvořák: 'Dvořáková', Procházka: 'Procházková', Veselý: 'Veselá', Horák: 'Horáková', Marek: 'Marková' };
+const MUZSKE = { Černá: 'Černý', Kučerová: 'Kučera', Němcová: 'Němec' };
+const ZENY = new Set(['Bára', 'Dana', 'Fanny', 'Hana', 'Jana', 'Lenka']);
+const celeJmeno = (j, p) => j + ' ' + (ZENY.has(j) ? ZENSKE[p] || p : MUZSKE[p] || p);
 const MESTA = ['Praha', 'Brno', 'Ostrava', 'Plzeň', 'Olomouc'];
 const ZBOZI = ['Pero', 'Sešit', 'Guma', 'Lepidlo', 'Pravítko', 'Fixa', 'Blok', 'Nůžky', 'Kružítko', 'Barvy'];
 
@@ -32,7 +37,7 @@ const SABLONY = [
   { tema: 'zaklady', uroven: 2, gen(n) {
     const k = n.cele(4, 6), pr = n.cele(1, 4) * 5, b = { A1: 'Zboží', B1: 'Cena', C1: 'Po slevě', E1: 'Sleva', F1: pr + '%' };
     n.zamichej(ZBOZI).slice(0, k).forEach((z, i) => { b['A' + (i + 2)] = z; b['B' + (i + 2)] = String(n.cele(50, 900)); });
-    return { bunky: b, cil: 'C2', kopirovat: `C2:C${k + 1}`, absolutni: true, chranit: ['F1'], reseni: '=B2*(1-$F$1)', zadani: `Sleva je v [[@F1]]. Do [[@C2]] spočítejte cenu po slevě tak, aby šel vzorec zkopírovat do C${k + 1}.`, napovedy: ['Cena po slevě = cena × (1 − sleva).', 'Sleva se při kopírování nesmí posouvat → $F$1.'] };
+    return { bunky: b, cil: 'C2', kopirovat: `C2:C${k + 1}`, absolutni: true, reseni: '=B2*(1-$F$1)', zadani: `Sleva je v [[@F1]]. Do [[@C2]] spočítejte cenu po slevě tak, aby šel vzorec zkopírovat do C${k + 1}.`, napovedy: ['Cena po slevě = cena × (1 − sleva).', 'Sleva se při kopírování nesmí posouvat → $F$1.'] };
   } },
   { tema: 'zaklady', uroven: 3, gen(n) {
     const a = n.cele(2, 9), c = n.cele(2, 9), d = n.cele(2, 5);
@@ -51,20 +56,21 @@ const SABLONY = [
     return { bunky: b, cil: 'C2', kopirovat: `C2:C${k + 1}`, absolutni: true, reseni: `=B2/$B$${k + 2}`, zadani: `Do [[@C2]] spočítejte, jakou část celkové tržby (B${k + 2}) udělal prodejce. Vzorec zkopírujte do C${k + 1}.`, napovedy: ['Podíl = tržba ÷ celkem.', `Celkem je jen v B${k + 2} → ukotvit řádek: B$${k + 2} nebo $B$${k + 2}.`] };
   } },
   { tema: 'funkce', uroven: 1, gen(n) {
-    const f = n.vyber([['SUM', 'součet'], ['AVERAGE', 'průměr'], ['MAX', 'nejvyšší hodnotu'], ['MIN', 'nejnižší hodnotu']]), k = n.cele(5, 8), b = { A1: 'Den', B1: 'Teplota' };
+    const f = n.vyber([['SUM', 'součet', 'Součet'], ['AVERAGE', 'průměr', 'Průměr'], ['MAX', 'nejvyšší hodnotu', 'Nejvyšší'], ['MIN', 'nejnižší hodnotu', 'Nejnižší']]), k = n.cele(5, 8), b = { A1: 'Den', B1: 'Teplota' };
     for (let i = 0; i < k; i++) { b['A' + (i + 2)] = String(i + 1) + '.'; b['B' + (i + 2)] = String(n.cele(-5, 30)); }
-    b.D1 = f[1][0].toUpperCase() + f[1].slice(1);
+    b.D1 = f[2] + ':';
     return { bunky: b, cil: 'E1', vyzaduje: [f[0]], reseni: `=${f[0]}(B2:B${k + 1})`, zadani: `Do [[@E1]] spočítejte ${f[1]} teplot z B2:B${k + 1}.`, napovedy: [`Funkce {${f[0]}}(oblast).`] };
   } },
   { tema: 'funkce', uroven: 2, gen(n) {
     const k = n.cele(6, 8), b = { A1: 'Žák', B1: 'Body' };
     n.zamichej(JMENA).slice(0, k).forEach((j, i) => { b['A' + (i + 2)] = j; b['B' + (i + 2)] = n.r() < 0.25 ? 'chyběl' : String(n.cele(10, 50)); });
     b.D1 = 'Psalo test:';
-    return { bunky: b, cil: 'E1', reseni: `=COUNT(B2:B${k + 1})`, varianty: false, zadani: `Někteří žáci chyběli (místo bodů mají text). Do [[@E1]] spočítejte, kolik žáků test psalo.`, napovedy: ['Počítají se jen buňky s číslem.', '{COUNT}, ne {COUNTA}.'] };
+    return { bunky: b, cil: 'E1', reseni: `=COUNT(B2:B${k + 1})`,
+      varianty: [{ B2: b.B2 === 'chyběl' ? '25' : 'chyběl' }, { B3: b.B3 === 'chyběl' ? '40' : 'chyběl', B4: b.B4 === 'chyběl' ? '18' : 'chyběl' }],   /* jiný počet chybějících – opsané číslo neprojde */ zadani: `Někteří žáci chyběli (místo bodů mají text). Do [[@E1]] spočítejte, kolik žáků test psalo.`, napovedy: ['Počítají se jen buňky s číslem.', '{COUNT}, ne {COUNTA}.'] };
   } },
   { tema: 'zaokrouhleni', uroven: 1, gen(n) {
     const d = n.vyber([0, 1, 2]);
-    return { bunky: { A1: 'Cena bez DPH', B1: des(n.cele(1000, 99999) / 100), A2: 'DPH', B2: '21%', A3: 'Cena s DPH' }, cil: 'B3', vyzaduje: ['ROUND'], chranit: ['B2'], reseni: `=ROUND(B1*(1+B2),${d})`,
+    return { bunky: { A1: 'Cena bez DPH', B1: des(n.cele(1000, 99999) / 100), A2: 'DPH', B2: '21%', A3: 'Cena s DPH' }, cil: 'B3', vyzaduje: ['ROUND'], reseni: `=ROUND(B1*(1+B2),${d})`,
       zadani: `Do [[@B3]] spočítejte cenu s DPH zaokrouhlenou na ${d === 0 ? 'celé koruny' : d === 1 ? '1 desetinné místo' : 'haléře (2 desetinná místa)'}.`, napovedy: ['Cena s DPH: B1*(1+B2).', `Obalte {ROUND}(…{;}${d}).`] };
   } },
   { tema: 'zaokrouhleni', uroven: 2, gen(n) {
@@ -82,7 +88,7 @@ const SABLONY = [
   { tema: 'kdyz', uroven: 2, gen(n) {
     const k = n.cele(5, 7), hr = n.cele(2, 5) * 1000, pr = n.cele(1, 3) * 5, b = { A1: 'Objednávka', B1: 'Částka', C1: 'Sleva', E1: 'Sleva od', F1: String(hr), E2: 'Sleva %', F2: pr + '%' };
     for (let i = 0; i < k; i++) { b['A' + (i + 2)] = 'OBJ-' + (100 + i); b['B' + (i + 2)] = String(n.cele(5, 80) * 100); }
-    return { bunky: b, cil: 'C2', kopirovat: `C2:C${k + 1}`, absolutni: true, vyzaduje: ['IF'], chranit: ['F2'], reseni: '=IF(B2>=$F$1,B2*$F$2,0)',
+    return { bunky: b, cil: 'C2', kopirovat: `C2:C${k + 1}`, absolutni: true, vyzaduje: ['IF'], reseni: '=IF(B2>=$F$1,B2*$F$2,0)',
       zadani: `Do [[@C2]] spočítejte slevu: od částky v F1 je sleva F2 z částky, jinak 0. Zkopírujte do C${k + 1}.`, napovedy: ['Větev „ano“ je výpočet B2*$F$2.'] };
   } },
   { tema: 'logika', uroven: 2, gen(n) {
@@ -125,12 +131,12 @@ const SABLONY = [
     const k = n.cele(5, 6), b = { A1: 'Jméno', B1: 'Osobní číslo' }, j = n.zamichej(JMENA).slice(0, k);
     j.forEach((x, i) => { b['A' + (i + 2)] = x; b['B' + (i + 2)] = String(n.cele(1000, 9999)); });
     b.D1 = 'Číslo:'; b.E1 = b['B' + n.cele(2, k + 1)]; b.D2 = 'Jméno:';
-    return { bunky: b, cil: 'E2', varianty: [{ E1: b.B2 }], chranit: Object.keys(b).filter(a => a[0] === 'B' || a === 'E1'), reseni: `=INDEX(A2:A${k + 1},MATCH(E1,B2:B${k + 1},0))`,
+    return { bunky: b, cil: 'E2', varianty: [{ E1: b.B2 }, { E1: b['B' + (k + 1)] }], chranit: Object.keys(b).filter(a => a[0] === 'B' || a === 'E1'), reseni: `=INDEX(A2:A${k + 1},MATCH(E1,B2:B${k + 1},0))`,
       zadani: 'Do [[@E2]] najděte jméno podle osobního čísla v [[@E1]]. Jméno je <b>vlevo</b> od čísla.', napovedy: ['{VLOOKUP} doleva neumí.', '{INDEX}(jména{;} {MATCH}(E1{;} čísla{;} 0)) nebo {XLOOKUP}.'] };
   } },
   { tema: 'text', uroven: 2, gen(n) {
     const k = n.cele(4, 5), b = { A1: 'Celé jméno', B1: n.r() < 0.5 ? 'Jméno' : 'Příjmení' };
-    for (let i = 0; i < k; i++) b['A' + (i + 2)] = n.vyber(JMENA) + ' ' + n.vyber(PRIJMENI);
+    for (let i = 0; i < k; i++) b['A' + (i + 2)] = celeJmeno(n.vyber(JMENA), n.vyber(PRIJMENI));
     const jm = b.B1 === 'Jméno';
     return { bunky: b, cil: 'B2', kopirovat: `B2:B${k + 1}`, varianty: false, reseni: jm ? '=LEFT(A2,FIND(" ",A2)-1)' : '=MID(A2,FIND(" ",A2)+1,100)',
       zadani: `Do [[@B2]] vytáhněte z celého jména ${jm ? 'křestní jméno (před mezerou)' : 'příjmení (za mezerou)'}. Zkopírujte do B${k + 1}.`, napovedy: ['Pozici mezery najde {FIND}(" "{;}A2).', jm ? '{LEFT}(A2{;} pozice−1)' : '{MID}(A2{;} pozice+1{;} 100) nebo {TEXTAFTER}.'] };

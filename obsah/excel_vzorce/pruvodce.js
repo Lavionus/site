@@ -39,7 +39,7 @@ function klavesy(e) {
   else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !e.target.closest('.pruvodce-bublina button'))) { e.preventDefault(); e.stopPropagation(); dalsi(); }
   else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); ukaz(i - 1); }
   else if (e.key === 'Tab') {   /* fokus zůstává v bublině */
-    const t = [...bublina.querySelectorAll('button')], a = t.indexOf(document.activeElement);
+    const t = [...bublina.querySelectorAll('button')].filter(b => !b.disabled && !b.hidden), a = t.indexOf(document.activeElement);
     e.preventDefault(); t[(a + (e.shiftKey ? -1 : 1) + t.length) % t.length].focus();
   }
 }
@@ -64,14 +64,17 @@ function polohuj() {
   bublina.style.top = y + 'px';
   bublina.style.left = Math.min(innerWidth - bw - 8, Math.max(8, left)) + 'px';
 }
-function ukaz(n) {
+function ukaz(n, smer = n < i ? -1 : 1) {
   if (n < 0 || n >= KROKY.length) return;
+  /* krok, jehož prvek teď na stránce není (ukázky a úlohy mimo lekci), se přeskočí */
+  while (KROKY[n].cil && !cilKroku(KROKY[n]) && n + smer >= 0 && n + smer < KROKY.length) n += smer;
+  if (KROKY[n].cil && !cilKroku(KROKY[n]) && n !== KROKY.length - 1) return;
   i = n;
   const k = KROKY[i], el = cilKroku(k);
   bublina.querySelector('#pruvodceNadpis').textContent = k.nadpis;
   bublina.querySelector('.pruvodce-text').textContent = k.text;
   bublina.querySelector('.pruvodce-poradi').textContent = `${i + 1} / ${KROKY.length}`;
-  bublina.querySelector('[data-pr="zpet"]').disabled = i === 0;
+  bublina.querySelector('[data-pr="zpet"]').disabled = !KROKY.slice(0, i).some(k => !k.cil || cilKroku(k));
   bublina.querySelector('[data-pr="dal"]').textContent = i === KROKY.length - 1 ? 'Hotovo ✓' : 'Další ▶';
   bublina.querySelector('[data-pr="zavri"]').hidden = i === KROKY.length - 1;
   if (el) el.scrollIntoView({ block: 'center', inline: 'nearest' });
@@ -89,7 +92,7 @@ function zavri() {
 function spust(volby = {}) {
   if (bublina) return;
   priZavreni = volby.priZavreni || null; puvodniFokus = document.activeElement;
-  vytvor(); ukaz(0);
+  vytvor(); i = 0; ukaz(0, 1);
 }
 window.XLV_PRUVODCE = { spust, zavri, get aktivni() { return !!bublina; }, get krok() { return i; }, KROKY };
 })();
