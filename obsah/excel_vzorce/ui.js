@@ -10,16 +10,18 @@ const VYCHOZI = { jazyk: 'cs', lekce: LEKCE[0].id, rezim: 'lekce', hotovo: {}, l
 
 /* ---------- stav a ukládání ---------- */
 let stav;
-try { stav = Object.assign({}, VYCHOZI, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { stav = { ...VYCHOZI }; }
+const novyStav = () => ({ ...VYCHOZI, hotovo: {}, listy: {} });   /* VYCHOZI se nesmí sdílet (hotovo/listy jsou objekty) */
+try { stav = Object.assign(novyStav(), JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { stav = novyStav(); }
 if (!LEKCE.some(l => l.id === stav.lekce) && !(String(stav.lekce).startsWith('sada:') && (stav.sady || []).some(x => 'sada:' + x.id === stav.lekce))) stav.lekce = LEKCE[0].id;
 /* návštěvník v jiném jazyce než češtině dostane výchozí anglický zápis vzorců */
 try { if (!JSON.parse(localStorage.getItem(KLIC) || '{}').jazyk && window.I18N && I18N.jazyk && I18N.jazyk !== 'cs') stav.jazyk = 'en'; } catch (e) { /* bez úložiště */ }
 if (!['lekce', 'piskoviste', 'tahak', 'rozbor', 'procvic', 'ucitel'].includes(stav.rezim)) stav.rezim = 'lekce';
 let varovaniUloziste = false;
 function uloz() {
-  try { localStorage.setItem(KLIC, JSON.stringify(stav)); }
+  try { localStorage.setItem(KLIC, JSON.stringify(stav)); return true; }
   catch (e) {   /* plné úložiště: jednou upozornit, jinak by se tiše přestalo ukládat */
     if (!varovaniUloziste) { varovaniUloziste = true; setTimeout(() => window.Dialog && Dialog.chyba('Úložiště prohlížeče je plné – změny se neukládají. Smažte staré zálohy v 📁 Soubor → Moje sešity, nebo sešit stáhněte jako .xlsx.'), 0); }
+    return false;
   }
 }
 
@@ -81,8 +83,9 @@ let historie = [], vpred = [];
 const vstup = $('vzorec'), zvyr = $('zvyr'), mrizka = $('mrizka');
 
 function rozmer() {
-  if (stav.rezim === 'piskoviste' || stav.rezim === 'rozbor') return { R: Math.max(30, list.radku + 3), C: Math.max(12, list.sloupcu + 2) };
-  return { R: list.radku + 2, C: list.sloupcu + 1 };
+  const R = stav.rezim === 'piskoviste' || stav.rezim === 'rozbor' ? Math.max(30, list.radku + 3) : list.radku + 2;
+  const C = stav.rezim === 'piskoviste' || stav.rezim === 'rozbor' ? Math.max(12, list.sloupcu + 2) : list.sloupcu + 1;
+  return { R: Math.min(R, 2003), C: Math.min(C, 203) };   /* pojistka proti zamrznutí kreslení */
 }
 function cileLekce() {
   if (stav.rezim === 'ucitel') { const sa = aktSada(); return new Map((sa ? sa.ulohy : []).map(u => [u.cil, true])); }
@@ -145,7 +148,7 @@ function zobrazHodnotu(a) {
   if (typeof v === 'number' && !list.format[a] && /\d{11,}/.test(t.replace(/[,.]/, ''))) t = X.fmtCislo(parseFloat(v.toPrecision(10)), list.jazyk);
   return t;
 }
-const stylSirky = c => (list.sirky && list.sirky[c] ? `width:${list.sirky[c]}px;min-width:${list.sirky[c]}px;max-width:${list.sirky[c]}px;` : '');
+const stylSirky = c => { const w = Math.round(Number(list.sirky && list.sirky[c])); return w >= 20 && w <= 800 ? `width:${w}px;min-width:${w}px;max-width:${w}px;` : ''; };
 function kresliMrizku() {
   const { R, C } = rozmer(), cile = cileLekce(), pf = list.pravidla && list.pravidla.length ? list.podmineneStyly() : new Map(), tabs = list.tabulky || [];
   const mapa = mapaZap ? list.mapaVzorcu() : null;
@@ -329,16 +332,45 @@ function potvrd() {
   if (v !== list.surova(vybrana)) {
     info('');
     let doplneno = 0;
-    zmena(`zápis do ${vybrana}`, () => { list.nastav(vybrana, v); doplneno = vypocitanySloupec(vybrana, v); });
+    let rozsireni = '';
+    zmena(`zápis do ${vybrana}`, () => { list.nastav(vybrana, v); rozsireni = rozsirTabulku(vybrana, v); doplneno = vypocitanySloupec(vybrana, v); });
+    if (rozsireni) info(rozsireni);
     if (doplneno) info(`📋 <b>Vypočítaný sloupec:</b> vzorec se v tabulce sám doplnil do ${doplneno} dalších řádků – stejně jako v Excelu. Zpět (Ctrl+Z) vrátí celý zápis najednou.`);
   }
   else kresliMrizku();
   return true;
 }
+/* zápis hned pod tabulku nebo vedle ní tabulku rozšíří (Excel: automatické rozšíření tabulky) */
+function rozsirTabulku(a, v) {
+  if (v === '') return '';
+  const p = X.rozeberAdresu(a), tabs = list.tabulky || [];
+  if (tabs.some(t => p.r >= t.r1 && p.r <= t.r2 && p.c >= t.c1 && p.c <= t.c2)) return '';
+  const volno = (o) => !tabs.some(t => !(o.r2 < t.r1 || o.r1 > t.r2 || o.c2 < t.c1 || o.c1 > t.c2));
+  /* nový řádek: buňka v řádku pod tabulkou (bez řádku součtů) */
+  let t = tabs.find(x => !x.souhrn && p.r === x.r2 + 1 && p.c >= x.c1 && p.c <= x.c2);
+  if (t && volno({ r1: p.r, c1: t.c1, r2: p.r, c2: t.c2 })) {
+    t.r2++;
+    /* vypočítané sloupce pokračují i v novém řádku */
+    for (let c = t.c1; c <= t.c2; c++) {
+      const nad = list.surova(X.adresa(p.r - 1, c)), cil = X.adresa(p.r, c);
+      if (nad.startsWith('=') && list.surova(cil) === '') { try { list.nastav(cil, X.posunVzorec(nad, 1, 0, list.jazyk)); } catch (e) { /* chybný vzorec se nedoplní */ } }
+    }
+    return `📋 Tabulka <b>${esc(t.nazev)}</b> se rozšířila o řádek ${p.r} – vzorce s <code>${esc(t.nazev)}[…]</code> s ním hned počítají.`;
+  }
+  /* nový sloupec: buňka vpravo vedle tabulky */
+  t = tabs.find(x => p.c === x.c2 + 1 && p.r >= x.r1 && p.r <= x.r2);
+  if (t && volno({ r1: t.r1, c1: p.c, r2: t.r2, c2: p.c })) {
+    t.c2++;
+    const hl = X.adresa(t.r1, p.c);
+    if (list.surova(hl) === '') { const jm = list.najdiTabulku(t.nazev).sloupce; let n = 1; while (jm.includes('Sloupec' + n)) n++; list.nastav(hl, 'Sloupec' + n); }
+    return `📋 Tabulka <b>${esc(t.nazev)}</b> se rozšířila o sloupec <b>${esc(list.surova(hl))}</b>.`;
+  }
+  return '';
+}
 /* vzorec zapsaný do prázdného sloupce tabulky se doplní do všech jejích řádků (Excel: vypočítaný sloupec) */
 function vypocitanySloupec(a, v) {
   if (!v.startsWith('=') || list.format[a]?.t === 'text') return 0;
-  const p = X.rozeberAdresu(a), t = (list.tabulky || []).find(x => p.r > x.r1 && p.r <= x.r2 && p.c >= x.c1 && p.c <= x.c2);
+  const p = X.rozeberAdresu(a), t = (list.tabulky || []).find(x => p.r > x.r1 && p.r <= x.r2 - (x.souhrn ? 1 : 0) && p.c >= x.c1 && p.c <= x.c2);
   if (!t) return 0;
   const radky = [];
   for (let r = t.r1 + 1; r <= t.r2 - (t.souhrn ? 1 : 0); r++) if (r !== p.r) radky.push(r);
@@ -444,12 +476,14 @@ document.addEventListener('pointermove', e => {
   nastavSirku(tahSirka.c, Math.max(30, Math.min(600, tahSirka.w + (e.clientX - tahSirka.x) / lupa())));
   umistiUchyt();
 });
-document.addEventListener('pointerup', () => {
+const konecSirky = () => {
   if (!tahSirka) return;
   if (list.sirky?.[tahSirka.c] !== tahSirka.puvodni) { historie.push(tahSirka.pred); vpred = []; }   /* jen klik bez tažení do historie nepatří */
   tahSirka = null;
   ulozList(); aktualizujZpet(); umistiUchyt();
-});
+};
+document.addEventListener('pointerup', konecSirky);
+document.addEventListener('pointercancel', konecSirky);
 function sirkaPodleObsahu(c) {
   const cv = document.createElement('canvas').getContext('2d');
   cv.font = getComputedStyle(td('A1') || mrizka).font;
@@ -589,6 +623,7 @@ uchyt.addEventListener('pointermove', e => {
   }
   vypln.cile = cile; oznac();
 });
+uchyt.addEventListener('pointercancel', () => { if (vypln) { vypln = null; oznac(); } });
 uchyt.addEventListener('pointerup', () => {
   if (!vypln) return;
   const { o, smer, n } = vypln; vypln = null;
@@ -850,7 +885,7 @@ function zpracuj(t) {
   return t
     .replace(/<table class="tab">/g, '<div class="tabulka-obal"><table class="tab">').replace(/<\/table>/g, '</table></div>')
     .replace(/\[\[@([A-Z]+\d+)\]\]/g, (m, a) => `<button class="adr" data-adr="${a}" title="Vybrat buňku ${a} v listu">${a}</button>`)
-    .replace(/\[\[(=[\s\S]*?)\]\](?!\])/g, (m, f) => cip(f))
+    .replace(/[\s\S]*/, t => X.nahradCipy(t, f => cip(f)))
     .replace(/\{;\}/g, X.oddelovac(jaz()))
     .replace(/\{([A-Z][A-Z.]*)\}/g, (m, en) => X.FUNKCE[en] ? `<b class="fn">${esc(X.nazevFunkce(en, jaz()))}</b>` : m);
 }
@@ -900,7 +935,7 @@ function zpracujBezpecne(t) {
   const zpet = x => x.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
   return esc(t)
     .replace(/\[\[@([A-Z]+\d+)\]\]/g, (m, a) => `<button class="adr" data-adr="${a}" title="Vybrat buňku ${a} v listu">${a}</button>`)
-    .replace(/\[\[(=[\s\S]*?)\]\](?!\])/g, (m, f) => cip(zpet(f)))
+    .replace(/[\s\S]*/, t => X.nahradCipy(t, f => cip(zpet(f))))
     .replace(/\{;\}/g, X.oddelovac(jaz()))
     .replace(/\{([A-Z][A-Z.]*)\}/g, (m, en) => X.FUNKCE[en] ? `<b class="fn">${esc(X.nazevFunkce(en, jaz()))}</b>` : m);
 }
@@ -944,7 +979,7 @@ function htmlPiskoviste() {
 }
 function rozsahAdres(o) {
   const [a, b] = String(o || '').split(':'), p = X.rozeberAdresu(a), q = X.rozeberAdresu(b || a), out = [];
-  if (!p || !q) return out;   /* neplatná oblast (např. z importu) nesmí shodit stránku */
+  if (!p || !q || (Math.abs(q.r - p.r) + 1) * (Math.abs(q.c - p.c) + 1) > 20000) return out;   /* neplatná nebo obří oblast (např. z importu) nesmí shodit stránku */
   for (let r = p.r; r <= q.r; r++) for (let c = p.c; c <= q.c; c++) out.push(X.adresa(r, c));
   return out;
 }
@@ -1080,6 +1115,8 @@ function otevriLekci(id) {
 }
 function nastavRezim(r) {
   zastavPrehravani();
+  if (obnovCas) { clearTimeout(obnovCas); obnovCas = null; $('btnObnov').textContent = '↺ Obnovit list'; }   /* dvojklik Obnovit neplatí přes přepnutí režimu */
+  rezimOblasti = false;
   if (r !== 'procvic' && pv.zkouska) { clearInterval(pv.casovac); pv.zkouska = null; pv.uloha = null; }   /* odchod ze zkoušky ji ukončí */
   $('btnObnov').hidden = r === 'ucitel';
   stav.rezim = r; uloz();
@@ -1147,14 +1184,18 @@ document.querySelectorAll('[data-nabidka]').forEach(b => b.addEventListener('cli
   const n = $(b.dataset.nabidka), bylo = !n.hidden;
   zavriNabidky();
   if (bylo) return;
+  if (b.dataset.nabidka === 'nabSoubor') kresliMojeSesity();   /* i při otevření z klávesnice */
   n.hidden = false; b.setAttribute('aria-expanded', 'true');
-  const r = b.getBoundingClientRect();
-  n.style.top = (r.bottom + 4) + 'px';
+  const r = b.getBoundingClientRect(), pod = innerHeight - r.bottom - 10, nad = r.top - 10;
+  /* nabídka se vejde do okna: dolů, nebo nahoru, když je pod tlačítkem málo místa */
+  n.style.maxHeight = Math.max(160, pod >= 240 || pod >= nad ? pod : nad) + 'px';
+  n.style.top = (pod >= 240 || pod >= nad ? r.bottom + 4 : Math.max(6, r.top - 4 - n.offsetHeight)) + 'px';
   n.style.left = Math.max(6, Math.min(r.left, innerWidth - n.offsetWidth - 6)) + 'px';
 }));
 document.addEventListener('click', e => { if (!e.target.closest('.nabidka')) zavriNabidky(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') zavriNabidky(); });
-addEventListener('resize', zavriNabidky);
+let sirkaOkna = innerWidth;
+addEventListener('resize', () => { if (innerWidth !== sirkaOkna) { sirkaOkna = innerWidth; zavriNabidky(); } });   /* klávesnice / lišta prohlížeče mění jen výšku */
 
 $('jazyk').value = stav.jazyk;
 $('jazyk').addEventListener('change', () => {
@@ -1179,7 +1220,7 @@ obnov.addEventListener('click', () => {
   clearTimeout(obnovCas); obnovCas = null; obnov.textContent = '↺ Obnovit list';
   if (stav.rezim === 'procvic') { if (pv.uloha) { const v = pv.uloha.vysledek; pv.uloha.data = null; const l = new X.List(pv.uloha.bunky, { jazyk: 'en' }); l.prepniJazyk(jaz()); pv.uloha.data = { jazyk: jaz(), listy: [{ nazev: 'List1', bunky: l.bunky, format: l.format }] }; pv.uloha.vysledek = v; } nastavRezim('procvic'); info('List úlohy je ve výchozím stavu.'); return; }
   if (stav.rezim === 'rozbor') { if (stav.rozbor?.vzorec) rozebrat(stav.rozbor.vzorec, { seme: stav.rozbor.seme }); info('Ukázková data jsou znovu vygenerovaná.'); return; }
-  if (stav.rezim === 'piskoviste') stav.piskoviste = null; else delete stav.listy[stav.lekce];
+  if (stav.rezim === 'piskoviste') { zalohujPiskoviste(); stav.piskoviste = null; } else delete stav.listy[stav.lekce];
   uloz(); nastavRezim(stav.rezim);
   info('List je ve výchozím stavu.');
 });
@@ -1335,7 +1376,7 @@ function htmlKukatko() {
   let h = `<div class="audit"><p class="rz-prazdne">Kukátko ukazuje hodnoty sledovaných buněk, i když jsou mimo obrazovku – změňte vstupy a sledujte dopad na výsledky.</p>
     <button class="btn mini" data-kuk="pridej">＋ Sledovat ${textObl(obl())}</button>`;
   if (k.length) h += '<table class="kuk"><tr><th>Buňka</th><th>Hodnota</th><th>Vzorec</th><th></th></tr>' + k.map(a =>
-    `<tr><td class="h">${odkazAdr(a)}</td><td>${esc(list.zobraz(a) || '∅')}</td><td><code>${esc(list.surova(a))}</code></td><td><button class="btn mini" data-kuk="smaz" data-a="${a}" aria-label="Přestat sledovat ${a}">✕</button></td></tr>`).join('') + '</table>';
+    `<tr><td class="h">${odkazAdr(a)}</td><td>${esc(list.zobraz(a) || '∅')}</td><td><code>${esc(list.surova(a))}</code></td><td><button class="btn mini" data-kuk="smaz" data-a="${esc(a)}" aria-label="Přestat sledovat ${esc(a)}">✕</button></td></tr>`).join('') + '</table>';
   else h += '<p class="rz-prazdne">Zatím nesledujete žádnou buňku.</p>';
   return h + '</div>';
 }
@@ -1351,7 +1392,7 @@ $('rozklad').addEventListener('click', e => {
   const j = e.target.closest('[data-jdi]');
   if (j) { if (edit && !potvrd()) return; vyber(j.dataset.jdi); td(j.dataset.jdi)?.classList.add('blik'); return; }
   const rl = e.target.closest('[data-rozloz]');
-  if (rl) { zalozka = 'kroky'; vyber(rl.dataset.rozloz); return; }
+  if (rl) { if (edit && !potvrd()) return; zalozka = 'kroky'; vyber(rl.dataset.rozloz); return; }
   const sp = e.target.closest('[data-sipky]');
   if (sp) { if (sp.dataset.sipky === 'smaz') { smazSipky(); obnovAudit(); } else { pridejUroven(sp.dataset.sipky); obnovAudit(); } return; }
   const kk = e.target.closest('[data-kuk]');
@@ -1422,7 +1463,7 @@ function otevriStrukturu(h, x, y) {
   ukazNabidku($('nabStruktura'), x, y);
 }
 function ukazNabidku(n, x, y) {
-  zavriNabidky(); n.hidden = false;
+  zavriNabidky(); n.hidden = false; n.style.maxHeight = (innerHeight - 12) + 'px';
   n.style.top = Math.max(6, Math.min(y, innerHeight - n.offsetHeight - 6)) + 'px';
   n.style.left = Math.max(6, Math.min(x, innerWidth - n.offsetWidth - 6)) + 'px';
 }
@@ -1436,6 +1477,7 @@ function vypisNalezy(adr, nadpis) {
   $('hlVysledky').innerHTML = `<li><b>${esc(nadpis)}</b></li>` + adr.slice(0, 200).map(a => `<li><button class="adr" data-jdi="${esc(a)}">${esc(a)}</button> <code>${esc(list.surova(a))}</code></li>`).join('');
 }
 $('hlNajdi').addEventListener('click', () => {
+  if (edit && !potvrd()) return;
   const adr = list.hledej($('hlText').value, volbyHledani());
   vypisNalezy(adr, adr.length ? `Nalezeno ${adr.length}` : 'Nic nenalezeno');
   if (adr.length) vyber(adr[0]);
@@ -1464,10 +1506,12 @@ function kresliZalozkyListu() {
 }
 function prepniList(i) {
   if (edit && !potvrd()) return;
+  rezimOblasti = false;
   list = sesit.listy[i]; sipky = []; hranice = null;
   ulozList(); kresliZalozkyListu(); kresliMrizku(); vyber('A1');
 }
 $('listyZal').addEventListener('click', async e => {
+  if ((e.target.closest('[data-smaz-list]') || e.target.closest('[data-novy-list]')) && edit && !potvrd()) return;
   const sm = e.target.closest('[data-smaz-list]');
   if (sm) {
     e.stopPropagation();
@@ -1514,6 +1558,7 @@ $('btnNazvy').addEventListener('click', () => {
   kresliNazvy(); $('dlgNazvy').showModal(); $('nzNazev').focus();
 });
 $('nzPridej').addEventListener('click', () => {
+  if (edit && !potvrd()) return;
   const n = $('nzNazev').value.trim(), d = $('nzDef').value.trim();
   const ch = sesit.platnyNazev(n) || (!d ? 'Vyplňte, na co název odkazuje.' : null);
   if (ch) { $('nzZprava').textContent = '⚠ ' + ch; return; }
@@ -1540,8 +1585,9 @@ function zalohujPiskoviste() {
   const d = new Date(), z = `Záloha ${d.getDate()}. ${d.getMonth() + 1}. ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   let n = z; for (let i = 2; stav.sesity && stav.sesity[n]; i++) n = `${z} (${i})`;
   stav.sesity = { ...(stav.sesity || {}), [n]: stav.piskoviste };
-  const zalohy = Object.keys(stav.sesity).filter(k => k.startsWith('Záloha '));   /* nejvýš 5 nejnovějších záloh */
-  while (zalohy.length > 5) delete stav.sesity[zalohy.shift()];
+  /* nejvýš 5 automatických záloh – vlastní sešity (i pojmenované „Záloha…“) se nemažou */
+  stav.autoZalohy = [...(stav.autoZalohy || []).filter(k => stav.sesity[k]), n];
+  while (stav.autoZalohy.length > 5) delete stav.sesity[stav.autoZalohy.shift()];
   return n;
 }
 function otevriVPiskovisti(data, popis) {
@@ -1682,7 +1728,10 @@ async function zabal(obj) {
 }
 async function rozbal(t) {
   const proud = new Blob([zB64url(t)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-  return JSON.parse(await new Response(proud).text());
+  /* strop 20 MB: krátký odkaz se nesmí rozbalit na stovky MB */
+  const cteni = proud.getReader(), kusy = []; let n = 0;
+  for (;;) { const { done, value } = await cteni.read(); if (done) break; n += value.length; if (n > 20e6) { cteni.cancel(); throw new Error('příliš velká data'); } kusy.push(value); }
+  return JSON.parse(new TextDecoder().decode(await new Blob(kusy).arrayBuffer()));
 }
 async function sdilet() {
   const kod = await zabal(dataSesitu());
@@ -1694,8 +1743,9 @@ async function sdilet() {
 async function nactiZOdkazu() {
   const m = /#sesit=([\w-]+)/.exec(location.hash); if (!m) return false;
   try {
-    const d = await rozbal(m[1]);
+    const d = cistySesit(await rozbal(m[1]));   /* odkaz = nedůvěryhodná data: jen přes Sesit.obnov */
     history.replaceState(null, '', location.href.split('#')[0]);
+    if (!d) throw new Error('neplatný sešit');
     otevriVPiskovisti(d, 'Otevřen sdílený sešit z odkazu.');
     return true;
   } catch (e) { Dialog.chyba('Odkaz na sešit je poškozený.'); return false; }
@@ -1878,12 +1928,18 @@ function sadaJakoLekce(id) {
   if (!String(id).startsWith('sada:')) return null;
   const s = sady().find(x => x.id === id.slice(5)); if (!s) return null;
   try {
-    return { id, sada: true, emoji: '📝', nazev: s.nazev, cile: [], text: s.popis ? `<p>${esc(s.popis).replace(/\n/g, '<br>')}</p>` : '', list: { bunky: bunkyProZaka(s) }, predpovez: [], ulohy: s.ulohy.map(u => ({ ...u, sada: true, napovedy: [] })) };
+    return { id, sada: true, emoji: '📝', nazev: s.nazev, cile: [], text: s.popis ? `<p>${esc(s.popis).replace(/\n/g, '<br>')}</p>` : '', list: { bunky: bunkyProZaka(s), tabulky: s.data?.listy?.[0]?.tabulky }, predpovez: [], ulohy: s.ulohy.map(u => ({ ...u, sada: true, napovedy: [] })) };
   } catch (e) { return null; }   /* poškozená sada nesmí shodit stránku */
 }
 const exportSady = s => ({ format: 'excel-vzorce-sada', verze: 1, nazev: s.nazev, popis: s.popis, bunky: bunkyProZaka(s), ulohy: s.ulohy, data: s.data });
-const jeAdresa = a => typeof a === 'string' && /^[A-Z]{1,3}[1-9]\d{0,6}$/i.test(a);
-const jeOblast = o => typeof o === 'string' && /^[A-Z]{1,3}[1-9]\d{0,6}:[A-Z]{1,3}[1-9]\d{0,6}$/i.test(o);
+/* adresy a oblasti z nedůvěryhodných dat: rozumné meze, jinak by kreslení listu zamrzlo */
+const jeAdresa = a => { if (typeof a !== 'string' || !/^[A-Z]{1,3}[1-9]\d{0,6}$/i.test(a)) return false; const p = X.rozeberAdresu(a.toUpperCase()); return p.r <= 2000 && p.c <= 200; };
+const jeOblast = o => {
+  if (typeof o !== 'string' || !/^[A-Z]{1,3}[1-9]\d{0,6}:[A-Z]{1,3}[1-9]\d{0,6}$/i.test(o)) return false;
+  const [a, b] = o.toUpperCase().split(':'); if (!jeAdresa(a) || !jeAdresa(b)) return false;
+  const p = X.rozeberAdresu(a), q = X.rozeberAdresu(b);
+  return q.r >= p.r && q.c >= p.c && (q.r - p.r + 1) * (q.c - p.c + 1) <= 2000;
+};
 /* import sady (soubor nebo odkaz = nedůvěryhodný vstup): ověřit každou položku */
 function importSady(d) {
   const s = vycistiSadu(d);
@@ -1898,7 +1954,7 @@ function vycistiSadu(d) {
   const lzeRozebrat = f => { try { X.rozeber(f, 'en'); return true; } catch (e) { return false; } };
   const ulohy = d.ulohy.filter(u => u && jeAdresa(u.cil) && typeof u.reseni === 'string' && u.reseni.startsWith('=') && lzeRozebrat(u.reseni)).slice(0, 100)
     .map((u, i) => ({ id: typeof u.id === 'string' && /^[\w-]{1,40}$/.test(u.id) ? u.id : 'u' + i, cil: u.cil.toUpperCase(), reseni: u.reseni.slice(0, 2000), zadani: String(u.zadani || '').slice(0, 3000),
-      kopirovat: jeOblast(u.kopirovat) ? u.kopirovat.toUpperCase() : undefined, vyzaduje: Array.isArray(u.vyzaduje) ? u.vyzaduje.filter(f => X.FUNKCE[f]) : undefined, absolutni: !!u.absolutni }));
+      kopirovat: jeOblast(u.kopirovat) ? u.kopirovat.toUpperCase() : undefined, vyzaduje: Array.isArray(u.vyzaduje) ? u.vyzaduje.filter(f => typeof f === 'string' && Object.hasOwn(X.FUNKCE, f)) : undefined, absolutni: !!u.absolutni }));
   const nazev = String(d.nazev || 'Sada').slice(0, 100), popis = String(d.popis || '').slice(0, 3000);
   const otisk = JSON.stringify([nazev, popis, ulohy.map(u => [u.cil, u.reseni, u.zadani, u.kopirovat || ''])]);
   const s = { id: typeof d.id === 'string' && /^[\w-]{1,40}$/.test(d.id) ? d.id : 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), nazev, popis, ulohy, otisk };
@@ -1926,15 +1982,16 @@ function cistySesit(d) {
 }
 function cistyStav(z) {
   if (!z || z.format !== 'excel-vzorce-zaloha' || !z.stav || typeof z.stav !== 'object') throw new Error('Soubor není záloha z této stránky.');
-  const d = z.stav, o = { ...VYCHOZI };
+  const d = z.stav, o = novyStav();
   const ob = x => x && typeof x === 'object' && !Array.isArray(x);
   o.jazyk = d.jazyk === 'en' ? 'en' : 'cs';
   if (['lekce', 'piskoviste', 'tahak', 'rozbor', 'procvic', 'ucitel'].includes(d.rezim)) o.rezim = d.rezim === 'rozbor' ? 'lekce' : d.rezim;
   if (ob(d.hotovo)) for (const [k, v] of Object.entries(d.hotovo).slice(0, 2000)) if (v === true && k.length <= 200) o.hotovo[k] = true;
   o.listy = {};
-  if (ob(d.listy)) for (const [k, v] of Object.entries(d.listy).slice(0, 200)) if (/^[\w:-]{1,60}$/.test(k)) { const c = cistySesit(v); if (c) o.listy[k] = c; }
+  if (ob(d.listy)) for (const [k, v] of Object.entries(d.listy).slice(0, 200)) if (/^[\w:-]{1,60}$/.test(k) && k !== '__proto__') { const c = cistySesit(v); if (c) o.listy[k] = c; }
   o.piskoviste = cistySesit(d.piskoviste);
-  if (ob(d.sesity)) { o.sesity = {}; for (const [k, v] of Object.entries(d.sesity).slice(0, 60)) { const c = cistySesit(v); if (c) o.sesity[String(k).slice(0, 100)] = c; } }
+  if (ob(d.sesity)) { o.sesity = {}; for (const [k, v] of Object.entries(d.sesity).slice(0, 60)) { const c = k !== '__proto__' && cistySesit(v); if (c) o.sesity[String(k).slice(0, 100)] = c; } }
+  if (Array.isArray(d.autoZalohy)) o.autoZalohy = d.autoZalohy.filter(k => typeof k === 'string' && o.sesity && Object.hasOwn(o.sesity, k)).slice(-5);
   if (Array.isArray(d.sady)) o.sady = d.sady.slice(0, 50).map(x => { try { return vycistiSadu({ ...x, format: 'excel-vzorce-sada' }); } catch (e) { return null; } }).filter(Boolean);
   if (typeof d.ucitelSada === 'string' && (o.sady || []).some(x => x.id === d.ucitelSada)) o.ucitelSada = d.ucitelSada;
   o.lekce = LEKCE.some(l => l.id === d.lekce) || (String(d.lekce).startsWith('sada:') && (o.sady || []).some(x => 'sada:' + x.id === d.lekce)) ? d.lekce : LEKCE[0].id;
@@ -1958,10 +2015,15 @@ function souhrnZalohy(o) {
 async function obnovZeZalohy(z, zdroj) {
   let o;
   try { o = cistyStav(z); } catch (e) { return Dialog.chyba(e.message); }
-  const kdy = z.datum && !isNaN(Date.parse(z.datum)) ? new Date(z.datum).toLocaleString('cs-CZ') : 'neznámo kdy';
-  if (!(await Dialog.potvrd(`Obnovit pokrok ze zálohy (${zdroj}, ${kdy})?\n\nV záloze: ${souhrnZalohy(o)}.\n\nSoučasný pokrok v tomto prohlížeči se nahradí. Kdyby šlo o omyl, vrátíte ho v 📁 Soubor → Vrátit stav před obnovou.`))) return;
-  try { localStorage.setItem(KLIC_PRED_OBNOVOU, JSON.stringify(stav)); } catch (e) { /* bez pojistky – úložiště je plné */ }
-  stav = o; uloz();
+  const kdy = z.datum && !isNaN(Date.parse(z.datum)) ? new Date(z.datum).toLocaleString(window.I18N && I18N.jazyk && I18N.jazyk !== 'cs' ? 'en-GB' : 'cs-CZ') : '?';
+  const tt = x => (window.I18N && I18N.t ? I18N.t(x) : x);
+  if (!(await Dialog.potvrd(`Obnovit pokrok ze zálohy (${tt(zdroj)}, ${kdy})?\n\nV záloze: ${souhrnZalohy(o)}.\n\nSoučasný pokrok v tomto prohlížeči se nahradí. Kdyby šlo o omyl, vrátíte ho v 📁 Soubor → Vrátit stav před obnovou.`))) return;
+  let pojistka = true;
+  try { localStorage.setItem(KLIC_PRED_OBNOVOU, JSON.stringify(stav)); } catch (e) { pojistka = false; }
+  if (!pojistka && !(await Dialog.potvrd('Současný pokrok se nepodařilo schovat (úložiště je plné), obnovu pak nepůjde vrátit. Pokračovat?'))) return;
+  const puvodni = stav;
+  stav = o;
+  if (!uloz()) { stav = puvodni; return Dialog.chyba('Zálohu se nepodařilo uložit – úložiště prohlížeče je plné. Uvolněte místo (Moje sešity, ⚙️ Nastavení webu) a zkuste to znovu.'); }
   history.replaceState(null, '', location.href.split('#')[0]);
   location.reload();
 }
@@ -1970,13 +2032,14 @@ async function zalohujPokrok() {
   stahni(new Blob([text], { type: 'application/json' }), `vzorce-zaloha-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`);
   let odkaz = '';
   try { odkaz = location.href.split('#')[0] + '#zaloha=' + await zabal(z); } catch (e) { /* bez odkazu */ }
+  if (odkaz.length > 60000) odkaz = '';   /* tak dlouhý odkaz prohlížeč neotevře – zbývá soubor */
   $('zalOdkaz').value = odkaz;
   $('zalSouhrn').textContent = `Záloha obsahuje: ${souhrnZalohy(cistyStav(z))}. Soubor (${Math.round(text.length / 1024) || 1} kB) se právě stáhl.`;
   const qr = $('zalQR'); qr.innerHTML = '';
-  if (odkaz && odkaz.length <= 2300) {
+  if (odkaz && odkaz.length <= 900) {   /* delší odkaz = příliš hustý QR kód, telefon ho nepřečte */
     try { await nactiQR(); new QRCode(qr, { text: odkaz, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.L }); $('zalQRtext').textContent = 'Naskenujte kód telefonem nebo tabletem – otevře stránku s nabídkou obnovit tuto zálohu.'; }
     catch (e) { $('zalQRtext').textContent = 'QR kód se nepodařilo vytvořit – použijte odkaz nebo soubor.'; }
-  } else $('zalQRtext').textContent = odkaz ? `Záloha je na QR kód příliš velká (${odkaz.length} znaků odkazu) – přeneste soubor nebo pošlete odkaz.` : '';
+  } else $('zalQRtext').textContent = odkaz ? `Záloha je na QR kód příliš velká (${odkaz.length} znaků odkazu) – přeneste soubor nebo pošlete odkaz.` : 'Záloha je na odkaz i QR kód příliš velká – přeneste stažený soubor.';
   $('dlgZaloha').showModal();
 }
 let qrSlib = null;
@@ -1996,7 +2059,7 @@ $('zalSoubor').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   if (f.size > 20e6) return Dialog.chyba('Soubor je na zálohu příliš velký.');
-  try { await obnovZeZalohy(JSON.parse(await f.text()), 'soubor ' + f.name); }
+  try { await obnovZeZalohy(JSON.parse(await f.text()), 'soubor'); }
   catch (er) { Dialog.chyba('Soubor se nepodařilo přečíst jako zálohu: ' + er.message); }
 });
 async function nactiZalohuZOdkazu() {
@@ -2257,7 +2320,7 @@ function rozebrat(text, o = {}) {
   if (o.zList) { l = new X.List({}, { jazyk: jaz() }); l.bunky = { ...o.zList.bunky }; l.format = { ...o.zList.format }; l.sirky = { ...(o.zList.sirky || {}) }; bunka = o.bunka; }
   else {
     /* tabulky ze strukturovaných odkazů (Prodej[Cena]) dostanou vlastní ukázkovou tabulku vlevo, ostatní data až za ní */
-    const tb = RB.ukazkoveTabulky(strom, seme), dalsi = RB.ukazkovaData(strom, seme);
+    const tb = RB.ukazkoveTabulky(strom, seme, jaz()), dalsi = RB.ukazkovaData(strom, seme);
     l = new X.List({ ...dalsi, ...tb.bunky }, { jazyk: jaz() });
     if (tb.tabulky.length) l.tabulky = tb.tabulky;
     bunka = tb.bunka || RB.bunkaProVzorec(strom);
@@ -2489,7 +2552,9 @@ mrizka.addEventListener('touchend', e => {
 mrizka.addEventListener('touchcancel', zrusDotyk);
 
 /* ---------- Hledat řešení (Goal Seek) ---------- */
+let historiePredHledanim = 0;
 function otevriHledaniReseni() {
+  historiePredHledanim = historie.length;
   const v = list.surova(vybrana).startsWith('=') ? vybrana : '';
   /* měněná buňka: první zadané číslo, na kterém vzorec (i oklikou) závisí */
   let zm = '';
@@ -2531,7 +2596,7 @@ $('hrHledej').addEventListener('click', () => {
     <p class="rz-prazdne">Jak hledání funguje: zkusí dvě hodnoty, podívá se, o kolik se výsledek změnil, a odhadne, kde by měl být cíl (metoda sečen). Opakuje to, dokud se netrefí. Když odhad „uteče“, půlí interval, ve kterém výsledek přechází přes cíl – stejně jako Excel.</p>${t}`;
   $('hrVratit').hidden = false;
 });
-$('hrVratit').addEventListener('click', () => { zpet(); $('hrVratit').hidden = true; $('hrVysledek').innerHTML = '<p class="rz-prazdne">Původní hodnota je zpět.</p>'; });
+$('hrVratit').addEventListener('click', () => { while (historie.length > historiePredHledanim) zpet(); $('hrVratit').hidden = true; $('hrVysledek').innerHTML = '<p class="rz-prazdne">Původní hodnota je zpět.</p>'; });
 $('hrZavri').addEventListener('click', () => $('dlgReseni').close());
 ['hrCil', 'hrHodnota', 'hrZmena'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('hrHledej').click(); } }));
 
@@ -2556,6 +2621,7 @@ $('btnMapa').addEventListener('click', () => {
 });
 $('mapaLegenda').addEventListener('click', e => {
   const b = e.target.closest('[data-mapa-druh]'); if (!b) return;
+  if (edit && !potvrd()) return;
   const adr = [...list.mapaVzorcu()].filter(([, d]) => d === b.dataset.mapaDruh).map(([a]) => a)
     .sort((x, y) => { const p = X.rozeberAdresu(x), q = X.rozeberAdresu(y); return p.r - q.r || p.c - q.c; });
   if (!adr.length) return;
@@ -2620,8 +2686,12 @@ async function zrusTabulku() {
     }
     list.tabulky = list.tabulky.filter(x => x !== t);
   });
+  vyber(vybrana, true, konec);   /* řádek vzorců s převedeným vzorcem */
   info(`Tabulka ${esc(t.nazev)} je zrušená, odkazy na ni se převedly na adresy buněk.`);
 }
+
+/* výška horní lišty (zalamuje se) – aby skok na dílnu nebo buňku neskončil pod lepkavou lištou */
+try { new ResizeObserver(() => document.documentElement.style.setProperty('--vyska-listy', $('lista').offsetHeight + 'px')).observe($('lista')); } catch (e) { /* starý prohlížeč */ }
 
 /* ---------- předěl výklad | dílna (široké rozvržení) ----------
    poměr zvlášť pro lekce a pískoviště (stav.podil), sbalení výkladu (stav.sbaleno) */
@@ -2773,7 +2843,9 @@ catch (e) {   /* poškozený uložený stav: vrátit se na první lekci, aby str
   nastavRezim('lekce');
   info('⚠ Uložený stav stránky byl poškozený – otevřela se první lekce.');
 }
-nactiZOdkazu(); nactiSaduZOdkazu(); nactiZalohuZOdkazu();
+/* odkazy až po načtení dialog.js (defer) – jinak by chybová hláška poškozeného odkazu spadla na neexistující Dialog */
+const poNacteni = f => (document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', f, { once: true }) : f());
+poNacteni(() => { nactiZOdkazu(); nactiSaduZOdkazu(); nactiZalohuZOdkazu(); });
 if (!stav.pruvodce && !/#(sesit|sada|zaloha)=/.test(location.hash)) setTimeout(spustPruvodce, 600);
 window.XLV_UI = { zalohaData, obnovZeZalohy, cistyStav, spustPruvodce, get pv() { return pv; }, importSoubor, exportXlsx, sesitNaWorkbook, nactiXLSX, zabal, rozbal, nactiZOdkazu, get list() { return list; }, vyber, potvrd, nastavRezim, otevriLekci, nastavRozklad, rozebrat, zpet, znovu, vyplnRadu, prepniFormat, get rz() { return rz; }, get vyberObl() { return textObl(obl()); } };
 })();

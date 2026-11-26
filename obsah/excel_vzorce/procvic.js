@@ -173,7 +173,7 @@ const SABLONY = [
 const ROZBITI = [
   { druh: 'dolar', rada: 'Zkuste vzorec zkopírovat a podívejte se, kam se posunuly odkazy. Něco by mělo zůstat na místě.',
     f: (v, u) => (u.absolutni && v.includes('$') ? v.replace(/\$/g, '') : null) },
-  { druh: 'zavorky', rada: 'Projděte si pořadí operací: násobení a dělení mají přednost před sčítáním a odčítáním.',
+  { druh: 'zavorky', rada: 'Projděte si pořadí operací: mocnina, násobení a dělení mají přednost před sčítáním a odčítáním. Co se má spočítat dřív, patří do závorky.',
     f: v => {
       for (let i = 1; i < v.length; i++) {
         if (v[i] !== '(' || /[A-Za-z0-9_.]/.test(v[i - 1])) continue;   /* jen závorky výrazu, ne volání funkce */
@@ -184,8 +184,8 @@ const ROZBITI = [
       return null;
     } },
   { druh: 'porovnani', rada: 'Podívejte se pozorně na porovnání – platí podmínka i pro hraniční hodnotu?',
-    f: v => { const m = /(>=|<=|<>|>|<)/.exec(v.replace(/"[^"]*"/g, x => '_'.repeat(x.length))); if (!m) return null;
-      const nove = { '>=': '>', '<=': '<', '>': '>=', '<': '<=', '<>': '=' }[m[1]]; return v.slice(0, m.index) + nove + v.slice(m.index + m[1].length); } },
+    f: v => { const m = /(>=|<=|<>|>|<)/.exec(v.replace(/"[^"]*"/g, x => '_'.repeat(x.length))); if (!m || m[1] === '<>') return null;
+      const nove = { '>=': '>', '<=': '<', '>': '>=', '<': '<=' }[m[1]]; return v.slice(0, m.index) + nove + v.slice(m.index + m[1].length); } },
   { druh: 'presne', rada: 'Hledá funkce přesnou shodu? Bez posledního argumentu hledá přibližně.',
     f: v => (/,FALSE\)/.test(v) ? v.replace(/,FALSE\)/, ')') : /MATCH\(([^()]*),0\)/.test(v) ? v.replace(/(MATCH\([^()]*),0\)/, '$1)') : null) },
   { druh: 'uvozovky', rada: 'Text ve vzorci musí být v uvozovkách, jinak ho Excel bere jako název.',
@@ -194,37 +194,68 @@ const ROZBITI = [
     f: v => { const m = /([A-Z]+)(\$?)(\d+):(\$?)([A-Z]+)(\$?)(\d+)/.exec(v); if (!m || +m[7] - +m[3] < 2) return null;
       return v.slice(0, m.index) + `${m[1]}${m[2]}${m[3]}:${m[4]}${m[5]}${m[6]}${+m[7] - 1}` + v.slice(m.index + m[0].length); } },
   { druh: 'funkce', rada: 'Dělá použitá funkce opravdu to, co úloha chce?',
-    f: v => { const z = [['SUM(', 'AVERAGE('], ['AVERAGE(', 'SUM('], ['MAX(', 'MIN('], ['MIN(', 'MAX('], ['COUNT(', 'COUNTA('], ['ROUND(', 'ROUNDDOWN('], ['SUMIF(', 'COUNTIF(']];
+    f: v => { const z = [['SUM(', 'AVERAGE('], ['AVERAGE(', 'SUM('], ['MAX(', 'MIN('], ['MIN(', 'MAX('], ['COUNT(', 'COUNTA('], ['ROUND(', 'ROUNDDOWN(']];
       for (const [a, b] of z) { const i = v.search(new RegExp('(^|[^A-Z.])' + a.replace('(', '\\('))); if (i >= 0) { const k = v.indexOf(a, i); return v.slice(0, k) + b + v.slice(k + a.length); } }
       return null; } },
+  { druh: 'soucet', rada: 'Co se má sčítat? Bez 3. argumentu {SUMIF} sčítá přímo buňky, ve kterých hledá kritérium.',
+    f: v => {   /* SUMIF(oblast,kritérium,součet) → zapomenutá oblast součtu */
+      const i = v.indexOf('SUMIF('); if (i < 0 || /[A-Z.]/.test(v[i - 1] || '')) return null;
+      let h = 0, carky = [];
+      for (let j = i + 5; j < v.length; j++) {
+        if (v[j] === '"') { j = v.indexOf('"', j + 1); if (j < 0) return null; continue; }
+        if (v[j] === '(') h++; else if (v[j] === ')') { if (--h === 0) return carky.length === 2 ? v.slice(0, carky[1]) + v.slice(j) : null; }
+        else if (v[j] === ',' && h === 1) carky.push(j);
+      }
+      return null;
+    } },
   { druh: 'odkaz', rada: 'Ukazují všechny odkazy na správné buňky? Klikněte na vzorec – barevné rámečky v listu ukážou, kam sahá.',
     f: v => { const m = /(^|[^A-Z$:!])([A-H])(\d+)(?![\d(:])/.exec(v.replace(/"[^"]*"/g, x => '_'.repeat(x.length))); if (!m) return null;
       const k = m.index + m[1].length; return v.slice(0, k) + String.fromCharCode(m[2].charCodeAt(0) + 1) + m[3] + v.slice(k + m[2].length + m[3].length); } },
 ];
+/* vzácnější a výukově cennější chyby dostanou při losování přednost */
+const VAHA_ROZBITI = { porovnani: 3, presne: 3, oblast: 2, zavorky: 2, soucet: 2, funkce: 1.5, uvozovky: 1, dolar: 1, odkaz: 0.7 };
 function rozbij(u, n) {
   const X = koren.XLV; if (!X) return null;
   const l = new X.List(u.bunky, { jazyk: 'en' });
-  for (const r of n.zamichej(ROZBITI)) {
+  const poradi = ROZBITI.map(r => [r, -Math.log(1 - n.r() * 0.999999) / (VAHA_ROZBITI[r.druh] || 1)]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+  for (const r of poradi) {
     const v = r.f(u.reseni, u);
     if (!v || v === u.reseni) continue;
     let st; try { st = X.rozeber(v, 'en'); } catch (e) { continue; }
     const pc = X.rozeberAdresu(u.cil);   /* odkaz na vlastní buňku = cyklus, to není „typická chyba“ */
     if (X.odkazyStromu(st).some(o => pc.r >= o.r1 && pc.r <= o.r2 && pc.c >= o.c1 && pc.c <= o.c2)) continue;
-    if (X.zkontroluj(l, u, v).ok) continue;   /* „chyba“, se kterou úloha projde, není chyba */
-    return { vzorec: v, druh: r.druh, rada: r.rada };
+    /* záměna funkce: kontrola nesmí prozradit „Úloha chce použít funkci MIN“ → bez vyzaduje */
+    const uu = { ...u, oprava: true, ...(r.druh === 'funkce' ? { vyzaduje: undefined } : {}) };   /* ověřit stejně, jak bude kontrolovat stránka */
+    if (X.zkontroluj(l, uu, v).ok) continue;   /* „chyba“, se kterou úloha projde, není chyba */
+    return { vzorec: v, druh: r.druh, rada: r.rada, vyzaduje: uu.vyzaduje };
   }
   return null;
+}
+/* první porovnání „relativní buňka ⋚ práh“: buňce v řádku cíle dá přesně hodnotu prahu */
+function ukazHranici(u, X) {
+  let cmp = null;
+  (function p(x) { if (!x || cmp) return; if (x.t === 'op' && /^(>=|<=|>|<)$/.test(x.op)) { cmp = x; return; } (x.args || []).forEach(p); p(x.l); p(x.r); p(x.x); })(X.rozeber(u.reseni, 'en'));
+  if (!cmp) return;
+  const [rel, prah] = cmp.l.t === 'ref' && !cmp.l.absR && !cmp.l.absC ? [cmp.l, cmp.r] : cmp.r.t === 'ref' && !cmp.r.absR && !cmp.r.absC ? [cmp.r, cmp.l] : [null, null];
+  if (!rel) return;
+  const h = prah.t === 'num' ? prah.v : prah.t === 'ref' ? Number(String(u.bunky[X.adresa(prah.r, prah.c)] ?? '').replace(',', '.')) : NaN;
+  const a = X.adresa(rel.r, rel.c), puv = u.bunky[a];
+  if (!Number.isFinite(h) || puv === undefined || !/^-?\d+([.,]\d+)?$/.test(String(puv))) return;
+  u.bunky = { ...u.bunky, [a]: String(h) };
+  if (!X.zkontroluj(new X.List(u.bunky, { jazyk: 'en' }), u, u.reseni).ok) u.bunky = { ...u.bunky, [a]: puv };
 }
 function gen_oprava(n, obtiznost) {
   const zaklad = SABLONY.filter(s => s.tema !== 'oprava' && (obtiznost === 1 ? s.uroven <= 2 : true));
   for (let pokus = 0; pokus < 12; pokus++) {
     const s = n.vyber(zaklad), u = s.gen(n), r = rozbij(u, n);
     if (!r) continue;
-    const X = koren.XLV, bunky = { ...u.bunky };
+    const X = koren.XLV;
+    if (r.druh === 'porovnani') ukazHranici(u, X);   /* hraniční hodnota v datech: chyba > místo >= je vidět hned */
+    const bunky = { ...u.bunky };
     const cile = u.kopirovat ? (() => { const [a, b] = u.kopirovat.split(':'), p = X.rozeberAdresu(a), q = X.rozeberAdresu(b), o = []; for (let rr = p.r; rr <= q.r; rr++) for (let c = p.c; c <= q.c; c++) o.push(X.adresa(rr, c)); return o; })() : [u.cil];
     const pc = X.rozeberAdresu(u.cil);
     cile.forEach(a => { const q = X.rozeberAdresu(a); bunky[a] = X.posunVzorec(r.vzorec, q.r - pc.r, q.c - pc.c, 'en'); });
-    return { ...u, bunky, rozbity: r.vzorec, druhChyby: r.druh, zakladTema: s.tema,
+    return { ...u, bunky, vyzaduje: r.vyzaduje, oprava: true, rozbity: r.vzorec, druhChyby: r.druh, zakladTema: s.tema, zakladUroven: s.uroven,
       zadani: `<b>Úloha:</b> ${u.zadani}<br>🔧 V [[@${u.cil}]] už vzorec je, ale má v sobě chybu. Najděte ji a vzorec opravte.`,
       napovedy: [r.rada, ...(u.napovedy || [])] };
   }
@@ -236,15 +267,17 @@ function vygeneruj(temata, obtiznost = 2, seme, volby = {}) {
   const n = nahoda(seme);
   if (volby.vahy || obtiznost === 0) {
     const povolena = Object.keys(TEMATA).filter(t => !temata || !temata.length || temata.includes(t));
-    const vaha = t => Math.max(0.05, volby.vahy?.[t] ?? 1);
+    const vaha = t => { const v = Number(volby.vahy?.[t] ?? 1); return Number.isFinite(v) ? Math.max(0.05, v) : 1; };
     let x = n.r() * povolena.reduce((a, t) => a + vaha(t), 0), tema = povolena[povolena.length - 1];
     for (const t of povolena) { x -= vaha(t); if (x < 0) { tema = t; break; } }
     const ob = obtiznost === 0 ? (volby.urovne?.[tema] || 2) : obtiznost;
-    if (tema === 'oprava') { const o = gen_oprava(n, ob); if (o) return { ...o, tema: 'oprava', uroven: ob === 3 ? 3 : 2, id: 'oprava-' + o.druhChyby }; }
+    if (tema === 'oprava') { const o = gen_oprava(n, ob); if (o) return { ...o, tema: 'oprava', uroven: o.zakladUroven, id: 'oprava-' + o.druhChyby }; }
     let kand = SABLONY.filter(s => s.tema === tema);
     if (!kand.length) kand = SABLONY;
     const dle = kand.filter(s => (ob === 1 ? s.uroven === 1 : ob === 2 ? s.uroven <= 2 : s.uroven >= 2));
-    const sab = n.vyber(dle.length ? dle : kand), u = sab.gen(n);
+    /* téma bez lehké šablony: slabší žák dostane aspoň tu nejlehčí, ne náhodně i nejtěžší */
+    const nejnizsi = Math.min(...kand.map(s => s.uroven));
+    const sab = n.vyber(dle.length ? dle : ob === 1 ? kand.filter(s => s.uroven === nejnizsi) : kand), u = sab.gen(n);
     return { ...u, tema: sab.tema, uroven: sab.uroven, id: sab.tema + '-' + SABLONY.indexOf(sab) };
   }
   let kand = SABLONY.filter(s => (!temata || !temata.length || temata.includes(s.tema)));
@@ -253,7 +286,7 @@ function vygeneruj(temata, obtiznost = 2, seme, volby = {}) {
   /* oprava se losuje jako jedno z témat; když se rozbití nepovede, vezme se obyčejná úloha */
   const vse = [...new Set(kand.map(s => s.tema))];
   const chceOpravu = (!temata || !temata.length || temata.includes('oprava')) && n.r() < (temata && temata.length === 1 ? 1 : 1 / (vse.length + 1));
-  if (chceOpravu) { const o = gen_oprava(n, obtiznost); if (o) return { ...o, tema: 'oprava', uroven: 2, id: 'oprava-' + o.druhChyby }; }
+  if (chceOpravu) { const o = gen_oprava(n, obtiznost); if (o) return { ...o, tema: 'oprava', uroven: o.zakladUroven, id: 'oprava-' + o.druhChyby }; }
   const bezOpravy = kand.length ? kand : SABLONY;
   const s = n.vyber(bezOpravy), u = s.gen(n);
   return { ...u, tema: s.tema, uroven: s.uroven, id: s.tema + '-' + SABLONY.indexOf(s) };
