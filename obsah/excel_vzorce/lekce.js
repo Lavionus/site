@@ -482,6 +482,52 @@ je to čistší: [[=IF(B2=0,0,B1/B2)]]. U hledání stačí {IFNA}, která zachy
   ],
 },
 {
+  id: 'tabulky', emoji: '📋', nazev: 'Tabulky a strukturované odkazy',
+  cile: ['vím, co je tabulka a proč se s ní pracuje lépe než s oblastí', 'píšu odkazy názvem sloupce: Prodej[Kusy], [@Cena]', 'využiji vypočítaný sloupec, který se doplní sám'],
+  text: `
+<h3>Oblast, která ví, co obsahuje</h3>
+<p>Data vlevo jsou <b>tabulka</b> jménem <code>Prodej</code> (barevné záhlaví a pruhy). V Excelu ji vytvoříte přes
+<b>Vložit → Tabulka</b> (<kbd>Ctrl+T</kbd>), tady přes <b>▦ Úpravy → Vytvořit tabulku z výběru</b>.
+První řádek je <b>záhlaví</b> – názvy sloupců. Od té chvíle se na data neodkazuje adresou, ale <b>jménem</b>:</p>
+<p>[[=SUM(Prodej[Kusy])]] sečte celý sloupec Kusy. Je to totéž jako <code>{SUM}(C2:C7)</code>, jen čitelné:
+na první pohled je vidět, <i>co</i> se sčítá. A hlavně – když tabulka naroste o další řádky, odkaz se sám rozšíří
+a vzorce není potřeba opravovat.</p>
+<h3>Jak strukturovaný odkaz čte Excel</h3>
+<ul>
+<li><code>Prodej[Kusy]</code> – data sloupce Kusy (bez záhlaví),</li>
+<li><code>Prodej</code> – všechna data tabulky, např. jako tabulka pro {VLOOKUP}: [[=VLOOKUP("Jana",Prodej,4,FALSE)]],</li>
+<li><code>[@Cena]</code> – Cena <b>v tomtéž řádku</b>, kde je vzorec (@ = „tento řádek“),</li>
+<li><code>Prodej[[#Vše]{;}[Kusy]]</code> – sloupec i se záhlavím, <code>Prodej[#Záhlaví]</code> – řádek názvů: [[=COUNTA(Prodej[#Headers])]] vrátí počet sloupců.</li>
+</ul>
+<p>V anglickém Excelu se klíčová slova jmenují <code>#All</code>, <code>#Data</code>, <code>#Headers</code>, <code>#Totals</code>, <code>#This Row</code> – přepínač zápisu vzorců je přeloží.</p>
+<h3>Vypočítaný sloupec</h3>
+<p>Napište do první prázdné buňky sloupce <b>Tržba</b> vzorec [[=[@Kusy]*[@Cena]]] a potvrďte – Excel ho <b>sám doplní do celého sloupce</b>.
+Nemusíte kopírovat ani hlídat <code>$</code>: <code>[@Kusy]</code> v každém řádku znamená „Kusy z mého řádku“.
+Když při psaní vzorce klepnete na buňku ve stejném řádku tabulky, vloží se rovnou <code>[@Sloupec]</code>.</p>
+<div class="tip">Strukturované odkazy se při kopírování <b>neposouvají</b> – <code>Prodej[Kusy]</code> zůstane <code>Prodej[Kusy]</code>, ať vzorec zkopírujete kamkoli.
+Proto u nich není potřeba znak $.</div>
+<div class="pozor">Název tabulky nesmí obsahovat mezery a nesmí vypadat jako adresa (<code>T2026</code> je adresa buňky!). Název sloupce s mezerou se píše do dvojitých závorek: <code>[@[Cena za kus]]</code>.</div>`,
+  list: { sloupcu: 9, radku: 8, tabulky: [{ nazev: 'Prodej', r1: 1, c1: 1, r2: 7, c2: 5 }], bunky: {
+    A1: 'Prodejce', B1: 'Region', C1: 'Kusy', D1: 'Cena', E1: 'Tržba',
+    A2: 'Adam', B2: 'Praha', C2: '12', D2: '150', A3: 'Bára', B3: 'Brno', C3: '7', D3: '220', A4: 'Cyril', B4: 'Praha', C4: '20', D4: '95',
+    A5: 'Dana', B5: 'Ostrava', C5: '4', D5: '310', A6: 'Emil', B6: 'Brno', C6: '15', D6: '120', A7: 'Jana', B7: 'Praha', C7: '9', D7: '180',
+    G1: 'Přehled', G2: 'Kusů celkem:', G3: 'Praha', G4: 'Počet prodejů:', G5: 'Nejvyšší cena:',
+  } },
+  predpovez: [{ vzorec: '=SUM(Prodej[Kusy])' }, { vzorec: '=COUNTA(Prodej[#Headers])' }, { vzorec: '=ROWS(Prodej)' }, { vzorec: '=Prodej[Nic]' }],
+  ulohy: [
+    { id: 't1', cil: 'E2', kopirovat: 'E2:E7', tabulka: true, reseni: '=[@Kusy]*[@Cena]',
+      zadani: 'Do [[@E2]] napište vypočítaný sloupec Tržba = Kusy × Cena pomocí <code>[@…]</code>. Po potvrzení se doplní do celé tabulky.',
+      napovedy: ['V řádku tabulky se na sousední buňku odkazuje [@NázevSloupce].', '=[@Kusy]*[@Cena]'] },
+    { id: 't2', cil: 'H2', tabulka: true, reseni: '=SUM(Prodej[Kusy])', vyzaduje: ['SUM'],
+      zadani: 'Do [[@H2]] sečtěte všechny prodané kusy – odkazem na sloupec tabulky, ne adresou.', napovedy: ['Sloupec tabulky: Prodej[Kusy].', '={SUM}(Prodej[Kusy])'] },
+    { id: 't3', cil: 'H3', tabulka: true, reseni: '=SUMIF(Prodej[Region],G3,Prodej[Kusy])', vyzaduje: ['SUMIF'], varianty: [{ G3: 'Brno' }, { G3: 'Ostrava' }],
+      zadani: 'Do [[@H3]] sečtěte kusy prodané v regionu, který je napsaný v [[@G3]].', napovedy: ['{SUMIF}(kde hledat{;} co{;} co sčítat).', '={SUMIF}(Prodej[Region]{;}G3{;}Prodej[Kusy])'] },
+    { id: 't4', cil: 'H4', tabulka: true, reseni: '=COUNTA(Prodej[Prodejce])', vyzaduje: ['COUNTA'],
+      zadani: 'Do [[@H4]] spočítejte, kolik řádků (prodejů) tabulka má.', napovedy: ['{COUNTA} spočítá neprázdné buňky.', '={COUNTA}(Prodej[Prodejce])'] },
+    { id: 't5', cil: 'H5', tabulka: true, reseni: '=MAX(Prodej[Cena])', vyzaduje: ['MAX'],
+      zadani: 'Do [[@H5]] najděte nejvyšší cenu v tabulce.', napovedy: ['={MAX}(Prodej[Cena])'] },
+  ],
+}, {
   id: 'projekt', emoji: '🧾', nazev: 'Závěrečný projekt: faktura',
   cile: ['spojím vše dohromady v jedné tabulce', 'navrhnu vzorce, které jdou kopírovat', 'zkontroluji výsledek rozkladem'],
   text: `

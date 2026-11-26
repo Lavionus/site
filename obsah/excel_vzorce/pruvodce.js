@@ -4,7 +4,7 @@
 'use strict';
 const KROKY = [
   { nadpis: '👋 Vítejte v kurzu vzorců', text: 'Za minutu vám ukážu, kde co na stránce najdete. Průvodce kdykoli zavřete klávesou Esc a znovu ho spustíte tlačítkem 🧭 Průvodce vpravo nahoře.' },
-  { cil: '#btnLekce', nadpis: '📘 Lekce', text: 'Seznam 13 lekcí od prvního vzorce po vyhledávání a chyby. Šipkami vedle přecházíte na předchozí a další lekci. U každé lekce vidíte, kolik úloh máte splněno.' },
+  { cil: '#btnLekce', nadpis: '📘 Lekce', text: 'Seznam 14 lekcí od prvního vzorce přes vyhledávání a tabulky po chyby. Šipkami vedle přecházíte na předchozí a další lekci. U každé lekce vidíte, kolik úloh máte splněno.' },
   { cil: '.lista [aria-label="Režim"]', nadpis: '🎓 Režimy stránky', text: 'Výuka = lekce s výkladem. Procvičování = nekonečné úlohy a zkouška na čas. Rozbor vzorce = vložíte vlastní vzorec a stránka ho vysvětlí. Pískoviště = volný sešit. Tahák = přehled funkcí. Učitel = vlastní sady úloh.' },
   { cil: '#vyklad h2', nadpis: '📖 Výklad', text: 'Vlevo je výklad lekce. Čtěte postupně – na konci lekce čekají otázky „Co vrátí vzorec?“ a úlohy.' },
   { cil: '#vyklad button.vz', nadpis: '▸ Klikací ukázky', text: 'Každý vzorec v rámečku se šipkou je klikací. Po kliknutí se rozloží v dílně vpravo a uvidíte, jak ho Excel počítá krok za krokem.' },

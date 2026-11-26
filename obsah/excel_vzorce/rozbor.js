@@ -241,6 +241,57 @@ function vetaFunkce(u, a, d, j) {
   return f ? `${X.nazevFunkce(en, j)}: ${f.popis.replace(/\.$/, '').toLowerCase()} (${sez(a)})` : `volá neznámou funkci ${u.jmeno} – překlep?`;
 }
 
+/* strukturovaný odkaz slovy: Prodej[Cena] → „sloupec Cena tabulky Prodej“ */
+function popisTab(u, EN) {
+  const tab = u.tab ? (EN ? ` of table ${u.tab}` : ` tabulky ${u.tab}`) : '';
+  const sl = u.sl1 ? (u.sl2 ? (EN ? `columns ${u.sl1}–${u.sl2}` : `sloupce ${u.sl1}–${u.sl2}`) : (EN ? `column ${u.sl1}` : `sloupec ${u.sl1}`)) : '';
+  switch (u.cast) {
+    case 'radek': return EN ? `${u.sl1 || 'the whole row'} from this row${tab}` : `${u.sl1 || 'celý řádek'} z tohoto řádku${tab}`;
+    case 'vse': return EN ? `${sl || 'the whole table'}${tab} incl. headers` : `${sl || 'celá tabulka'}${tab} i se záhlavím`;
+    case 'hlavicky': return EN ? `header row${sl ? ' of ' + sl : ''}${tab}` : `záhlaví${sl ? ' – ' + sl : ''}${tab}`;
+    case 'souhrny': return EN ? `totals row${tab}` : `řádek souhrnů${tab}`;
+    default: return sl ? sl + tab : (EN ? `data${tab}` : `data${tab}`);
+  }
+}
+/* ukázková tabulka pro vzorec se strukturovanými odkazy: { bunky, tabulky, bunka } */
+const TEXTOVE_SLOUPCE = /jm[eé]no|n[aá]zev|region|m[ěe]sto|zbo[žz][ií]|prodejce|k[oó]d|obchod|name|city|product|item|code|seller|store/i;
+function ukazkoveTabulky(strom, seme = 1) {
+  let s = seme >>> 0 || 1;
+  const nahoda = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  const tab = new Map();   /* NÁZEV → { nazev, sloupce: Set, radek: bool } */
+  (function p(u) {
+    if (!u) return;
+    if (u.t === 'tab') {
+      const jm = u.tab || 'Tabulka1', k = jm.toUpperCase();
+      if (!tab.has(k)) tab.set(k, { nazev: jm, sloupce: new Set(), radek: false });
+      const t = tab.get(k);
+      [u.sl1, u.sl2].forEach(x => x && t.sloupce.add(x));
+      if (u.cast === 'radek') t.radek = true;
+    }
+    (u.args || []).forEach(p); p(u.l); p(u.r); p(u.x);
+  })(strom);
+  const bunky = {}, tabulky = [];
+  let c0 = 1, bunka = null;
+  /* tabulka až za buňkami, na které vzorec odkazuje adresou (A1 apod.) */
+  (function p(u) { if (!u) return; if (u.t === 'ref') c0 = Math.max(c0, u.c + 2); if (u.t === 'range') c0 = Math.max(c0, u.a.c + 2, u.b.c + 2); (u.args || []).forEach(p); p(u.l); p(u.r); p(u.x); })(strom);
+  for (const t of tab.values()) {
+    const sl = [...t.sloupce]; if (!sl.length) sl.push('Položka', 'Hodnota');
+    if (t.radek) sl.push('Výsledek');
+    sl.forEach((n, i) => {
+      const c = c0 + i, text = TEXTOVE_SLOUPCE.test(n), mesto = /region|m[ěe]sto|city|obchod|store/i.test(n);
+      bunky[X.adresa(1, c)] = n;
+      for (let r = 2; r <= 6; r++) {
+        if (n === 'Výsledek' && t.radek) continue;
+        bunky[X.adresa(r, c)] = text ? (mesto ? MESTA : /zbo|product|item|k[oó]d|code/i.test(n) ? POLOZKY : JMENA)[(r + i) % 4] : String(Math.round(10 + nahoda() * 290));
+      }
+    });
+    tabulky.push({ nazev: t.nazev, r1: 1, c1: c0, r2: 6, c2: c0 + sl.length - 1 });
+    if (t.radek && !bunka) bunka = X.adresa(2, c0 + sl.length - 1);
+    c0 += sl.length + 1;
+  }
+  return { bunky, tabulky, bunka, sloupcu: c0 - 1 };
+}
+
 /* postup: každá funkce = jeden krok; operátory se popíšou na místě */
 function vysvetli(strom, j = 'cs') {
   const kroky = [], EN = anglicky(), hotove = new Map();   /* uzel → ⟦n⟧, ať se funkce popsaná dvakrát nezapíše jako dva kroky */
@@ -253,6 +304,7 @@ function vysvetli(strom, j = 'cs') {
       case 'ref': return X.textRef(u);
       case 'range': return X.textRef(u.a) + ':' + X.textRef(u.b);
       case 'jmeno': return EN ? `“${u.v}” (unknown name!)` : `„${u.v}“ (neznámý název!)`;
+      case 'tab': return inline || u.cast !== 'radek' ? X.textTab(u, j) : `${X.textTab(u, j)} (${popisTab(u, EN)})`;
       case 'prazdny': return '';
       case 'zav': return d(u.x, inline);
       case 'un': return u.op === '-' ? '−' + obal(u.x, 6, inline) : d(u.x, inline);
@@ -457,5 +509,5 @@ function bunkaProVzorec(strom) {
   return X.adresa(minR === Infinity ? 1 : minR, Math.max(1, maxC + 2));   /* vpravo od všech odkazů – jinak by vznikl cyklus */
 }
 
-koren.XLV_ROZBOR = { anglicky, rozpoznej, vysvetli, rady, ukazkovaData, bunkaProVzorec, popisKriteria };
+koren.XLV_ROZBOR = { anglicky, rozpoznej, vysvetli, rady, ukazkovaData, ukazkoveTabulky, bunkaProVzorec, popisKriteria };
 })(typeof window !== 'undefined' ? window : globalThis);

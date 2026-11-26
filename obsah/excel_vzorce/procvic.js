@@ -5,7 +5,7 @@
 const TEMATA = {
   zaklady: '✏️ Vzorce a operátory', odkazy: '📌 Kopírování a $', funkce: '∑ Základní funkce', zaokrouhleni: '🎯 Zaokrouhlování',
   kdyz: '🔀 KDYŽ', logika: '🧩 A, NEBO, vnořené KDYŽ', podminene: '🔢 COUNTIF a SUMIF', hledani: '🔎 Vyhledávání',
-  text: '🔤 Text', datum: '📅 Datum', chyby: '🐞 Ošetření chyb',
+  text: '🔤 Text', datum: '📅 Datum', chyby: '🐞 Ošetření chyb', oprava: '🔧 Oprav vzorec',
 };
 const JMENA = ['Adam', 'Bára', 'Cyril', 'Dana', 'Emil', 'Fanny', 'Gustav', 'Hana', 'Igor', 'Jana', 'Karel', 'Lenka'];
 const PRIJMENI = ['Novák', 'Svoboda', 'Dvořák', 'Černá', 'Procházka', 'Kučerová', 'Veselý', 'Horák', 'Němcová', 'Marek'];
@@ -20,6 +20,7 @@ const ZBOZI = ['Pero', 'Sešit', 'Guma', 'Lepidlo', 'Pravítko', 'Fixa', 'Blok',
 function nahoda(seme) {
   let s = (seme >>> 0) || (Math.random() * 2147483646 + 1) | 0;
   const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  r(); r(); r();   /* malá semínka dávají první čísla těsně nad nulou */
   return {
     r, cele: (a, b) => a + Math.floor(r() * (b - a + 1)), vyber: p => p[Math.floor(r() * p.length)],
     zamichej: p => { const q = [...p]; for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; } return q; },
@@ -166,13 +167,96 @@ const SABLONY = [
   } },
 ];
 
-function vygeneruj(temata, obtiznost = 2, seme) {
+
+/* ---------- „Oprav vzorec“: vezme úlohu jiné šablony a její řešení rozbije typickou chybou ----------
+   Rozbitý vzorec je v cílové buňce (i zkopírovaný), žák ho má opravit. Rozbití se ověří: s ním úloha nesmí projít. */
+const ROZBITI = [
+  { druh: 'dolar', rada: 'Zkuste vzorec zkopírovat a podívejte se, kam se posunuly odkazy. Něco by mělo zůstat na místě.',
+    f: (v, u) => (u.absolutni && v.includes('$') ? v.replace(/\$/g, '') : null) },
+  { druh: 'zavorky', rada: 'Projděte si pořadí operací: násobení a dělení mají přednost před sčítáním a odčítáním.',
+    f: v => {
+      for (let i = 1; i < v.length; i++) {
+        if (v[i] !== '(' || /[A-Za-z0-9_.]/.test(v[i - 1])) continue;   /* jen závorky výrazu, ne volání funkce */
+        let h = 0, j = i;
+        for (; j < v.length; j++) { if (v[j] === '(') h++; else if (v[j] === ')' && --h === 0) break; }
+        if (j < v.length && /[+\-&]/.test(v.slice(i + 1, j))) return v.slice(0, i) + v.slice(i + 1, j) + v.slice(j + 1);
+      }
+      return null;
+    } },
+  { druh: 'porovnani', rada: 'Podívejte se pozorně na porovnání – platí podmínka i pro hraniční hodnotu?',
+    f: v => { const m = /(>=|<=|<>|>|<)/.exec(v.replace(/"[^"]*"/g, x => '_'.repeat(x.length))); if (!m) return null;
+      const nove = { '>=': '>', '<=': '<', '>': '>=', '<': '<=', '<>': '=' }[m[1]]; return v.slice(0, m.index) + nove + v.slice(m.index + m[1].length); } },
+  { druh: 'presne', rada: 'Hledá funkce přesnou shodu? Bez posledního argumentu hledá přibližně.',
+    f: v => (/,FALSE\)/.test(v) ? v.replace(/,FALSE\)/, ')') : /MATCH\(([^()]*),0\)/.test(v) ? v.replace(/(MATCH\([^()]*),0\)/, '$1)') : null) },
+  { druh: 'uvozovky', rada: 'Text ve vzorci musí být v uvozovkách, jinak ho Excel bere jako název.',
+    f: v => { const m = /"([A-Za-zÁ-ž][A-Za-zÁ-ž]*)"/.exec(v); return m ? v.slice(0, m.index) + m[1] + v.slice(m.index + m[0].length) : null; } },
+  { druh: 'oblast', rada: 'Zkontrolujte, jestli oblast ve vzorci zahrnuje všechna data.',
+    f: v => { const m = /([A-Z]+)(\$?)(\d+):(\$?)([A-Z]+)(\$?)(\d+)/.exec(v); if (!m || +m[7] - +m[3] < 2) return null;
+      return v.slice(0, m.index) + `${m[1]}${m[2]}${m[3]}:${m[4]}${m[5]}${m[6]}${+m[7] - 1}` + v.slice(m.index + m[0].length); } },
+  { druh: 'funkce', rada: 'Dělá použitá funkce opravdu to, co úloha chce?',
+    f: v => { const z = [['SUM(', 'AVERAGE('], ['AVERAGE(', 'SUM('], ['MAX(', 'MIN('], ['MIN(', 'MAX('], ['COUNT(', 'COUNTA('], ['ROUND(', 'ROUNDDOWN('], ['SUMIF(', 'COUNTIF(']];
+      for (const [a, b] of z) { const i = v.search(new RegExp('(^|[^A-Z.])' + a.replace('(', '\\('))); if (i >= 0) { const k = v.indexOf(a, i); return v.slice(0, k) + b + v.slice(k + a.length); } }
+      return null; } },
+  { druh: 'odkaz', rada: 'Ukazují všechny odkazy na správné buňky? Klikněte na vzorec – barevné rámečky v listu ukážou, kam sahá.',
+    f: v => { const m = /(^|[^A-Z$:!])([A-H])(\d+)(?![\d(:])/.exec(v.replace(/"[^"]*"/g, x => '_'.repeat(x.length))); if (!m) return null;
+      const k = m.index + m[1].length; return v.slice(0, k) + String.fromCharCode(m[2].charCodeAt(0) + 1) + m[3] + v.slice(k + m[2].length + m[3].length); } },
+];
+function rozbij(u, n) {
+  const X = koren.XLV; if (!X) return null;
+  const l = new X.List(u.bunky, { jazyk: 'en' });
+  for (const r of n.zamichej(ROZBITI)) {
+    const v = r.f(u.reseni, u);
+    if (!v || v === u.reseni) continue;
+    let st; try { st = X.rozeber(v, 'en'); } catch (e) { continue; }
+    const pc = X.rozeberAdresu(u.cil);   /* odkaz na vlastní buňku = cyklus, to není „typická chyba“ */
+    if (X.odkazyStromu(st).some(o => pc.r >= o.r1 && pc.r <= o.r2 && pc.c >= o.c1 && pc.c <= o.c2)) continue;
+    if (X.zkontroluj(l, u, v).ok) continue;   /* „chyba“, se kterou úloha projde, není chyba */
+    return { vzorec: v, druh: r.druh, rada: r.rada };
+  }
+  return null;
+}
+function gen_oprava(n, obtiznost) {
+  const zaklad = SABLONY.filter(s => s.tema !== 'oprava' && (obtiznost === 1 ? s.uroven <= 2 : true));
+  for (let pokus = 0; pokus < 12; pokus++) {
+    const s = n.vyber(zaklad), u = s.gen(n), r = rozbij(u, n);
+    if (!r) continue;
+    const X = koren.XLV, bunky = { ...u.bunky };
+    const cile = u.kopirovat ? (() => { const [a, b] = u.kopirovat.split(':'), p = X.rozeberAdresu(a), q = X.rozeberAdresu(b), o = []; for (let rr = p.r; rr <= q.r; rr++) for (let c = p.c; c <= q.c; c++) o.push(X.adresa(rr, c)); return o; })() : [u.cil];
+    const pc = X.rozeberAdresu(u.cil);
+    cile.forEach(a => { const q = X.rozeberAdresu(a); bunky[a] = X.posunVzorec(r.vzorec, q.r - pc.r, q.c - pc.c, 'en'); });
+    return { ...u, bunky, rozbity: r.vzorec, druhChyby: r.druh, zakladTema: s.tema,
+      zadani: `<b>Úloha:</b> ${u.zadani}<br>🔧 V [[@${u.cil}]] už vzorec je, ale má v sobě chybu. Najděte ji a vzorec opravte.`,
+      napovedy: [r.rada, ...(u.napovedy || [])] };
+  }
+  return null;
+}
+
+/* vážený výběr: volby.vahy {tema: váha} (víc úloh ze slabých témat), obtiznost 0 = automaticky podle volby.urovne {tema: 1–3} */
+function vygeneruj(temata, obtiznost = 2, seme, volby = {}) {
   const n = nahoda(seme);
+  if (volby.vahy || obtiznost === 0) {
+    const povolena = Object.keys(TEMATA).filter(t => !temata || !temata.length || temata.includes(t));
+    const vaha = t => Math.max(0.05, volby.vahy?.[t] ?? 1);
+    let x = n.r() * povolena.reduce((a, t) => a + vaha(t), 0), tema = povolena[povolena.length - 1];
+    for (const t of povolena) { x -= vaha(t); if (x < 0) { tema = t; break; } }
+    const ob = obtiznost === 0 ? (volby.urovne?.[tema] || 2) : obtiznost;
+    if (tema === 'oprava') { const o = gen_oprava(n, ob); if (o) return { ...o, tema: 'oprava', uroven: ob === 3 ? 3 : 2, id: 'oprava-' + o.druhChyby }; }
+    let kand = SABLONY.filter(s => s.tema === tema);
+    if (!kand.length) kand = SABLONY;
+    const dle = kand.filter(s => (ob === 1 ? s.uroven === 1 : ob === 2 ? s.uroven <= 2 : s.uroven >= 2));
+    const sab = n.vyber(dle.length ? dle : kand), u = sab.gen(n);
+    return { ...u, tema: sab.tema, uroven: sab.uroven, id: sab.tema + '-' + SABLONY.indexOf(sab) };
+  }
   let kand = SABLONY.filter(s => (!temata || !temata.length || temata.includes(s.tema)));
   const dle = kand.filter(s => (obtiznost === 1 ? s.uroven === 1 : obtiznost === 2 ? s.uroven <= 2 : s.uroven >= 2));
   if (dle.length) kand = dle;
-  const s = n.vyber(kand), u = s.gen(n);
+  /* oprava se losuje jako jedno z témat; když se rozbití nepovede, vezme se obyčejná úloha */
+  const vse = [...new Set(kand.map(s => s.tema))];
+  const chceOpravu = (!temata || !temata.length || temata.includes('oprava')) && n.r() < (temata && temata.length === 1 ? 1 : 1 / (vse.length + 1));
+  if (chceOpravu) { const o = gen_oprava(n, obtiznost); if (o) return { ...o, tema: 'oprava', uroven: 2, id: 'oprava-' + o.druhChyby }; }
+  const bezOpravy = kand.length ? kand : SABLONY;
+  const s = n.vyber(bezOpravy), u = s.gen(n);
   return { ...u, tema: s.tema, uroven: s.uroven, id: s.tema + '-' + SABLONY.indexOf(s) };
 }
-koren.XLV_PROCVIC = { TEMATA, SABLONY, vygeneruj, nahoda };
+koren.XLV_PROCVIC = { TEMATA, SABLONY, vygeneruj, nahoda, rozbij, ROZBITI };
 })(typeof window !== 'undefined' ? window : globalThis);

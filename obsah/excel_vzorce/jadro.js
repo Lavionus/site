@@ -640,6 +640,73 @@ const oddelovac = jazyk => jazyk === 'en' ? ',' : ';';
 /* ---------- tokenizace ---------- */
 function chybaSyntaxe(zprava, pozice) { const e = new Error(zprava); e.syntaxe = true; e.pozice = pozice; return e; }
 const PISMENO = /[A-Za-zÀ-ž_]/;
+/* ---------- tabulky: strukturované odkazy ---------- */
+/* obsah hranatých závorek od pozice i (s[i] === '['), vnořené závorky se počítají */
+function ctiHranate(s, i, tolerantne) {
+  let h = 0, j = i;
+  for (; j < s.length; j++) {
+    if (s[j] === "'" && j + 1 < s.length) { j++; continue; }   /* '[ = znak závorky v názvu sloupce */
+    if (s[j] === '[') h++;
+    else if (s[j] === ']' && --h === 0) return { text: s.slice(i + 1, j), konec: j + 1 };
+  }
+  if (tolerantne) return { text: s.slice(i + 1), konec: s.length };
+  throw chybaSyntaxe('Chybí uzavírací hranatá závorka ] strukturovaného odkazu', i);
+}
+const KLIC_TAB = { '#ALL': 'vse', '#VŠE': 'vse', '#DATA': 'data', '#HEADERS': 'hlavicky', '#ZÁHLAVÍ': 'hlavicky', '#TOTALS': 'souhrny', '#SOUHRNY': 'souhrny', '#THIS ROW': 'radek', '#TENTO ŘÁDEK': 'radek' };
+const SLOVA_TAB = { vse: ['#All', '#Vše'], data: ['#Data', '#Data'], hlavicky: ['#Headers', '#Záhlaví'], souhrny: ['#Totals', '#Souhrny'], radek: ['#This Row', '#Tento řádek'] };
+/* text uvnitř Tab[…] → { cast: data|vse|hlavicky|souhrny|radek, sl1, sl2 } */
+function rozeberSpec(t, poz = 0) {
+  t = String(t).trim();
+  const nazev = x => x.replace(/'(.)/g, '$1').trim();
+  if (t === '') return { cast: 'data' };
+  if (t[0] === '@') { let x = t.slice(1).trim(); if (x.startsWith('[') && x.endsWith(']')) x = x.slice(1, -1); return { cast: 'radek', sl1: x ? nazev(x) : null }; }
+  if (t[0] === '#') { const k = KLIC_TAB[t.toUpperCase()]; if (!k) throw chybaSyntaxe(`Neznámé klíčové slovo tabulky „${t}“ (#Vše, #Data, #Záhlaví, #Souhrny)`, poz); return { cast: k }; }
+  if (t[0] !== '[') return { cast: 'data', sl1: nazev(t) };
+  let cast = null; const sloupce = []; let i = 0, rozsah = false;
+  while (i < t.length) {
+    const ch = t[i];
+    if (ch === ' ' || ch === ',' || ch === ';') { i++; continue; }
+    if (ch === ':') { rozsah = true; i++; continue; }
+    if (ch !== '[') throw chybaSyntaxe('Strukturovaný odkaz: položky patří do hranatých závorek, např. Tab[[#Vše];[Cena]]', poz);
+    const h = ctiHranate(t, i, false); i = h.konec;
+    const x = h.text.trim();
+    if (x.startsWith('#')) { const k = KLIC_TAB[x.toUpperCase()]; if (!k) throw chybaSyntaxe(`Neznámé klíčové slovo tabulky „${x}“`, poz); cast = cast && cast !== k ? (cast === 'hlavicky' || k === 'hlavicky' ? 'vse' : k) : k; }
+    else if (x.startsWith('@')) { cast = 'radek'; sloupce.push(nazev(x.slice(1).replace(/^\[|\]$/g, ''))); }
+    else sloupce.push(nazev(x));
+  }
+  return { cast: cast || 'data', sl1: sloupce[0] || null, sl2: rozsah && sloupce[1] ? sloupce[1] : null };
+}
+function textTab(u, jazyk = 'cs') {
+  const odd = jazyk === 'en' ? ',' : ';';
+  const jednoduchy = n => /^[A-Za-zÀ-ž_][\wÀ-ž]*$/.test(n);
+  const br = n => '[' + n.replace(/([[\]#'])/g, "'$1") + ']';
+  const kw = SLOVA_TAB[u.cast][jazyk === 'en' ? 0 : 1];
+  let spec;
+  if (u.cast === 'radek' && !u.sl2) spec = '@' + (u.sl1 ? (jednoduchy(u.sl1) ? u.sl1 : br(u.sl1)) : '');
+  else if (u.cast === 'data' && !u.sl1) spec = '';
+  else if (u.cast === 'data' && !u.sl2) spec = /^[\wÀ-ž ]+$/.test(u.sl1) && !/^ | $/.test(u.sl1) ? u.sl1 : br(u.sl1);
+  else if (!u.sl1) spec = kw;
+  else spec = [...(u.cast === 'data' ? [] : ['[' + kw + ']']), br(u.sl1) + (u.sl2 ? ':' + br(u.sl2) : '')].join(odd);
+  return (u.tab || '') + '[' + spec + ']';
+}
+/* oblast strukturovaného odkazu podle tabulky o = {r1,c1,r2,c2,souhrn,sloupce[]}; kde = buňka vzorce {r,c} */
+function oblastTab(u, o, kde) {
+  const sl = n => { const i = o.sloupce.findIndex(x => x.toUpperCase() === String(n).toUpperCase()); if (i < 0) throw new Chyba('REF', `tabulka ${o.nazev} nemá sloupec „${n}“`); return o.c1 + i; };
+  let c1 = o.c1, c2 = o.c2;
+  if (u.sl1) { c1 = sl(u.sl1); c2 = u.sl2 ? sl(u.sl2) : c1; if (c2 < c1) [c1, c2] = [c2, c1]; }
+  const d1 = o.r1 + 1, d2 = o.r2 - (o.souhrn ? 1 : 0);
+  switch (u.cast) {
+    case 'vse': return { r1: o.r1, c1, r2: o.r2, c2 };
+    case 'hlavicky': return { r1: o.r1, c1, r2: o.r1, c2 };
+    case 'souhrny': if (!o.souhrn) throw new Chyba('REF', `tabulka ${o.nazev} nemá řádek souhrnů`); return { r1: o.r2, c1, r2: o.r2, c2 };
+    case 'radek':
+      if (!kde || kde.r < d1 || kde.r > d2) throw new Chyba('VALUE', '@ (tento řádek) funguje jen ve vzorci v řádku dat tabulky');
+      return { r1: kde.r, c1, r2: kde.r, c2 };
+    default: return { r1: d1, c1, r2: Math.max(d1, d2), c2 };
+  }
+}
+const platnyNazevTabulky = n => typeof n === 'string' && /^[A-Za-zÀ-ž_][\wÀ-ž.]{0,99}$/.test(n) && !/^[A-Za-z]{1,3}\d+$/.test(n) && !/^(TRUE|FALSE|PRAVDA|NEPRAVDA|R|C)$/i.test(n);
+
 function tokenizuj(s, jazyk = 'cs', tolerantne = false) {
   const t = [];
   let i = 0;
@@ -669,9 +736,17 @@ function tokenizuj(s, jazyk = 'cs', tolerantne = false) {
       if (s[i] !== "'" || s[i + 1] !== '!') throw chybaSyntaxe('Název listu v apostrofech musí končit ’! (např. \'Můj list\'!A1)', z);
       i += 2; t.push({ t: 'sheet', v, s: z, e: i }); continue;
     }
+    if (ch === '[') {   /* [@Sloupec] – strukturovaný odkaz bez názvu tabulky (tabulka, ve které je vzorec) */
+      const h = ctiHranate(s, i, tolerantne);
+      i = h.konec; t.push({ t: 'tab', tab: null, spec: h.text, s: z, e: i }); continue;
+    }
     if (ch === '$' || PISMENO.test(ch)) {
       const slovo = /^[$A-Za-zÀ-ž_][\wÀ-ž.$]*/.exec(s.slice(i))[0];
       i += slovo.length;
+      if (s[i] === '[' && !slovo.includes('$')) {   /* Tabulka[Sloupec] */
+        const h = ctiHranate(s, i, tolerantne);
+        i = h.konec; t.push({ t: 'tab', tab: slovo, spec: h.text, s: z, e: i }); continue;
+      }
       if (s[i] === '!' && !slovo.includes('$')) { i++; t.push({ t: 'sheet', v: slovo, s: z, e: i }); continue; }
       let j = i; while (s[j] === ' ') j++;
       const ref = /^(\$?)([A-Za-z]{1,3})(\$?)(\d+)$/.exec(slovo);
@@ -755,6 +830,7 @@ function rozeber(vstup, jazyk = 'cs') {
         }
         return ra;
       }
+      case 'tab': return { t: 'tab', tab: k.tab, ...rozeberSpec(k.spec, k.s), s: k.s, e: k.e };
       case 'name':
         if (k.v === 'TRUE' || k.v === 'PRAVDA') return { t: 'bool', v: true, s: k.s, e: k.e };
         if (k.v === 'FALSE' || k.v === 'NEPRAVDA') return { t: 'bool', v: false, s: k.s, e: k.e };
@@ -824,6 +900,7 @@ function vykresli(uzel, o = {}) {
       case 'ref': x = esc(textRef(u)); break;
       case 'range': x = esc(textRef(u.a) + ':' + textRef(u.b, false)); break;
       case 'jmeno': x = esc(u.v); break;
+      case 'tab': x = esc(textTab(u, jazyk)); break;
       case 'zav': x = esc('(') + r(u.x) + esc(')'); break;
       case 'un': x = esc(u.op) + r(u.x); break;
       case 'pct': x = r(u.x) + esc('%'); break;
@@ -961,7 +1038,24 @@ function vyhodnotUzel(u, ctx) {
         const v = vyhodnotUzel(st, { ...ctx, kroky: null, hloubka: (ctx.hloubka || 0) + 1 });
         return krok(v, `název ${u.v} = ${def} → ${L(v)}`);
       }
+      const tb = ctx.tabulka && ctx.tabulka(u.v);
+      if (tb) return vyhodnotUzel({ t: 'tab', tab: u.v, cast: 'data', s: u.s, e: u.e }, ctx);   /* samotný název tabulky = její data */
       return krok(new Chyba('NAME'), `„${u.v}“ není funkce, adresa, název ani PRAVDA/NEPRAVDA. Je-li to text, patří do uvozovek: "${u.v}"`);
+    }
+    case 'tab': {
+      const o = ctx.tabulka ? ctx.tabulka(u.tab, ctx.kde) : null;
+      const txt = textTab(u, ctx.jazyk);
+      if (!o) return krok(new Chyba('REF', u.tab ? `tabulka „${u.tab}“ neexistuje` : '[@…] patří do vzorce uvnitř tabulky'), u.tab ? `${txt} → tabulka ${u.tab} v sešitu není` : `${txt} → vzorec není v žádné tabulce`);
+      let ob;
+      try { ob = oblastTab(u, o, ctx.kde); } catch (e) { if (e instanceof Chyba) return krok(e, `${txt} → ${e.proc}`); throw e; }
+      const roh = (r, c) => ({ t: 'ref', r, c, list: o.list });
+      const n = ob.r1 === ob.r2 && ob.c1 === ob.c2 ? roh(ob.r1, ob.c1) : { t: 'range', a: roh(ob.r1, ob.c1), b: roh(ob.r2, ob.c2) };
+      const v = vyhodnotUzel(n, { ...ctx, kroky: null });
+      const co = { vse: 'celá tabulka i se záhlavím', hlavicky: 'řádek záhlaví', souhrny: 'řádek souhrnů', radek: 'tento řádek', data: 'data bez záhlaví' }[u.cast];
+      const kde = (o.list ? textListu(o.list) + '!' : '') + adresa(ob.r1, ob.c1) + (n.t === 'range' ? ':' + adresa(ob.r2, ob.c2) : '');
+      /* části věty přes I18N.t – překladač stránky vzory s proměnnými jinak nechá česky */
+      const tt = x => (koren.I18N && koren.I18N.t ? koren.I18N.t(x) : x), konec = n.t === 'ref' ? ` → ${L(v)}` : '';
+      return krok(v, u.sl1 ? `${txt} → sloupec ${u.sl1}${u.sl2 ? '–' + u.sl2 : ''} tabulky ${o.nazev} (${tt(co)}) = ${kde}${konec}` : `${txt} → ${tt(co)} tabulky ${o.nazev} = ${kde}${konec}`);
     }
     case 'ref': {
       const v = ctx.bunka(u.r, u.c, u.list);
@@ -1122,10 +1216,11 @@ function pokracujRadu(zdroj, n, jazyk = 'cs') {
 }
 
 /* odkazy ve stromu jako obdélníky {r1, c1, r2, c2} (pro audit) */
-function odkazyStromu(strom) {
+function odkazyStromu(strom, tabulka) {
   const out = [];
   (function p(u) {
     if (!u) return;
+    if ((u.t === 'tab' || u.t === 'jmeno') && tabulka) { const o = tabulka(u.t === 'jmeno' ? { t: 'tab', tab: u.v, cast: 'data' } : u); if (o) out.push(o); }
     if (u.t === 'ref') out.push({ r1: u.r, c1: u.c, r2: u.r, c2: u.c, list: u.list });
     else if (u.t === 'range') out.push({ r1: Math.min(u.a.r, u.b.r), c1: Math.min(u.a.c, u.b.c), r2: Math.max(u.a.r, u.b.r), c2: Math.max(u.a.c, u.b.c), list: u.a.list });
     (u.args || []).forEach(p); p(u.l); p(u.r); p(u.x);
@@ -1147,9 +1242,11 @@ class List {
     for (const [a, v] of Object.entries(bunky)) this.nastav(a, v);
   }
   zneplatni() { if (this.sesit) this.sesit.zneplatni(); else this.cache = new Map(); }
-  kontext(kroky) {
+  kontext(kroky, a) {
     return {
       jazyk: this.jazyk, kroky,
+      kde: a ? rozeberAdresu(a) : null,
+      tabulka: (jm, kde) => this.najdiTabulku(jm, kde),
       bunka: (r, c, l) => {
         /* buňka, ze které se rozlévá pole, se jako jednotlivá buňka chová jako jeho první prvek */
         const prvni = v => (jePole(v) && v.rozlitiZ ? v.h[0][0] : v);
@@ -1172,6 +1269,28 @@ class List {
     if (p) { this.radku = Math.max(this.radku, p.r); this.sloupcu = Math.max(this.sloupcu, p.c); }
   }
   surova(a) { return this.bunky[a.toUpperCase()] ?? ''; }
+  /* tabulka podle názvu (i na jiném listu sešitu), bez názvu ta, ve které leží buňka kde */
+  najdiTabulku(jm, kde) {
+    const popis = (t, l) => {
+      const sloupce = [];
+      for (let c = t.c1; c <= t.c2; c++) { const v = l.hodnota(adresa(t.r1, c)); sloupce.push(v === null || v === undefined ? 'Sloupec' + (c - t.c1 + 1) : text(jePole(v) ? v.h[0][0] : v, l.jazyk)); }
+      return { ...t, sloupce, list: l === this ? undefined : l.nazev };
+    };
+    if (!jm) { const t = kde && (this.tabulky || []).find(x => vObdelniku(x, kde.r, kde.c)); return t ? popis(t, this) : null; }
+    const N = String(jm).toUpperCase();
+    for (const l of [this, ...(this.sesit ? this.sesit.listy.filter(x => x !== this) : [])]) {
+      const t = (l.tabulky || []).find(x => x.nazev.toUpperCase() === N);
+      if (t) return popis(t, l);
+    }
+    return null;
+  }
+  vsechnyTabulky() { return this.sesit ? this.sesit.listy.flatMap(l => l.tabulky || []) : this.tabulky || []; }
+  /* oblast strukturovaného odkazu (uzel 'tab') pro buňku a – pro barevné rámečky a audit; jiný list → null */
+  oblastOdkazu(u, a) {
+    const o = this.najdiTabulku(u.tab, a ? rozeberAdresu(a) : null);
+    if (!o || o.list) return null;
+    try { return oblastTab(u, o, a ? rozeberAdresu(a) : null); } catch (e) { return null; }
+  }
   konstanta(s) {
     if (s.startsWith("'")) return s.slice(1);
     const n = textNaCislo(s, this.jazyk); if (n !== null) return n;
@@ -1195,7 +1314,7 @@ class List {
       if (pocita.has(klic)) { if (SONDA > 0) KONTAMINACE = true; return new Chyba('CIRC', `buňka ${a} (i oklikou) odkazuje sama na sebe`); }
       pocita.add(klic);
       try {
-        v = vyhodnotUzel(rozeber(s, this.jazyk), this.kontext(kroky));
+        v = vyhodnotUzel(rozeber(s, this.jazyk), this.kontext(kroky, a));
       } catch (e) {
         if (e instanceof Chyba) v = e;
         else if (e.syntaxe) v = new Chyba('NAME', 'chyba zápisu: ' + e.message);
@@ -1299,10 +1418,10 @@ class List {
     return { v: null, zdroj: null };
   }
   /* kroky vyhodnocení vzorce (v kontextu listu) */
-  kroky(vzorec) {
+  kroky(vzorec, a) {
     const strom = rozeber(vzorec, this.jazyk), kroky = [];
     let v;
-    try { v = vyhodnotUzel(strom, this.kontext(kroky)); }
+    try { v = vyhodnotUzel(strom, this.kontext(kroky, a)); }
     catch (e) { if (e instanceof Chyba) v = e; else throw e; }
     return { strom, kroky, vysledek: v };
   }
@@ -1355,7 +1474,7 @@ class List {
     a = a.toUpperCase();
     const s = this.surova(a);
     if (!s.startsWith('=') || this.format[a]?.t === 'text') return [];
-    try { return odkazyStromu(rozeber(s, this.jazyk)); } catch (e) { return []; }
+    try { return odkazyStromu(rozeber(s, this.jazyk), u => this.oblastOdkazu(u, a)); } catch (e) { return []; }
   }
   /* následníci: buňky, jejichž vzorec přímo odkazuje na buňku a */
   naslednici(a) {
@@ -1418,6 +1537,92 @@ class List {
     }
     return nalezy.sort((x, y) => { const q = rozeberAdresu(x.adresa), w = rozeberAdresu(y.adresa); return q.r - w.r || q.c - w.c; });
   }
+  /* Hledat řešení (Goal Seek): jakou hodnotu dát do buňky zmena, aby vzorec v cil vrátil cilova.
+     Sečny + půlení intervalu, jakmile se najde změna znaménka. Vrací { ok, x, kroky[{x, v}], duvod }. */
+  hledejReseni(cil, cilova, zmena, max = 100) {
+    cil = cil.toUpperCase(); zmena = zmena.toUpperCase();
+    const puv = this.surova(zmena);
+    if (!this.surova(cil).startsWith('=')) return { ok: false, kroky: [], duvod: `V buňce ${cil} musí být vzorec.` };
+    if (puv.startsWith('=')) return { ok: false, kroky: [], duvod: `Měněná buňka ${zmena} nesmí obsahovat vzorec – musí v ní být číslo.` };
+    const start = puv === '' ? 0 : textNaCislo(puv, this.jazyk);
+    if (start === null) return { ok: false, kroky: [], duvod: `V měněné buňce ${zmena} není číslo.` };
+    const zapis = x => { const t = String(+x.toPrecision(15)); this.nastav(zmena, this.jazyk === 'en' ? t : t.replace('.', ',')); };
+    const kroky = [], tol = 1e-7 * Math.max(1, Math.abs(cilova));
+    const f = x => { zapis(x); let v = this.hodnota(cil); if (jePole(v)) v = v.h[0][0]; const r = typeof v === 'number' && isFinite(v) ? v - cilova : NaN; kroky.push({ x, v: isNaN(r) ? (jeChyba(v) ? v : null) : r + cilova }); return r; };
+    let x0 = start, f0 = f(x0);
+    if (Math.abs(f0) <= tol) return { ok: true, x: x0, kroky };
+    let x1 = x0 === 0 ? 1 : x0 * 1.1, f1 = f(x1), lo = null, hi = null;
+    if (!isNaN(f0) && !isNaN(f1) && f0 === f1) {   /* plochý průběh: zkusit vzdálenější body, jinak cíl na buňce nezávisí */
+      for (const k of [10, -10, 1000, -1000]) { x1 = x0 + (x0 || 1) * k; f1 = f(x1); if (isNaN(f1) || f1 !== f0) break; }
+      if (f1 === f0) { zapis(start); this.nastav(zmena, puv); return { ok: false, kroky, duvod: `Vzorec v ${cil} se se změnou ${zmena} nemění – na této buňce nezávisí.` }; }
+    }
+    for (let i = 0; i < max; i++) {
+      if (!isNaN(f0) && !isNaN(f1) && Math.sign(f0) !== Math.sign(f1)) { lo = Math.min(x0, x1) === x0 ? [x0, f0] : [x1, f1]; hi = lo[0] === x0 ? [x1, f1] : [x0, f0]; }
+      if (!isNaN(f1) && Math.abs(f1) <= tol) return { ok: true, x: x1, kroky };
+      let x2;
+      if (isNaN(f1)) x2 = (x0 + x1) / 2;
+      else if (f1 === f0) x2 = x1 + (x1 - x0) * 2;
+      else x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
+      if (lo && hi && !(x2 > Math.min(lo[0], hi[0]) && x2 < Math.max(lo[0], hi[0]))) x2 = (lo[0] + hi[0]) / 2;   /* sečna utekla z intervalu → půlení */
+      if (!isFinite(x2)) break;
+      x0 = x1; f0 = f1; x1 = x2; f1 = f(x1);
+      if (lo && hi && !isNaN(f1)) { if (Math.sign(f1) === Math.sign(lo[1])) lo = [x1, f1]; else hi = [x1, f1]; x0 = lo[0]; f0 = lo[1]; }
+    }
+    /* sečny selhaly (třeba přeskočily nespojitost): body kolem odhadu na obě strany, změna znaménka → půlení */
+    const m = Math.abs(start) || 1, body = [start];
+    for (let k = -12; k <= 20; k++) { const d = m * Math.pow(2, k); body.push(start + d, start - d, d, -d); }
+    body.sort((a, b) => Math.abs(a - start) - Math.abs(b - start));
+    const hod = body.map(x => [x, f(x)]).filter(([, v]) => !isNaN(v));
+    const zn = hod.find(([, v]) => Math.abs(v) <= tol);
+    if (zn) { zapis(zn[0]); return { ok: true, x: zn[0], kroky }; }
+    hod.sort((a, b) => a[0] - b[0]);
+    let par = null;
+    for (let i = 1; i < hod.length; i++) if (Math.sign(hod[i][1]) !== Math.sign(hod[i - 1][1]) && (!par || Math.abs((hod[i][0] + hod[i - 1][0]) / 2 - start) < Math.abs((par[0][0] + par[1][0]) / 2 - start))) par = [hod[i - 1], hod[i]];
+    if (par) {
+      let [a, b] = par;
+      for (let i = 0; i < 200; i++) {
+        const x = (a[0] + b[0]) / 2, v = f(x);
+        if (isNaN(v)) break;
+        if (Math.abs(v) <= tol) return { ok: true, x, kroky };
+        if (Math.sign(v) === Math.sign(a[1])) a = [x, v]; else b = [x, v];
+      }
+    }
+    this.nastav(zmena, puv);
+    return { ok: false, kroky, duvod: 'Řešení se nenašlo – možná neexistuje, nebo je daleko od výchozí hodnoty. Zkuste do měněné buňky dát jiný odhad.' };
+  }
+  /* mapa vzorců: adresa → popisek | cislo | vstup | vzorec | natvrdo | nekonz | chyba (jako „Inquire“ v Excelu) */
+  mapaVzorcu() {
+    const out = new Map(), vstupy = new Set(), vzorce = {};
+    const norm = a => {
+      if (!(a in vzorce)) {
+        const s = this.surova(a), p = rozeberAdresu(a);
+        if (!s.startsWith('=') || !p) vzorce[a] = null;
+        else { try { vzorce[a] = posunVzorec(s, 1000 - p.r, 100 - p.c, this.jazyk); } catch (e) { vzorce[a] = s; } }
+      }
+      return vzorce[a];
+    };
+    const adr = Object.keys(this.bunky).filter(a => rozeberAdresu(a));
+    for (const a of adr) if (this.surova(a).startsWith('=')) for (const o of this.predchudci(a)) {
+      if (o.list && (!this.nazev || o.list.toUpperCase() !== this.nazev.toUpperCase())) continue;
+      for (let r = o.r1; r <= Math.min(o.r2, o.r1 + 2000); r++) for (let c = o.c1; c <= Math.min(o.c2, o.c1 + 200); c++) vstupy.add(adresa(r, c));
+    }
+    const BEZNA = [0, 1, 2, 10, 100, 1000, 12, 24, 60, 7, 365, 0.5];
+    const natvrdo = s => { try { let n = false; (function p(u) { if (!u || n) return; if (u.t === 'num' && !BEZNA.includes(u.v)) n = true; (u.args || []).forEach(p); p(u.l); p(u.r); p(u.x); })(rozeber(s, this.jazyk)); return n; } catch (e) { return false; } };
+    for (const a of adr) {
+      const s = this.surova(a), p = rozeberAdresu(a);
+      let v = this.hodnota(a); if (jePole(v)) v = v.h[0][0];
+      if (!s.startsWith('=') || this.format[a]?.t === 'text') {
+        out.set(a, vstupy.has(a) && typeof v === 'number' ? 'vstup' : typeof v === 'number' || typeof v === 'boolean' ? 'cislo' : vstupy.has(a) ? 'vstup' : 'popisek');
+        continue;
+      }
+      if (jeChyba(v)) { out.set(a, 'chyba'); continue; }
+      const ja = norm(a), sous = (dr, dc) => (p.r + dr >= 1 && p.c + dc >= 1 ? norm(adresa(p.r + dr, p.c + dc)) : null);
+      const [n, d, l, r] = [sous(-1, 0), sous(1, 0), sous(0, -1), sous(0, 1)];
+      if ((n && n === d && n !== ja) || (l && l === r && l !== ja)) { out.set(a, 'nekonz'); continue; }
+      out.set(a, natvrdo(s) ? 'natvrdo' : 'vzorec');
+    }
+    return out;
+  }
   /* ---------- struktura, řazení, hledání ---------- */
   zmenStrukturu(osa, od, pocet) {
     const nove = {}, nf = {};
@@ -1450,6 +1655,11 @@ class List {
         return q;
       } catch (e) { return p; }
     }).filter(Boolean);
+    if (this.tabulky) this.tabulky = this.tabulky.map(t => {
+      const st = strukturaStrom({ t: 'range', a: { t: 'ref', r: t.r1, c: t.c1 }, b: { t: 'ref', r: t.r2, c: t.c2 } }, osa, od, pocet);
+      if (st.t !== 'range' || (osa === 'r' && pocet < 0 && t.r1 >= od && t.r1 <= od - pocet - 1)) return null;   /* smazané záhlaví = konec tabulky */
+      return { ...t, r1: st.a.r, c1: st.a.c, r2: st.b.r, c2: st.b.c };
+    }).filter(t => t && t.r2 > t.r1);
     if (osa === 'r') this.radku = Math.max(1, this.radku + pocet); else this.sloupcu = Math.max(1, this.sloupcu + pocet);
     if (this.sesit && this.nazev) {
       const jm = this.nazev.toUpperCase();
@@ -1501,6 +1711,7 @@ class List {
   klon() {
     const l = new List({}, { jazyk: this.jazyk, radku: this.radku, sloupcu: this.sloupcu });
     l.bunky = { ...this.bunky }; l.format = { ...this.format };
+    if (this.tabulky) l.tabulky = this.tabulky.map(t => ({ ...t }));
     if (this.sesit) { l.sesit = this.sesit; l.nazev = this.nazev; l.cache = new Map(); l.pocita = new Set(); l.zneplatni = function () { this.cache = new Map(); }; }
     return l;
   }
@@ -1583,7 +1794,7 @@ class Sesit {
     this.jazyk = na; this.zneplatni();
   }
   serializuj() {
-    return { jazyk: this.jazyk, nazvy: { ...this.nazvy }, listy: this.listy.map(l => ({ nazev: l.nazev, bunky: { ...l.bunky }, format: { ...l.format }, sirky: { ...(l.sirky || {}) }, kukatko: [...(l.kukatko || [])], pravidla: (l.pravidla || []).map(p => ({ ...p })) })) };
+    return { jazyk: this.jazyk, nazvy: { ...this.nazvy }, listy: this.listy.map(l => ({ nazev: l.nazev, bunky: { ...l.bunky }, format: { ...l.format }, sirky: { ...(l.sirky || {}) }, kukatko: [...(l.kukatko || [])], pravidla: (l.pravidla || []).map(p => ({ ...p })), tabulky: (l.tabulky || []).map(t => ({ ...t })) })) };
   }
   /* obnova ze serializovaných dat (i ze sdíleného odkazu nebo souboru = nedůvěryhodný vstup):
      každá hodnota se ověří a převede na povolený tvar, aby se do stránky nedostal cizí kód ani rozbitý stav */
@@ -1613,6 +1824,10 @@ class Sesit {
       l.kukatko = (Array.isArray(x.kukatko) ? x.kukatko : []).filter(jeAdr).slice(0, 60);
       l.pravidla = (Array.isArray(x.pravidla) ? x.pravidla : []).filter(p => p && typeof p.oblast === 'string' && /^\$?[A-Za-z]{1,3}\$?\d+(:\$?[A-Za-z]{1,3}\$?\d+)?$/.test(p.oblast) && TYPY_P.includes(p.typ))
         .slice(0, 50).map(p => ({ oblast: p.oblast.toUpperCase(), typ: p.typ, h1: text(p.h1, 500), h2: text(p.h2, 500), styl: STYLY.includes(p.styl) ? p.styl : 'cervena' }));
+      const cele = v => Number.isInteger(v) && v >= 1 && v <= 100000;
+      const jmenaTab = new Set(s.listy.flatMap(q => (q.tabulky || []).map(t => t.nazev.toUpperCase())));
+      l.tabulky = (Array.isArray(x.tabulky) ? x.tabulky : []).filter(t => t && platnyNazevTabulky(t.nazev) && ['r1', 'c1', 'r2', 'c2'].every(k => cele(t[k])) && t.r2 > t.r1 && t.c2 >= t.c1 && !jmenaTab.has(t.nazev.toUpperCase()))
+        .slice(0, 20).map(t => { jmenaTab.add(t.nazev.toUpperCase()); return { nazev: t.nazev, r1: t.r1, c1: t.c1, r2: t.r2, c2: t.c2, souhrn: !!t.souhrn }; });
       for (const a of Object.keys(l.bunky)) { const p = rozeberAdresu(a); if (p) { l.radku = Math.max(l.radku, p.r); l.sloupcu = Math.max(l.sloupcu, p.c); } }
       let nazev = String(x.nazev || '').replace(/[\\/?*[\]:!]/g, '_').trim().slice(0, 31);
       if (!nazev || s.list(nazev)) nazev = s.volnyNazev();
@@ -1630,13 +1845,19 @@ class Sesit {
 
 /* ---------- pomůcky pro editor ---------- */
 /* odkazy ve vzorci s pozicemi (pro barevné zvýraznění) */
-function odkazyVeVzorci(vzorec, jazyk) {
+function odkazyVeVzorci(vzorec, jazyk, list, a) {
   if (!String(vzorec).startsWith('=')) return [];
   let tok;
   try { tok = tokenizuj(vzorec.slice(1), jazyk, true); } catch (e) { return []; }
   const out = [];
   for (let i = 0; i < tok.length; i++) {
     const k = tok[i];
+    if (list && (k.t === 'tab' || (k.t === 'name' && list.najdiTabulku(k.text)))) {   /* Tab[Sloupec] → oblast v listu */
+      let o = null;
+      try { o = list.oblastOdkazu(k.t === 'tab' ? { t: 'tab', tab: k.tab, ...rozeberSpec(k.spec) } : { t: 'tab', tab: k.text, cast: 'data' }, a); } catch (e) { o = null; }
+      if (o) out.push({ s: k.s + 1, e: k.e + 1, ...o });
+      continue;
+    }
     if (k.t !== 'ref' || (i > 0 && tok[i - 1].t === 'sheet')) continue;
     const b = tok[i + 2];
     if (tok[i + 1] && tok[i + 1].t === 'op' && tok[i + 1].v === ':' && b && b.t === 'ref') {
@@ -1747,6 +1968,7 @@ function rozborStromu(strom) {
     if (u.t === 'fn') { if (u.en) fn.add(u.en); u.args.forEach(pruchod); }
     else if (u.t === 'ref') refy.push(u);
     else if (u.t === 'range') refy.push(u.a, u.b);
+    else if (u.t === 'tab') refy.push({ t: 'tab', tab: u.tab, absR: true, absC: true });   /* strukturovaný odkaz se při kopírování neposouvá */
     else if (u.t === 'op') { pruchod(u.l); pruchod(u.r); }
     else if (u.x) pruchod(u.x);
   })(strom);
@@ -1768,6 +1990,7 @@ function zkontroluj(list, uloha, vstup) {
     if (!fn.has(f)) return { ok: false, zprava: `Úloha chce použít funkci ${nazevFunkce(f, jaz)}.` };
   }
   if (!refy.length) return { ok: false, zprava: 'Vzorec neobsahuje žádný odkaz na buňku. Počítejte s buňkami (např. B2), ne s opsanými čísly – když se data změní, výsledek se musí sám přepočítat.' };
+  if (uloha.tabulka && !refy.some(r => r.t === 'tab')) return { ok: false, zprava: 'Úloha chce strukturovaný odkaz na tabulku – pište názvy sloupců, např. Prodej[Kusy] nebo [@Kusy], ne adresy jako C2.' };
   if (uloha.absolutni && !refy.some(r => r.absR || r.absC)) return { ok: false, zprava: 'Při kopírování se odkazy posouvají. Některý odkaz je potřeba ukotvit znakem $ (v poli vzorce klávesa F4).' };
 
   const reseni = prelozVzorec(uloha.reseni, 'en', jaz);
@@ -1800,7 +2023,33 @@ function zkontroluj(list, uloha, vstup) {
   return { ok: true, zprava: cile.length > 1 ? `Správně! Vzorec funguje ve všech ${cile.length} buňkách i po změně dat.` : 'Správně! Vzorec funguje i po změně vstupních dat.' };
 }
 
+/* vzorec bez strukturovaných odkazů (Tab[Sloupec] → B2:B9) – pro export do souboru bez definic tabulek */
+function bezTabulek(vzorec, list, a, jazyk = list.jazyk, jen = null) {
+  if (!String(vzorec).startsWith('=') || !/\[|\b/.test(vzorec)) return vzorec;
+  try {
+    const kde = a ? rozeberAdresu(a) : null;
+    const nahrad = u => {
+      const tab = u.t === 'tab' ? u : u.t === 'jmeno' && list.najdiTabulku(u.v) ? { t: 'tab', tab: u.v, cast: 'data' } : null;
+      if (tab) {
+        const o = list.najdiTabulku(tab.tab, kde); if (!o) return { t: 'err', v: 'REF' };
+        if (jen && o.nazev.toUpperCase() !== jen.toUpperCase()) return u;   /* převádí se jen zrušená tabulka */
+        let ob; try { ob = oblastTab(tab, o, kde); } catch (e) { return { t: 'err', v: e.kod || 'REF' }; }
+        const roh = (r, c) => ({ t: 'ref', r, c, absR: true, absC: true, list: o.list });
+        return ob.r1 === ob.r2 && ob.c1 === ob.c2 ? { ...roh(ob.r1, ob.c1), absR: tab.cast !== 'radek' } : { t: 'range', a: roh(ob.r1, ob.c1), b: roh(ob.r2, ob.c2) };
+      }
+      switch (u.t) {
+        case 'zav': case 'un': case 'pct': return { ...u, x: nahrad(u.x) };
+        case 'op': return { ...u, l: nahrad(u.l), r: nahrad(u.r) };
+        case 'fn': return { ...u, args: u.args.map(nahrad) };
+        default: return u;
+      }
+    };
+    return '=' + vykresli(nahrad(rozeber(vzorec, list.jazyk)), { jazyk });
+  } catch (e) { return vzorec; }
+}
+
 koren.XLV = {
+  rozeberSpec, textTab, oblastTab, platnyNazevTabulky, bezTabulek,
   Chyba, CHYBY, FUNKCE, ALIAS, List, Sesit, textListu,
   tokenizuj, rozeber, vykresli, literal, vyhodnotUzel, posunStrom, posunVzorec, prelozVzorec,
   odkazyVeVzorci, tokenyProZvyrazneni, napovedaKurzoru, navrhyFunkci, prepniAbsolutni, zkontroluj, rozborStromu,

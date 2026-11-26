@@ -67,8 +67,14 @@
   <hr>
   <button class="tl" data-soubor="sdilet">🔗 Sdílet sešit odkazem</button>
   <hr>
+  <div class="titulek">Pokrok (lekce, sešity, sady, procvičování)</div>
+  <button class="tl" data-soubor="zaloha">🛟 Zálohovat celý pokrok…</button>
+  <button class="tl" data-soubor="obnova">♻ Obnovit pokrok ze zálohy…</button>
+  <button class="tl" data-soubor="predObnovou" id="btnPredObnovou" hidden>↶ Vrátit stav před obnovou</button>
+  <hr>
   <button class="tl" data-soubor="instalovat">📲 Nainstalovat jako aplikaci…</button>
 </div>
+<input type="file" id="zalSoubor" accept=".json,application/json" hidden>
 <input type="file" id="sadaVstup" accept=".json,application/json" hidden>
 <input type="file" id="souborVstup" accept=".xlsx,.xls,.xlsm,.ods,.csv" hidden>
 <!-- nabídka buňky po podržení prstu -->
@@ -97,6 +103,11 @@
   <button class="tl" data-str="seradZ">↑ Seřadit Z → A (od největšího)</button>
   <hr>
   <button class="tl" data-str="hledat">🔍 Najít a nahradit… <kbd>Ctrl+H</kbd></button>
+  <button class="tl" data-str="reseni">🎯 Hledat řešení (Goal Seek)…</button>
+  <hr>
+  <div class="titulek">Tabulka (strukturované odkazy)</div>
+  <button class="tl" data-str="tabulka">📋 Vytvořit tabulku z výběru…</button>
+  <button class="tl" data-str="zrusTab">✕ Zrušit tabulku (data zůstanou)</button>
 </div>
 <dialog id="dlgPodm">
   <h2>🎨 Podmíněné formátování</h2>
@@ -132,6 +143,9 @@
 
 <div class="rozlozeni" id="rozlozeni">
   <section class="vyklad" id="vyklad"></section>
+  <div class="predel" id="predel" role="separator" aria-orientation="vertical" aria-controls="vyklad" aria-label="Předěl mezi výkladem a dílnou – táhněte, šipky mění šířku, Enter sbalí výklad" tabindex="0">
+    <button class="predel-tl" id="predelTl" title="Sbalit výklad (dvojklik na předěl)" aria-label="Sbalit výklad" tabindex="-1">◀</button>
+  </div>
   <section class="dilna" id="dilna" aria-label="Dílna – list a rozklad vzorce">
     <div class="lista-dilny">
       <span id="popisListu">List lekce</span>
@@ -164,6 +178,7 @@
       <button class="tl" id="btnNazvy" title="Správce názvů – pojmenované oblasti a konstanty (např. DPH)">🏷<span class="txt"> Názvy</span></button>
       <button class="tl" data-nabidka="nabStruktura" title="Vložit/odstranit řádky a sloupce, seřadit, najít a nahradit (také pravé tlačítko na záhlaví)">▦<span class="txt"> Úpravy</span> ▾</button>
       <button class="tl ik" id="btnAuditSmaz" title="Odstranit šipky" aria-label="Odstranit šipky">✕⇢</button>
+      <button class="tl ik" id="btnMapa" aria-pressed="false" title="Mapa vzorců: barevně ukáže popisky, vstupy, vzorce a podezřelá místa listu" aria-label="Mapa vzorců">🗺</button>
     </div>
     <div class="radek-vzorce">
       <div class="nazev-bunky" data-i18n="ne" id="nazevBunky" title="Vybraná buňka">A1</div>
@@ -190,7 +205,9 @@
       </div>
     </div>
     <div class="listy-zal" id="listyZal" role="tablist" aria-label="Listy sešitu" hidden></div>
-    <div class="pod-mrizkou"><div class="info-dilny" id="infoDilny"></div><div class="stav-radek" id="stavRadek" aria-live="polite"></div></div>
+    <div class="mapa-legenda" id="mapaLegenda" hidden></div>
+    <div class="pod-mrizkou"><div class="info-dilny" id="infoDilny"></div><div class="stav-radek" id="stavRadek" aria-live="polite"></div>
+      <span class="lupa" role="group" aria-label="Zvětšení listu"><button class="btn mini" data-lupa="-" title="Zmenšit list (Ctrl+kolečko, dva prsty)" aria-label="Zmenšit list">−</button><button class="btn mini" data-lupa="0" id="lupaHodnota" title="Původní velikost">100 %</button><button class="btn mini" data-lupa="+" title="Zvětšit list" aria-label="Zvětšit list">+</button></span></div>
 
     <div class="rozklad" id="rozklad">
       <div class="rz-hlava" role="tablist">
@@ -208,38 +225,151 @@
   <section class="tahak" id="tahak" hidden></section>
 </div>
 
+<dialog id="dlgReseni" aria-labelledby="hrNadpis">
+  <h2 id="hrNadpis">🎯 Hledat řešení</h2>
+  <p class="hr-uvod">Stránka bude měnit jednu buňku tak dlouho, až vzorec vrátí požadovanou hodnotu. V Excelu: <b>Data → Citlivostní analýza → Hledat řešení</b>.</p>
+  <div class="hr-pole">
+    <label>Nastavit buňku <input id="hrCil" data-i18n="ne" autocomplete="off" autocapitalize="characters" placeholder="B5"></label>
+    <label>na hodnotu <input id="hrHodnota" inputmode="decimal" autocomplete="off" placeholder="1000"></label>
+    <label>změnou buňky <input id="hrZmena" data-i18n="ne" autocomplete="off" autocapitalize="characters" placeholder="B2"></label>
+  </div>
+  <p><button class="btn hlavni" id="hrHledej">🎯 Hledat</button></p>
+  <div id="hrVysledek" aria-live="polite"></div>
+  <div class="hr-konec"><button class="btn" id="hrVratit" hidden>↶ Vrátit původní hodnotu</button><button class="btn hlavni" id="hrZavri">Zavřít</button></div>
+</dialog>
+<dialog id="dlgZaloha" aria-labelledby="zalNadpis">
+  <h2 id="zalNadpis">🛟 Záloha pokroku</h2>
+  <p id="zalSouhrn"></p>
+  <p>Na jiném zařízení (nebo v nainstalované aplikaci) otevřete 📁 Soubor → <b>Obnovit pokrok ze zálohy</b> a vyberte soubor. Nebo použijte odkaz:</p>
+  <div class="zal-odkaz"><input id="zalOdkaz" readonly aria-label="Odkaz se zálohou" data-i18n="ne"><button class="btn" id="zalKopiruj">📋 Kopírovat</button></div>
+  <div class="zal-qr"><div id="zalQR" data-i18n="ne"></div><p id="zalQRtext"></p></div>
+  <form method="dialog" style="text-align:right"><button class="btn hlavni">Hotovo</button></form>
+</dialog>
 <dialog id="dlgInstalace" aria-labelledby="instalNadpis">
   <h2 id="instalNadpis">📲 Vzorce jako aplikace</h2>
   <div id="instalNavod"></div>
   <form method="dialog" style="text-align:right"><button class="btn">Zavřít</button></form>
 </dialog>
-<dialog id="dlgNapoveda">
-  <h2>❓ Jak se stránka ovládá</h2>
-  <p><button class="btn" id="btnPruvodceZNapovedy">🧭 Spustit průvodce stránkou</button></p>
-  <ul>
-    <li><b>Výuka</b>: vlevo výklad, vpravo živý list. Ukázky vzorců (rámeček se šipkou ▸) jsou klikací – vzorec se rozloží v dílně.</li>
-    <li><b>Psaní</b>: vyberte buňku a začněte psát, nebo klikněte do řádku vzorců. <kbd>Enter</kbd> potvrdí, <kbd>Esc</kbd> zruší, <kbd>Tab</kbd> potvrdí a jde doprava (nebo doplní nabízenou funkci).</li>
-    <li><b>iPad a telefon</b>: klepnutí vybere buňku, další klepnutí na ni otevře psaní. Pod řádkem vzorců je lišta se znaky, které na klávesnici chybí (<code>= ( ) ; : $ " &amp;</code>, operátory, ✓ potvrdit). Při psaní vzorce klepnutí na buňku vloží její adresu. <b>Podržet a táhnout</b> = výběr oblasti (obyčejný tah list posouvá), <b>podržet</b> buňku = nabídka (kopírovat, vložit, vyplnit dolů…), podržet záhlaví = řádky a sloupce, podržet záložku listu = přejmenovat. Velké kolečko v rohu výběru je úchyt.</li>
-    <li><b>Ukazování myší</b>: když při psaní vzorce stojíte za <code>=</code>, <code>(</code>, operátorem nebo oddělovačem, klikněte na buňku – vloží se její adresa. Tažením vložíte oblast.</li>
-    <li><kbd>F4</kbd> na adrese v řádku vzorců přepíná <code>A1 → $A$1 → A$1 → $A1</code>.</li>
-    <li><b>Výběr oblasti</b>: tažením myší, <kbd>Shift</kbd>+šipky, <kbd>Shift</kbd>+klik, klik na záhlaví řádku či sloupce, <kbd>Ctrl+A</kbd>. Dole se ukáže součet, průměr, počet, min a max.</li>
-    <li><b>Kopírování</b>: <kbd>Ctrl+C</kbd> / <kbd>Ctrl+X</kbd> / <kbd>Ctrl+V</kbd> i celých oblastí – relativní odkazy se posunou. Funguje i s Excelem a Calcem (vkládají se hodnoty).</li>
-    <li><b>Úchyt</b> (čtvereček v rohu výběru): táhnutím kopíruje vzorce a pokračuje v řadách (1, 2 → 3…, data, dny, měsíce, „Položka 1“). Dvojklik vyplní dolů podle sousedního sloupce.</li>
-    <li><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> Zpět a Znovu, <kbd>Delete</kbd> smaže výběr, <kbd>Ctrl+B</kbd> tučně, <kbd>Ctrl+`</kbd> zobrazí vzorce.</li>
-    <li><b>Audit</b>: tlačítka ⇠◻ a ◻⇢ kreslí šipky k předchůdcům a následníkům vybrané buňky (červená = odtud přichází chyba), každý další klik přidá úroveň. Záložky pod listem: <i>Závislosti</i>, <i>Kontrola</i> (všechny chyby listu i s původem, nekonzistentní vzorce) a <i>Kukátko</i> (sledované buňky).</li>
-    <li><b>▦ Úpravy</b> (nebo pravé tlačítko na záhlaví řádku/sloupce): vložit a odstranit řádky či sloupce – odkazy ve vzorcích se přepíšou, odkaz na smazanou buňku se změní na #ODKAZ!. Seřadit oblast (vzorce se posunou se svým řádkem). <kbd>Ctrl+H</kbd> najít a nahradit i ve vzorcích.</li>
-    <li><b>Listy</b> (v pískovišti): záložky pod listem, ＋ přidá list, dvojklik přejmenuje. Na jiný list se odkazuje <code>List2!A1</code> nebo <code>'Můj list'!A1:B5</code>. <b>🏷 Názvy</b> pojmenují buňku, oblast nebo konstantu (<code>=B2*DPH</code>).</li>
-    <li><b>📁 Soubor</b>: ukládání sešitů pod jménem, import a export Excelu (.xlsx – vzorce, hodnoty, listy, názvy, formáty čísel; tučné písmo a barvy se nepřenáší), .ods a .csv, sdílení odkazem. Před nahrazením pískoviště se jeho obsah uloží jako záloha do Mých sešitů.</li>
-    <li><b>👩‍🏫 Učitel</b>: v listu připravte data a do cílových buněk vzorová řešení, pak „Přidat úlohu z vybrané buňky“. Sadu lze vyzkoušet jako žák, stáhnout (JSON) a sdílet odkazem – žák ji najde v menu lekcí.</li>
-    <li><b>🎨 Podmíněné formátování</b>: obarví buňky podle hodnoty (větší než, mezi, obsahuje, nejvyšších N, duplicity, vlastní vzorec), datové pruhy a barevné škály.</li>
-    <li><b>Formát</b> čísla (měna, procenta, datum, desetinná místa) mění jen vzhled – vzorce počítají s uloženou hodnotou. Šířku sloupce změníte tažením okraje záhlaví.</li>
-    <li><b>🔬 Rozbor vzorce</b>: vložte jakýkoli vzorec – stránka ho vysvětlí slovy, rozepíše postup, upozorní na chyby a předvede ho na ukázkových datech.</li>
-    <li><b>Rozklad</b>: <i>Krok za krokem</i> nahrazuje části vzorce výsledky ve stejném pořadí jako Excel (Vzorce → Vyhodnotit vzorec). <i>Strom</i> ukazuje, co je argumentem čeho.</li>
-    <li><b>Úlohy</b> se kontrolují i se změněnými daty – opsaný výsledek místo vzorce neprojde.</li>
-    <li>Přepínač <b>Zápis vzorců</b> přeloží všechny vzorce mezi českým (<code>KDYŽ(A1>1;…)</code>) a anglickým (<code>IF(A1>1,…)</code>) Excelem.</li>
-  </ul>
-  <p style="font-size:.85rem;color:var(--text-muted)">Interpret umí přes 60 nejpoužívanějších funkcí. Formáty buněk, grafy a kontingenční tabulky tu nejsou. Pokrok se ukládá jen v tomto prohlížeči.</p>
-  <form method="dialog" style="text-align:right"><button class="btn hlavni">Rozumím</button></form>
+<dialog id="dlgNapoveda" class="napoveda" aria-labelledby="npNadpis">
+  <div class="np-hlava">
+    <h2 id="npNadpis">❓ Jak se stránka ovládá</h2>
+    <button class="btn mini" id="btnPruvodceZNapovedy">🧭 Průvodce stránkou</button>
+    <form method="dialog"><button class="np-zavri" aria-label="Zavřít nápovědu" title="Zavřít (Esc)">✕</button></form>
+  </div>
+  <nav class="np-zalozky" role="tablist" aria-label="Témata nápovědy">
+    <button role="tab" id="npz-zaciname" aria-controls="np-zaciname" aria-selected="true" tabindex="0" data-np="zaciname"><span aria-hidden="true">🚀</span> Začínáme</button>
+    <button role="tab" id="npz-psani" aria-controls="np-psani" aria-selected="false" tabindex="-1" data-np="psani"><span aria-hidden="true">✍️</span> Psaní vzorců</button>
+    <button role="tab" id="npz-list" aria-controls="np-list" aria-selected="false" tabindex="-1" data-np="list"><span aria-hidden="true">▦</span> List a úpravy</button>
+    <button role="tab" id="npz-nastroje" aria-controls="np-nastroje" aria-selected="false" tabindex="-1" data-np="nastroje"><span aria-hidden="true">🔧</span> Nástroje</button>
+    <button role="tab" id="npz-rezimy" aria-controls="np-rezimy" aria-selected="false" tabindex="-1" data-np="rezimy"><span aria-hidden="true">🎓</span> Režimy</button>
+    <button role="tab" id="npz-dotyk" aria-controls="np-dotyk" aria-selected="false" tabindex="-1" data-np="dotyk"><span aria-hidden="true">📱</span> iPad a dotyk</button>
+    <button role="tab" id="npz-soubory" aria-controls="np-soubory" aria-selected="false" tabindex="-1" data-np="soubory"><span aria-hidden="true">📁</span> Soubory a záloha</button>
+    <button role="tab" id="npz-zkratky" aria-controls="np-zkratky" aria-selected="false" tabindex="-1" data-np="zkratky"><span aria-hidden="true">⌨️</span> Zkratky</button>
+  </nav>
+  <div class="np-telo">
+  <section class="np-panel" id="np-zaciname" role="tabpanel" aria-labelledby="npz-zaciname">
+    <h3>🚀 Začínáme</h3>
+    <p class="np-uvod">Vlevo je výklad lekce, vpravo živý list jako v Excelu. Všechno se počítá hned a dá se rozebrat krok za krokem.</p>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📘</span><div><b>Lekce</b><p>14 lekcí od prvního vzorce po tabulky a chyby. Šipky ◀ ▶ vedle názvu přepínají na předchozí a další lekci.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">▸</span><div><b>Klikací ukázky</b><p>Vzorec v rámečku se šipkou se po kliknutí rozloží v dílně vpravo.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">✍️</span><div><b>Úlohy</b><p>Vzorec napište do šrafované buňky a klikněte na <i>Zkontrolovat</i>. Kontrola ho vyzkouší i se změněnými daty, takže opsaný výsledek neprojde.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🔍</span><div><b>Rozklad vzorce</b><p><i>Krok za krokem</i> nahrazuje části vzorce výsledky ve stejném pořadí jako Excel (Vyhodnotit vzorec). <i>Strom</i> ukáže, co je argumentem čeho.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🧭</span><div><b>Průvodce</b><p>Krátká prohlídka stránky – tlačítko nahoře v liště nebo tady v nápovědě.</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-psani" role="tabpanel" aria-labelledby="npz-psani" hidden>
+    <h3>✍️ Psaní vzorců</h3>
+    <p class="np-uvod">Vyberte buňku a začněte psát, nebo klikněte do řádku vzorců nad listem. Vzorec vždy začíná znakem <code>=</code>.</p>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">👆</span><div><b>Ukazování myší</b><p>Za <code>=</code>, <code>(</code>, operátorem nebo oddělovačem klikněte na buňku – vloží se její adresa. Tažením vložíte oblast, v řádku tabulky se vloží <code>[@Sloupec]</code>.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">💲</span><div><b>Znak $ (F4)</b><p>Na adrese v řádku vzorců přepíná <code>A1 → $A$1 → A$1 → $A1</code>. Ukotvený odkaz se při kopírování neposune.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">💡</span><div><b>Nápověda funkcí</b><p>Při psaní se nabízejí funkce a pod řádkem je vidět, který argument právě píšete. <kbd>Tab</kbd> doplní nabízenou funkci.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🇨🇿</span><div><b>Zápis vzorců</b><p>Přepínač v liště přeloží všechny vzorce mezi českým <code>KDYŽ(A1&gt;1;…)</code> a anglickým <code>IF(A1&gt;1,…)</code> Excelem.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🔢</span><div><b>Formát čísla</b><p>Měna, procenta, datum nebo desetinná místa mění jen vzhled – vzorce počítají s uloženou hodnotou.</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-list" role="tabpanel" aria-labelledby="npz-list" hidden>
+    <h3>▦ List a úpravy</h3>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">⬚</span><div><b>Výběr oblasti</b><p>Tažením myší, <kbd>Shift</kbd>+šipky, <kbd>Shift</kbd>+klik, klik na záhlaví řádku či sloupce, <kbd>Ctrl+A</kbd>. Dole se ukáže součet, průměr, počet, minimum a maximum.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📋</span><div><b>Kopírování</b><p><kbd>Ctrl+C</kbd> / <kbd>Ctrl+X</kbd> / <kbd>Ctrl+V</kbd> i celých oblastí – relativní odkazy se posunou. S Excelem a Calcem se vyměňují hodnoty.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">◢</span><div><b>Úchyt</b><p>Čtvereček v rohu výběru: táhnutím kopíruje vzorce a pokračuje v řadách (1, 2 → 3…, data, dny, měsíce). Dvojklik vyplní dolů podle sousedního sloupce.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">▦</span><div><b>Úpravy</b><p>Vložit a odstranit řádky či sloupce (odkazy se přepíšou), seřadit, najít a nahradit. Také pravým tlačítkem na záhlaví.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">↔</span><div><b>Šířka sloupce</b><p>Táhněte okraj záhlaví, dvojklik nastaví šířku podle obsahu.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📑</span><div><b>Listy a názvy</b><p>V pískovišti: záložky pod listem, ＋ přidá list, dvojklik přejmenuje. Odkaz na jiný list: <code>List2!A1</code>. 🏷 Názvy pojmenují buňku nebo konstantu.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📋</span><div><b>Tabulky</b><p>▦ Úpravy → Vytvořit tabulku z výběru. Ve vzorcích pak <code>Prodej[Kusy]</code> nebo <code>[@Cena]</code>; vzorec v prázdném sloupci tabulky se doplní do všech řádků.</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-nastroje" role="tabpanel" aria-labelledby="npz-nastroje" hidden>
+    <h3>🔧 Nástroje</h3>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">⇠</span><div><b>Audit</b><p>Tlačítka ⇠◻ a ◻⇢ kreslí šipky k předchůdcům a následníkům vybrané buňky (červená = odtud přichází chyba). Každý další klik přidá úroveň.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🐞</span><div><b>Závislosti, Kontrola, Kukátko</b><p>Záložky pod listem: na co buňka odkazuje, všechny chyby listu i s původem a sledované buňky.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🗺</span><div><b>Mapa vzorců</b><p>Obarví popisky, vstupy, vzorce, čísla napsaná natvrdo, nekonzistentní vzorce a chyby. Klik v legendě přejde na další takovou buňku.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🎯</span><div><b>Hledat řešení</b><p>▦ Úpravy → zadáte cílovou hodnotu vzorce a buňku, kterou smí měnit. Stránka ji dopočítá a ukáže jednotlivé pokusy.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🎨</span><div><b>Podmíněné formátování</b><p>Obarví buňky podle hodnoty (větší než, mezi, obsahuje, nejvyšších N, duplicity, vlastní vzorec), datové pruhy a barevné škály.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">ƒx</span><div><b>Zobrazit vzorce</b><p>Místo výsledků ukáže vzorce v buňkách (<kbd>Ctrl+`</kbd>).</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-rezimy" role="tabpanel" aria-labelledby="npz-rezimy" hidden>
+    <h3>🎓 Režimy</h3>
+    <p class="np-uvod">Přepínají se v horní liště.</p>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🎓</span><div><b>Výuka</b><p>Lekce s výkladem, předpověďmi „Co vrátí vzorec?“ a úlohami.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🎯</span><div><b>Procvičování</b><p>Nekonečné úlohy s náhodnými daty a zkouška na čas. Téma 🔧 <i>Oprav vzorec</i> dá rozbitý vzorec k opravě. Volba „Víc úloh z témat, kde chybuji“ a automatická obtížnost se řídí vašimi posledními pokusy.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🔬</span><div><b>Rozbor vzorce</b><p>Vložte jakýkoli vzorec – stránka ho vysvětlí slovy, rozepíše postup, upozorní na chyby a předvede ho na ukázkových datech.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🧪</span><div><b>Pískoviště</b><p>Volný sešit s více listy, názvy a tabulkami.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📚</span><div><b>Tahák</b><p>Přehled všech funkcí s příklady a hledáním.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">👩‍🏫</span><div><b>Učitel</b><p>Připravte data a vzorová řešení, z vybraných buněk udělejte úlohy. Sadu stáhnete nebo sdílíte odkazem – žák ji najde v menu lekcí.</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-dotyk" role="tabpanel" aria-labelledby="npz-dotyk" hidden>
+    <h3>📱 iPad a dotyk</h3>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">👆</span><div><b>Klepnutí</b><p>Klepnutí vybere buňku, další klepnutí na ni otevře psaní. Při psaní vzorce klepnutí na jinou buňku vloží její adresu.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">⌨️</span><div><b>Lišta znaků</b><p>Pod řádkem vzorců jsou znaky, které na klávesnici chybí: <code>= ( ) ; : $ " &amp;</code>, operátory a ✓ potvrdit.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">✋</span><div><b>Podržení</b><p>Podržet a táhnout = výběr oblasti (obyčejný tah list posouvá). Podržet buňku = nabídka (kopírovat, vložit, vyplnit dolů…), podržet záhlaví = řádky a sloupce, podržet záložku listu = přejmenovat.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🔍</span><div><b>Zvětšení</b><p>Dva prsty zvětší jen list. Tlačítka − / + pod listem dělají totéž.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">✏️</span><div><b>Apple Pencil</b><p>Tah tužkou v listu rovnou vybírá oblast, do řádku vzorců jde psát rukou.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">↔</span><div><b>Předěl</b><p>Hranici mezi výkladem a listem jde posunout tažením, dvojí klepnutí nebo ◀ výklad sbalí.</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-soubory" role="tabpanel" aria-labelledby="npz-soubory" hidden>
+    <h3>📁 Soubory a záloha</h3>
+    <p class="np-uvod">Pokrok, sešity a sady se ukládají jen v tomto prohlížeči.</p>
+    <div class="nk-mriz">
+      <div class="nk"><span class="nk-ik" aria-hidden="true">💾</span><div><b>Moje sešity</b><p>Pískoviště jde uložit pod jménem. Než se nahradí jiným obsahem, uloží se jako záloha.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📥</span><div><b>Excel a Calc</b><p>Otevře .xlsx, .ods a .csv (vzorce, hodnoty, listy, názvy, formáty čísel) a stáhne sešit jako .xlsx nebo .csv. Barvy a písmo se nepřenáší.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🔗</span><div><b>Sdílení</b><p>Sešit i sadu úloh jde poslat odkazem.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">🛟</span><div><b>Záloha pokroku</b><p>Celý pokrok do souboru, odkazu nebo QR kódu – na jiném zařízení nebo v nainstalované aplikaci ho obnovíte.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">📲</span><div><b>Aplikace</b><p>Stránku jde nainstalovat na plochu; poběží přes celou obrazovku i bez internetu.</p></div></div>
+      <div class="nk"><span class="nk-ik" aria-hidden="true">ℹ️</span><div><b>Co tu není</b><p>Interpret umí 97 nejpoužívanějších funkcí. Grafy, kontingenční tabulky a makra tu nejsou.</p></div></div>
+    </div>
+  </section>
+  <section class="np-panel" id="np-zkratky" role="tabpanel" aria-labelledby="npz-zkratky" hidden>
+    <h3>⌨️ Klávesové zkratky</h3>
+    <table class="np-zkratky">
+      <tr><td><kbd>Enter</kbd></td><td>potvrdit a jít dolů</td></tr>
+      <tr><td><kbd>Shift+Enter</kbd></td><td>potvrdit a jít nahoru</td></tr>
+      <tr><td><kbd>Tab</kbd></td><td>potvrdit a jít doprava · doplnit nabízenou funkci</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>zrušit úpravu</td></tr>
+      <tr><td><kbd>F2</kbd></td><td>upravit vybranou buňku</td></tr>
+      <tr><td><kbd>F4</kbd></td><td>přepnout $ u odkazu</td></tr>
+      <tr><td><kbd>Šipky</kbd></td><td>pohyb po listu</td></tr>
+      <tr><td><kbd>Shift+šipky</kbd></td><td>rozšířit výběr</td></tr>
+      <tr><td><kbd>Ctrl+A</kbd></td><td>vybrat celý list</td></tr>
+      <tr><td><kbd>Ctrl+C</kbd> / <kbd>X</kbd> / <kbd>V</kbd></td><td>kopírovat / vyjmout / vložit</td></tr>
+      <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>zpět / znovu</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>smazat výběr</td></tr>
+      <tr><td><kbd>Ctrl+B</kbd></td><td>tučně</td></tr>
+      <tr><td><kbd>Ctrl+`</kbd></td><td>zobrazit vzorce</td></tr>
+      <tr><td><kbd>Ctrl+H</kbd>, <kbd>Ctrl+F</kbd></td><td>najít a nahradit</td></tr>
+      <tr><td><kbd>Ctrl+kolečko</kbd></td><td>zvětšit / zmenšit list</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>Esc</kbd></td><td>ovládání průvodce</td></tr>
+    </table>
+  </section>
+  </div>
 </dialog>
 
 <script src="excel_vzorce/ui.js"></script>
