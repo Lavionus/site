@@ -3710,7 +3710,7 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/excel_vzorce.html",
         "nazev": "📊 Vzorce v Excelu – kurz",
         "popis": "Kurz vzorců: rozbor vlastního vzorce, krokování, úlohy, tahák",
-        "stav": "vyvoj",
+        "stav": "beta",
         "tagy": ["excel", "vzorce", "funkce", "tabulkový procesor", "kurz", "výuka", "SUMA", "KDYŽ", "SVYHLEDAT", "XLOOKUP", "COUNTIF", "SUMIF", "INDEX", "POZVYHLEDAT", "absolutní odkaz", "$", "vyhodnotit vzorec", "LibreOffice Calc", "Google Tabulky", "spreadsheet", "rozbor vzorce", "vysvětlení vzorce", "formát buněk", "řada", "Zpět", "procvičování", "zkouška", "učitel", "sada úloh", "xlsx", "import Excelu", "listy", "názvy", "podmíněné formátování", "FILTR", "dynamické pole", "audit vzorců", "předchůdci"]
       },
       {
