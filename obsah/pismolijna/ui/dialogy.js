@@ -87,7 +87,8 @@
         volba('📚', 'Z knihovny webu', 'Upravit některé z volných písem (OFL)', () => { D._zavri('knihovna'); }),
         volba('✍️', 'Moje rukopisné písmo', 'Vytisknout šablonu, napsat, naskenovat', () => { D._zavri('rukopis'); }),
         volba('✨', 'Generátor stylů', 'Strašidelné, metalové, Diablo, neon, pixel… jedním klikem', () => { D._zavri('generator'); }),
-        volba('🐦', 'Ptačí písmo', 'Písmo rodové knihy z Kronik vyhnanství', () => { D._zavri('ptaci'); })
+        volba('🐦', 'Ptačí písmo', 'Písmo rodové knihy z Kronik vyhnanství', () => { D._zavri('ptaci'); }),
+        volba('┆', 'Čáry a tečky', 'Značky z válce a kosti z Kronik vyhnanství', () => { D._zavri('carytecky'); })
       ])
     ];
     if (projekty.length) telo.push(el('h3', { text: 'Rozpracované projekty', style: 'margin-top:14px;font-size:.9rem' }), seznam);
@@ -97,6 +98,7 @@
     if (v === 'knihovna') return D.zKnihovny();
     if (v === 'rukopis') return D.rukopis();
     if (v === 'ptaci') return D.ptaciPismo();
+    if (v === 'carytecky') return D.caryTecky();
     if (v === 'generator') { if (!A.font) A.otevriFont(P.novyFont()); A.prepniPohled('generator'); return; }
     if (v === 'prazdny' || (!A.font && v == null)) { A.otevriFont(P.novyFont()); }
   };
@@ -166,9 +168,15 @@
     const mrizka = el('div', { class: 'knihovna-fontu' });
     let vybrano = null;
     for (const f of seznam) {
-      const b = el('button', { type: 'button', title: f.nazev + (f.licence ? ' · ' + f.licence : ' · SIL OFL 1.1'), onclick: () => { vybrano = f.id; D._zavri('ok'); } }, [el('span', { class: 'uk', text: 'Aa Čř' }), el('small', { text: f.nazev })]);
+      const b = el('button', { type: 'button', title: f.nazev + (f.licence ? ' · ' + f.licence : ' · SIL OFL 1.1'), onclick: () => { vybrano = f.id; D._zavri('ok'); } }, [el('span', { class: 'uk' }, [el('span', { text: 'Aa Čř' }), el('span', { class: 'cisla', text: '0123456789' })]), el('small', { text: f.nazev })]);
       mrizka.append(b);
-      FONTY.rodina(f.id).then(r => { b.firstChild.style.fontFamily = "'" + r + "'"; }).catch(() => { /* náhled není nutný */ });
+      FONTY.rodina(f.id).then(r => {
+        b.firstChild.style.fontFamily = "'" + r + "'";
+        // široká písma: řádek číslic zmenšit, aby se vešel celý
+        const c = b.querySelector('.cisla');
+        const vejdiSe = () => { if (c.clientWidth && c.scrollWidth > c.clientWidth) c.style.fontSize = Math.floor(17 * c.clientWidth / c.scrollWidth * 10) / 10 + 'px'; };
+        document.fonts.load("17px '" + r + "'", '0123456789').then(() => requestAnimationFrame(vejdiSe)).catch(() => { /* nic */ });
+      }).catch(() => { /* náhled není nutný */ });
     }
     const v = await D.okno({
       nadpis: '📚 Písmo z knihovny webu', sirka: 'min(820px, 96vw)', bezFokusu: true,
@@ -206,6 +214,33 @@
           radek('Velké písmeno', 'je větší znak – v knize jím začíná každý řádek.'),
           radek('Číslice', 'čárky jako na listu s čárkami, pětka přeškrtnutá.'),
           radek('Znaky z knih', 'napište slovo v hranatých závorkách: [narozeni] kroužek (také *), [umrti] křížek (také + †), [lovec], [korist], [merin], [shora], [zdola], [zlesa], [zvody], [zhory], [zvenku]. Znak „odjinud“ písmo nemá – Sael proto píše latinkou aliunde.')
+        ])
+      ],
+      tlacitka: [{ text: 'Zavřít', hodnota: null, hlavni: true }]
+    });
+  };
+
+  /* ---------- Čáry a tečky (Kroniky vyhnanství) ----------
+     Font z knihovny webu (generuje tools/cary_tecky.js). */
+  D.caryTecky = async function () {
+    try {
+      A.otevriFont(P.nactiFont(await FONTY.data('carytecky')));
+      A.prepniPohled('znaky');
+    } catch (e) { A.zprava('Písmo Čáry a tečky se nepodařilo načíst: ' + e.message, true); if (!A.font) D.start(); return; }
+    const radek = (k, t) => el('li', {}, [el('b', { text: k + ' ' }), t]);
+    await D.okno({
+      nadpis: '┆ Čáry a tečky', sirka: 'min(640px, 96vw)', bezFokusu: true,
+      telo: [
+        el('p', { class: 'poznamka', text: '„Čáry byly rovné, svislé, stejně hluboké. Byly dvojí délky, dlouhé a krátké. Tečky mezi nimi stály ve skupinách, jedna, dvě, tři, čtyři.“ Značky z válce, kosti a mřížek v hoře z Kronik vyhnanství. Kromě čísel je v knihách nikdo nečte – tohle písmo je výklad: česká latinka zapsaná podle jejich pravidel.' }),
+        el('ul', { style: 'margin:8px 0 0 18px;line-height:1.55' }, [
+          radek('Samohlásky', 'jedna čára a za ní tečky: a e i o = 1–4 tečky, u y = dvě čáry. Dlouhá čára = dlouhá samohláska.'),
+          radek('Souhlásky', 'čára – tečky – čára. Tečky = místo (1 rty, 2 zuby, 3 c q x, 4 patro), první čára krátká = závěrová, dlouhá = třená, druhá krátká = neznělá, dlouhá = znělá.'),
+          radek('Zvučné', 'dvě čáry a tečky za nimi: krátké = m n, dlouhé = w l r j.'),
+          radek('Měkčení', 'tečky zvednuté do půli krátké čáry: ť ď š ž č ň ř ě ů (v knihách „tečky nestály v jedné výšce“).'),
+          radek('Velké písmeno', 'je stejný znak – čáry jsou jen dvojí délky.'),
+          radek('Čísla', 'soustava o základu 25: sloupec teček = jednotky (0–4), krátké čáry = pětky (0–4), dlouhá čára odděluje řády a uzavírá číslo, nula = zvednutá tečka. Znaky 0–9 kreslí jednomístné číslo; delší čísla přepočítá Převodník písma (460 = 18 · 25 + 10).'),
+          radek('Řádky', 'krátká čára začíná řádek (záznam), ne slovo – Převodník ji doplní sám a každou větu dá na nový řádek. Interpunkce je jen širší mezera.'),
+          radek('Znaky z knih', '[zacatek] krátká čára na začátek řádku (také |), [soucet] krátká čára s tečkou nad ní – v knihách jen v řádku součtu (také =).')
         ])
       ],
       tlacitka: [{ text: 'Zavřít', hodnota: null, hlavni: true }]

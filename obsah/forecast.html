@@ -3007,7 +3007,7 @@
         // forecast_days=4 (96 h): potřebujeme zobrazit 72 h OD AKTUÁLNÍ hodiny, ne od dnešní půlnoci
         // past_days=1: včerejšek pro kontext v 3denním grafu; daily=sunrise,sunset pro stínování nocí
         // minutely_15=precipitation: 15min srážky pro nowcast „kdy začne pršet"
-        const hourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&daily=sunrise,sunset&minutely_15=precipitation&timezone=Europe%2FPrague&forecast_days=4&past_days=1`;
+        const hourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&daily=sunrise,sunset&minutely_15=precipitation,snowfall&timezone=Europe%2FPrague&forecast_days=4&past_days=1`;
         const aqParams = ['european_aqi', ...POLLEN_TYPES.map(p => p.key)].join(',');
         const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${aqParams}&timezone=Europe%2FPrague&forecast_days=4&past_days=1`;
 
@@ -3087,7 +3087,7 @@
 
         // 15minutové srážky pro nowcast „kdy začne pršet"
         const min15Data = hourly3DayData.minutely_15 && Array.isArray(hourly3DayData.minutely_15.time)
-          ? { time: hourly3DayData.minutely_15.time, precip: hourly3DayData.minutely_15.precipitation }
+          ? { time: hourly3DayData.minutely_15.time, precip: hourly3DayData.minutely_15.precipitation, snow: hourly3DayData.minutely_15.snowfall }
           : null;
 
         // Pylové koncentrace (jen Evropa; jinde API vrací null)
@@ -6227,6 +6227,9 @@
       const end = Math.min(start + HORIZON, m.time.length);
       const fmt = i => new Date(m.time[i]).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
 
+      // Sníh, když vodní hodnota sněžení (cm / 7 × 10 = mm) tvoří aspoň polovinu srážek
+      const snezi = i => Array.isArray(m.snow) && (m.snow[i] ?? 0) * 10 / 7 >= 0.5 * (m.precip[i] ?? 0);
+
       let icon, text, kratce;
       if ((m.precip[start] ?? 0) >= THRESH) {
         // Právě prší → kdy přestane (2 suché kroky po sobě, ať nereagujeme na mezeru v přeháňce)
@@ -6234,9 +6237,13 @@
         for (let i = start + 1; i < end - 1; i++) {
           if ((m.precip[i] ?? 0) < THRESH && (m.precip[i + 1] ?? 0) < THRESH) { stop = i; break; }
         }
-        icon = 'dest';
-        kratce = 'Právě prší';
-        text = stop >= 0
+        const sneh = snezi(start);
+        icon = sneh ? 'snezeni' : 'dest';
+        kratce = sneh ? 'Právě sněží' : 'Právě prší';
+        if (sneh) text = stop >= 0
+          ? `Právě sněží – přestane kolem ${fmt(stop)}.`
+          : 'Právě sněží a v příštích 6 hodinách bez výraznější přestávky.';
+        else text = stop >= 0
           ? `Právě prší – přestane kolem ${fmt(stop)}.`
           : 'Právě prší a v příštích 6 hodinách bez výraznější přestávky.';
       } else {
@@ -6251,9 +6258,10 @@
             if ((m.precip[i] ?? 0) < THRESH && (m.precip[i + 1] ?? 0) < THRESH) { stop = i; break; }
           }
           const durMin = stop > begin ? (stop - begin) * 15 : null;
-          icon = 'destnik';
-          kratce = `Déšť kolem ${fmt(begin)}`;
-          text = `Déšť začne kolem ${fmt(begin)}` + (durMin ? ` a potrvá asi ${durMin} min.` : '.');
+          const sneh = snezi(begin);
+          icon = sneh ? 'snezeni' : 'destnik';
+          kratce = sneh ? `Sněžení kolem ${fmt(begin)}` : `Déšť kolem ${fmt(begin)}`;
+          text = (sneh ? `Sněžení začne kolem ${fmt(begin)}` : `Déšť začne kolem ${fmt(begin)}`) + (durMin ? ` a potrvá asi ${durMin} min.` : '.');
         } else {
           icon = 'jasno';
           kratce = 'Bez srážek 6 h';

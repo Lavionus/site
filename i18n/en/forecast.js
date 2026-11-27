@@ -619,4 +619,9 @@ I18N.pridej('en', {
   'Radar – čárkovaná čára ukazuje, odkud srážky přicházejí: vede z místa, kde byly před 3 hodinami, k vybranému místu (rychlost {rychlost} km/h). Každá hodina má jinou barvu – modrá před 3 h, oranžová před 2 h, žlutá poslední hodina (stejně jako na záložce Radar). Klepnutím otevřete radar.': 'Radar – the dashed line shows where precipitation is coming from: it leads from where it was 3 hours ago to the selected place (speed {rychlost} km/h). Each hour has a different colour – blue 3 h ago, orange 2 h ago, yellow the last hour (same as on the Radar tab). Tap to open the radar.',
   'Radar – čárkovaná čára ukazuje, odkud srážky přicházejí: vede z místa, kde byly před 3 hodinami, k vybranému místu (rychlost {rychlost} km/h). Každá hodina má jinou barvu – modrá před 3 h, oranžová před 2 h, žlutá poslední hodina (stejně jako na záložce Radar). Jedna čárka = {krokMin} minut letu srážek. Klepnutím otevřete radar.': 'Radar – the dashed line shows where precipitation is coming from: it leads from where it was 3 hours ago to the selected place (speed {rychlost} km/h). Each hour has a different colour – blue 3 h ago, orange 2 h ago, yellow the last hour (same as on the Radar tab). One dash = {krokMin} minutes of precipitation travel. Tap to open the radar.',
   'čárka = {min} min': 'dash = {min} min',
+  'Právě sněží': 'Snowing now',
+  'Právě sněží – přestane kolem {stop}.': 'Snowing now – will stop around {stop}.',
+  'Právě sněží a v příštích 6 hodinách bez výraznější přestávky.': 'Snowing now, with no significant break in the next 6 hours.',
+  'Sněžení kolem {begin}': 'Snow around {begin}',
+  'Sněžení začne kolem {begin}': 'Snow will start around {begin}',
 });

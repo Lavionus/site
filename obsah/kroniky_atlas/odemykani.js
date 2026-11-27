@@ -1,5 +1,6 @@
-/* Atlas Kronik – odemykání faktů podle přečteného místa (čisté funkce, bez DOM; test _test/kroniky_atlas_test.js).
-   Smlouva: docs/plany/KronikyAtlas_PLAN.md.
+/* Atlas díla (Kroniky, Svět, který tě zná) – odemykání faktů podle přečteného místa (čisté funkce, bez DOM;
+   testy _test/kroniky_atlas_test.js, _test/ai_svet_atlas_test.js). Smlouva: docs/plany/KronikyAtlas_PLAN.md.
+   Sbírky díla: data.sbirky = {klíč: typ karty} (typ populace/postavy/mista/osa/pojmy); bez něj sbírky Kronik.
    Token místa: "0" = známo předem, "K5:13" = kniha V, kapitola se souborem 13_*.md, "P:kavyl" = povídka NN_kavyl.md.
    Pozice čtenáře = { hranice, povidky }: kapitoly s pořadím < hranice jsou známé, povidky = Set slugů. */
 (function (koren) {
@@ -73,13 +74,16 @@
   const SEZNAMY = ['jmena', 'fakta', 'vystupuje'];
   const vsechnaFakta = p => [...SEZNAMY.flatMap(k => Array.isArray(p[k]) ? p[k] : []), p.taxon, p.role].filter(Boolean);
   const SBIRKY = ['populace', 'postavy', 'mista', 'osa', 'pojmy'];
+  const sbirky = data => data.sbirky ? Object.keys(data.sbirky) : SBIRKY;
+  const typ = (data, sb) => (data.sbirky && data.sbirky[sb]) || sb;
 
   /* Vrátí kopii dat jen s tím, co čtenář na pozici zná. Zamčené položky vůbec nejsou (ani název).
      Položka dostane `vic: true`, když má ještě zamčená fakta (bez počtu). */
   function filtruj(data, poz) {
     const por = poradi(data.kapitoly);
     const vid = f => viditelny(f, poz, por);
-    const ven = { knihy: data.knihy, kapitoly: data.kapitoly, povidky: data.povidky };
+    const ven = { knihy: data.knihy, kapitoly: data.kapitoly, povidky: data.povidky, sbirky: data.sbirky, ctecka: data.ctecka, ctecka_povidky: data.ctecka_povidky };
+    const SB = sbirky(data);
     // Položka je vidět, když je známé její „od“, NEBO kterýkoli její fakt z přečtené povídky
     // (povídku lze číst dřív než knihu, kde položka začíná). Vrací místo, odkud ji čtenář zná, jinak null.
     const odkud = p => {
@@ -88,7 +92,7 @@
       return f ? f.od : null;
     };
     const viditelneId = new Set();
-    for (const sb of SBIRKY) for (const p of data[sb] || []) if (odkud(p)) viditelneId.add(p.id);
+    for (const sb of SB) for (const p of data[sb] || []) if (odkud(p)) viditelneId.add(p.id);
     // kniha je celá přečtená, když je známá její poslední kapitola
     const konecKnihy = {};
     data.kapitoly.forEach(k => { konecKnihy[k.k] = k.t; });
@@ -101,7 +105,7 @@
       for (const k of p.knihy || []) if (typeof k === 'string' ? znamo(k, poz, por) : znamo(konecKnihy[k], poz, por)) s.add(k);
       return [...s].sort((a, b) => (typeof a === 'string') - (typeof b === 'string') || (a < b ? -1 : a > b ? 1 : 0));
     };
-    for (const sb of SBIRKY) {
+    for (const sb of SB) {
       ven[sb] = (data[sb] || []).filter(p => viditelneId.has(p.id)).map(p => {
         const q = { ...p, od: odkud(p) };   // pozdější „od“ položky se neprozradí ani odkazem
         let vic = false;
@@ -123,9 +127,9 @@
           q.vazby = p.vazby.filter(v => typeof v === 'string' ? viditelneId.has(v) : (viditelneId.has(v.id) && vid(v)));
           vic = vic || p.vazby.some(v => typeof v !== 'string' && viditelneId.has(v.id) && zamceny(v, poz, por));
         }
-        if (sb === 'mista') q.knihy = knihyMista(p, { ...q, fakta: q.fakta || [] });
+        if (typ(data, sb) === 'mista') q.knihy = knihyMista(p, { ...q, fakta: q.fakta || [] });
         // postava známá zatím jen z povídky patří k povídce – skupina „kniha V“ by prozradila, kde se objeví
-        if (sb === 'postavy' && q.od !== p.od) q.kniha = q.od;
+        if (typ(data, sb) === 'postavy' && q.od !== p.od) q.kniha = q.od;
         q.vic = vic;
         return q;
       });
@@ -150,10 +154,10 @@
     if (!token || token === '0') return null;
     if (token.startsWith('P:')) {
       const p = (data.povidky || []).find(x => x.slug === token.slice(2));
-      return p ? `kniha_povidky_kronik.html?kniha=${p.kniha || 1}&kap=${encodeURIComponent(p.s)}` : null;
+      return p ? `${data.ctecka_povidky || 'kniha_povidky_kronik.html'}?kniha=${p.kniha || 1}&kap=${encodeURIComponent(p.s)}` : null;
     }
     const k = data.kapitoly.find(x => x.t === token);
-    return k ? `kroniky.html?kniha=${k.k}&kap=${encodeURIComponent(k.s)}` : null;
+    return k ? `${data.ctecka || 'kroniky.html'}?kniha=${k.k}&kap=${encodeURIComponent(k.s)}` : null;
   }
 
   // Popis pozice pro lištu: „kniha V, 12. Studna hvězd“ = poslední známá kapitola
@@ -164,7 +168,7 @@
     return popisMista(k.t, data);
   }
 
-  const api = { predpona, slugPovidky, poradi, tokenCtecky, poziceZCtecky, pozice, znamo, viditelny, filtruj, popisMista, odkazMista, popisPozice, RIM };
+  const api = { sbirky, typ, predpona, slugPovidky, poradi, tokenCtecky, poziceZCtecky, pozice, znamo, viditelny, filtruj, popisMista, odkazMista, popisPozice, RIM };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else koren.ATLAS_ODEMYK = api;
 })(typeof window !== 'undefined' ? window : this);

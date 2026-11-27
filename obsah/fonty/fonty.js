@@ -102,6 +102,8 @@ const FONTY = (function () {
     { id: 'goticke',    soubor: 'NotoSansGothic-Regular.ttf', nazev: 'Noto Sans Gothic',  druh: 'pismo', pismo: 'goticke',   pro3d: true },
     // vlastní písmo webu (tools/ptaci_pismo.js) – kreslí latinku ptačími stopami
     { id: 'ptaci',      soubor: 'PtaciPismo-Regular.ttf',     nazev: 'Ptačí písmo (Kroniky)', druh: 'pismo', pro3d: true },
+    // vlastní písmo webu (tools/cary_tecky.js) – latinka čárami a tečkami podle značek z Kronik
+    { id: 'carytecky',  soubor: 'CaryTecky-Regular.ttf',      nazev: 'Čáry a tečky (Kroniky)', druh: 'pismo', pro3d: true },
   ];
 
   const DRUHY = {

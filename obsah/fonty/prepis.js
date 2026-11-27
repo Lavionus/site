@@ -225,6 +225,25 @@ const PREPIS = (function () {
     0: '-----', 1: '.----', 2: '..---', 3: '...--', 4: '....-', 5: '.....', 6: '-....', 7: '--...',
     8: '---..', 9: '----.', '.': '.-.-.-', ',': '--..--', '?': '..--..', '!': '-.-.--', '-': '-....-',
   };
+  /* Čáry a tečky (Kroniky, font tools/cary_tecky.js kreslí latinku sám):
+     – čísla do soustavy o základu 25 – dlouhá čára (U+E002) mezi řády
+       a kolem čísla, číslice U+E010 + v (v = 0…24);
+     – každá věta na vlastní řádek a každý řádek začíná krátkou čarou (|),
+       protože krátká čára v knihách začíná záznam, ne slovo.
+     volby.uryvek: jen čísla (kousek textu uprostřed řádku – Pergamen). */
+  function carytecky(text, volby) {
+    const H = '\uE002';
+    let t = String(text).replace(/\d+/g, m => {
+      let n = BigInt(m);
+      const cif = [];
+      do { cif.unshift(String.fromCharCode(0xE010 + Number(n % 25n))); n /= 25n; } while (n > 0n);
+      return H + cif.join(H) + H;
+    });
+    if (volby && volby.uryvek) return t;
+    t = t.replace(/([.!?…]+["“”«»'’)]*)[ \t]+(?=\S)/g, '$1\n');
+    return t.split('\n').map(r => (r.trim() && !/^\s*[|\uE000]/.test(r) ? '|' + r.replace(/^\s+/, '') : r)).join('\n');
+  }
+
   function morse(text) {
     return text.split('\n').map(r => {
       const s = bezDiakritiky(r.toLowerCase());
@@ -347,13 +366,15 @@ const PREPIS = (function () {
     { id: 'etruske',   nazev: 'Etruské písmo',              font: 'etruske' },
     { id: 'goticke',   nazev: 'Gótské písmo',               font: 'goticke',
       popis: 'Písmo Wulfilovy bible (4. století).' },
-    { id: 'ptaci',     nazev: 'Ptačí písmo (Kroniky)',      font: 'ptaci',
+    { id: 'ptaci',     nazev: 'Ptačí písmo (Kroniky)',      font: 'ptaci', vlastniFont: true,
       popis: 'Písmo elfí rodové knihy z Kronik vyhnanství – každé písmeno je ptačí stopa. Znaky z knih: [narozeni], [umrti], [lovec], [korist], [merin], [shora], [zdola], [zlesa], [zvody], [zhory], [zvenku].' },
+    { id: 'carytecky', nazev: 'Čáry a tečky (Kroniky)',     font: 'carytecky', vlastniFont: true,
+      popis: 'Latinka zapsaná podle značek z válce, kosti a mřížek v hoře (Kroniky vyhnanství): svislé čáry dvojí délky a tečky po jedné až čtyřech. Samohláska = jedna čára (dlouhá = dlouhá samohláska), souhláska = čára–tečky–čára, zvednuté tečky = měkčení (ť ď š ž č ň ř ě ů). Každá věta jde na vlastní řádek a řádek začíná krátkou čarou, jako záznam v knihách. Čísla se přepíšou do soustavy o základu 25: sloupec teček = jednotky, krátké čáry = pětky, dlouhá čára odděluje řády. Je to výklad – znaky, které nejsou čísla, v knihách nikdo nečte. Součet: [soucet] (také =).' },
     { id: 'morse',     nazev: 'Morseovka',                  font: 'libsans' },
   ];
   // přepisy, které mají vlastní znaky (a tedy i vlastní font)
   for (const p of SEZNAM) p.vlastniPismo = ['tengwar', 'runy', 'hlaholice', 'ogam', 'braille', 'hieroglyfy', 'fenicke', 'etruske', 'goticke'].includes(p.id);
-  const FUNKCE = { tengwar, runy, hlaholice, azbuka, alfabeta, ogam, morse, braille, hieroglyfy, fenicke, etruske, goticke };
+  const FUNKCE = { tengwar, runy, hlaholice, azbuka, alfabeta, ogam, morse, braille, hieroglyfy, fenicke, etruske, goticke, carytecky };
 
   function preved(id, text, volby) {
     const f = FUNKCE[id];

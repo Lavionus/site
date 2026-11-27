@@ -5229,30 +5229,6 @@ const KATALOG_SEKCE = [
         "tagy": ["čtečka", "e-kniha", "ebook", "kniha", "knihovna", "čtení", "epub", "mobi", "kindle", "markdown", "md", "txt", "záložky", "poznámky", "zvýraznění", "předčítání", "offline", "reader"]
       },
       {
-        "soubor": "obsah/kroniky.html",
-        "nazev": "🐉 Kroniky vyhnanství",
-        "popis": "Sága o sedmi knihách od středověku po budoucnost, ke čtení i poslechu",
-        "stav": "beta",
-        "jen_cs": true,
-        "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Paměť kamene", "První vyhnanci", "Strážci ticha", "Rozsudek", "Druhý soud", "Chebsko", "Jáchymov", "Yucatán", "středověk", "pravěk", "sci-fi", "drak"]
-      },
-      {
-        "soubor": "obsah/kniha_povidky_kronik.html",
-        "nazev": "📜 Povídky ze světa Kronik",
-        "popis": "Samostatné povídky ze světa ságy Kroniky vyhnanství",
-        "stav": "vyvoj",
-        "jen_cs": true,
-        "tagy": ["kniha", "povídky", "povídka", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "Kroniky vyhnanství", "Von Wölfen geholt", "Odnesli je vlci", "Poslední zima obrů", "Vejce na útesu", "Kavyl", "Roh, který pije", "Obchůzka", "Sladká voda", "Pokojní a zdvořilí", "Pro pořádek", "Tři falešné", "vlkodlak", "obři", "harpyje", "kentauři", "jednorožec", "Atlantida", "mor", "elfové", "Krušnohoří", "třicetiletá válka", "pravěk", "mezolit", "fantasy"]
-      },
-      {
-        "soubor": "obsah/kroniky_atlas.html",
-        "nazev": "🗺️ Atlas a bestiář Kronik",
-        "popis": "Populace, postavy, mapa a časová osa ságy bez spoilerů",
-        "stav": "vyvoj",
-        "jen_cs": true,
-        "tagy": ["atlas", "bestiář", "Kroniky vyhnanství", "postavy", "mapa", "časová osa", "slovníček", "pojmy", "draci", "elfové", "upíři", "vlkodlaci", "trpaslíci", "jednorožci", "obři", "kentauři", "harpyje", "fantasy", "bez spoilerů", "encyklopedie"]
-      },
-      {
         "soubor": "obsah/vypisky.html",
         "nazev": "📌 Výpisky a citáty",
         "popis": "Zvýraznění, poznámky a citáty z knih na jednom místě",
@@ -5286,6 +5262,58 @@ const KATALOG_SEKCE = [
         "popis": "Domácí knihovna se skenem ISBN, průběhem čtení a statistikami",
         "stav": "vyvoj",
         "tagy": ["čtenářský deník", "knihy", "knihovna", "ISBN", "čárový kód", "sken", "Open Library", "Goodreads", "police", "přečteno", "chci číst", "průběh čtení", "hodnocení", "citáty", "poznámky", "série", "půjčeno", "čtenářská výzva", "statistiky", "škola", "zápis do deníku", "povinná četba", "tisk", "PDF", "CSV", "export", "import"]
+      }
+    ]
+  },
+  {
+    "nazev": "🐉 Kroniky vyhnanství",
+    "skupina": "ostatni",
+    "polozky": [
+      {
+        "soubor": "obsah/kroniky.html",
+        "nazev": "🐉 Kroniky vyhnanství",
+        "popis": "Sága o sedmi knihách od středověku po budoucnost, ke čtení i poslechu",
+        "stav": "beta",
+        "jen_cs": true,
+        "tagy": ["kniha", "román", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sága", "fantasy", "Poslední drak", "Krev starších", "Paměť kamene", "První vyhnanci", "Strážci ticha", "Rozsudek", "Druhý soud", "Chebsko", "Jáchymov", "Yucatán", "středověk", "pravěk", "sci-fi", "drak"]
+      },
+      {
+        "soubor": "obsah/kniha_povidky_kronik.html",
+        "nazev": "📜 Povídky ze světa Kronik",
+        "popis": "Samostatné povídky ze světa ságy Kroniky vyhnanství",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["kniha", "povídky", "povídka", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "Kroniky vyhnanství", "Von Wölfen geholt", "Odnesli je vlci", "Poslední zima obrů", "Vejce na útesu", "Kavyl", "Roh, který pije", "Obchůzka", "Sladká voda", "Pokojní a zdvořilí", "Pro pořádek", "Tři falešné", "vlkodlak", "obři", "harpyje", "kentauři", "jednorožec", "Atlantida", "mor", "elfové", "Krušnohoří", "třicetiletá válka", "pravěk", "mezolit", "fantasy"]
+      },
+      {
+        "soubor": "obsah/kroniky_atlas.html",
+        "nazev": "🗺️ Atlas a bestiář Kronik",
+        "popis": "Populace, postavy, mapa a časová osa ságy bez spoilerů",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["atlas", "bestiář", "Kroniky vyhnanství", "postavy", "mapa", "časová osa", "slovníček", "pojmy", "draci", "elfové", "upíři", "vlkodlaci", "trpaslíci", "jednorožci", "obři", "kentauři", "harpyje", "fantasy", "bez spoilerů", "encyklopedie"]
+      }
+    ]
+  },
+  {
+    "nazev": "🤖 Svět, který tě zná",
+    "skupina": "ostatni",
+    "polozky": [
+      {
+        "soubor": "obsah/kniha_ai_svet.html",
+        "nazev": "🤖 Svět, který tě zná",
+        "popis": "Detektivní série z Brna 70. let s osobní AI a roboty, ke čtení i poslechu",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["kniha", "román", "detektivka", "série", "čtení", "čtečka", "e-kniha", "epub", "předčítání", "záložky", "poznámky", "sci-fi", "umělá inteligence", "AI", "roboti", "humanoidi", "Brno", "Brožová", "Ota", "Přistěhovalec", "Druhá já", "Potřebná", "Osm hodin ticha", "výpadek", "budoucnost", "Svět, který tě zná"]
+      },
+      {
+        "soubor": "obsah/ai_svet_atlas.html",
+        "nazev": "🦾 Atlas a bestiář Světa",
+        "popis": "Stroje, osobní AI, postavy, místa a pojmy série bez spoilerů",
+        "stav": "vyvoj",
+        "jen_cs": true,
+        "tagy": ["atlas", "bestiář", "Svět, který tě zná", "roboti", "humanoidi", "stroje", "osobní AI", "PAI", "postavy", "místa", "Brno", "časová osa", "slovníček", "pojmy", "Hestia", "Ota", "Sabr", "bez spoilerů", "encyklopedie"]
       }
     ]
   },

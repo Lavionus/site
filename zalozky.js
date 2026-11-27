@@ -228,7 +228,7 @@ const Zalozky = (function () {
       pasEl.replaceChildren(...karty.map(k => k.el));
     }
     pocetEl.textContent = karty.length;
-    prehledBtn.title = t('Přehled záložek a naposledy otevřených ({počet} otevřeno) – Alt+Shift+O', { 'počet': karty.length });
+    prehledBtn.title = t('Nedávno zavřené a naposledy otevřené – Alt+Shift+O');
     if (prehled && !prehled.hidden) vykresliPrehled();
   }
 
@@ -395,7 +395,8 @@ const Zalozky = (function () {
     k.iframe.hidden = false;
     k.iframe.name = 'okno';
     nastavSkryti(k, false);
-    if (zameritRam) { zameritRam = false; k.iframe.focus(); }
+    // stránka si mohla fokus vzít sama (domovská → pole hledání); focus() rámu by ho shodil
+    if (zameritRam) { zameritRam = false; if (document.activeElement !== k.iframe) k.iframe.focus(); }
     uspiPrebytecne();
     obnov();
     ukazAktivni();
@@ -636,7 +637,7 @@ const Zalozky = (function () {
     prehledFiltr = document.createElement('input');
     prehledFiltr.type = 'search';
     prehledFiltr.className = 'z-filtr';
-    prehledFiltr.placeholder = t('🔍 Hledat v záložkách a historii…');
+    prehledFiltr.placeholder = t('🔍 Hledat v historii…');
     prehledFiltr.autocomplete = 'off';
     prehledSeznam = document.createElement('div');
     prehledSeznam.className = 'z-seznam';
@@ -693,11 +694,11 @@ const Zalozky = (function () {
     const sedi = nazev => !q || norm(nazev).includes(q) || norm(t(nazev)).includes(q);
     prehledSeznam.replaceChildren();
 
-    const radek = (k, page, stavy, akce, zavrit) => {
-      const p = k ? popis(k) : (o.popis(zaklad(page)) || { nazev: zaklad(page), emoji: '📄' });
+    const radek = (page, akce) => {
+      const p = o.popis(zaklad(page)) || { nazev: zaklad(page), emoji: '📄' };
       if (!sedi(p.nazev)) return;
       const r = document.createElement('div');
-      r.className = 'z-radek' + (k && k === aktivni ? ' aktivni' : '');
+      r.className = 'z-radek';
       r.setAttribute('role', 'option');
       const ik = document.createElement('span');
       ik.className = 'z-ikona';
@@ -706,24 +707,7 @@ const Zalozky = (function () {
       const n = document.createElement('span');
       n.className = 'z-nazev';
       n.textContent = p.nazev;
-      const st = document.createElement('span');
-      st.className = 'z-stavy';
-      st.textContent = stavy;
-      r.append(ik, n, st);
-      if (zavrit) {
-        const x = document.createElement('button');
-        x.type = 'button';
-        x.className = 'z-zavri';
-        x.textContent = '✕';
-        x.title = t('Zavřít záložku');
-        x.addEventListener('click', async e => {
-          e.stopPropagation();
-          await zavrit();
-          vykresliPrehled();
-          zamerFiltr();
-        });
-        r.appendChild(x);
-      }
+      r.append(ik, n);
       r.addEventListener('click', () => { zavriVyskakovaci(); akce(); });
       r.addEventListener('mousemove', () => {
         const i = [...prehledSeznam.querySelectorAll('.z-radek')].indexOf(r);
@@ -739,28 +723,13 @@ const Zalozky = (function () {
       prehledSeznam.appendChild(h);
     };
 
-    nadpis(t('Otevřené záložky'));
-    karty.forEach(k => {
-      const stavy = (!k.iframe && !k.domu ? '💤' : '') + (k.zvuk ? '🔊' : '');
-      const r = radek(k, k.page, stavy, () => { zameritRam = true; prejdiNa(k); }, k.domu ? null : () => zavri(k));
-      if (!r || k.domu) return;
-      // připínání i bez kontextové nabídky (dotykové displeje)
-      const pin = document.createElement('button');
-      pin.type = 'button';
-      pin.className = 'z-zavri z-pin' + (k.pin ? ' zapnuto' : '');
-      pin.textContent = '📌';
-      pin.title = t(k.pin ? 'Odepnout záložku' : 'Připnout záložku');
-      pin.setAttribute('aria-pressed', String(!!k.pin));
-      pin.addEventListener('click', e => { e.stopPropagation(); pripni(k); vykresliPrehled(); });
-      r.insertBefore(pin, r.querySelector('.z-zavri:not(.z-pin)'));
-    });
-
+    // jen zavřené a historie – otevřené (připnuté) jsou vidět v liště
     const videno = new Set(karty.map(k => zaklad(k.page)));
     const zavreneNove = [...zavrene].reverse().filter(z => !videno.has(zaklad(z.page)) && o.platna(zaklad(z.page)));
     zavreneNove.forEach(z => videno.add(zaklad(z.page)));
     if (zavreneNove.length) {
       nadpis(t('Nedávno zavřené'));
-      zavreneNove.forEach(z => radek(null, z.page, '', () => {
+      zavreneNove.forEach(z => radek(z.page, () => {
         const i = zavrene.lastIndexOf(z);
         if (i >= 0) zavrene.splice(i, 1);
         if (!najdi(z.page)) pridej(z.page, z.index).pin = z.pin;
@@ -774,7 +743,7 @@ const Zalozky = (function () {
     nedavne = nedavne.filter(s => typeof s === 'string' && !videno.has(s) && o.platna(s)).slice(0, q ? 24 : 10);
     if (nedavne.length) {
       nadpis(t('🕘 Naposledy otevřené'));
-      nedavne.forEach(s => radek(null, s, '', () => { zameritRam = true; o.prejdi(s, false); }));
+      nedavne.forEach(s => radek(s, () => { zameritRam = true; o.prejdi(s, false); }));
     }
 
     // prázdné skupiny (filtr nic nenašel) – nadpis bez řádků pryč

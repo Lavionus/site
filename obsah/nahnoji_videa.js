@@ -16,6 +16,7 @@
    nahnoji_odkazy.tsv z nahrávače → „Kopírovat jako nahnoji_videa.js“. */
 window.NAHNOJI_SERIALY = {
   'Král džungle': { ikona: '🦍', popis: 'Animovaný seriál o Georgovi, pánovi džungle (George of the Jungle).', obrazek: 'nahnoji_obrazky/kral_dzungle.webp' },
+  'Chytrá kmotra Liška': { ikona: '🦊', popis: 'Kreslený seriál o chytré lišce od hájovny u pěti buků (13 dílů).', obrazek: 'nahnoji_obrazky/chytra_kmotra_liska.webp' },
 };
 
 window.NAHNOJI_VIDEA = [
@@ -49,4 +50,17 @@ window.NAHNOJI_VIDEA = [
   { id: 21764, nazev: 'Pořád na to mám', serial: 'Král džungle', rada: 5, dil: 4 },
   { id: 21765, nazev: 'Trable s banáníky', serial: 'Král džungle', rada: 5, dil: 5 },
   { id: 21766, nazev: 'Rozmazlený král', serial: 'Král džungle', rada: 5, dil: 6 },
+  { id: 21778, nazev: 'V hájovně u pěti buků', serial: 'Chytrá kmotra Liška', rada: 1, dil: 1 },
+  { id: 21779, nazev: 'Nový domov', serial: 'Chytrá kmotra Liška', rada: 1, dil: 2 },
+  { id: 21780, nazev: 'Povedený rybolov', serial: 'Chytrá kmotra Liška', rada: 1, dil: 3 },
+  { id: 21781, nazev: 'Stolečku prostři se', serial: 'Chytrá kmotra Liška', rada: 1, dil: 4 },
+  { id: 21782, nazev: 'Čertovský gramofon', serial: 'Chytrá kmotra Liška', rada: 1, dil: 5 },
+  { id: 21783, nazev: 'Sláva telefonu', serial: 'Chytrá kmotra Liška', rada: 1, dil: 6 },
+  { id: 21784, nazev: 'Smělý dopis', serial: 'Chytrá kmotra Liška', rada: 1, dil: 7 },
+  { id: 21785, nazev: 'Výprava do Nohavic', serial: 'Chytrá kmotra Liška', rada: 1, dil: 8 },
+  { id: 21786, nazev: 'Poklad na silnici', serial: 'Chytrá kmotra Liška', rada: 1, dil: 9 },
+  { id: 21787, nazev: 'Liška se stává slavnou', serial: 'Chytrá kmotra Liška', rada: 1, dil: 10 },
+  { id: 21788, nazev: 'Zkouška na hajného', serial: 'Chytrá kmotra Liška', rada: 1, dil: 11 },
+  { id: 21789, nazev: 'Jak se knížepán div nerozsypal smíchy', serial: 'Chytrá kmotra Liška', rada: 1, dil: 12 },
+  { id: 21790, nazev: 'Hajný z Malinového vršku', serial: 'Chytrá kmotra Liška', rada: 1, dil: 13 },
 ];

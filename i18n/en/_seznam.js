@@ -566,7 +566,7 @@ I18N.seznam('en', [
   'fonty/fonty': ['hieroglyfy', 'klicenky', 'kostky3d', 'krabicka_pant', 'modelar', 'obalka_knihy', 'odmerky', 'organizer_vrtaku', 'pergamen', 'pismolijna', 'plakat_mapy', 'povrch3d', 'prevod_pisma', 'razitko', 'stencil', 'text3d', 'vanocni_ozdoby', 'vyprava'],
   'stencil/vystup': ['halloween', 'krajky', 'stencil'],
   'sky_events/astro': ['atlas_mesice', 'dalekohled', 'satelity', 'sky_events'],
-  'fonty/prepis': ['pergamen', 'prekladac_svetu', 'prevod_pisma', 'text3d', 'vyprava'],
+  'fonty/prepis': ['pergamen', 'prekladac_svetu', 'prevod_pisma', 'sifry', 'text3d', 'vyprava'],
   'modelar/jadro/soubory/svg': ['modelar', 'razitko', 'zalozky_exlibris'],
   'gen3d/gui': ['adapter_vysavac', 'bludiste3d', 'bryle', 'civka_filamentu', 'cleat', 'cookieCutter', 'dozy_zavit', 'drzaky_naradi', 'evolventni_kola', 'formy', 'foto_uchyty', 'ibc', 'kabely3d', 'kleste', 'klicenky', 'kliky', 'kliky_hridel', 'klipy_sacky', 'kloubova_hadice', 'knob', 'knofliky', 'kolecka', 'kolicky', 'kopirovaci_krouzky', 'kostky3d', 'krabicka_pant', 'krabicky', 'kvetinace', 'magnat', 'md_dokument', 'nozicky', 'odizolovac', 'odmerky', 'odsavaci_botka', 'organizer_vrtaku', 'ozubena_kola', 'panty', 'podzemi', 'prichytky_trubek', 'pruzne', 'razitko', 'remenice', 'rozbocka_vzt', 's_hak', 'samosvorna_pinzeta', 'sita', 'sluchatka', 'snek', 'soukoli_skladacka', 'soupe', 'spojky', 'stinitka', 'stojany', 'text3d', 'trychtyre', 'tubeRed', 'tubeRedFlat', 'tubeSplit', 'uhelniky', 'vacky', 'vanocni_ozdoby', 'ventilator_trubka', 'vesaky', 'zarazky_dveri'],
   karticky_tisk: ['pantomima', 'tabooGame'],

@@ -1,18 +1,25 @@
-/* Atlas a bestiář Kronik vyhnanství – stránka. Data: data.js (tools/atlas_export.py), odemykání: odemykani.js.
+/* Atlas a bestiář díla – stránka (Kroniky vyhnanství: kroniky_atlas.html, Svět, který tě zná: ai_svet_atlas.html).
+   Data: data.js (tools/atlas_export.py [--dilo]), odemykání: odemykani.js. Nastavení díla: window.ATLAS_DILO na stránce
+   (klíče localStorage, texty; chybějící texty = Kroniky); záložky (data-karta) a jejich sekce (#k-<sbírka>) jsou v HTML, mapa jen když je na stránce #mapa.
    Zamčené položky se do DOM vůbec nedostanou: vše se kreslí z ATLAS_ODEMYK.filtruj(). */
 (function () {
   'use strict';
   const O = window.ATLAS_ODEMYK, DATA = window.ATLAS_DATA;
   const $ = id => document.getElementById(id);
-  const KLIC = 'webapp_kroniky_atlas', KLIC_K = 'webapp_kroniky', KLIC_P = 'webapp_kniha_povidky_kronik';
-  const KARTY = ['populace', 'postavy', 'mista', 'osa', 'pojmy'];
+  // nastavení díla ze stránky; klíče localStorage: atlas, čtečka díla (kniha1…), čtečka povídek (null = dílo bez povídek)
+  const DILO = window.ATLAS_DILO;
+  const KLIC = DILO.klic, KLIC_K = DILO.ctecka, KLIC_P = DILO.povidky;
+  const KARTY = [...document.querySelectorAll('[data-karta]')].map(b => b.dataset.karta);
+  const TYP = sb => O.typ(DATA, sb);   // typ karty sbírky (populace/postavy/mista/osa/pojmy)
+  const POPISKY = { jmena: 'Říká se jim:', vystupuje: 'Kde vystupují', ...(DILO.popisky || {}) };
+  const DRUHY_POJMU = DILO.druhyPojmu || [['artefakt', 'Artefakty'], ['pojem', 'Pojmy'], ['organizace', 'Organizace'], ['misto_v_textu', 'Místa v textu']];
   const POR = O.poradi(DATA.kapitoly);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const cti = k => { try { return JSON.parse(localStorage.getItem(k)) || null; } catch (e) { return null; } };
+  const cti = k => { if (!k) return null; try { return JSON.parse(localStorage.getItem(k)) || null; } catch (e) { return null; } };
 
-  let volba = { rezim: 'ctecka', do: '', povidky: [], karta: 'populace', skryteKnihy: [], mapa: 'moderni', ...(cti(KLIC) || {}) };
-  if (!KARTY.includes(volba.karta)) volba.karta = 'populace';
+  let volba = { rezim: 'ctecka', do: '', povidky: [], karta: KARTY[0], skryteKnihy: [], mapa: 'moderni', ...(cti(KLIC) || {}) };
+  if (!KARTY.includes(volba.karta)) volba.karta = KARTY[0];
   const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(volba)); } catch (e) {} };
 
   let poz, vid, dotaz = '';
@@ -64,6 +71,7 @@
   const obrazkyPolozky = p => [...(p.obrazek ? [{ src: p.obrazek, popis: nazevPolozky(p) }] : []),
     ...(p.obrazky || []).map(o => ({ src: o.soubor, popis: o.popis || nazevPolozky(p), od: o.od }))];
   function galerie(p, sb) {
+    sb = TYP(sb);
     const obr = obrazkyPolozky(p);
     if (!obr.length) return '';
     const tl = (o, i, trida, img) => `<button class="${trida}" data-galerie="${esc(p.id)}" data-i="${i}" title="${esc(o.popis)} – zvětšit" aria-label="Zvětšit obrázek: ${esc(o.popis)}">${img}</button>`;
@@ -72,22 +80,27 @@
   }
 
   function karta(p, sb) {
+    sb = TYP(sb);
     let hlava = galerie(p, sb), telo = '';
     if (sb === 'populace') {
       if (p.taxon) telo += `<p class="taxon">${esc(p.taxon.t)} ${misto(p.taxon.od)}</p>`;
-      if (p.jmena && p.jmena.length) telo += `<p class="jmena"><span class="popisek">Říká se jim:</span> ${p.jmena.map(j => esc(j.t) + ' ' + misto(j.od)).join(' · ')}</p>`;
+      if (p.jmena && p.jmena.length) telo += `<p class="jmena"><span class="popisek">${esc(POPISKY.jmena)}</span> ${p.jmena.map(j => esc(j.t) + ' ' + misto(j.od)).join(' · ')}</p>`;
       telo += fakta(p.fakta);
-      if (p.vystupuje && p.vystupuje.length) telo += `<p class="popisek">Kde vystupují</p>${fakta(p.vystupuje)}`;
+      if (p.vystupuje && p.vystupuje.length) telo += `<p class="popisek">${esc(POPISKY.vystupuje)}</p>${fakta(p.vystupuje)}`;
     } else if (sb === 'postavy') {
       if (p.role) telo += `<p class="taxon">${esc(p.role.t)}</p>`;
       telo += fakta(p.fakta);
     } else if (sb === 'pojmy') {
-      telo += `<p class="taxon">${esc({ artefakt: 'artefakt', pojem: 'pojem', organizace: 'organizace', misto_v_textu: 'místo v textu' }[p.druh] || p.druh)}</p>` + fakta(p.fakta);
+      telo += `<p class="taxon">${esc({ artefakt: 'artefakt', pojem: 'pojem', organizace: 'organizace', misto_v_textu: 'místo v textu', ...(DILO.druhPojmu || {}) }[p.druh] || p.druh)}</p>` + fakta(p.fakta);
       // ptačí písmo knihy rodu – vlastní font webu (tools/ptaci_pismo.js); id je v datech anonymizované, proto podle názvu
       if (/^Kniha rodu/.test(p.nazev)) telo += `<p class="ptaci-ukazka" data-i18n="ne" title="Kniha rodu, znak úřadu Merin">Kniha rodu [merin]</p>
         <p class="ptaci-odkazy">Ptačí písmo si můžete vyzkoušet v <a href="prevod_pisma.html">Převodníku písma</a>, v <a href="sifry.html">Šifrách</a> (Šifrovačky) nebo v <a href="pismolijna.html">Písmolijně</a>.</p>`;
+      // čáry a tečky z válce a kosti – vlastní font webu (tools/cary_tecky.js), výklad latinkou
+      if (p.nazev === 'Mřížky čar a teček') telo += `<p class="ptaci-ukazka tecky" data-i18n="ne" title="Je to rovné.">|Je to rovné.</p>
+        <p class="ptaci-odkazy">Písmo Čáry a tečky (latinka zapsaná podle pravidel značek – výklad, ne rozluštění) si můžete vyzkoušet v <a href="prevod_pisma.html">Převodníku písma</a>, v <a href="sifry.html">Šifrách</a> (Šifrovačky) nebo v <a href="pismolijna.html">Písmolijně</a>.</p>`;
     } else if (sb === 'mista') {
-      telo += `<p class="taxon">${esc(PRESNOST[p.presnost] || '')}${p.knihy && p.knihy.length ? ' · ' + esc(p.knihy.map(popisKnihy).join(', ')) : ''}</p>` + fakta(p.fakta);
+      const popis = [PRESNOST[p.presnost], p.knihy && p.knihy.length && p.knihy.map(popisKnihy).join(', ')].filter(Boolean).join(' · ');
+      telo += (popis ? `<p class="taxon">${esc(popis)}</p>` : '') + fakta(p.fakta);
     } else if (sb === 'osa') {
       telo += fakta(p.fakta);
     }
@@ -102,8 +115,8 @@
   const sedi = p => !dotaz || norm(dotaz).split(/\s+/).every(s => textPolozky(p).includes(s));
   const skryta = k => volba.skryteKnihy.includes(String(k));
   const knihaPostavy = p => typeof p.kniha === 'string' ? 'P' : String(p.kniha);
-  const projdeFiltr = (p, sb) => sb === 'postavy' ? !skryta(knihaPostavy(p))
-    : sb === 'mista' ? !(p.knihy && p.knihy.length) || p.knihy.some(k => !skryta(skupinaKnihy(k))) : true;
+  const projdeFiltr = (p, sb) => TYP(sb) === 'postavy' ? !skryta(knihaPostavy(p))
+    : TYP(sb) === 'mista' ? !(p.knihy && p.knihy.length) || p.knihy.some(k => !skryta(skupinaKnihy(k))) : true;
   const polozky = sb => vid[sb].filter(p => projdeFiltr(p, sb) && sedi(p));
 
   const prazdno = sb => `<p class="prazdno">${dotaz ? 'Nic nenalezeno.'
@@ -111,9 +124,9 @@
 
   /* ---------- vykreslení záložek ---------- */
   function kresliMrizku(sb) {
-    const s = polozky(sb);
+    const s = polozky(sb), t = TYP(sb);
     if (!s.length) return prazdno(sb);
-    if (sb === 'postavy') {
+    if (t === 'postavy') {
       const skup = new Map();
       for (const p of s) { const k = knihaPostavy(p); if (!skup.has(k)) skup.set(k, []); skup.get(k).push(p); }
       const klice = [...skup.keys()].sort((a, b) => (a === 'P') - (b === 'P') || a - b);
@@ -122,14 +135,13 @@
         return `<h2 class="skupina">${esc(k === 'P' ? 'Povídky' : kn ? kn.n : 'Kniha ' + k)}</h2><div class="mrizka">${skup.get(k).map(p => karta(p, sb)).join('')}</div>`;
       }).join('');
     }
-    if (sb === 'pojmy') {
-      const druhy = [['artefakt', 'Artefakty'], ['pojem', 'Pojmy'], ['organizace', 'Organizace'], ['misto_v_textu', 'Místa v textu']];
-      return druhy.map(([d, n]) => {
+    if (t === 'pojmy') {
+      return DRUHY_POJMU.map(([d, n]) => {
         const x = s.filter(p => p.druh === d);
         return x.length ? `<h2 class="skupina">${n}</h2><div class="mrizka">${x.map(p => karta(p, sb)).join('')}</div>` : '';
       }).join('');
     }
-    return `<div class="mrizka${sb === 'populace' ? ' bestiar' : ''}">${s.map(p => karta(p, sb)).join('')}</div>`;
+    return `<div class="mrizka${t === 'populace' ? ' bestiar' : ''}">${s.map(p => karta(p, sb)).join('')}</div>`;
   }
 
   /* časová osa: hluboký čas v logaritmickém měřítku (roky před dneškem), dějiny a naše doba lineárně */
@@ -138,7 +150,7 @@
     const u = [
       { nazev: 'Hluboký čas', pozn: 'logaritmické měřítko – čím hlouběji do minulosti, tím víc let na centimetr', x: s.filter(p => p.kdy.rok < 1000), log: true },
       { nazev: 'Dějiny', pozn: 'lineárně', x: s.filter(p => p.kdy.rok >= 1000 && p.kdy.rok < 2000) },
-      { nazev: 'Naše doba a blízká budoucnost', pozn: 'lineárně', x: s.filter(p => p.kdy.rok >= 2000) },
+      { nazev: DILO.osaNase || 'Naše doba a blízká budoucnost', pozn: 'lineárně', x: s.filter(p => p.kdy.rok >= 2000) },
     ].filter(x => x.x.length);
     for (const us of u) {
       if (us.log) {
@@ -162,8 +174,8 @@
     }
     return u;
   }
-  function kresliOsu() {
-    const s = polozky('osa').slice().sort((a, b) => a.kdy.rok - b.kdy.rok);
+  function kresliOsu(sb = 'osa') {
+    const s = polozky(sb).slice().sort((a, b) => a.kdy.rok - b.kdy.rok);
     if (!s.length) return prazdno('osa');
     return useky(s).map(u => `<section class="usek"><h2 class="skupina">${esc(u.nazev)} <small>${esc(u.pozn)}</small></h2>
       <div class="pruh">${u.znacky.map(z => `<span class="dilek" style="left:${(u.poloha(z.rok) * 100).toFixed(2)}%">${esc(z.text)}</span>`).join('')}
@@ -285,8 +297,8 @@
   }
 
   function kresliKartu(sb) {
-    if (sb === 'mista') return kresliMapu();
-    $('k-' + sb).innerHTML = sb === 'osa' ? kresliOsu() : kresliMrizku(sb);
+    if (sb === 'mista' && $('mapa')) return kresliMapu();
+    $('k-' + sb).innerHTML = TYP(sb) === 'osa' ? kresliOsu(sb) : kresliMrizku(sb);
   }
 
   /* ---------- stav, lišta, záložky ---------- */
@@ -295,7 +307,7 @@
     vid = O.filtruj(DATA, poz);
     const popis = O.popisPozice(poz, DATA);
     $('popisPozice').textContent = popis === 'vše' ? 'vše' : popis === 'nic' ? 'zatím nic' : popis;
-    $('stavRadek').innerHTML = (DATA.ukazka ? '<strong class="ukazka">Ukázková data – skutečný atlas se teprve připravuje.</strong> ' : '') + (volba.rezim === 'vse' ? 'Ukazuji celý atlas, včetně všeho, co odhaluje konec ságy.'
+    $('stavRadek').innerHTML = (DATA.ukazka ? '<strong class="ukazka">Ukázková data – skutečný atlas se teprve připravuje.</strong> ' : '') + (volba.rezim === 'vse' ? `Ukazuji celý atlas, včetně všeho, co odhaluje konec ${esc(DILO.celku || 'ságy')}.`
       : `${volba.rezim === 'rucne' ? 'Nastaveno ručně' : 'Podle čtečky'}: ${popis === 'nic' ? 'zatím nic přečteno – vidíte jen to, co je známo předem' : 'přečteno do: ' + esc(popis)}${poz.povidky.size ? ` · povídky: ${poz.povidky.size}` : ''}. Co jste ještě nečetli, tu není.`);
     vse();
   }
@@ -318,7 +330,7 @@
   function skok(id) {
     const c = najdi(id);
     if (!c) return;
-    if (c.sb === 'mista') { prepniKartu('mista'); ukazMisto(id, true); return; }
+    if (c.sb === 'mista' && $('mapa')) { prepniKartu('mista'); ukazMisto(id, true); return; }
     if (!polozky(c.sb).some(p => p.id === id)) { dotaz = ''; $('hledat').value = ''; volba.skryteKnihy = []; vse(); }
     prepniKartu(c.sb);
     const el = $('p-' + id);
@@ -380,8 +392,8 @@
     naplnKapitoly(kniha);
     $('volbaPovidek').innerHTML = DATA.povidky.map(p => `<label class="radek"><input type="checkbox" value="${esc(p.slug)}"${(volba.povidky || []).includes(p.slug) ? ' checked' : ''}><span>${esc(p.nazev)}</span></label>`).join('');
     $('poznCteni').textContent = volba.rezim === 'ctecka'
-      ? 'Pozice se čte ze čtečky Kronik a Povídek v tomto prohlížeči. Kapitola se počítá, když je dočtená nebo už čtete další.'
-      : volba.rezim === 'rucne' ? 'Ruční volba platí, dokud ji nevrátíte na „Podle čtečky“.' : 'Pozor: ukazuje i rozuzlení celé ságy.';
+      ? `Pozice se čte ze ${DILO.ctecky || 'čtečky Kronik a Povídek'} v tomto prohlížeči. Kapitola se počítá, když je dočtená nebo už čtete další.`
+      : volba.rezim === 'rucne' ? 'Ruční volba platí, dokud ji nevrátíte na „Podle čtečky“.' : `Pozor: ukazuje i rozuzlení celé ${DILO.celku || 'ságy'}.`;
   }
   function naplnKapitoly(kniha) {
     const kap = DATA.kapitoly.filter(k => k.k === kniha), i0 = DATA.kapitoly.indexOf(kap[0]);
@@ -395,7 +407,7 @@
     volba.povidky = [...$('volbaPovidek').querySelectorAll('input:checked')].map(i => i.value); uloz(); prepocti();
   });
   function vykresliNabFiltr() {
-    const polozkyFiltru = [...DATA.knihy.map(k => [String(k.k), k.n]), ['P', 'Povídky']];
+    const polozkyFiltru = [...DATA.knihy.map(k => [String(k.k), k.n]), ...(DATA.povidky.length ? [['P', 'Povídky']] : [])];
     $('filtrKnih').innerHTML = polozkyFiltru.map(([k, n]) => `<button class="tl prep" data-prikaz="filtr-${k}" aria-pressed="${!skryta(k)}">${esc(n)}</button>`).join('');
     $('tlFiltr').setAttribute('aria-pressed', String(volba.skryteKnihy.length > 0));
   }
@@ -466,7 +478,7 @@
     if (e.key === 'Escape') return zavriNabidky();
     if (e.target.closest('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === '/') { e.preventDefault(); $('hledat').focus(); }
-    else if (/^[1-5]$/.test(e.key)) prepniKartu(KARTY[+e.key - 1]);
+    else if (/^[1-9]$/.test(e.key) && KARTY[+e.key - 1]) prepniKartu(KARTY[+e.key - 1]);
   });
   // čtečka v jiné kartě/záložce rozcestníku posunula pozici
   addEventListener('storage', e => { if (e.key === KLIC_K || e.key === KLIC_P) prepocti(); });

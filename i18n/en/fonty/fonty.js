@@ -102,4 +102,5 @@ I18N.pridej('en', {
   'Žádný font neodpovídá.': 'No font matches.',
   'Nahrát vlastní font…': 'Upload your own font…',
   'Ptačí písmo (Kroniky)': 'Bird script (Chronicles)',
+  'Čáry a tečky (Kroniky)': 'Lines and dots (Chronicles)',
 });

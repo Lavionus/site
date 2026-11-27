@@ -258,6 +258,35 @@
       background-color: color-mix(in srgb, var(--danger) 30%, transparent);
     }
     .hledani-zrus:disabled { opacity: 0.45; cursor: default; }
+    /* našeptávač pod polem hledání */
+    .hledani-radek { position: relative; }
+    .naseptavac {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 52px;
+      z-index: 20;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 4px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .naseptavac a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: calc(var(--radius) - 2px);
+    }
+    .naseptavac a.vybrano { background-color: var(--bg-control); }
+    .naseptavac .emoji { font-size: 1.2rem; }
+    .naseptavac img.emoji { width: 26px; height: 26px; border-radius: 6px; margin: 0; }
+    .naseptavac .nazev { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     section h2 .akce { float: right; text-transform: none; letter-spacing: 0; font-weight: 400; }
     .akce button, .tip button.dalsi {
@@ -429,6 +458,7 @@
     <div class="hledani-radek">
       <input type="search" class="hledani" id="hledani" placeholder="🔍 Hledat aplikaci…" autocomplete="off" aria-label="Hledat aplikaci">
       <button type="button" class="hledani-zrus" id="hledaniZrus" title="Zrušit hledání" aria-label="Zrušit hledání" disabled>✕</button>
+      <div class="naseptavac" id="naseptavac" role="listbox" hidden></div>
     </div>
   </header>
 
@@ -843,15 +873,51 @@
       naplnDlazdice('vysledky', shody.slice(0, 24).map(p => p.soubor), 'Nic nenalezeno.');
       return shody;
     }
-    hledani.addEventListener('input', hledej);
+    // našeptávač: prvních 8 shod přímo pod polem, šipky vybírají, Enter otevře
+    const naseptavac = document.getElementById('naseptavac');
+    let vybrano = 0;
+    function naseptej() {
+      const shody = hledej().slice(0, 8);
+      vybrano = 0;
+      naseptavac.replaceChildren(...shody.map(p => odkaz(p)));
+      naseptavac.hidden = !shody.length;
+      oznacNaseptane();
+    }
+    function oznacNaseptane() {
+      [...naseptavac.children].forEach((a, i) => {
+        a.classList.toggle('vybrano', i === vybrano);
+        a.setAttribute('role', 'option');
+        a.setAttribute('aria-selected', String(i === vybrano));
+      });
+      naseptavac.children[vybrano]?.scrollIntoView({ block: 'nearest' });
+    }
+    const zavriNaseptavac = () => { naseptavac.hidden = true; };
+    // klik do seznamu nesmí vzít fokus poli dřív, než se odkaz otevře
+    naseptavac.addEventListener('mousedown', e => e.preventDefault());
+    naseptavac.addEventListener('click', zavriNaseptavac);
+    hledani.addEventListener('blur', zavriNaseptavac);
+    hledani.addEventListener('input', naseptej);
+    hledani.addEventListener('focus', () => { if (hledani.value.trim()) naseptej(); });
     document.getElementById('hledaniZrus').addEventListener('click', () => {
       hledani.value = '';
-      hledej();
+      naseptej();
       hledani.focus();
     });
     hledani.addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.querySelector('#vysledky a')?.click();
-      if (e.key === 'Escape') { hledani.value = ''; hledej(); }
+      const n = naseptavac.children.length;
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && n && !naseptavac.hidden) {
+        e.preventDefault();
+        vybrano = (vybrano + (e.key === 'ArrowDown' ? 1 : -1) + n) % n;
+        oznacNaseptane();
+      } else if (e.key === 'Enter') {
+        (naseptavac.hidden ? document.querySelector('#vysledky a') : naseptavac.children[vybrano])?.click();
+        zavriNaseptavac();
+      } else if (e.key === 'Escape') { hledani.value = ''; naseptej(); }
+    });
+    // přepnutí na domovskou záložku (rozcestník posílá visibilitychange) → psát se dá hned;
+    // na dotyku ne – fokus by vysunul klávesnici
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && matchMedia('(hover: hover)').matches) hledani.select();
     });
 
     /* ---- Tip na vyzkoušení: jen aplikace, které uživatel ještě nezná ---- */
